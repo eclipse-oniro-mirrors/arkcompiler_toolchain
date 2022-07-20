@@ -1,0 +1,35 @@
+{
+    "name": "@ohos/arkcompiler_toolchain",
+    "version": "3.1",
+    "description": "ark compiler toolchain",
+    "homePage": "https://gitee.com/openharmony",
+    "license": "Apache Liscense 2.0",
+    "publishAs": "code-segment",
+    "scripts": {},
+    "dirs": [],
+    "segment": {
+        "destPath": "arkcompiler/toolchain"
+    },
+    "component": {
+        "name": "arkcompiler_toolchain",
+        "subsystem": "arkcompiler",
+        "syscap": [],
+        "features": [],
+        "adapted_system_type": [
+            "standard"
+        ],
+        "rom": "",
+        "ram": "",
+        "deps": {
+            "components": [],
+            "third_party": []
+        },
+        "build": {
+            "sub_component": [
+                "//arkcompiler/toolchain/inspector:ark_debugger"
+            ],
+            "inner_kits": [],
+            "test": []
+        }
+    }
+}
