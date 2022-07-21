@@ -16,4 +16,49 @@
 #ifndef ARKCOMPILER_TOOLCHAIN_INSPECTOR_INSPECTOR_H
 #define ARKCOMPILER_TOOLCHAIN_INSPECTOR_INSPECTOR_H
 
+#include "ws_server.h"
+
+#include <string>
+
+namespace panda::ecmascript {
+class EcmaVM;
+}  // namespace panda::ecmascript
+
+namespace OHOS::ArkCompiler::Toolchain {
+using EcmaVM = panda::ecmascript::EcmaVM;
+using DebuggerPostTask = std::function<void(std::function<void()>&&)>;
+
+#ifdef __cplusplus
+#if __cplusplus
+extern "C" {
+#endif
+#endif
+
+bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode, int32_t instanceId,
+    const DebuggerPostTask& debuggerPostTask);
+
+void StopDebug(const std::string& componentName);
+
+#ifdef __cplusplus
+#if __cplusplus
+}
+#endif
+#endif
+
+class Inspector {
+public:
+    Inspector() = default;
+    ~Inspector() = default;
+
+    void OnMessage(std::string&& msg);
+
+    static constexpr int32_t DELAY_CHECK_DISPATCH_STATUS = 100;
+
+    pthread_t tid_ = 0;
+    void* vm_ = nullptr;
+    std::unique_ptr<WsServer> websocketServer_;
+    DebuggerPostTask debuggerPostTask_;
+};
+} // namespace OHOS::ArkCompiler::Toolchain
+
 #endif // ARKCOMPILER_TOOLCHAIN_INSPECTOR_INSPECTOR_H
