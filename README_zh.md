@@ -5,8 +5,7 @@
   - [目录<a name="section0002"></a>](#目录)
   - [使用说明<a name="section0003"></a>](#使用说明)
   - [编译构建<a name="section0004"></a>](#编译构建)
-  - [约束<a name="section0005"></a>](#约束)
-  - [相关仓<a name="section0006"></a>](#相关仓)
+  - [相关仓<a name="section0005"></a>](#相关仓)
 
 ## 简介<a name="section0001"></a>
 
@@ -19,9 +18,9 @@
 **调试调优协议实现：**
 
 调试调优实现划分不同的域，每个域定义其所支持的协议命令：
-- Debugger域实现包括断点、单步、停止执行、恢复执行以及CallFrame求值等调试功能；
-- Profiler域实现包括启动采样、停止采样以及设置采样间隔等cpu调优功能；
-- HeapProfiler域实现包括启动采样、停止采样、垃圾收集以及获取堆内存快照等堆内存调优功能；
+- Debugger域实现包括断点、单步、停止执行、恢复执行以及CallFrame求值等调试功能。
+- Profiler域实现包括启动采样、停止采样以及设置采样间隔等cpu调优功能。
+- HeapProfiler域实现包括启动采样、停止采样、垃圾收集以及获取堆内存快照等堆内存调优功能。
 - Runtime域实现包括堆获取内存使用情况、获取对象属性等运行时相关功能。
 
 ## 目录<a name="section0002"></a>
@@ -34,7 +33,7 @@
 
 ## 使用说明<a name="section0003"></a>
 
-调试应用时，需要配套DevEco Studio使用，详细的指导请前往[应用调试](https://developer.harmonyos.com/cn/docs/documentation/doc-guides/ide_debug_device-0000001053822404)。此外，对调试调优特性支持情况可前往[DevEco Studio版本说明](https://developer.harmonyos.com/cn/docs/documentation/doc-releases/release_notes-0000001057597449)查看详细说明。
+调试应用时，需要配套DevEco Studio和SDK使用，详细的指导请前往[应用调试](https://developer.harmonyos.com/cn/docs/documentation/doc-guides/ide_debug_device-0000001053822404)。此外，对调试调优特性支持情况可前往[DevEco Studio版本说明](https://developer.harmonyos.com/cn/docs/documentation/doc-releases/release_notes-0000001057597449)查看详细说明。
 
 
 ## 编译构建<a name="section0004"></a>
@@ -47,10 +46,7 @@ $ ./build.sh --product-name rk3568 --build-target ark_debugger
 $ ./build.sh --product-name rk3568 --build-target libark_ecma_debugger
 ```
 
-## 约束<a name="section0005"></a>
-- 需配套DevEco Studio和SDK使用
-
-## 相关仓<a name="section0006"></a>
+## 相关仓<a name="section0005"></a>
 
 **[arkcompiler\_toolchain](https://gitee.com/openharmony/arkcompiler_toolchain)**
 
