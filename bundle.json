@@ -12,7 +12,7 @@
     },
     "component": {
         "name": "arkcompiler_toolchain",
-        "subsystem": "arkcompiler",
+        "subsystem": "ark",
         "syscap": [],
         "features": [],
         "adapted_system_type": [
@@ -25,9 +25,7 @@
             "third_party": []
         },
         "build": {
-            "sub_component": [
-                "//arkcompiler/toolchain/inspector:ark_debugger"
-            ],
+            "sub_component": [],
             "inner_kits": [],
             "test": []
         }
