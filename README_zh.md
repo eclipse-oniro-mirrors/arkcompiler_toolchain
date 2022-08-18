@@ -16,12 +16,20 @@
 
 ![](/figures/arkcompiler-toolchain-arch.png)
 
+**调试调优协议实现：**
+
+调试调优实现划分不同的域，每个域定义其所支持的协议命令：
+- Debugger域实现包括断点、单步、停止执行、恢复执行以及CallFrame求值等调试功能；
+- Profiler域实现包括启动采样、停止采样以及设置采样间隔等cpu调优功能；
+- HeapProfiler域实现包括启动采样、停止采样、垃圾收集以及获取堆内存快照等堆内存调优功能；
+- Runtime域实现包括堆获取内存使用情况、获取对象属性等运行时相关功能。
+
 ## 目录<a name="section0002"></a>
 
 ```
 /arkcompiler/toolchain
-├─ tooling             # 调试调优实现
-└─ inspector           # inspector调试协议，包括会话连接，消息转发等
+├─ tooling             # 调试调优协议实现
+└─ inspector           # 调试协议对接层，包括会话连接接，消息转发等
 ```
 
 ## 使用说明<a name="section0003"></a>
