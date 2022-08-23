@@ -20,6 +20,8 @@
 
 #include <string>
 
+#include <pthread.h>
+
 namespace panda::ecmascript {
 class EcmaVM;
 }  // namespace panda::ecmascript
@@ -28,10 +30,8 @@ namespace OHOS::ArkCompiler::Toolchain {
 using EcmaVM = panda::ecmascript::EcmaVM;
 using DebuggerPostTask = std::function<void(std::function<void()>&&)>;
 
-#ifdef __cplusplus
 #if __cplusplus
 extern "C" {
-#endif
 #endif
 
 bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode, int32_t instanceId,
@@ -39,10 +39,8 @@ bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode, in
 
 void StopDebug(const std::string& componentName);
 
-#ifdef __cplusplus
 #if __cplusplus
 }
-#endif
 #endif
 
 class Inspector {

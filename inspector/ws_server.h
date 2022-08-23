@@ -16,19 +16,28 @@
 #ifndef ARKCOMPILER_TOOLCHAIN_INSPECTOR_WS_SERVER_H
 #define ARKCOMPILER_TOOLCHAIN_INSPECTOR_WS_SERVER_H
 
+#include <boost/asio/error.hpp>
+#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
+#include <boost/asio/ip/tcp.hpp>
+#else
+#include <boost/asio/local/stream_protocol.hpp>
+#endif
+#include <boost/beast/core.hpp>
+#include <boost/beast/websocket.hpp>
 #include <functional>
 #include <iostream>
 #include <queue>
 
-#include <boost/asio/error.hpp>
-#include <boost/asio/local/stream_protocol.hpp>
-#include <boost/beast/core.hpp>
-#include <boost/beast/websocket.hpp>
+#include <pthread.h>
 
 namespace OHOS::ArkCompiler::Toolchain {
 namespace beast = boost::beast;
 namespace websocket = beast::websocket;
-using localSocket = boost::asio::local::stream_protocol;
+#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
+using CommProtocol = boost::asio::ip::tcp;
+#else
+using CommProtocol = boost::asio::local::stream_protocol;
+#endif
 
 class WsServer {
 public:
@@ -43,11 +52,11 @@ public:
 private:
     std::atomic<bool> connectState_ {false};
     std::atomic<bool> terminateExecution_ { false };
-    int32_t instanceId_ {0};
+    [[maybe_unused]] int32_t instanceId_ {0};
     pthread_t tid_ {0};
     std::string componentName_ {};
     std::function<void(std::string&&)> wsOnMessage_ {};
-    std::unique_ptr<websocket::stream<localSocket::socket>> webSocket_ { nullptr };
+    std::unique_ptr<websocket::stream<CommProtocol::socket>> webSocket_ { nullptr };
     std::unique_ptr<boost::asio::io_context> ioContext_ { nullptr };
 };
 } // namespace OHOS::ArkCompiler::Toolchain

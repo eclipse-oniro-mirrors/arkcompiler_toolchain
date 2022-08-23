@@ -11,7 +11,7 @@
         "destPath": "arkcompiler/toolchain"
     },
     "component": {
-        "name": "arkcompiler_toolchain",
+        "name": "toolchain",
         "subsystem": "ark",
         "syscap": [],
         "features": [],
@@ -25,7 +25,9 @@
             "third_party": []
         },
         "build": {
-            "sub_component": [],
+            "sub_component": [
+                "//arkcompiler/toolchain/inspector:ark_debugger"
+            ],
             "inner_kits": [],
             "test": []
         }

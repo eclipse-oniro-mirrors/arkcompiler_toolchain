@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-#include "inspector/inspector.h"
+#include "inspector.h"
 
-#include <dlfcn.h>
+#include <chrono>
 #include <shared_mutex>
-#include <unistd.h>
+#include <thread>
 #include <unordered_map>
 
-#include "base/log/log.h"
-#include "inspector/ws_server.h"
+#include "hilog_wrapper.h"
+#include "library_loader.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 namespace {
@@ -34,11 +34,11 @@ enum DispatchStatus : int32_t {
 using InitializeDebugger = void(*)(void*, const std::function<void(const void*, const std::string&)>&);
 using UninitializeDebugger = void(*)(void*);
 using WaitForDebugger = void(*)(void*);
-using DispatchMessage = void(*)(void*, std::string&&);
+using OnMessage = void(*)(void*, std::string&&);
 using ProcessMessage = void(*)(void*);
 using GetDispatchStatus = int32_t(*)(void*);
 
-DispatchMessage g_dispatchMessage = nullptr;
+OnMessage g_onMessage = nullptr;
 InitializeDebugger g_initializeDebugger = nullptr;
 UninitializeDebugger g_uninitializeDebugger = nullptr;
 WaitForDebugger g_waitForDebugger = nullptr;
@@ -52,7 +52,13 @@ std::shared_mutex g_mutex;
 thread_local void* g_handle = nullptr;
 thread_local void* g_vm = nullptr;
 
+#if defined(WINDOWS_PLATFORM)
+constexpr char ARK_DEBUGGER_SHARED_LIB[] = "libark_ecma_debugger.dll";
+#elif defined(MAC_PLATFORM)
+constexpr char ARK_DEBUGGER_SHARED_LIB[] = "libark_ecma_debugger.dylib";
+#else
 constexpr char ARK_DEBUGGER_SHARED_LIB[] = "libark_ecma_debugger.so";
+#endif
 
 void* HandleClient(void* const server)
 {
@@ -71,9 +77,8 @@ bool LoadArkDebuggerLibrary()
         LOGE("Already opened");
         return false;
     }
-    g_handle = dlopen(ARK_DEBUGGER_SHARED_LIB, RTLD_LAZY);
+    g_handle = Load(ARK_DEBUGGER_SHARED_LIB);
     if (g_handle == nullptr) {
-        LOGE("Failed to open %{public}s, reason: %{public}sn", ARK_DEBUGGER_SHARED_LIB, dlerror());
         return false;
     }
     return true;
@@ -81,11 +86,7 @@ bool LoadArkDebuggerLibrary()
 
 void* GetArkDynFunction(const char* symbol)
 {
-    auto function = dlsym(g_handle, symbol);
-    if (function == nullptr) {
-        LOGE("Failed to get symbol %{public}s in %{public}s", symbol, ARK_DEBUGGER_SHARED_LIB);
-    }
-    return function;
+    return ResolveSymbol(g_handle, symbol);
 }
 
 void SendReply(const void* vm, const std::string& message)
@@ -109,7 +110,7 @@ void ResetServiceLocked()
         g_inspectors.erase(iter);
     }
     if (g_handle != nullptr) {
-        dlclose(g_handle);
+        CloseHandle(g_handle);
         g_handle = nullptr;
     }
 }
@@ -175,9 +176,9 @@ bool InitializeArkFunctions()
         ResetServiceLocked();
         return false;
     }
-    g_dispatchMessage = reinterpret_cast<DispatchMessage>(
-        GetArkDynFunction("DispatchMessage"));
-    if (g_dispatchMessage == nullptr) {
+    g_onMessage = reinterpret_cast<OnMessage>(
+        GetArkDynFunction("OnMessage"));
+    if (g_onMessage == nullptr) {
         ResetServiceLocked();
         return false;
     }
@@ -201,13 +202,13 @@ bool InitializeArkFunctions()
 
 void Inspector::OnMessage(std::string&& msg)
 {
-    g_dispatchMessage(vm_, std::move(msg));
+    g_onMessage(vm_, std::move(msg));
 
     // message will be processed soon if the debugger thread is in running or waiting status
     if (g_getDispatchStatus(vm_) != DispatchStatus::UNKNOWN) {
         return;
     }
-    usleep(DELAY_CHECK_DISPATCH_STATUS);
+    std::this_thread::sleep_for(std::chrono::microseconds(DELAY_CHECK_DISPATCH_STATUS));
     if (g_getDispatchStatus(vm_) != DispatchStatus::UNKNOWN) {
         return;
     }
@@ -229,7 +230,6 @@ void Inspector::OnMessage(std::string&& msg)
 bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode, int32_t instanceId,
     const DebuggerPostTask& debuggerPostTask)
 {
-    LOGI("StartDebug: %{private}s", componentName.c_str());
     g_vm = vm;
     if (!LoadArkDebuggerLibrary()) {
         return false;
@@ -249,7 +249,6 @@ bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode, in
     if (isDebugMode) {
         g_waitForDebugger(vm);
     }
-    LOGI("StartDebug Continue");
     return true;
 }
 
