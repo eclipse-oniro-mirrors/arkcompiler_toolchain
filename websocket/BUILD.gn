@@ -1,0 +1,100 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//arkcompiler/toolchain/toolchain.gni")
+import("//build/ohos.gni")
+
+config("websocket_config") {
+  cflags_cc = [
+    "-fno-complete-member-pointers",
+    "-Wno-implicit-fallthrough",
+    "-fvisibility=default",
+    "-frtti",
+  ]
+}
+
+config("websocket_platform_config") {
+  defines = []
+  if (is_ohos) {
+    defines += [
+      "OHOS_PLATFORM",
+      "UNIX_PLATFORM",
+    ]
+  } else if (is_mingw) {
+    defines += [ "WINDOWS_PLATFORM" ]
+  } else if (is_mac) {
+    defines += [
+      "MAC_PLATFORM",
+      "UNIX_PLATFORM",
+    ]
+  } else if (target_os == "android") {
+    defines += [
+      "ANDROID_PLATFORM",
+      "UNIX_PLATFORM",
+    ]
+  } else if (target_os == "ios") {
+    defines += [
+      "UNIX_PLATFORM",
+      "IOS_PLATFORM",
+    ]
+  } else {
+    defines += [ "UNIX_PLATFORM" ]
+  }
+}
+
+ohos_source_set("websocket") {
+  defines = []
+  deps = []
+
+  configs = [ sdk_libc_secshared_config ]
+  if (is_mingw || is_mac) {
+    cflags = [ "-std=c++17" ]
+    if (is_mingw) {
+      platform = "windows"
+    } else {
+      platform = "mac"
+    }
+    deps += [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_$platform",
+    ]
+  } else if (target_os == "android") {
+    aosp_deps = [ "shared_library:liblog" ]
+  } else {
+    external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  }
+
+  include_dirs = []
+
+  include_dirs += [
+    "$toolchain_root/inspector",
+    "//third_party/openssl/include",
+    "//third_party/openssl:libcrypto_static",
+    "//utils/native/base/include",
+  ]
+
+  sources = [ "websocket.cpp" ]
+
+  deps += [
+    "//third_party/openssl:libcrypto_static",
+    "//third_party/openssl:ssl_source",
+    sdk_libc_secshared_dep,
+  ]
+
+  configs += [
+    ":websocket_config",
+    ":websocket_platform_config",
+  ]
+
+  subsystem_name = "ark"
+  part_name = "toolchain"
+}
