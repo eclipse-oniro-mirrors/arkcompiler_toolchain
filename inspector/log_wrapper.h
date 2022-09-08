@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 
-#ifndef ARKCOMPILER_TOOLCHAIN_INSPECTOR_HILOG_WRAPPER_H
-#define ARKCOMPILER_TOOLCHAIN_INSPECTOR_HILOG_WRAPPER_H
+#ifndef ARKCOMPILER_TOOLCHAIN_INSPECTOR_LOG_WRAPPER_H
+#define ARKCOMPILER_TOOLCHAIN_INSPECTOR_LOG_WRAPPER_H
 
+#if !defined(ANDROID_PLATFORM)
 #include "hilog/log.h"
+#endif
 
 namespace OHOS::ArkCompiler::Toolchain {
 #ifdef LOGF
@@ -35,16 +37,44 @@ namespace OHOS::ArkCompiler::Toolchain {
 #undef LOGD
 #endif
 
+#if defined(ANDROID_PLATFORM)
+enum class LogLevel {
+    UNKNOWN,
+    DEFAULT,
+    VERBOSE,
+    DEBUG,
+    INFO,
+    WARN,
+    ERROR,
+    FATAL
+};
+class AndroidLog {
+public:
+    AndroidLog() = default;
+    ~AndroidLog() = default;
+
+    static void PrintLog(LogLevel level, const char* fmt, ...);
+};
+#else
 static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {
     LOG_CORE,
     0xD003F00,
     "ArkCompiler"
 };
+#endif
 
+#if defined(ANDROID_PLATFORM)
+#define LOGF(fmt, ...) AndroidLog::PrintLog(LogLevel::FATAL, fmt, ##__VA_ARGS__)
+#define LOGE(fmt, ...) AndroidLog::PrintLog(LogLevel::ERROR, fmt, ##__VA_ARGS__)
+#define LOGW(fmt, ...) AndroidLog::PrintLog(LogLevel::WARN, fmt, ##__VA_ARGS__)
+#define LOGI(fmt, ...) AndroidLog::PrintLog(LogLevel::INFO, fmt, ##__VA_ARGS__)
+#define LOGD(fmt, ...) AndroidLog::PrintLog(LogLevel::DEBUG, fmt, ##__VA_ARGS__)
+#else
 #define LOGF(fmt, ...) OHOS::HiviewDFX::HiLog::Fatal(LABEL, fmt, ##__VA_ARGS__)
 #define LOGE(fmt, ...) OHOS::HiviewDFX::HiLog::Error(LABEL, fmt, ##__VA_ARGS__)
 #define LOGW(fmt, ...) OHOS::HiviewDFX::HiLog::Warn(LABEL, fmt, ##__VA_ARGS__)
 #define LOGI(fmt, ...) OHOS::HiviewDFX::HiLog::Info(LABEL, fmt, ##__VA_ARGS__)
 #define LOGD(fmt, ...) OHOS::HiviewDFX::HiLog::Debug(LABEL, fmt, ##__VA_ARGS__)
+#endif
 } // namespace OHOS::ArkCompiler::Toolchain
-#endif // ARKCOMPILER_TOOLCHAIN_INSPECTOR_HILOG_WRAPPER_H
+#endif // ARKCOMPILER_TOOLCHAIN_INSPECTOR_LOG_WRAPPER_H

@@ -19,7 +19,7 @@
 #include <iostream>
 #include <sys/types.h>
 
-#include "hilog_wrapper.h"
+#include "log_wrapper.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 void WsServer::RunServer()
