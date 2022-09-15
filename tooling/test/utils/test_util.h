@@ -16,11 +16,13 @@
 #ifndef ECMASCRIPT_TOOLING_TEST_UTILS_TEST_UTIL_H
 #define ECMASCRIPT_TOOLING_TEST_UTILS_TEST_UTIL_H
 
+#include "test/utils/test_events.h"
+#include "test/utils/test_extractor.h"
+
+#include "agent/debugger_impl.h"
+
 #include "ecmascript/jspandafile/js_pandafile_manager.h"
-#include "ecmascript/tooling/agent/debugger_impl.h"
-#include "ecmascript/tooling/backend/js_debugger.h"
-#include "ecmascript/tooling/test/utils/test_events.h"
-#include "ecmascript/tooling/test/utils/test_extractor.h"
+#include "ecmascript/debugger/js_debugger.h"
 #include "os/mutex.h"
 
 namespace panda::ecmascript::tooling::test {

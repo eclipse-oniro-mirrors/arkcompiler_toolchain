@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) 2022 Huawei Device Co., Ltd.
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<configuration ver="2.0">
+    <target name="DebuggerEntryTest">
+        <preparer>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/sample.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/exception.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/arrow_func.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/async_func.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/range_error.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/syntax_exception.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/throw_exception.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/step.abc -> /data/test" src="out"/>
+            <option name="push" value="test/test/libjsdebugtest.so -> /data/test" src="out"/>
+            <option name="push" value="test/test/libdebugger_entry.so -> /data/test" src="out"/>
+            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
+            <option name="push" value="test/test/libark_ecma_debugger_test.so -> /data/test" src="out"/>
+        </preparer>
+    </target>
+    <target name="DebuggerTest">
+        <preparer>
+            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
+            <option name="push" value="test/test/libark_ecma_debugger_test.so -> /data/test" src="out"/>
+        </preparer>
+    </target>
+</configuration>

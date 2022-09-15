@@ -22,7 +22,6 @@ config("ark_ecma_debugger_config") {
 
   include_dirs = [
     ".",
-    "//third_party/boost",
     "//third_party/cJSON",
   ]
 }
@@ -32,8 +31,8 @@ debugger_sources = [
   "agent/runtime_impl.cpp",
   "agent/tracing_impl.cpp",
   "backend/debugger_executor.cpp",
-  "backend/js_pt_extractor.cpp",
   "backend/js_pt_hooks.cpp",
+  "backend/js_single_stepper.cpp",
   "base/pt_base64.cpp",
   "base/pt_events.cpp",
   "base/pt_json.cpp",
@@ -114,7 +113,7 @@ ohos_shared_library("libark_ecma_debugger") {
   if (!is_standard_system) {
     relative_install_dir = "ark"
   }
-  part_name = "ark_js_runtime"
+  part_name = "toolchain"
   subsystem_name = "ark"
 }
 

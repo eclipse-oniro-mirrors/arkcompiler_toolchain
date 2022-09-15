@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "ecmascript/tooling/base/pt_json.h"
+#include "base/pt_json.h"
 
 #include "libpandabase/macros.h"
 

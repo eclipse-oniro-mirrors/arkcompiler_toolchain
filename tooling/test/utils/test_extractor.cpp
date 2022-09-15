@@ -14,7 +14,7 @@
  */
 // Taken from panda-tools/panda-debugger/debugger
 
-#include "ecmascript/tooling/test/utils/test_extractor.h"
+#include "test/utils/test_extractor.h"
 
 #include "libpandabase/utils/leb128.h"
 #include "libpandabase/utils/utf.h"
@@ -30,7 +30,7 @@ std::pair<EntityId, uint32_t> TestExtractor::GetBreakpointAddress(const SourceLo
 {
     EntityId retId = EntityId();
     uint32_t retOffset = 0;
-    auto callbackFunc = [&retId, &retOffset](File::EntityId id, uint32_t offset) -> bool {
+    auto callbackFunc = [&retId, &retOffset](panda_file::File::EntityId id, uint32_t offset) -> bool {
         retId = id;
         retOffset = offset;
         return true;

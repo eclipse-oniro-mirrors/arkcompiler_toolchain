@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "ecmascript/tooling/protocol_handler.h"
+#include "protocol_handler.h"
 
-#include "ecmascript/tooling/agent/debugger_impl.h"
+#include "agent/debugger_impl.h"
 
 namespace panda::ecmascript::tooling {
 void ProtocolHandler::WaitForDebugger()

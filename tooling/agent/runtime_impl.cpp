@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 
-#include "ecmascript/tooling/agent/runtime_impl.h"
+#include "agent/runtime_impl.h"
 
 #include <iomanip>
 
+#include "base/pt_returns.h"
+#include "protocol_channel.h"
+
 #include "ecmascript/napi/include/dfx_jsnapi.h"
-#include "ecmascript/tooling/base/pt_returns.h"
-#include "ecmascript/tooling/protocol_channel.h"
 
 namespace panda::ecmascript::tooling {
 void RuntimeImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)

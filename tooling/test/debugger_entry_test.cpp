@@ -16,7 +16,7 @@
 #include "ecmascript/ecma_vm.h"
 #include "ecmascript/napi/include/jsnapi.h"
 #include "ecmascript/tests/test_helper.h"
-#include "ecmascript/tooling/test/utils/test_list.h"
+#include "test/utils/test_list.h"
 
 namespace panda::ecmascript::tooling::test {
 using panda::test::TestHelper;

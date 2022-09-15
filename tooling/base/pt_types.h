@@ -19,9 +19,10 @@
 #include <memory>
 #include <optional>
 
+#include "base/pt_json.h"
+
+#include "ecmascript/debugger/debugger_api.h"
 #include "ecmascript/dfx/cpu_profiler/samples_record.h"
-#include "ecmascript/tooling/backend/debugger_api.h"
-#include "ecmascript/tooling/base/pt_json.h"
 #include "libpandabase/macros.h"
 
 namespace panda::ecmascript::tooling {

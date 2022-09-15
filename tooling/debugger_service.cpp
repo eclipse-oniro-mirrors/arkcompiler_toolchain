@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-#include "ecmascript/tooling/debugger_service.h"
+#include "debugger_service.h"
 
+#include "protocol_handler.h"
+
+#include "ecmascript/debugger/js_debugger_manager.h"
 #include "ecmascript/ecma_vm.h"
-#include "ecmascript/tooling/protocol_handler.h"
-#include "ecmascript/tooling/interface/js_debugger_manager.h"
 
 namespace panda::ecmascript::tooling {
 void InitializeDebugger(::panda::ecmascript::EcmaVM *vm,

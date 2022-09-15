@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "ecmascript/tooling/agent/heapprofiler_impl.h"
+#include "agent/heapprofiler_impl.h"
 
 namespace panda::ecmascript::tooling {
 void HeapProfilerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)

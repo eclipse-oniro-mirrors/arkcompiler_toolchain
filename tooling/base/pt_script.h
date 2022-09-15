@@ -16,7 +16,7 @@
 #ifndef ECMASCRIPT_TOOLING_BASE_PT_SCRIPT_H
 #define ECMASCRIPT_TOOLING_BASE_PT_SCRIPT_H
 
-#include "ecmascript/tooling/base/pt_types.h"
+#include "base/pt_types.h"
 
 #include "libpandabase/macros.h"
 

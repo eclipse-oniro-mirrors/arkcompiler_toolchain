@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "ecmascript/tooling/base/pt_params.h"
+#include "base/pt_params.h"
 
 namespace panda::ecmascript::tooling {
 std::unique_ptr<EnableParams> EnableParams::Create(const PtJson &params)
@@ -445,7 +445,7 @@ std::unique_ptr<ReplyNativeCallingParams> ReplyNativeCallingParams::Create(const
     std::string error;
     Result ret;
 
-    bool userCode= false;
+    bool userCode = false;
     ret = params.GetBool("userCode", &userCode);
     if (ret == Result::SUCCESS) {
         paramsObject->userCode_ = userCode;

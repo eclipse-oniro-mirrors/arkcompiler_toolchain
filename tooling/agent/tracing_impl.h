@@ -16,10 +16,11 @@
 #ifndef ECMASCRIPT_TOOLING_AGENT_TRACING_IMPL_H
 #define ECMASCRIPT_TOOLING_AGENT_TRACING_IMPL_H
 
+#include "base/pt_params.h"
+#include "base/pt_returns.h"
+#include "dispatcher.h"
+
 #include "ecmascript/dfx/cpu_profiler/samples_record.h"
-#include "ecmascript/tooling/base/pt_params.h"
-#include "ecmascript/tooling/base/pt_returns.h"
-#include "ecmascript/tooling/dispatcher.h"
 #include "libpandabase/macros.h"
 
 namespace panda::ecmascript::tooling {

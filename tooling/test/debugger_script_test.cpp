@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,16 +14,17 @@
  * limitations under the License.
  */
 
+#include "base/pt_params.h"
+#include "base/pt_returns.h"
+#include "base/pt_script.h"
+#include "debugger_service.h"
+#include "dispatcher.h"
+
+#include "ecmascript/debugger/js_debugger.h"
 #include "ecmascript/js_array.h"
 #include "ecmascript/js_tagged_value-inl.h"
 #include "ecmascript/object_factory.h"
 #include "ecmascript/tests/test_helper.h"
-#include "ecmascript/tooling/base/pt_params.h"
-#include "ecmascript/tooling/base/pt_returns.h"
-#include "ecmascript/tooling/debugger_service.h"
-#include "ecmascript/tooling/dispatcher.h"
-#include "ecmascript/tooling/backend/js_debugger.h"
-#include "ecmascript/tooling/base/pt_script.h"
 
 using namespace panda::ecmascript;
 using namespace panda::ecmascript::tooling;

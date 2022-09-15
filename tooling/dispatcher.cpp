@@ -13,18 +13,18 @@
  * limitations under the License.
  */
 
-#include "ecmascript/tooling/dispatcher.h"
+#include "dispatcher.h"
 
-#include "ecmascript/tooling/agent/debugger_impl.h"
-#include "ecmascript/tooling/agent/runtime_impl.h"
+#include "agent/debugger_impl.h"
+#include "agent/runtime_impl.h"
 #ifdef ECMASCRIPT_SUPPORT_HEAPPROFILER
-#include "ecmascript/tooling/agent/heapprofiler_impl.h"
+#include "agent/heapprofiler_impl.h"
 #endif
 #ifdef ECMASCRIPT_SUPPORT_CPUPROFILER
-#include "ecmascript/tooling/agent/profiler_impl.h"
+#include "agent/profiler_impl.h"
 #endif
-#include "ecmascript/tooling/agent/tracing_impl.h"
-#include "ecmascript/tooling/protocol_channel.h"
+#include "agent/tracing_impl.h"
+#include "protocol_channel.h"
 
 namespace panda::ecmascript::tooling {
 DispatchRequest::DispatchRequest(const std::string &message)

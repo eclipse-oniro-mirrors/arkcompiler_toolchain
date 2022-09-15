@@ -12,3 +12,12 @@
 # limitations under the License.
 
 toolchain_root = "//arkcompiler//toolchain"
+ark_root = "//arkcompiler/runtime_core"
+js_root = "//arkcompiler/ets_runtime"
+third_party_gn_path = "//third_party"
+
+# For OpenHarmony build, always link with the static lib:
+sdk_libc_secshared_dep =
+    "$third_party_gn_path/bounds_checking_function:libsec_static"
+sdk_libc_secshared_config =
+    "$third_party_gn_path/bounds_checking_function:libsec_public_config"

@@ -19,9 +19,10 @@
 #include <map>
 #include <memory>
 
+#include "base/pt_returns.h"
+
+#include "ecmascript/debugger/js_debugger_interface.h"
 #include "ecmascript/napi/include/jsnapi.h"
-#include "ecmascript/tooling/backend/js_debugger_interface.h"
-#include "ecmascript/tooling/base/pt_returns.h"
 #include "libpandabase/macros.h"
 
 namespace panda::ecmascript::tooling {

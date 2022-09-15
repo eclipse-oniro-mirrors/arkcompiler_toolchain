@@ -16,11 +16,10 @@
 #ifndef ECMASCRIPT_TOOLING_BACKEND_JS_PT_HOOKS_H
 #define ECMASCRIPT_TOOLING_BACKEND_JS_PT_HOOKS_H
 
-#include "ecmascript/tooling/backend/js_pt_extractor.h"
-#include "ecmascript/tooling/base/pt_events.h"
-#include "ecmascript/tooling/base/pt_script.h"
-#include "ecmascript/tooling/backend/js_debugger_interface.h"
+#include "base/pt_events.h"
+#include "base/pt_script.h"
 
+#include "ecmascript/debugger/js_debugger_interface.h"
 #include "libpandabase/macros.h"
 
 namespace panda::ecmascript::tooling {

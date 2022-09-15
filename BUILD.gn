@@ -1,0 +1,145 @@
+# Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//arkcompiler/toolchain/toolchain.gni")
+import("//build/ohos.gni")
+
+config("ark_toolchain_common_config") {
+  defines = [ "PANDA_ENABLE_LTO" ]
+  cflags_cc = [
+    "-Wall",
+    "-Wshadow",
+    "-Werror",
+    "-Wextra",
+    "-pedantic",
+    "-Wno-invalid-offsetof",
+    "-Wno-gnu-statement-expression",
+    "-pipe",
+    "-Wdate-time",
+    "-funwind-tables",
+    "-fasynchronous-unwind-tables",
+    "-Wformat=2",
+  ]
+
+  if (is_linux) {
+    defines += [
+      "PANDA_TARGET_UNIX",
+      "PANDA_TARGET_LINUX",
+      "PANDA_USE_FUTEX",
+    ]
+  } else if (is_mingw) {
+    cflags_cc += [
+      "-std=c++17",
+      "-Wno-ignored-attributes",
+    ]
+    defines += [
+      "PANDA_TARGET_WINDOWS",
+      "_CRTBLD",
+      "__LIBMSVCRT__",
+    ]
+  } else if (is_mac) {
+    defines += [
+      "PANDA_TARGET_UNIX",
+      "PANDA_TARGET_MACOS",
+    ]
+  } else if (target_os == "android") {
+    defines += [
+      "PANDA_TARGET_ANDROID",
+      "PANDA_TARGET_UNIX",
+      "PANDA_USE_FUTEX",
+    ]
+  } else {
+    defines += [
+      "PANDA_TARGET_UNIX",
+      "PANDA_USE_FUTEX",
+    ]
+    if (!is_standard_system && (current_cpu != "arm" || is_wearable_product)) {
+      defines += [ "PANDA_TARGET_MOBILE" ]
+    }
+  }
+
+  if (is_debug) {
+    cflags_cc += [
+      "-O0",
+      "-ggdb3",
+    ]
+  } else {
+    defines += [ "NDEBUG" ]
+  }
+}
+
+config("ark_toolchain_public_config") {
+  defines = []
+  if (!is_mingw && !is_mac) {
+    defines += [
+      "ECMASCRIPT_SUPPORT_CPUPROFILER",
+      "ECMASCRIPT_SUPPORT_HEAPPROFILER",
+      "ECMASCRIPT_SUPPORT_SNAPSHOT",
+      "ECMASCRIPT_SUPPORT_DEBUGGER",
+    ]
+  } else if (target_os == "android") {
+    defines += [
+      "ECMASCRIPT_SUPPORT_CPUPROFILER",
+      "ECMASCRIPT_SUPPORT_DEBUGGER",
+    ]
+  }
+
+  include_dirs = [
+    # Dependent on runtime_core include
+    "$ark_root",
+    "$js_root",
+    "$toolchain_root",
+  ]
+}
+
+# ecmascript unit testcase config
+config("toolchain_test_config") {
+  visibility = [ ":*" ]
+
+  configs = [
+    "$toolchain_root:ark_toolchain_public_config",
+    "$toolchain_root:ark_toolchain_common_config",
+  ]
+
+  ldflags = [ "-Wl,-rpath=\$ORIGIN/" ]
+}
+
+group("ark_toolchain_packages") {
+  deps = []
+  if (host_os != "mac") {
+    deps += [
+      "//arkcompiler/toolchain/inspector:ark_debugger",
+      "//arkcompiler/toolchain/tooling:libark_ecma_debugger",
+    ]
+  }
+}
+
+group("ark_toolchain_unittest") {
+  testonly = true
+  deps = []
+  if (host_os != "mac") {
+    deps += [ "//arkcompiler/toolchain/tooling/test:unittest" ]
+    if (is_ohos && is_standard_system) {
+      deps += [ "//arkcompiler/toolchain/test/fuzztest:fuzztest" ]
+    }
+  }
+}
+
+group("ark_toolchain_host_unittest") {
+  testonly = true
+  deps = []
+  if (host_os != "mac") {
+    # js unittest
+    deps += [ "//arkcompiler/toolchain/tooling/test:host_unittest" ]
+  }
+}

@@ -16,16 +16,16 @@
 #ifndef ECMASCRIPT_TOOLING_AGENT_HEAPPROFILER_IMPL_H
 #define ECMASCRIPT_TOOLING_AGENT_HEAPPROFILER_IMPL_H
 
-#include "ecmascript/tooling/base/pt_params.h"
-#include "ecmascript/tooling/base/pt_events.h"
-#include "ecmascript/tooling/base/pt_returns.h"
-#include "ecmascript/tooling/dispatcher.h"
-#include "ecmascript/tooling/interface/stream.h"
-#include "ecmascript/tooling/interface/progress.h"
-#include "ecmascript/tooling/protocol_handler.h"
-#include "ecmascript/tooling/protocol_channel.h"
-#include "ecmascript/napi/include/dfx_jsnapi.h"
+#include "base/pt_params.h"
+#include "base/pt_events.h"
+#include "base/pt_returns.h"
+#include "dispatcher.h"
+#include "protocol_handler.h"
+#include "protocol_channel.h"
 
+#include "ecmascript/dfx/hprof/progress.h"
+#include "ecmascript/dfx/hprof/stream.h"
+#include "ecmascript/napi/include/dfx_jsnapi.h"
 #include "libpandabase/macros.h"
 
 #include <sys/time.h>

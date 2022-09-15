@@ -18,7 +18,7 @@
 
 #include <utility>
 
-#include "ecmascript/tooling/backend/js_pt_hooks.h"
+#include "backend/js_pt_hooks.h"
 
 namespace panda::ecmascript::tooling::test {
 using BreakpointCallback = std::function<bool(const JSPtLocation &)>;

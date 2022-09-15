@@ -16,7 +16,7 @@
 #ifndef ECMASCRIPT_TOOLING_TEST_UTILS_TESTCASES_JS_RANGE_ERROR_TEST_H
 #define ECMASCRIPT_TOOLING_TEST_UTILS_TESTCASES_JS_RANGE_ERROR_TEST_H
 
-#include "ecmascript/tooling/test/utils/test_util.h"
+#include "test/utils/test_util.h"
 
 namespace panda::ecmascript::tooling::test {
 class JsRangeErrorTest : public TestEvents {

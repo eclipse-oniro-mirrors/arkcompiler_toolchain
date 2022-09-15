@@ -13,28 +13,28 @@
 
 import("//arkcompiler/ets_frontend/ts2panda/ts2abc_config.gni")
 import("//arkcompiler/ets_runtime/js_runtime_config.gni")
-import("//arkcompiler/ets_runtime/test/test_helper.gni")
+import("//arkcompiler/toolchain/test/test_helper.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 
-module_output_path = "arkcompiler/ets_runtime"
+module_output_path = "arkcompiler/toolchain"
 
 config("debug_api_test") {
   visibility = [ ":*" ]
 
   ldflags = [ "-Wl,-rpath=\$ORIGIN/" ]
 
-  configs = [ "//arkcompiler/ets_runtime:ecma_test_config" ]
+  configs = [ "//arkcompiler/toolchain:toolchain_test_config" ]
 
   include_dirs = [
     "//arkcompiler/ets_runtime",
-    "//arkcompiler/ets_runtime/ecmascript/tooling/test",
+    "//arkcompiler/toolchain/tooling",
   ]
 }
 
-test_js_path = "//arkcompiler/ets_runtime/ecmascript/tooling/test/testcases/js/"
+test_js_path = "//arkcompiler/toolchain/tooling/test/testcases/js/"
 
-# add new js test file here and modify test/resource/js_runtime/ohos_test.xml
+# When new js test file added, pls modify ohos_test.xml in test/resource accordingly.
 test_js_files = [
   "arrow_func",
   "async_func",
@@ -50,7 +50,9 @@ foreach(file, test_js_files) {
   ts2abc_gen_abc("gen_${file}_abc") {
     test_js = "${test_js_path}${file}.js"
     test_abc = "$target_out_dir/${file}.abc"
-    extra_visibility = [ ":*" ]  # Only targets in this file can depend on this.
+
+    # Only targets in this file can depend on this.
+    extra_visibility = [ ":*" ]
     src_js = rebase_path(test_js)
     dst_file = rebase_path(test_abc)
     extra_args = [ "--debug" ]
@@ -91,7 +93,7 @@ source_set("jsdebugtest_set") {
 
   public_configs = [
     ":debug_api_test",
-    "//arkcompiler/ets_runtime/ecmascript/tooling:ark_ecma_debugger_config",
+    "//arkcompiler/toolchain/tooling:ark_ecma_debugger_config",
   ]
 
   test_abc_dir = "/data/test/"
@@ -113,7 +115,7 @@ source_set("jsdebugtest_set") {
 
   deps = [
     "//arkcompiler/ets_runtime:libark_jsruntime_test",
-    "//arkcompiler/ets_runtime/ecmascript/tooling:libark_ecma_debugger_test",
+    "//arkcompiler/toolchain/tooling:libark_ecma_debugger_test",
   ]
 }
 
@@ -150,7 +152,7 @@ host_unittest_action("DebuggerEntryTest") {
     ":debugger_entry_resource",
     ":jsdebugtest",
     "//arkcompiler/ets_runtime:libark_jsruntime_test",
-    "//arkcompiler/ets_runtime/ecmascript/tooling:libark_ecma_debugger_test",
+    "//arkcompiler/toolchain/tooling:libark_ecma_debugger_test",
   ]
 }
 
@@ -170,11 +172,11 @@ host_unittest_action("DebuggerTest") {
     "pt_json_test.cpp",
   ]
 
-  configs = [ "//arkcompiler/ets_runtime:ecma_test_config" ]
+  configs = [ "//arkcompiler/toolchain:toolchain_test_config" ]
 
   deps = [
     "//arkcompiler/ets_runtime:libark_jsruntime_test",
-    "//arkcompiler/ets_runtime/ecmascript/tooling:libark_ecma_debugger_test",
+    "//arkcompiler/toolchain/tooling:libark_ecma_debugger_test",
     sdk_libc_secshared_dep,
   ]
 }

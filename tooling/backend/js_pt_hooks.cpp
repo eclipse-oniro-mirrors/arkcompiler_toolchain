@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "ecmascript/tooling/backend/js_pt_hooks.h"
+#include "backend/js_pt_hooks.h"
 
-#include "ecmascript/tooling/agent/debugger_impl.h"
+#include "agent/debugger_impl.h"
 
 namespace panda::ecmascript::tooling {
 void JSPtHooks::Breakpoint(const JSPtLocation &location)

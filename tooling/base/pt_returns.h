@@ -16,7 +16,7 @@
 #ifndef ECMASCRIPT_TOOLING_BASE_PT_RETURNS_H
 #define ECMASCRIPT_TOOLING_BASE_PT_RETURNS_H
 
-#include "ecmascript/tooling/base/pt_types.h"
+#include "base/pt_types.h"
 
 namespace panda::ecmascript::tooling {
 class PtBaseReturns : public PtBaseTypes {

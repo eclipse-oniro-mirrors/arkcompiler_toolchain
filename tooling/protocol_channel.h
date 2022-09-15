@@ -16,9 +16,9 @@
 #ifndef ECMASCRIPT_TOOLING_PROTOCOL_CHANNEL_H
 #define ECMASCRIPT_TOOLING_PROTOCOL_CHANNEL_H
 
-#include "ecmascript/tooling/base/pt_events.h"
-#include "ecmascript/tooling/base/pt_returns.h"
-#include "ecmascript/tooling/dispatcher.h"
+#include "base/pt_events.h"
+#include "base/pt_returns.h"
+#include "dispatcher.h"
 
 #include "libpandabase/macros.h"
 

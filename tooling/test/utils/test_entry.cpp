@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-#include "ecmascript/tooling/test/utils/test_entry.h"
+#include "test/utils/test_entry.h"
 
 #include <thread>
 
-#include "ecmascript/tooling/test/utils/test_hooks.h"
-#include "ecmascript/tooling/test/utils/test_list.h"
+#include "test/utils/test_hooks.h"
+#include "test/utils/test_list.h"
 
 namespace panda::ecmascript::tooling::test {
 static std::thread g_debuggerThread;

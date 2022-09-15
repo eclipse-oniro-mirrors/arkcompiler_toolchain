@@ -17,8 +17,8 @@
 #define ECMASCRIPT_TOOLING_AGENT_RUNTIME_IMPL_H
 
 
-#include "ecmascript/tooling/base/pt_params.h"
-#include "ecmascript/tooling/dispatcher.h"
+#include "base/pt_params.h"
+#include "dispatcher.h"
 
 #include "libpandabase/macros.h"
 

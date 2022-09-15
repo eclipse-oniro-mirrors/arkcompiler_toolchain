@@ -13,14 +13,15 @@
  * limitations under the License.
  */
 
+#include "base/pt_types.h"
+#include "base/pt_returns.h"
+#include "dispatcher.h"
+
 #include "ecmascript/js_array.h"
 #include "ecmascript/js_object-inl.h"
 #include "ecmascript/js_tagged_value-inl.h"
 #include "ecmascript/object_factory.h"
 #include "ecmascript/tests/test_helper.h"
-#include "ecmascript/tooling/base/pt_types.h"
-#include "ecmascript/tooling/base/pt_returns.h"
-#include "ecmascript/tooling/dispatcher.h"
 
 using namespace panda::ecmascript;
 using namespace panda::ecmascript::tooling;

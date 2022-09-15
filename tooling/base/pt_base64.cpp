@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "ecmascript/tooling/base/pt_base64.h"
+#include "base/pt_base64.h"
 
 namespace panda::ecmascript::tooling {
 static const uint8_t DECODE_STR_LEN = 3;

@@ -16,9 +16,9 @@
 #ifndef ECMASCRIPT_TOOLING_TEST_UTILS_TEST_HOOKS_H
 #define ECMASCRIPT_TOOLING_TEST_UTILS_TEST_HOOKS_H
 
-#include "ecmascript/tooling/agent/debugger_impl.h"
-#include "ecmascript/tooling/backend/js_pt_hooks.h"
-#include "ecmascript/tooling/test/utils/test_util.h"
+#include "agent/debugger_impl.h"
+#include "backend/js_pt_hooks.h"
+#include "test/utils/test_util.h"
 
 namespace panda::ecmascript::tooling::test {
 class TestHooks : public PtHooks {

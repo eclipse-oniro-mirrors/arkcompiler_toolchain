@@ -21,7 +21,7 @@
 #include <queue>
 #include <memory>
 
-#include "ecmascript/tooling/protocol_channel.h"
+#include "protocol_channel.h"
 
 namespace panda::ecmascript::tooling {
 class ProtocolHandler final : public ProtocolChannel {

@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-#include "ecmascript/tooling/backend/debugger_executor.h"
+#include "backend/debugger_executor.h"
 
-#include "ecmascript/tooling/backend/debugger_api.h"
-#include "ecmascript/tooling/interface/js_debugger_manager.h"
+#include "ecmascript/debugger/debugger_api.h"
+#include "ecmascript/debugger/js_debugger_manager.h"
 
 namespace panda::ecmascript::tooling {
 void DebuggerExecutor::Initialize(const EcmaVM *vm)

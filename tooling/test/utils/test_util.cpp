@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "ecmascript/tooling/test/utils/test_util.h"
+#include "test/utils/test_util.h"
 
 namespace panda::ecmascript::tooling::test {
 TestMap TestUtil::testMap_;

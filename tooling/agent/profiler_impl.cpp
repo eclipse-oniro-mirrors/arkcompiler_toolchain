@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-#include "ecmascript/tooling/agent/profiler_impl.h"
+#include "agent/profiler_impl.h"
+
+#include "base/pt_events.h"
+#include "protocol_channel.h"
 
 #include "ecmascript/napi/include/dfx_jsnapi.h"
-#include "ecmascript/tooling/base/pt_events.h"
-#include "ecmascript/tooling/protocol_channel.h"
 
 namespace panda::ecmascript::tooling {
 void ProfilerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)

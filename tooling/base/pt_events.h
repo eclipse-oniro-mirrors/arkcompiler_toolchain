@@ -19,9 +19,9 @@
 #include <memory>
 #include <optional>
 
-#include "ecmascript/tooling/base/pt_script.h"
-#include "ecmascript/tooling/base/pt_types.h"
-#include "ecmascript/tooling/dispatcher.h"
+#include "base/pt_script.h"
+#include "base/pt_types.h"
+#include "dispatcher.h"
 
 #include "libpandabase/macros.h"
 
