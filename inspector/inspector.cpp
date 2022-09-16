@@ -20,7 +20,7 @@
 #include <thread>
 #include <unordered_map>
 
-#include "hilog_wrapper.h"
+#include "log_wrapper.h"
 #include "library_loader.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
