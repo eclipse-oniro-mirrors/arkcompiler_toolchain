@@ -20,8 +20,8 @@
 #include <string_view>
 
 namespace OHOS::ArkCompiler::Toolchain {
-void* Load(std::string_view filename);
-void* ResolveSymbol(void* handle, std::string_view name);
+void* Load(std::string_view libraryName);
+void* ResolveSymbol(void* handle, std::string_view symbol);
 void CloseHandle(void* handle);
 } // namespace OHOS::ArkCompiler::Toolchain
 
