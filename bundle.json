@@ -26,10 +26,12 @@
         },
         "build": {
             "sub_component": [
-                "//arkcompiler/toolchain/inspector:ark_debugger"
+                "//arkcompiler/toolchain:ark_toolchain_packages"
             ],
             "inner_kits": [],
-            "test": []
+            "test": [
+                "//arkcompiler/toolchain:ark_toolchain_unittest"
+            ]
         }
     }
 }
