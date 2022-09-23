@@ -935,6 +935,7 @@ bool DebuggerImpl::GenerateCallFrame(CallFrame *callFrame,
 
     std::vector<std::unique_ptr<Scope>> scopeChain;
     scopeChain.emplace_back(GetLocalScopeChain(frameHandler, &thisObj));
+    scopeChain.emplace_back(GetModuleScopeChain());
     scopeChain.emplace_back(GetGlobalScopeChain());
 
     callFrame->SetCallFrameId(callFrameId)
@@ -995,6 +996,23 @@ std::unique_ptr<Scope> DebuggerImpl::GetLocalScopeChain(const FrameHandler *fram
     }
 
     return localScope;
+}
+
+std::unique_ptr<Scope> DebuggerImpl::GetModuleScopeChain()
+{
+    auto moduleScope = std::make_unique<Scope>();
+
+    std::unique_ptr<RemoteObject> module = std::make_unique<RemoteObject>();
+    Local<ObjectRef> moduleObj = ObjectRef::New(vm_);
+    module->SetType(ObjectType::Object)
+        .SetObjectId(runtime_->curObjectId_)
+        .SetClassName(ObjectClassName::Object)
+        .SetDescription(RemoteObject::ObjectDescription);
+    moduleScope->SetType(Scope::Type::Module()).SetObject(std::move(module));
+    runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, moduleObj);
+    JSThread *thread = vm_->GetJSThread();
+    DebuggerApi::GetModuleVariables(vm_, moduleObj, thread);
+    return moduleScope;
 }
 
 void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_file::File::EntityId methodId,
