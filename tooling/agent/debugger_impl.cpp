@@ -895,7 +895,8 @@ bool DebuggerImpl::GenerateCallFrame(CallFrame *callFrame,
 {
     Method *method = DebuggerApi::GetMethod(frameHandler);
     auto methodId = method->GetMethodId();
-    DebugInfoExtractor *extractor = GetExtractor(method->GetJSPandaFile());
+    const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
+    DebugInfoExtractor *extractor = GetExtractor(jsPandaFile);
     if (extractor == nullptr) {
         LOG_DEBUGGER(ERROR) << "GenerateCallFrame: extractor is null";
         return false;
@@ -935,7 +936,9 @@ bool DebuggerImpl::GenerateCallFrame(CallFrame *callFrame,
 
     std::vector<std::unique_ptr<Scope>> scopeChain;
     scopeChain.emplace_back(GetLocalScopeChain(frameHandler, &thisObj));
-    scopeChain.emplace_back(GetModuleScopeChain());
+    if (jsPandaFile != nullptr && !jsPandaFile->IsBundlePack()) {
+        scopeChain.emplace_back(GetModuleScopeChain());
+    }
     scopeChain.emplace_back(GetGlobalScopeChain());
 
     callFrame->SetCallFrameId(callFrameId)
