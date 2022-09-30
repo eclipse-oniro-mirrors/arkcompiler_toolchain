@@ -12,10 +12,10 @@
 # limitations under the License.
 
 # The location of the build configuration file.
-buildconfig = "//toolchain/build/config/BUILDCONFIG.gn"
+buildconfig = "//arkcompiler/toolchain/build/config/BUILDCONFIG.gn"
 
 # The source root location.
-root = "//toolchain/build/core/gn"
+root = "//arkcompiler/toolchain/build/core/gn"
 
 # The executable used to execute scripts in action and exec_script.
 script_executable = "/usr/bin/env"

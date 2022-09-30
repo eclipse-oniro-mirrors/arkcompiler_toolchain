@@ -62,7 +62,8 @@ template("ohos_executable") {
     }
 
     if (defined(invoker.use_exceptions) && invoker.use_exceptions) {
-      configs += [ "//toolchain/build/config/compiler:exceptions" ]
+      configs += [ "//arkcompiler/toolchain/build/config/compiler:exceptions" ]
+      ldflags = []
     }
   }
 }
@@ -87,7 +88,8 @@ template("ohos_static_library") {
     }
 
     if (defined(invoker.use_exceptions) && invoker.use_exceptions) {
-      configs += [ "//toolchain/build/config/compiler:exceptions" ]
+      configs += [ "//arkcompiler/toolchain/build/config/compiler:exceptions" ]
+      ldflags = []
     }
   }
 }

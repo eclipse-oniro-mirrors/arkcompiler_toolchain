@@ -233,7 +233,7 @@ def main():
     host_platform = args.host_platform
     host_cpu = args.host_cpu
     tool_repo = args.tool_repo
-    config_file = os.path.join(args.code_dir, 'toolchain/build/prebuilts_download/prebuilts_download_config.json')
+    config_file = os.path.join(args.code_dir, 'arkcompiler/toolchain/build/prebuilts_download/prebuilts_download_config.json')
     config_info = read_json_file(config_file)
     args.npm_install_config = config_info.get('npm_install_path')
     node_modules_copy_config = config_info.get('node_modules_copy')
