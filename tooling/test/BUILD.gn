@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//arkcompiler/ets_frontend/es2panda/es2abc_config.gni")
 import("//arkcompiler/ets_frontend/ts2panda/ts2abc_config.gni")
 import("//arkcompiler/ets_runtime/js_runtime_config.gni")
 import("//arkcompiler/toolchain/test/test_helper.gni")
@@ -47,7 +48,7 @@ test_js_files = [
 ]
 
 foreach(file, test_js_files) {
-  ts2abc_gen_abc("gen_${file}_abc") {
+  es2abc_gen_abc("gen_${file}_abc") {
     test_js = "${test_js_path}${file}.js"
     test_abc = "$target_out_dir/${file}.abc"
 
@@ -112,15 +113,15 @@ source_set("jsdebugtest_set") {
           [ "//base/hiviewdfx/hilog/interfaces/native/innerkits/include" ]
     }
   }
-
-  deps = [
-    "//arkcompiler/ets_runtime:libark_jsruntime_test",
-    "//arkcompiler/toolchain/tooling:libark_ecma_debugger_test",
-  ]
 }
 
 ohos_shared_library("jsdebugtest") {
   deps = [ ":jsdebugtest_set" ]
+
+  deps += [
+    "//arkcompiler/ets_runtime:libark_jsruntime_test",
+    "//arkcompiler/toolchain/tooling:libark_ecma_debugger_test",
+  ]
 
   if (is_ohos && is_standard_system) {
     if (enable_hilog) {
