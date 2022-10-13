@@ -37,11 +37,11 @@ python ark.py x64.release
 ```
 ### step2 将js文件转换为abc文件
 ```
-./out/x64.release/ark/ark/es2abc test.js
+./out/x64.release/arkcompiler/ets_frontend/es2abc test.js
 ```
 ### step3 执行生成的abc文件
 ```
-LD_LIBRARY_PATH=out/x64.release:prebuilts/clang/ohos/linux-x86_64/llvm/lib ./out/x64.release/ark/ark_js_runtime/ark_js_vm test.abc
+LD_LIBRARY_PATH=out/x64.release:prebuilts/clang/ohos/linux-x86_64/llvm/lib ./out/x64.release/arkcompiler/ets_runtime/ark_js_vm test.abc
 ```
 ### 执行262测试套
 ```

@@ -143,3 +143,11 @@ group("ark_toolchain_host_unittest") {
     deps += [ "//arkcompiler/toolchain/tooling/test:host_unittest" ]
   }
 }
+
+group("ark_js_host_unittest") {
+  testonly = true
+  deps = [
+    "//arkcompiler/ets_runtime:ark_runtime_host_unittest",
+    "//arkcompiler/toolchain:ark_toolchain_host_unittest",
+  ]
+}
