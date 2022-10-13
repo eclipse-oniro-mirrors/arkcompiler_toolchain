@@ -113,6 +113,8 @@ source_set("jsdebugtest_set") {
           [ "//base/hiviewdfx/hilog/interfaces/native/innerkits/include" ]
     }
   }
+
+  deps = [ "$ark_root/libpandafile:arkfile_header_deps" ]
 }
 
 ohos_shared_library("jsdebugtest") {
