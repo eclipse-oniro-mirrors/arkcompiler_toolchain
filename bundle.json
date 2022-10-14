@@ -1,7 +1,7 @@
 {
     "name": "@ohos/arkcompiler_toolchain",
     "version": "3.1",
-    "description": "ark compiler toolchain",
+    "description": "arkcompiler toolchain",
     "homePage": "https://gitee.com/openharmony",
     "license": "Apache Liscense 2.0",
     "publishAs": "code-segment",
@@ -12,7 +12,7 @@
     },
     "component": {
         "name": "toolchain",
-        "subsystem": "ark",
+        "subsystem": "arkcompiler",
         "syscap": [],
         "features": [],
         "adapted_system_type": [
