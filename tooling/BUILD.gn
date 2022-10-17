@@ -44,7 +44,7 @@ debugger_sources = [
   "dispatcher.cpp",
   "protocol_handler.cpp",
 ]
-if (!is_mingw && !is_mac) {
+if (!is_mingw && !is_mac && target_os != "ios") {
   debugger_sources += [
     "agent/heapprofiler_impl.cpp",
     "agent/profiler_impl.cpp",
