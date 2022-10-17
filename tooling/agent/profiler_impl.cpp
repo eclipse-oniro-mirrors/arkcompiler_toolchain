@@ -28,7 +28,7 @@ void ProfilerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         { "enable", &ProfilerImpl::DispatcherImpl::Enable },
         { "start", &ProfilerImpl::DispatcherImpl::Start },
         { "stop", &ProfilerImpl::DispatcherImpl::Stop },
-        { "SetSamplingInterval", &ProfilerImpl::DispatcherImpl::SetSamplingInterval },
+        { "setSamplingInterval", &ProfilerImpl::DispatcherImpl::SetSamplingInterval },
         { "getBestEffortCoverage", &ProfilerImpl::DispatcherImpl::GetBestEffortCoverage },
         { "stopPreciseCoverage", &ProfilerImpl::DispatcherImpl::StopPreciseCoverage },
         { "takePreciseCoverage", &ProfilerImpl::DispatcherImpl::TakePreciseCoverage },
