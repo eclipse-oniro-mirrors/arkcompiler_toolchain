@@ -129,7 +129,7 @@ public:
         return lastEvent_ == DebugEvent::VM_DEATH;
     }
 
-    static JSPtLocation GetLocation(int32_t line, int32_t column, const char *pandaFile)
+    static JSPtLocation GetLocation(const char *sourceFile, int32_t line, int32_t column, const char *pandaFile)
     {
         auto jsPandaFile = ::panda::ecmascript::JSPandaFileManager::GetInstance()->FindJSPandaFile(pandaFile);
         if (jsPandaFile == nullptr) {
@@ -138,7 +138,7 @@ public:
         }
         TestExtractor extractor(jsPandaFile);
         auto [id, offset] = extractor.GetBreakpointAddress({jsPandaFile, line, column});
-        return JSPtLocation(jsPandaFile, id, offset);
+        return JSPtLocation(jsPandaFile, id, offset, sourceFile);
     }
 
     static SourceLocation GetSourceLocation(const JSPtLocation &location, const char *pandaFile)
@@ -162,7 +162,7 @@ public:
 
         // Wait for continue
         while (suspended_) {
-            constexpr uint64_t TIMEOUT_MSEC = 10000U;
+            constexpr uint64_t TIMEOUT_MSEC = 120000U;
             bool timeExceeded = suspendCv_.TimedWait(&suspendMutex_, TIMEOUT_MSEC);
             if (timeExceeded) {
                 LOG_DEBUGGER(FATAL) << "Time limit exceeded while suspend";
@@ -190,7 +190,7 @@ private:
             if (lastEvent_ == DebugEvent::VM_DEATH) {
                 return false;
             }
-            constexpr uint64_t TIMEOUT_MSEC = 10000U;
+            constexpr uint64_t TIMEOUT_MSEC = 120000U;
             bool timeExceeded = eventCv_.TimedWait(&eventMutex_, TIMEOUT_MSEC);
             if (timeExceeded) {
                 LOG_DEBUGGER(FATAL) << "Time limit exceeded while waiting " << event;

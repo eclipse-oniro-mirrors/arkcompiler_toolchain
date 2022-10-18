@@ -96,6 +96,7 @@ private:
     static constexpr size_t STEP_SIZE = 4;
 
     std::string pandaFile_ = DEBUGGER_ABC_DIR "step.abc";
+    std::string sourceFile_ = DEBUGGER_JS_DIR "step.js";
     std::string entryPoint_ = "_GLOBAL::func_main_0";
     JSPtLocation location1_ {nullptr, JSPtLocation::EntityId(0), 0};
     JSPtLocation location2_ {nullptr, JSPtLocation::EntityId(0), 0};
@@ -107,8 +108,8 @@ private:
     void SetJSPtLocation(size_t *arr, size_t number, std::vector<JSPtLocation> &locations)
     {
         for (size_t i = 0; i < number; i++) {
-            JSPtLocation location_ =
-                TestUtil::GetLocation(arr[i * LINE_COLUMN], arr[i * LINE_COLUMN + 1], pandaFile_.c_str());
+            JSPtLocation location_ = TestUtil::GetLocation(sourceFile_.c_str(), arr[i * LINE_COLUMN],
+                                                           arr[i * LINE_COLUMN + 1], pandaFile_.c_str());
             locations.push_back(location_);
         }
     };

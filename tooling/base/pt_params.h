@@ -459,9 +459,21 @@ public:
         return objectId_;
     }
 
+    GetPropertiesParams &SetObjectId(RemoteObjectId id)
+    {
+        objectId_ = id;
+        return *this;
+    }
+
     bool GetOwnProperties() const
     {
         return ownProperties_.value_or(false);
+    }
+
+    GetPropertiesParams &SetOwnProperties(bool ownProperties)
+    {
+        ownProperties_ = ownProperties;
+        return *this;
     }
 
     bool HasOwnProperties() const
@@ -472,6 +484,12 @@ public:
     bool GetAccessPropertiesOnly() const
     {
         return accessorPropertiesOnly_.value_or(false);
+    }
+
+    GetPropertiesParams &SetAccessPropertiesOnly(bool accessorPropertiesOnly)
+    {
+        accessorPropertiesOnly_ = accessorPropertiesOnly;
+        return *this;
     }
 
     bool HasAccessPropertiesOnly() const

@@ -18,7 +18,9 @@
 
 #include <utility>
 
+#include "agent/runtime_impl.h"
 #include "backend/js_pt_hooks.h"
+#include "test/utils/test_channel.h"
 
 namespace panda::ecmascript::tooling::test {
 using BreakpointCallback = std::function<bool(const JSPtLocation &)>;
@@ -57,6 +59,8 @@ struct TestEvents {
     const EcmaVM *vm_ {nullptr};
     JSDebugger *debugInterface_ {nullptr};
     DebuggerImpl *debugger_ {nullptr};
+    RuntimeImpl *runtime_ {nullptr};
+    TestChannel *channel_ {nullptr};
     TestEvents();
     virtual ~TestEvents() = default;
 

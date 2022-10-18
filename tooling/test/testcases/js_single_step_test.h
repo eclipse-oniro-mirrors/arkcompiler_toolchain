@@ -30,8 +30,10 @@ public:
         };
 
         loadModule = [this](std::string_view moduleName) {
-            locationStart_ = TestUtil::GetLocation(19, 0, pandaFile_.c_str());  // 19: line number
-            locationEnd_ = TestUtil::GetLocation(22, 0, pandaFile_.c_str());  // 22: line number
+            // 19: line number
+            locationStart_ = TestUtil::GetLocation(sourceFile_.c_str(), 19, 0, pandaFile_.c_str());
+            // 22: line number
+            locationEnd_ = TestUtil::GetLocation(sourceFile_.c_str(), 22, 0, pandaFile_.c_str());
             TestUtil::SuspendUntilContinue(DebugEvent::LOAD_MODULE);
             ASSERT_EQ(moduleName, pandaFile_);
             auto condFuncRef = FunctionRef::Undefined(vm_);
@@ -82,6 +84,7 @@ public:
 
 private:
     std::string pandaFile_ = DEBUGGER_ABC_DIR "sample.abc";
+    std::string sourceFile_ = DEBUGGER_JS_DIR "sample.js";
     std::string entryPoint_ = "_GLOBAL::func_main_0";
     JSPtLocation locationStart_ {nullptr, JSPtLocation::EntityId(0), 0};
     JSPtLocation locationEnd_ {nullptr, JSPtLocation::EntityId(0), 0};
