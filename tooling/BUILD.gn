@@ -114,7 +114,7 @@ ohos_shared_library("libark_ecma_debugger") {
     relative_install_dir = "ark"
   }
   part_name = "toolchain"
-  subsystem_name = "ark"
+  subsystem_name = "arkcompiler"
 }
 
 source_set("libark_ecma_debugger_test_set") {

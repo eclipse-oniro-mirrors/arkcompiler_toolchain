@@ -23,12 +23,6 @@ class JsSingleStepTest : public TestEvents {
 public:
     JsSingleStepTest()
     {
-        vmStart = [this] {
-            locationStart_ = TestUtil::GetLocation(19, 0, pandaFile_.c_str());  // 19: line number
-            locationEnd_ = TestUtil::GetLocation(22, 0, pandaFile_.c_str());  // 22: line number
-            return true;
-        };
-
         vmDeath = [this]() {
             ASSERT_NE(stepCounter_, 0);  // 0: step counter
             ASSERT_EQ(breakpointCounter_, 2);  // 2: break point counter
@@ -36,6 +30,8 @@ public:
         };
 
         loadModule = [this](std::string_view moduleName) {
+            locationStart_ = TestUtil::GetLocation(19, 0, pandaFile_.c_str());  // 19: line number
+            locationEnd_ = TestUtil::GetLocation(22, 0, pandaFile_.c_str());  // 22: line number
             TestUtil::SuspendUntilContinue(DebugEvent::LOAD_MODULE);
             ASSERT_EQ(moduleName, pandaFile_);
             auto condFuncRef = FunctionRef::Undefined(vm_);

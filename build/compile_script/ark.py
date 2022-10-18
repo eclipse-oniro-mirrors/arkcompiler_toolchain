@@ -153,7 +153,7 @@ def Get_templete(args_list):
     else:
         is_debug = "is_debug = false"
     all_part = (is_debug + "\n" + target_os + "\n" + target_cpu) 
-    return [global_arche, global_mode, global_target, global_clean, USER_ARGS_TEMPLATE%(all_part), global_test]
+    return [global_arche, global_mode, global_target, global_clean, USER_ARGS_TEMPLATE % (all_part), global_test]
 
 
 def Build(template):

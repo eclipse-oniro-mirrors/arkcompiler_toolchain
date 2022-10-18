@@ -540,7 +540,7 @@ ohos_shared_library("shared_icuuc") {
   relative_install_dir = "platformsdk"
   output_name = "hmicuuc"
   install_enable = true
-  cflags_cc += ["-fPIC"]
+  cflags_cc += [ "-fPIC" ]
 }
 
 ohos_shared_library("shared_icui18n") {

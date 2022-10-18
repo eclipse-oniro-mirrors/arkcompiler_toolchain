@@ -23,16 +23,6 @@ class JsStepOverTest : public TestEvents {
 public:
     JsStepOverTest()
     {
-        vmStart = [this] {
-            // 24、27: line number for breakpoint array
-            size_t breakpoint[8][2] = {{24, 0}, {27, 0}, {36, 0}, {50, 0}, {60, 0}, {90, 0}, {96, 0}, {54, 0}};
-            // 25、28: line number for stepinto array
-            size_t stepOver[7][2] = {{25, 5}, {28, 0}, {37, 0}, {51, 0}, {61, 0}, {91, 5}, {97, 15}};
-            SetJSPtLocation(breakpoint[0], POINTER_SIZE, pointerLocations_);
-            SetJSPtLocation(stepOver[0], STEP_SIZE, stepLocations_);
-            return true;
-        };
-
         vmDeath = [this]() {
             ASSERT_EQ(breakpointCounter_, pointerLocations_.size());  // size: break point counter
             ASSERT_EQ(stepCompleteCounter_, stepLocations_.size());  // size: step complete counter
@@ -40,6 +30,12 @@ public:
         };
 
         loadModule = [this](std::string_view moduleName) {
+            // 24、27: line number for breakpoint array
+            size_t breakpoint[8][2] = {{24, 0}, {27, 0}, {36, 0}, {50, 0}, {60, 0}, {90, 0}, {96, 0}, {54, 0}};
+            // 25、28: line number for stepinto array
+            size_t stepOver[7][2] = {{25, 5}, {28, 0}, {37, 0}, {51, 0}, {61, 0}, {91, 5}, {97, 15}};
+            SetJSPtLocation(breakpoint[0], POINTER_SIZE, pointerLocations_);
+            SetJSPtLocation(stepOver[0], STEP_SIZE, stepLocations_);
             TestUtil::SuspendUntilContinue(DebugEvent::LOAD_MODULE);
             ASSERT_EQ(moduleName, pandaFile_);
             debugger_->NotifyScriptParsed(0, moduleName.data());
