@@ -1,9 +1,9 @@
-# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Copyright (c) 2021 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,7 +19,10 @@ config("icu_config") {
     "//third_party/icu/icu4c/source/i18n",
     "//third_party/icu/icu4c/source",
   ]
-  cflags_cc = [ "-fPIC" ]
+}
+
+config("static_icustubdata_all_deps_config") {
+  include_dirs = [ "//third_party/icu/icu4c/source/common" ]
 }
 
 ohos_static_library("static_icustubdata") {
@@ -42,6 +45,13 @@ ohos_static_library("static_icustubdata") {
   output_dir = "${root_out_dir}/third_party/icu/stubdata"
   output_name = "stubdata"
 }
+
+# ohos_prebuilt_etc("ohos_icudat") {
+#   source = "//third_party/icu/ohos_icu4j/data/icudt69l.dat"
+#   module_install_dir = "usr/ohos_icu/"
+#   part_name = "icu"
+#   subsystem_name = "thirdparty"
+# }
 
 icu_common_source = [
   "//third_party/icu/icu4c/source/common/ubiditransform.cpp",
@@ -370,8 +380,15 @@ icu_i18n_source = [
   "//third_party/icu/icu4c/source/i18n/reldtfmt.cpp",
   "//third_party/icu/icu4c/source/i18n/nultrans.cpp",
   "//third_party/icu/icu4c/source/i18n/number_grouping.cpp",
+  "//third_party/icu/icu4c/source/i18n/number_symbolswrapper.cpp",
+  "//third_party/icu/icu4c/source/i18n/number_usageprefs.cpp",
+  "//third_party/icu/icu4c/source/i18n/numrange_capi.cpp",
+  "//third_party/icu/icu4c/source/i18n/pluralranges.cpp",
+  "//third_party/icu/icu4c/source/i18n/units_complexconverter.cpp",
+  "//third_party/icu/icu4c/source/i18n/units_converter.cpp",
+  "//third_party/icu/icu4c/source/i18n/units_data.cpp",
+  "//third_party/icu/icu4c/source/i18n/units_router.cpp",
   "//third_party/icu/icu4c/source/i18n/rbt_pars.cpp",
-  "//third_party/icu/icu4c/source/i18n/nounit.cpp",
   "//third_party/icu/icu4c/source/i18n/winnmfmt.cpp",
   "//third_party/icu/icu4c/source/i18n/uregexc.cpp",
   "//third_party/icu/icu4c/source/i18n/fpositer.cpp",
@@ -484,6 +501,7 @@ ohos_shared_library("shared_icuuc") {
     ":icu_config",
     "$build_root/config/compiler:rtti",
   ]
+  all_dependent_configs = [ ":static_icustubdata_all_deps_config" ]
   deps = [ ":static_icustubdata" ]
   defines = [
     "U_ATTRIBUTE_DEPRECATED=",
@@ -511,7 +529,18 @@ ohos_shared_library("shared_icuuc") {
     "-shared",
     "-lm",
   ]
+  if (is_standard_system) {
+    part_name = "icu"
+    subsystem_name = "thirdparty"
+  } else {
+    part_name = "i18n"
+    subsystem_name = "global"
+  }
+  install_images = [ system_base_dir ]
+  relative_install_dir = "platformsdk"
   output_name = "hmicuuc"
+  install_enable = true
+  cflags_cc += [ "-fPIC" ]
 }
 
 ohos_shared_library("shared_icui18n") {
@@ -551,7 +580,17 @@ ohos_shared_library("shared_icui18n") {
     cflags_cc += [ "-fPIC" ]
     ldflags += [ "-ldl" ]
   }
+  if (is_standard_system) {
+    part_name = "icu"
+    subsystem_name = "thirdparty"
+  } else {
+    part_name = "i18n"
+    subsystem_name = "global"
+  }
+  install_images = [ system_base_dir ]
+  relative_install_dir = "platformsdk"
   output_name = "hmicui18n"
+  install_enable = true
 }
 
 ohos_static_library("static_icuuc") {

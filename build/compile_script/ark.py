@@ -33,7 +33,7 @@ MODES = ["release", "debug"]
 DEFAULT_MODES = "release"
 TARGETS = ["ark_js_vm"]
 DEFAULT_TARGETS = "all"
-TARGETS_TEST = ["-test262"]
+TARGETS_TEST = ["test262"]
 
 
 USER_ARGS_TEMPLATE = """\
@@ -53,7 +53,7 @@ for example , python ark.py x64.release
 target: only support ark_js_vm and all now
 clean: clear your data in output dir
 [test] 
--test262: run test262
+test262: run test262
 """
 
 def PrintHelp():
@@ -110,7 +110,7 @@ def Get_args(argvs):
         PrintHelp()
     elif args_len == 1:
         args_out = args_list
-        if "-help" in args_out:
+        if "--help" in args_out:
             PrintHelp()
     else :
         args_out = args_list
@@ -180,9 +180,10 @@ def Build(template):
     if not os.path.exists("build.ninja"):
         build_ninja = os.path.join(path, "build.ninja")
         code = _Call("./prebuilts/build-tools/linux-x86/bin/gn gen %s" % path)
-        print("=== gn success! ===")
         if code != 0:
             return code  
+        else:
+            print("=== gn success! ===")
     pass_code = _CallWithOutput("./prebuilts/build-tools/linux-x86/bin/ninja -C %s %s" %
                                           (path, target), build_log)
     if pass_code == 0:
@@ -195,10 +196,10 @@ def RunTest(template):
     mode = template[1]
     test = template[5]
     test_dir = arch + "." + mode 
-    test262_code = '''cd ets_frontend
-    python3 test262/run_test262.py --es2021 all --timeout 180000 --libs-dir ../out/%s:../prebuilts/clang/ohos/linux-x86_64/llvm/lib --ark-tool=../out/%s/arkcompiler/ets_runtime/ark_js_vm --ark-frontend-binary=../out/%s/clang_x64/arkcompiler/ets_frontend/es2abc --merge-abc-binary=../out/%s/clang_x64/arkcompiler/ets_frontend/merge_abc --ark-frontend=es2panda
-    ''' % (test_dir, test_dir, test_dir, test_dir)
-    if ("-test262" == test):
+    test262_code = '''cd arkcompiler/ets_frontend
+    python3 test262/run_test262.py --es2021 all --timeout 180000 --libs-dir ../../out/%s:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib --ark-tool=../../out/%s/ark/ark_js_runtime/ark_js_vm --ark-frontend-binary=../../out/%s/clang_x64/ark/ark/es2abc --merge-abc-binary=../../out/%s/ark/ark/merge_abc --ark-frontend=es2panda
+    '''%(test_dir, test_dir, test_dir, test_dir)
+    if ("test262" == test):
         print("=== come to test ===")
         return _Call(test262_code)
     else:

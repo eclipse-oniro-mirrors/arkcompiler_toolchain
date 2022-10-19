@@ -15,7 +15,7 @@ declare_args() {
   another_path = true
   ark_standalone_build = true
   use_musl = false
-  build_root = "//toolchain/build"
+  build_root = "//arkcompiler/toolchain/build"
 }
 
 if (target_os == "") {
@@ -52,7 +52,7 @@ declare_args() {
 declare_args() {
   host_toolchain = ""
   custom_toolchain = ""
-  is_standard_system = false
+  is_standard_system = true
 
   is_clang = current_os != "linux" ||
              (current_cpu != "s390x" && current_cpu != "s390" &&

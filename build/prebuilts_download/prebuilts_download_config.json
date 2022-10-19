@@ -1,16 +1,16 @@
 {
-  "prebuilts_download_dir": "../../OpenHarmony_canary_prebuilts",
-  "npm_install_path": ["ets_frontend/ts2panda"],
+  "prebuilts_download_dir": "../OpenHarmony_canary_prebuilts",
+  "npm_install_path": ["arkcompiler/ets_frontend/ts2panda"],
   "node_modules_copy": [
     {
-      "src": "ets_frontend/ts2panda/node_modules",
+      "src": "arkcompiler/ets_frontend/ts2panda/node_modules",
       "dest": "prebuilts/build-tools/common/ts2abc/node_modules",
       "use_symlink": "True"
     }
   ],
   "file_handle_config": [
     {
-      "src": "/prebuilts/clang/ohos/linux-x86_64/clang-971024-20220827",
+      "src": "/prebuilts/clang/ohos/linux-x86_64/clang_linux-x86_64-942740-20220927",
       "dest": "/prebuilts/clang/ohos/linux-x86_64/llvm",
       "symlink_src": "/lib/clang/12.0.1",
       "symlink_dest": "/lib/clang/current"
@@ -31,7 +31,7 @@
         },
         {
           "unzip_dir": "prebuilts/ark_tools",
-          "file_path": "/openharmony/compiler/llvm_prebuilt_libs/ark_js_prebuilts_20220815.tar.gz",
+          "file_path": "/openharmony/compiler/llvm_prebuilt_libs/ark_js_prebuilts_20220923.tar.gz",
           "unzip_filename": "ark_js_prebuilts"
         },
         {
@@ -43,7 +43,7 @@
       "linux_copy_config": [
         {
           "unzip_dir": "prebuilts/clang/ohos/linux-x86_64",
-          "file_path": "/openharmony/compiler/clang/12.0.1-971024/linux/clang-971024-linux-x86_64-20220827.tar.bz2",
+          "file_path": "/openharmony/compiler/clang/12.0.1-942740/linux/clang_linux-x86_64-942740-20220927.tar.bz2",
           "unzip_filename": "llvm"
         }
       ]

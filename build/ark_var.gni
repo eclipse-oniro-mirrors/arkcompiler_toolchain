@@ -14,4 +14,7 @@
 declare_args() {
   # build version
   build_public_version = true
+
+  # system package dir
+  system_base_dir = "system"
 }
