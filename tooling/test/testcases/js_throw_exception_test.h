@@ -56,7 +56,8 @@ public:
         };
 
         loadModule = [this](std::string_view moduleName) {
-            location_ = TestUtil::GetLocation(28, 0, pandaFile_.c_str()); // 28: breakpointer line
+            // 28: breakpointer line
+            location_ = TestUtil::GetLocation(sourceFile_.c_str(), 28, 0, pandaFile_.c_str());
             std::cout<<"vmStart1"<<std::endl;
             ASSERT_TRUE(location_.GetMethodId().IsValid());
             std::cout<<"vmStart2"<<std::endl;
@@ -96,7 +97,9 @@ public:
     ~JsThrowExceptionTest() = default;
 
 private:
-    std::string pandaFile_ = DEBUGGER_ABC_DIR "throw_exception.abc";
+    const std::string testFile = "throw_exception";
+    std::string pandaFile_ = DEBUGGER_ABC_DIR + testFile + ".abc";
+    std::string sourceFile_ = DEBUGGER_JS_DIR + testFile + ".js";
     std::string entryPoint_ = "_GLOBAL::func_main_0";
     JSPtLocation location_ {nullptr, JSPtLocation::EntityId(0), 0};
     size_t breakpointCounter_ = 0;

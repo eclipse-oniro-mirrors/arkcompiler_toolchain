@@ -32,7 +32,8 @@ public:
         };
 
         loadModule = [this](std::string_view moduleName) {
-            location_ = TestUtil::GetLocation(18, 0, pandaFile_.c_str()); // 18: breakpointer line
+            // 18: breakpointer line
+            location_ = TestUtil::GetLocation(sourceFile_.c_str(), 18, 0, pandaFile_.c_str());
             ASSERT_TRUE(location_.GetMethodId().IsValid());
             TestUtil::SuspendUntilContinue(DebugEvent::LOAD_MODULE);
             ASSERT_EQ(moduleName, pandaFile_);
@@ -68,6 +69,7 @@ public:
 
 private:
     std::string pandaFile_ = DEBUGGER_ABC_DIR "arrow_func.abc";
+    std::string sourceFile_ = DEBUGGER_JS_DIR "arrow_func.js";
     std::string entryPoint_ = "_GLOBAL::func_main_0";
     JSPtLocation location_ {nullptr, JSPtLocation::EntityId(0), 0};
     size_t breakpointCounter_ = 0;

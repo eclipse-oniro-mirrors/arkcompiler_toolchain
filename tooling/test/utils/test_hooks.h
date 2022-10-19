@@ -25,12 +25,13 @@ class TestHooks : public PtHooks {
 public:
     TestHooks(const std::string &testName, const EcmaVM *vm) : vm_(vm)
     {
-        runtime_ = std::make_unique<RuntimeImpl>(vm, nullptr);
-        debugger_ = std::make_unique<DebuggerImpl>(vm, nullptr, runtime_.get());
         testName_ = testName;
         test_ = TestUtil::GetTest(testName);
+        runtime_ = std::make_unique<RuntimeImpl>(vm, test_->channel_);
+        debugger_ = std::make_unique<DebuggerImpl>(vm, test_->channel_, runtime_.get());
         test_->vm_ = vm;
         test_->debugger_ = debugger_.get();
+        test_->runtime_ = runtime_.get();
         test_->debugInterface_ = debugger_->jsDebugger_;
         debugInterface_ = debugger_->jsDebugger_;
         TestUtil::Reset();

@@ -1039,17 +1039,17 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
     bool hasThis = false;
     for (const auto &[varName, regIndex] : extractor->GetLocalVariableTable(methodId)) {
         value = DebuggerApi::GetVRegValue(vm_, frameHandler, regIndex);
-        if (varName == "4newTarget") {
+        if (varName == "4newTarget" || varName == "=nt") {
             continue;
         }
 
-        if (varName == "this") {
+        if (varName == "this" || varName == "=t") {
             thisVal = value;
             hasThis = true;
             continue;
         }
         Local<JSValueRef> name = JSValueRef::Undefined(vm_);
-        if (varName == "4funcObj") {
+        if (varName == "4funcObj" || varName == "=f") {
             if (value->IsFunction()) {
                 auto funcName = Local<FunctionRef>(value)->GetName(vm_)->ToString();
                 name = StringRef::NewFromUtf8(vm_, funcName.c_str());
@@ -1075,12 +1075,12 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
         JSThread *thread = vm_->GetJSThread();
         for (const auto &[varName, slot] : scopeDebugInfo->scopeInfo) {
             // skip possible duplicate variables both in local variable table and env
-            if (varName == "4newTarget") {
+            if (varName == "4newTarget" || varName == "=nt") {
                 continue;
             }
             value = JSNApiHelper::ToLocal<JSValueRef>(
                 JSHandle<JSTaggedValue>(thread, lexEnv->GetProperties(slot)));
-            if (varName == "this") {
+            if (varName == "this" || varName == "=t") {
                 if (!hasThis) {
                     thisVal = value;
                 }

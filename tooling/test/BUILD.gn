@@ -45,6 +45,7 @@ test_js_files = [
   "step",
   "syntax_exception",
   "throw_exception",
+  "variable",
 ]
 
 foreach(file, test_js_files) {
@@ -103,8 +104,12 @@ source_set("jsdebugtest_set") {
   if (target_toolchain == host_toolchain) {
     test_abc_dir = rebase_path(target_out_dir)
   }
+  test_js_dir = rebase_path(test_js_path)
 
-  defines = [ "DEBUGGER_ABC_DIR=\"${test_abc_dir}/\"" ]
+  defines = [
+    "DEBUGGER_ABC_DIR=\"${test_abc_dir}/\"",
+    "DEBUGGER_JS_DIR=\"${test_js_dir}\"",
+  ]
 
   if (is_ohos && is_standard_system) {
     if (enable_hilog) {
