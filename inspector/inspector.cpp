@@ -23,6 +23,10 @@
 #include "log_wrapper.h"
 #include "library_loader.h"
 
+#if defined(IOS_PLATFORM)
+#include "tooling/debugger_service.h"
+#endif
+
 namespace OHOS::ArkCompiler::Toolchain {
 namespace {
 enum DispatchStatus : int32_t {
@@ -49,15 +53,19 @@ std::atomic<bool> g_hasArkFuncsInited = false;
 std::unordered_map<const void*, Inspector*> g_inspectors;
 std::shared_mutex g_mutex;
 
+#if !defined(IOS_PLATFORM)
 thread_local void* g_handle = nullptr;
+#endif
 thread_local void* g_vm = nullptr;
 
+#if !defined(IOS_PLATFORM)
 #if defined(WINDOWS_PLATFORM)
 constexpr char ARK_DEBUGGER_SHARED_LIB[] = "libark_ecma_debugger.dll";
 #elif defined(MAC_PLATFORM)
 constexpr char ARK_DEBUGGER_SHARED_LIB[] = "libark_ecma_debugger.dylib";
 #else
 constexpr char ARK_DEBUGGER_SHARED_LIB[] = "libark_ecma_debugger.so";
+#endif
 #endif
 
 void* HandleClient(void* const server)
@@ -71,6 +79,7 @@ void* HandleClient(void* const server)
     return nullptr;
 }
 
+#if !defined(IOS_PLATFORM)
 bool LoadArkDebuggerLibrary()
 {
     if (g_handle != nullptr) {
@@ -88,6 +97,7 @@ void* GetArkDynFunction(const char* symbol)
 {
     return ResolveSymbol(g_handle, symbol);
 }
+#endif
 
 void SendReply(const void* vm, const std::string& message)
 {
@@ -109,10 +119,12 @@ void ResetServiceLocked()
         iter->second = nullptr;
         g_inspectors.erase(iter);
     }
+#if !defined(IOS_PLATFORM)
     if (g_handle != nullptr) {
         CloseHandle(g_handle);
         g_handle = nullptr;
     }
+#endif
 }
 
 bool InitializeInspector(void* vm, const std::string& componentName, int32_t instanceId,
@@ -158,6 +170,7 @@ bool InitializeArkFunctions()
     if (g_hasArkFuncsInited) {
         return true;
     }
+#if !defined(IOS_PLATFORM)
     g_initializeDebugger = reinterpret_cast<InitializeDebugger>(
         GetArkDynFunction("InitializeDebugger"));
     if (g_initializeDebugger == nullptr) {
@@ -194,6 +207,15 @@ bool InitializeArkFunctions()
         ResetServiceLocked();
         return false;
     }
+#else
+    using namespace panda::ecmascript;
+    g_initializeDebugger = reinterpret_cast<InitializeDebugger>(&tooling::InitializeDebugger);
+    g_uninitializeDebugger = reinterpret_cast<UninitializeDebugger>(&tooling::UninitializeDebugger);
+    g_waitForDebugger = reinterpret_cast<WaitForDebugger>(&tooling::WaitForDebugger);
+    g_onMessage = reinterpret_cast<OnMessage>(&tooling::OnMessage);
+    g_getDispatchStatus = reinterpret_cast<GetDispatchStatus>(&tooling::GetDispatchStatus);
+    g_processMessage = reinterpret_cast<ProcessMessage>(&tooling::ProcessMessage);
+#endif
 
     g_hasArkFuncsInited = true;
     return true;
@@ -231,9 +253,11 @@ bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode, in
     const DebuggerPostTask& debuggerPostTask)
 {
     g_vm = vm;
+#if !defined(IOS_PLATFORM)
     if (!LoadArkDebuggerLibrary()) {
         return false;
     }
+#endif
     if (!InitializeArkFunctions()) {
         LOGE("Initialize ark functions failed");
         return false;
