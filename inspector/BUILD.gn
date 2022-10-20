@@ -25,6 +25,35 @@ config("ark_debugger_config") {
   ]
 }
 
+config("ark_platform_config") {
+  defines = []
+  if (is_ohos) {
+    defines += [
+      "OHOS_PLATFORM",
+      "UNIX_PLATFORM",
+    ]
+  } else if (is_mingw) {
+    defines += [ "WINDOWS_PLATFORM" ]
+  } else if (is_mac) {
+    defines += [
+      "MAC_PLATFORM",
+      "UNIX_PLATFORM",
+    ]
+  } else if (target_os == "android") {
+    defines += [
+      "ANDROID_PLATFORM",
+      "UNIX_PLATFORM",
+    ]
+  } else if (target_os == "ios") {
+    defines += [
+      "UNIX_PLATFORM",
+      "IOS_PLATFORM",
+    ]
+  } else {
+    defines += [ "UNIX_PLATFORM" ]
+  }
+}
+
 ohos_shared_library("ark_debugger") {
   deps = [ ":ark_debugger_static" ]
 
@@ -62,26 +91,6 @@ ohos_source_set("ark_debugger_static") {
 
   if (is_mingw || is_mac) {
     cflags = [ "-std=c++17" ]
-    if (is_mingw) {
-      defines += [ "WINDOWS_PLATFORM" ]
-    } else {
-      defines += [
-        "MAC_PLATFORM",
-        "UNIX_PLATFORM",
-      ]
-    }
-  } else if (target_os == "android") {
-    defines += [
-      "ANDROID_PLATFORM",
-      "UNIX_PLATFORM",
-    ]
-  } else if (target_os == "ios") {
-    defines += [
-      "UNIX_PLATFORM",
-      "IOS_PLATFORM",
-    ]
-  } else {
-    defines += [ "UNIX_PLATFORM" ]
   }
 
   include_dirs = [
@@ -109,5 +118,8 @@ ohos_source_set("ark_debugger_static") {
         [ "//base/hiviewdfx/hilog/interfaces/native/innerkits/include" ]
   }
 
-  configs = [ ":ark_debugger_config" ]
+  configs = [
+    ":ark_debugger_config",
+    ":ark_platform_config",
+  ]
 }
