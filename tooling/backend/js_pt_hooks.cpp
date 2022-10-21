@@ -24,7 +24,7 @@ void JSPtHooks::Breakpoint(const JSPtLocation &location)
                          << location.GetBytecodeOffset();
 
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
-    debugger_->NotifyPaused(location, INSTRUMENTATION);
+    debugger_->NotifyPaused(location, OTHER);
 }
 
 void JSPtHooks::Exception([[maybe_unused]] const JSPtLocation &location)
