@@ -18,8 +18,6 @@
 from __future__ import print_function
 import errno
 import os
-import platform
-import re
 import subprocess
 import sys
 
@@ -31,8 +29,8 @@ ARCHES = ["x64", "arm", "arm64"]
 DEFAULT_ARCHES = "x64"
 MODES = ["release", "debug"]
 DEFAULT_MODES = "release"
-TARGETS = ["ark_js_vm"]
-DEFAULT_TARGETS = "all"
+TARGETS = ["ets_runtime", "ets_frontend", "default", "all"]
+DEFAULT_TARGETS = "default"
 TARGETS_TEST = ["test262"]
 
 
@@ -45,15 +43,15 @@ OUTDIR = "out"
 
 
 Help_message = """
-formot like python ark.py [arch].[mode].[options] [test]
+formot like python ark.py [arch].[mode] [options] [test]
 for example , python ark.py x64.release
 [arch] can be one of ["x64", "arm", "arm64"]  
 [mode] can be one of ["release", "debug"]
 [options]
-target: only support ark_js_vm and all now
-clean: clear your data in output dir
+  target: only support [ets_runtime | ets_frontend | default | all] now
+  clean: clear your data in output dir
 [test] 
-test262: run test262
+  test262: run test262
 """
 
 def PrintHelp():
@@ -138,6 +136,7 @@ def Get_templete(args_list):
                 global_test = part
             else:
                 print("\033[34mUnkown word: %s\033[0m" % part)
+                PrintHelp()
                 sys.exit(1)
 # Determine the target CPU
     if global_arche in ("arm", "arm64"):
@@ -173,6 +172,7 @@ def Build(template):
         if code != 0:
             return code
         print("=== clean success! ===")
+        exit(0)
     build_log = os.path.join(path, "build.log")
     if not os.path.exists("args.gn"):
         args_gn = os.path.join(path, "args.gn")
