@@ -26,10 +26,18 @@ print("target_os=$target_os,    target_cpu=$target_cpu")
 print()
 
 group("default") {
-  deps = [
-    ":ets_frontend",
-    ":ets_runtime",
-  ]
+  if (host_os != "mac") {
+    deps = [ ":linux_packages" ]
+  }
+}
+
+group("linux_packages") {
+  if (host_os != "mac") {
+    deps = [
+      ":ets_frontend($host_toolchain)",
+      ":ets_runtime($host_toolchain)",
+    ]
+  }
 }
 
 group("ets_runtime") {

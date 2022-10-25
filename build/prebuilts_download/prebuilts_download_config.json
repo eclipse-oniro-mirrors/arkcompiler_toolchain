@@ -1,13 +1,5 @@
 {
   "prebuilts_download_dir": "../OpenHarmony_canary_prebuilts",
-  "npm_install_path": ["arkcompiler/ets_frontend/ts2panda"],
-  "node_modules_copy": [
-    {
-      "src": "arkcompiler/ets_frontend/ts2panda/node_modules",
-      "dest": "prebuilts/build-tools/common/ts2abc/node_modules",
-      "use_symlink": "True"
-    }
-  ],
   "file_handle_config": [
     {
       "src": "/prebuilts/clang/ohos/linux-x86_64/clang_linux-x86_64-942740-20220927",
@@ -33,11 +25,6 @@
           "unzip_dir": "prebuilts/ark_tools",
           "file_path": "/openharmony/compiler/llvm_prebuilt_libs/ark_js_prebuilts_20220923.tar.gz",
           "unzip_filename": "ark_js_prebuilts"
-        },
-        {
-          "unzip_dir": "prebuilts/build-tools/common/nodejs",
-          "file_path": "/nodejs/v12.18.4/node-v12.18.4-linux-x64.tar.gz",
-          "unzip_filename": "node-v12.18.4-linux-x64"
         }
       ],
       "linux_copy_config": [

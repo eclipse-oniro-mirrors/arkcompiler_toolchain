@@ -197,7 +197,7 @@ def RunTest(template):
     test = template[5]
     test_dir = arch + "." + mode 
     test262_code = '''cd arkcompiler/ets_frontend
-    python3 test262/run_test262.py --es2021 all --timeout 180000 --libs-dir ../../out/%s:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib --ark-tool=../../out/%s/ark/ark_js_runtime/ark_js_vm --ark-frontend-binary=../../out/%s/clang_x64/ark/ark/es2abc --merge-abc-binary=../../out/%s/ark/ark/merge_abc --ark-frontend=es2panda
+    python3 test262/run_test262.py --es2021 all --timeout 180000 --libs-dir ../../out/%s/clang_x64/thirdparty/icu:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib --ark-tool=../../out/%s/clang_x64/arkcompiler/ets_runtime/ark_js_vm --ark-frontend-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/es2abc --merge-abc-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/merge_abc --ark-frontend=es2panda
     '''%(test_dir, test_dir, test_dir, test_dir)
     if ("test262" == test):
         print("=== come to test ===")
