@@ -101,7 +101,7 @@ stamp_description = "STAMP {{output}}"
 copy_description = "COPY {{source}} {{output}}"
 if (host_os == "win") {
   _tool_wrapper_path =
-      rebase_path("//build/toolchain/win/tool_wrapper.py", root_build_dir)
+      rebase_path("$build_root/toolchain/win/tool_wrapper.py", root_build_dir)
   stamp_command = "cmd /c type nul > \"{{output}}\""
   copy_command =
       "$python_path $_tool_wrapper_path recursive-mirror {{source}} {{output}}"

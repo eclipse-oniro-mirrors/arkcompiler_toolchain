@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//arkcompiler/ets_frontend/ts2panda/ts2abc_config.gni")
+import("//arkcompiler/ets_frontend/es2panda/es2abc_config.gni")
 import("//arkcompiler/ets_runtime/js_runtime_config.gni")
 
 print("root_out_dir=$root_out_dir")
@@ -25,10 +25,20 @@ print("target_os=$target_os,    target_cpu=$target_cpu")
 
 print()
 
-group("ark_js_packages") {
+group("default") {
+  deps = [
+    ":ets_frontend",
+    ":ets_runtime",
+  ]
+}
+
+group("ets_runtime") {
   deps = [ "//arkcompiler/ets_runtime/ecmascript/js_vm:ark_js_vm" ]
 }
 
-group("ark_es2abc") {
-  deps = [ "//arkcompiler/ets_frontend/es2panda:es2panda" ]
+group("ets_frontend") {
+  deps = [
+    "//arkcompiler/ets_frontend/es2panda:es2panda",
+    "//arkcompiler/ets_frontend/merge_abc:merge_abc",
+  ]
 }
