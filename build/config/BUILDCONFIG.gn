@@ -12,7 +12,6 @@
 # limitations under the License.
 
 declare_args() {
-  another_path = true
   ark_standalone_build = true
   use_musl = false
   build_root = "//arkcompiler/toolchain/build"
