@@ -17,11 +17,14 @@
 
 #include <fstream>
 #include <iostream>
+#include <shared_mutex>
 #include <sys/types.h>
 
 #include "hilog_wrapper.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
+std::shared_mutex g_mutex;
+
 void WsServer::RunServer()
 {
     terminateExecution_ = false;
@@ -99,6 +102,7 @@ void WsServer::StopServer()
 
 void WsServer::SendReply(const std::string& message) const
 {
+    std::unique_lock<std::shared_mutex> lock(g_mutex);
     if (webSocket_ == nullptr) {
         LOGE("WsServer SendReply websocket has been closed unexpectedly");
         return;
