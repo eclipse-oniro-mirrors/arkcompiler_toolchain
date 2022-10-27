@@ -15,10 +15,5 @@ group("fuzztest") {
   testonly = true
   deps = []
 
-  deps += [
-    "agent:fuzztest",
-    "backend:fuzztest",
-    "dispatchprotocolmessage_fuzzer:fuzztest",
-    "initializedebugger_fuzzer:fuzztest",
-  ]
+  deps += [ "heapprofiler:fuzztest" ]
 }
