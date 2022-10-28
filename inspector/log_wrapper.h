@@ -16,7 +16,7 @@
 #ifndef ARKCOMPILER_TOOLCHAIN_INSPECTOR_LOG_WRAPPER_H
 #define ARKCOMPILER_TOOLCHAIN_INSPECTOR_LOG_WRAPPER_H
 
-#if !defined(ANDROID_PLATFORM)
+#if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM)
 #include "hilog/log.h"
 #endif
 
@@ -37,7 +37,7 @@ namespace OHOS::ArkCompiler::Toolchain {
 #undef LOGD
 #endif
 
-#if defined(ANDROID_PLATFORM)
+#if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
 enum class LogLevel {
     UNKNOWN,
     DEFAULT,
@@ -48,10 +48,10 @@ enum class LogLevel {
     ERROR,
     FATAL
 };
-class AndroidLog {
+class StdLog {
 public:
-    AndroidLog() = default;
-    ~AndroidLog() = default;
+    StdLog() = default;
+    ~StdLog() = default;
 
     static void PrintLog(LogLevel level, const char* fmt, ...);
 };
@@ -63,12 +63,12 @@ static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {
 };
 #endif
 
-#if defined(ANDROID_PLATFORM)
-#define LOGF(fmt, ...) AndroidLog::PrintLog(LogLevel::FATAL, fmt, ##__VA_ARGS__)
-#define LOGE(fmt, ...) AndroidLog::PrintLog(LogLevel::ERROR, fmt, ##__VA_ARGS__)
-#define LOGW(fmt, ...) AndroidLog::PrintLog(LogLevel::WARN, fmt, ##__VA_ARGS__)
-#define LOGI(fmt, ...) AndroidLog::PrintLog(LogLevel::INFO, fmt, ##__VA_ARGS__)
-#define LOGD(fmt, ...) AndroidLog::PrintLog(LogLevel::DEBUG, fmt, ##__VA_ARGS__)
+#if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM)
+#define LOGF(fmt, ...) StdLog::PrintLog(LogLevel::FATAL, fmt, ##__VA_ARGS__)
+#define LOGE(fmt, ...) StdLog::PrintLog(LogLevel::ERROR, fmt, ##__VA_ARGS__)
+#define LOGW(fmt, ...) StdLog::PrintLog(LogLevel::WARN, fmt, ##__VA_ARGS__)
+#define LOGI(fmt, ...) StdLog::PrintLog(LogLevel::INFO, fmt, ##__VA_ARGS__)
+#define LOGD(fmt, ...) StdLog::PrintLog(LogLevel::DEBUG, fmt, ##__VA_ARGS__)
 #else
 #define LOGF(fmt, ...) OHOS::HiviewDFX::HiLog::Fatal(LABEL, fmt, ##__VA_ARGS__)
 #define LOGE(fmt, ...) OHOS::HiviewDFX::HiLog::Error(LABEL, fmt, ##__VA_ARGS__)

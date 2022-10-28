@@ -17,7 +17,7 @@
 #define ARKCOMPILER_TOOLCHAIN_INSPECTOR_WS_SERVER_H
 
 #include <boost/asio/error.hpp>
-#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
+#if !defined(OHOS_PLATFORM)
 #include <boost/asio/ip/tcp.hpp>
 #else
 #include <boost/asio/local/stream_protocol.hpp>
@@ -33,7 +33,7 @@
 namespace OHOS::ArkCompiler::Toolchain {
 namespace beast = boost::beast;
 namespace websocket = beast::websocket;
-#if defined(WINDOWS_PLATFORM) || defined(MAC_PLATFORM)
+#if !defined(OHOS_PLATFORM)
 using CommProtocol = boost::asio::ip::tcp;
 #else
 using CommProtocol = boost::asio::local::stream_protocol;

@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import("//arkcompiler/ets_frontend/es2panda/es2abc_config.gni")
-import("//arkcompiler/ets_frontend/ts2panda/ts2abc_config.gni")
 import("//arkcompiler/ets_runtime/js_runtime_config.gni")
 import("//arkcompiler/toolchain/test/test_helper.gni")
 import("//build/ohos.gni")

@@ -12,7 +12,7 @@
 # limitations under the License.
 
 if (defined(ark_standalone_build)) {
-  import("//profiler//build/config.gni")
+  import("//developtools/profiler//build/config.gni")
   import("$build_root/ark.gni")
 } else {
   import("//build/ohos.gni")
