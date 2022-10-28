@@ -48,5 +48,6 @@ group("ets_frontend") {
   deps = [
     "//arkcompiler/ets_frontend/es2panda:es2panda",
     "//arkcompiler/ets_frontend/merge_abc:merge_abc",
+    "//arkcompiler/ets_frontend/ts2panda:ts2abc_build",
   ]
 }

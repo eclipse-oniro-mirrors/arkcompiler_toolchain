@@ -179,6 +179,19 @@ def _npm_install(args, code_dir, unzip_dir, unzip_filename):
         if proc.returncode:
             raise Exception(err.decode())
 
+def _node_modules_copy(config, code_dir):
+    for config_info in config:
+        src_dir = os.path.join(code_dir, config_info.get('src'))
+        dest_dir = os.path.join(code_dir, config_info.get('dest'))
+        use_symlink = config_info.get('use_symlink')
+        if os.path.exists(os.path.dirname(dest_dir)):
+            shutil.rmtree(os.path.dirname(dest_dir))
+        if use_symlink == 'True':
+            os.makedirs(os.path.dirname(dest_dir))
+            os.symlink(src_dir, dest_dir)
+        else:
+            shutil.copytree(src_dir, dest_dir, symlinks=True)
+
 def _file_handle(config, code_dir):
     for config_info in config:
         src_dir = ''.join([code_dir, config_info.get('src')])
@@ -238,6 +251,7 @@ def main():
         copy_config.extend(darwin_copy_config)
     _hwcloud_download(args, copy_config, args.bin_dir, args.code_dir)
     _file_handle(file_handle_config, args.code_dir)
+    _node_modules_copy(node_modules_copy_config, args.code_dir)
 
 if __name__ == '__main__':
     sys.exit(main())
