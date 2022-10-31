@@ -15,15 +15,12 @@
 
 #include "log_wrapper.h"
 
+#include <string>
 #ifdef ANDROID_PLATFORM
 #include <android/log.h>
-#include <string>
 #endif
 
 namespace OHOS::ArkCompiler::Toolchain {
-#ifdef ANDROID_PLATFORM
-const char* tag = "ArkCompiler";
-
 void StripString(const std::string& prefix, std::string& str)
 {
     for (auto pos = str.find(prefix, 0); pos != std::string::npos; pos = str.find(prefix, pos)) {
@@ -38,14 +35,60 @@ std::string StripFormatString(const char* fmt)
     StripString("{private}", newFmt);
     return newFmt;
 }
-
-void AndroidLog::PrintLog(LogLevel level, const char* fmt, ...)
+#ifdef ANDROID_PLATFORM
+const char* tag = "ArkCompiler";
+void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
 {
     std::string formatted = StripFormatString(fmt);
     va_list args;
     va_start(args, fmt);
     __android_log_vprint(static_cast<int>(level), tag, formatted.c_str(), args);
     va_end(args);
+}
+#elif defined(IOS_PLATFORM)
+constexpr int32_t MAX_BUFFER_SIZE = 100;
+void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
+{
+    std::string formatted = StripFormatString(fmt);
+    va_list args;
+    va_start(args, fmt);
+
+    char buf[MAX_BUFFER_SIZE];
+    if (vsnprintf(buf, sizeof(buf), formatted.c_str(), args) < 0 && errno == EINVAL) {
+        return;
+    }
+    va_end(args);
+
+    char timeBuf[MAX_BUFFER_SIZE];
+    const char* domainTag = "[ArkCompiler Debugger]";
+    std::string levelTag;
+    switch (level) {
+        case LogLevel::FATAL:
+            levelTag = "[FATAL]";
+            break;
+        case LogLevel::ERROR:
+            levelTag = "[ERROR]";
+            break;
+        case LogLevel::WARN:
+            levelTag = "[WARN]";
+            break;
+        case LogLevel::INFO:
+            levelTag = "[INFO]";
+            break;
+        case LogLevel::DEBUG:
+            levelTag = "[DEBUG]";
+            break;
+        default:
+            levelTag = "[DEFAULT]";
+            break;
+    }
+
+    if (snprintf(timeBuf, sizeof(timeBuf), "%s",
+            domainTag, levelTag.c_str(), std::this_thread::get_id()) < 0) {
+        return;
+    }
+
+    printf("%s %s\r\n", timeBuf, buf);
 }
 #endif
 } // namespace OHOS::ArkCompiler::Toolchain

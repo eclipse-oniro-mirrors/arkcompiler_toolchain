@@ -25,7 +25,62 @@ config("ark_debugger_config") {
   ]
 }
 
+config("ark_platform_config") {
+  defines = []
+  if (is_ohos) {
+    defines += [
+      "OHOS_PLATFORM",
+      "UNIX_PLATFORM",
+    ]
+  } else if (is_mingw) {
+    defines += [ "WINDOWS_PLATFORM" ]
+  } else if (is_mac) {
+    defines += [
+      "MAC_PLATFORM",
+      "UNIX_PLATFORM",
+    ]
+  } else if (target_os == "android") {
+    defines += [
+      "ANDROID_PLATFORM",
+      "UNIX_PLATFORM",
+    ]
+  } else if (target_os == "ios") {
+    defines += [
+      "UNIX_PLATFORM",
+      "IOS_PLATFORM",
+    ]
+  } else {
+    defines += [ "UNIX_PLATFORM" ]
+  }
+}
+
 ohos_shared_library("ark_debugger") {
+  deps = [ ":ark_debugger_static" ]
+
+  if (is_mingw || is_mac) {
+    if (is_mingw) {
+      platform = "windows"
+      ldflags = [
+        "-lwsock32",
+        "-lws2_32",
+      ]
+    } else {
+      platform = "mac"
+    }
+    deps += [
+      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_$platform",
+    ]
+  } else if (target_os == "android") {
+    aosp_deps = [ "shared_library:liblog" ]
+  } else {
+    external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  }
+
+  part_name = "toolchain"
+  subsystem_name = "arkcompiler"
+}
+
+ohos_source_set("ark_debugger_static") {
   deps = []
   defines = [
     "BOOST_ERROR_CODE_HEADER_ONLY",
@@ -36,32 +91,6 @@ ohos_shared_library("ark_debugger") {
 
   if (is_mingw || is_mac) {
     cflags = [ "-std=c++17" ]
-    if (is_mingw) {
-      platform = "windows"
-      defines += [ "WINDOWS_PLATFORM" ]
-      ldflags = [
-        "-lwsock32",
-        "-lws2_32",
-      ]
-    } else {
-      platform = "mac"
-      defines += [
-        "MAC_PLATFORM",
-        "UNIX_PLATFORM",
-      ]
-    }
-    deps = [
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_$platform",
-    ]
-  } else if (target_os == "android") {
-    defines += [
-      "ANDROID_PLATFORM",
-      "UNIX_PLATFORM",
-    ]
-    aosp_deps = [ "shared_library:liblog" ]
-  } else {
-    external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
-    defines += [ "UNIX_PLATFORM" ]
   }
 
   include_dirs = [
@@ -77,10 +106,20 @@ ohos_shared_library("ark_debugger") {
   ]
   if (target_os == "android") {
     sources += [ "log_wrapper.cpp" ]
+  } else if (target_os == "ios") {
+    sources += [ "log_wrapper.cpp" ]
+    include_dirs += [
+      "//arkcompiler/toolchain",
+      "//arkcompiler/ets_runtime",
+      "//arkcompiler/runtime_core",
+    ]
+  } else {
+    include_dirs +=
+        [ "//base/hiviewdfx/hilog/interfaces/native/innerkits/include" ]
   }
 
-  configs = [ ":ark_debugger_config" ]
-
-  part_name = "toolchain"
-  subsystem_name = "arkcompiler"
+  configs = [
+    ":ark_debugger_config",
+    ":ark_platform_config",
+  ]
 }

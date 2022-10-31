@@ -62,7 +62,8 @@ DebuggerImpl::~DebuggerImpl()
 
 bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &fileName, std::string_view entryPoint)
 {
-#if !defined(PANDA_TARGET_WINDOWS) && !defined(PANDA_TARGET_MACOS) && !defined(PANDA_TARGET_ANDROID)
+#if !defined(PANDA_TARGET_WINDOWS) && !defined(PANDA_TARGET_MACOS) \
+    && !defined(PANDA_TARGET_ANDROID) && !defined(PANDA_TARGET_IOS)
     if (fileName.substr(0, DATA_APP_PATH.length()) != DATA_APP_PATH) {
         LOG_DEBUGGER(DEBUG) << "NotifyScriptParsed: unsupport file: " << fileName;
         return false;
