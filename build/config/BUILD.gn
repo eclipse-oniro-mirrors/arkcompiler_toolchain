@@ -16,7 +16,6 @@ config("complier_defaults") {
     cflags = [
       "-fPIC",
       "-pthread",
-      "-fno-rtti",
     ]
   }
 }
@@ -27,11 +26,7 @@ config("executable_ldconfig") {
       "-Wl,-rpath=\$ORIGIN/",
       "-Wl,-rpath-link=",
       "-fPIE",
-      "-ldl",
-      "-lpthread",
-      "-lrt",
-      "-lc++",
-      "-latomic",
+      "-pthread",
     ]
   }
 }
