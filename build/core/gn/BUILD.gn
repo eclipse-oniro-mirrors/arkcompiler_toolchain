@@ -17,6 +17,7 @@ import("//arkcompiler/ets_runtime/js_runtime_config.gni")
 print("root_out_dir=$root_out_dir")
 print("root_build_dir=$root_build_dir")
 print("root_gen_dir=$root_gen_dir")
+print("default_toolchain=$default_toolchain")
 print("current_toolchain=$current_toolchain")
 print("host_toolchain=$host_toolchain")
 print("current_os=$current_os,   current_cpu=$current_cpu")
@@ -36,12 +37,13 @@ group("linux_packages") {
     deps = [
       ":ets_frontend($host_toolchain)",
       ":ets_runtime($host_toolchain)",
+      ":runtime_core($host_toolchain)",
     ]
   }
 }
 
 group("ets_runtime") {
-  deps = [ "//arkcompiler/ets_runtime/ecmascript/js_vm:ark_js_vm" ]
+  deps = [ "//arkcompiler/ets_runtime:ark_js_packages" ]
 }
 
 group("ets_frontend") {
@@ -49,5 +51,12 @@ group("ets_frontend") {
     "//arkcompiler/ets_frontend/es2panda:es2panda",
     "//arkcompiler/ets_frontend/merge_abc:merge_abc",
     "//arkcompiler/ets_frontend/ts2panda:ts2abc_build",
+  ]
+}
+
+group("runtime_core") {
+  deps = [
+    "//arkcompiler/runtime_core/assembler:ark_asm",
+    "//arkcompiler/runtime_core/disassembler:ark_disasm",
   ]
 }
