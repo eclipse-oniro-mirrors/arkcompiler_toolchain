@@ -63,15 +63,13 @@ declare_args() {
 
   # Compile with Control Flow Integrity to protect virtual calls and casts.
   # See http://clang.llvm.org/docs/ControlFlowIntegrity.html
-  is_cfi = target_os == "linux" && !is_chromeos && target_cpu == "x64" &&
-           is_official_build
+  is_cfi = target_os == "linux" && target_cpu == "x64"
 
   # Enable checks for bad casts: derived cast and unrelated cast.
   use_cfi_cast = false
 
   # Enable checks for indirect function calls via a function pointer.
-  use_cfi_icall = target_os == "linux" && !is_chromeos && target_cpu == "x64" &&
-                  is_official_build
+  use_cfi_icall = target_os == "linux" && target_cpu == "x64"
 
   # Print detailed diagnostics when Control Flow Integrity detects a violation.
   use_cfi_diag = false

@@ -139,13 +139,12 @@ def Get_templete(args_list):
                 PrintHelp()
                 sys.exit(1)
 # Determine the target CPU
+    target_cpu = "target_cpu = \"%s\"" % global_arche
+# Determine the target CPU
     if global_arche in ("arm", "arm64"):
-        ARK_cpu = global_arche
+        ARK_os = "ohos"
     else:
-        ARK_cpu = "x64"
-    target_cpu = "target_cpu = \"%s\"" % ARK_cpu
-# Determine the target OS,Only ohos for now
-    ARK_os = "ohos"
+        ARK_os = "linux"
     target_os = "target_os = \"%s\"" % ARK_os
     if global_mode == "debug":
         is_debug = "is_debug = true"
@@ -214,9 +213,9 @@ def Main(argvs):
     if pass_code == 0:
         pass_code += RunTest(templete)
     if pass_code == 0:
-        print('\033[32mDone!\033[0m', '\033[32mARK_{} compilation finished successfully.\033[0m'.format(argvs[0].split('.')[0]))
+        print('\033[32mDone!\033[0m', '\033[32m{} compilation finished successfully.\033[0m'.format(argvs[0]))
     else:
-        print('\033[31mError!\033[0m', '\033[31mARK_{} compilation finished with errors.\033[0m'.format(argvs[0].split('.')[0]))
+        print('\033[31mError!\033[0m', '\033[31m{} compilation finished with errors.\033[0m'.format(argvs[0]))
     return pass_code  
 
 

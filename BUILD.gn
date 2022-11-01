@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import("//arkcompiler/toolchain/toolchain.gni")
-import("//build/ohos.gni")
 
 config("ark_toolchain_common_config") {
   defines = [ "PANDA_ENABLE_LTO" ]
