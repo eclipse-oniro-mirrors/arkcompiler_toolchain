@@ -23,6 +23,9 @@ template("_ohos_test") {
     _deps += invoker.deps
   }
 
+  test_output_dir =
+      "$root_out_dir/tests/${invoker.test_type}/${invoker.module_out_path}"
+
   # copy fuzz config file
   if (defined(invoker.fuzz_config_file)) {
     fuzz_config_file = invoker.fuzz_config_file
@@ -53,13 +56,11 @@ template("_ohos_test") {
                              "resource_config_file",
                            ])
     forward_variables_from(invoker, [ "visibility" ])
-    if (!defined(deps)) {
-      deps = []
-    }
 
     subsystem_name = "tests"
     part_name = invoker.test_type
     testonly = true
+    unit_test = true
     output_name = "$target_name"
   }
 }
