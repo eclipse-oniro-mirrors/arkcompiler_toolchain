@@ -556,18 +556,23 @@ void RuntimeImpl::GetMapValue(Local<JSValueRef> value,
     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
     Local<MapRef> mapRef = value->ToObject(vm_);
-    int32_t len = mapRef->GetSize();
-    Local<JSValueRef> jsValueRef = NumberRef::New(vm_, len);
+    int32_t size = mapRef->GetSize();
+    int32_t len = mapRef->GetTotalElements();
+    int32_t index = 0;
+    Local<JSValueRef> jsValueRef = NumberRef::New(vm_, size);
     SetKeyValue(jsValueRef, outPropertyDesc, "size");
-    jsValueRef = ArrayRef::New(vm_, len);
+    jsValueRef = ArrayRef::New(vm_, size);
     for (int32_t i = 0; i < len; i++) {
         Local<JSValueRef> jsKey = mapRef->GetKey(vm_, i);
+        if (jsKey->IsHole()) {
+            continue;
+        }
         Local<JSValueRef> jsValue = mapRef->GetValue(vm_, i);
         Local<ObjectRef> objRef = ObjectRef::New(vm_);
         objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "key"), jsKey);
         objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), jsValue);
         AddInternalProperties(objRef, ArkInternalValueType::Entry);
-        ArrayRef::SetValueAt(vm_, jsValueRef, i, objRef);
+        ArrayRef::SetValueAt(vm_, jsValueRef, index++, objRef);
     }
     AddInternalProperties(jsValueRef, ArkInternalValueType::Entry);
     SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");
@@ -577,19 +582,23 @@ void RuntimeImpl::GetSetValue(Local<JSValueRef> value,
     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
     Local<SetRef> setRef = value->ToObject(vm_);
-    int32_t len = setRef->GetSize();
-    Local<JSValueRef> jsValueRef = NumberRef::New(vm_, len);
+    int32_t size = setRef->GetSize();
+    int32_t len = setRef->GetTotalElements();
+    int32_t index = 0;
+    Local<JSValueRef> jsValueRef = NumberRef::New(vm_, size);
     SetKeyValue(jsValueRef, outPropertyDesc, "size");
-    jsValueRef = ArrayRef::New(vm_, len);
+    jsValueRef = ArrayRef::New(vm_, size);
     for (int32_t i = 0; i < len; i++) {
         Local<JSValueRef> elementRef = setRef->GetValue(vm_, i);
-        if (elementRef->IsObject()) {
+        if (elementRef->IsHole()) {
+            continue;
+        } else if (elementRef->IsObject()) {
             Local<ObjectRef> objRef = ObjectRef::New(vm_);
             objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), elementRef);
             AddInternalProperties(objRef, ArkInternalValueType::Entry);
-            ArrayRef::SetValueAt(vm_, jsValueRef, i, objRef);
+            ArrayRef::SetValueAt(vm_, jsValueRef, index++, objRef);
         } else {
-            ArrayRef::SetValueAt(vm_, jsValueRef, i, elementRef);
+            ArrayRef::SetValueAt(vm_, jsValueRef, index++, elementRef);
         }
     }
     AddInternalProperties(jsValueRef, ArkInternalValueType::Entry);
