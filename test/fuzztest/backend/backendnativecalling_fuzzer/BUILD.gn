@@ -19,16 +19,12 @@ import("//build/ohos.gni")
 import("//build/test.gni")
 
 ####################################fuzztest##################################
-ohos_fuzztest("InitializeDebuggerFuzzTest") {
+ohos_fuzztest("BackendNativeCallingFuzzTest") {
   module_out_path = "arkcompiler/toolchain"
 
-  fuzz_config_file =
-      "//arkcompiler/toolchain/test/fuzztest/initializedebugger_fuzzer"
+  fuzz_config_file = "//arkcompiler/toolchain/test/fuzztest/backend/backendnativecalling_fuzzer"
 
-  resource_config_file =
-      "//arkcompiler/toolchain/test/resource/tooling/ohos_test.xml"
-
-  sources = [ "initializedebugger_fuzzer.cpp" ]
+  sources = [ "backendnativecalling_fuzzer.cpp" ]
 
   configs = [ "//arkcompiler/toolchain:toolchain_test_config" ]
 
@@ -43,5 +39,5 @@ ohos_fuzztest("InitializeDebuggerFuzzTest") {
 group("fuzztest") {
   testonly = true
   deps = []
-  deps += [ ":InitializeDebuggerFuzzTest" ]
+  deps += [ ":BackendNativeCallingFuzzTest" ]
 }

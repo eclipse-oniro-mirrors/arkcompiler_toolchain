@@ -19,21 +19,17 @@ import("//build/ohos.gni")
 import("//build/test.gni")
 
 ####################################fuzztest##################################
-ohos_fuzztest("InitializeDebuggerFuzzTest") {
+ohos_fuzztest("HeapprofilerDispatchFuzzTest") {
   module_out_path = "arkcompiler/toolchain"
 
-  fuzz_config_file =
-      "//arkcompiler/toolchain/test/fuzztest/initializedebugger_fuzzer"
+  fuzz_config_file = "//arkcompiler/toolchain/test/fuzztest/agent/heapprofiler/heapprofilerdispatch_fuzzer"
 
-  resource_config_file =
-      "//arkcompiler/toolchain/test/resource/tooling/ohos_test.xml"
-
-  sources = [ "initializedebugger_fuzzer.cpp" ]
+  sources = [ "heapprofilerdispatch_fuzzer.cpp" ]
 
   configs = [ "//arkcompiler/toolchain:toolchain_test_config" ]
 
   deps = [
-    "//arkcompiler/ets_runtime:libark_jsruntime_test",
+    "//arkcompiler/ets_runtime:libark_jsruntime",
     "//arkcompiler/toolchain/tooling:libark_ecma_debugger_set",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     sdk_libc_secshared_dep,
@@ -43,5 +39,5 @@ ohos_fuzztest("InitializeDebuggerFuzzTest") {
 group("fuzztest") {
   testonly = true
   deps = []
-  deps += [ ":InitializeDebuggerFuzzTest" ]
+  deps += [ ":HeapprofilerDispatchFuzzTest" ]
 }

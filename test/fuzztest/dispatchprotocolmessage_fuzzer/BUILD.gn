@@ -30,7 +30,7 @@ ohos_fuzztest("DispatchProtocolMessageFuzzTest") {
   configs = [ "//arkcompiler/toolchain:toolchain_test_config" ]
 
   deps = [
-    "//arkcompiler/ets_runtime:libark_jsruntime",
+    "//arkcompiler/ets_runtime:libark_jsruntime_test",
     "//arkcompiler/toolchain/tooling:libark_ecma_debugger_set",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     sdk_libc_secshared_dep,
