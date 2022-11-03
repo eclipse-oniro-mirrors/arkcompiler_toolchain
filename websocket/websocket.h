@@ -17,7 +17,6 @@
 #define ARKCOMPILER_TOOLCHAIN_WEBSOCKET_WEBSOCKET_H
 
 #include <iostream>
-#include <optional>
 
 namespace OHOS::ArkCompiler::Toolchain {
 struct WebSocketFrame {
@@ -40,7 +39,7 @@ class WebSocket {
 public:
     WebSocket() = default;
     ~WebSocket() = default;
-    std::optional<std::string> Decode();
+    std::string Decode();
     void Close();
     bool DecodeMessage(WebSocketFrame& wsFrame);
     bool HttpHandShake();

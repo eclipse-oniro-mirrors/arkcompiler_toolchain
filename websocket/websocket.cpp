@@ -214,7 +214,7 @@ bool WebSocket::ProtocolUpgrade(const HttpProtocol& req)
     return true;
 }
 
-std::optional<std::string> WebSocket::Decode()
+std::string WebSocket::Decode()
 {
     char recvbuf[SOCKET_HEADER_LEN + 1];
     int32_t msgLen = recv(client_, recvbuf, SOCKET_HEADER_LEN, 0);
@@ -233,7 +233,7 @@ std::optional<std::string> WebSocket::Decode()
         HandleFrame(wsFrame);
         return wsFrame.payload.get();
     }
-    return {};
+    return std::string();
 }
 
 bool WebSocket::HttpHandShake()

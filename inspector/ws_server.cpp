@@ -31,7 +31,9 @@ void WsServer::RunServer()
     terminateExecution_ = false;
     webSocket_ = std::make_unique<WebSocket>();
 #if !defined(OHOS_PLATFORM)
-    webSocket_->StartForSimulator();
+    if (!webSocket_->StartForSimulator()) {
+        return;
+    }
 #else
     tid_ = pthread_self();
     int appPid = getpid();
@@ -48,9 +50,10 @@ void WsServer::RunServer()
     }
 #endif
     while (!terminateExecution_) {
-        std::optional<std::string> message = webSocket_->Decode();
-        if (message.has_value()) {
-            wsOnMessage_(std::move(message.value()));
+        std::string message = webSocket_->Decode();
+        if (!message.empty()) {
+            LOGI("WsServer OnMessage: %{public}s", message.c_str());
+            wsOnMessage_(std::move(message));
         }
     }
 }
