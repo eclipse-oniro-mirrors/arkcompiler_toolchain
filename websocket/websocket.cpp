@@ -219,7 +219,6 @@ std::optional<std::string> WebSocket::Decode()
     char recvbuf[SOCKET_HEADER_LEN + 1];
     int32_t msgLen = recv(client_, recvbuf, SOCKET_HEADER_LEN, 0);
     if (msgLen != SOCKET_HEADER_LEN) {
-        LOGE("Decode Failed: missing necessary header info");
         return {};
     }
     recvbuf[SOCKET_HEADER_LEN] = '\0';
@@ -329,7 +328,7 @@ bool WebSocket::StartWebSocket(std::string sockName)
         return false;
     }
     if ((client_ = accept(fd_, nullptr, nullptr)) < SOCKET_SUCCESS) {
-        LOGE("StartWebSocket accept failed");
+        LOGD("StartWebSocket accept failed");
         return false;
     }
     if (!HttpHandShake()) {
