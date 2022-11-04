@@ -45,7 +45,7 @@ OUTDIR = "out"
 Help_message = """
 formot like python ark.py [arch].[mode] [options] [test]
 for example , python ark.py x64.release
-[arch] can be one of ["x64", "arm", "arm64"]  
+[arch] only support "x64" now 
 [mode] can be one of ["release", "debug"]
 [options]
   target: only support [ets_runtime | ets_frontend | default | all] now
