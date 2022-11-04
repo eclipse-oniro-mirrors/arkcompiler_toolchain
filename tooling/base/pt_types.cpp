@@ -396,7 +396,8 @@ std::string ObjectRemoteObject::DescriptionForDate(const EcmaVM *ecmaVm, Local<D
 
 std::string ObjectRemoteObject::DescriptionForMap(const EcmaVM *ecmaVm, Local<MapRef> tagged)
 {
-    int32_t len = tagged->GetSize();
+    int32_t len = tagged->GetTotalElements();
+    int32_t index = 0;
     std::string description = "Map(" + std::to_string(len) + ")";
     if (!len) {
         return description;
@@ -406,6 +407,10 @@ std::string ObjectRemoteObject::DescriptionForMap(const EcmaVM *ecmaVm, Local<Ma
     for (int32_t i = 0; i < len; ++i) {
         // add Key
         Local<JSValueRef> jsVKey = tagged->GetKey(ecmaVm, i);
+        if (jsVKey->IsHole()) {
+            continue;
+        }
+
         Local<JSValueRef> jsVValue = tagged->GetValue(ecmaVm, i);
         if (jsVKey->IsObject()) {
             description += "Object";
@@ -424,11 +429,12 @@ std::string ObjectRemoteObject::DescriptionForMap(const EcmaVM *ecmaVm, Local<Ma
         } else {
             description += jsVValue->ToString(ecmaVm)->ToString();
         }
-        if (i == len - 1 || i >= 4) { // 4:The count of elements
-            description += len > 5 ? ", ..." : ""; // 5:The count of elements
+        if (index == tagged->GetSize() - 1 || index >= 4) { // 4:The count of elements
+            description += tagged->GetSize() > 5 ? ", ..." : ""; // 5:The count of elements
             break;
         }
         description += ", ";
+        index++;
     }
     description += "}";
     return description;
@@ -436,7 +442,8 @@ std::string ObjectRemoteObject::DescriptionForMap(const EcmaVM *ecmaVm, Local<Ma
 
 std::string ObjectRemoteObject::DescriptionForSet(const EcmaVM *ecmaVm, Local<SetRef> tagged)
 {
-    int32_t len = tagged->GetSize();
+    int32_t len = tagged->GetTotalElements();
+    int32_t index = 0;
     std::string description = ("Set(" + std::to_string(tagged->GetSize()) + ")");
     if (!len) {
         return description;
@@ -446,6 +453,9 @@ std::string ObjectRemoteObject::DescriptionForSet(const EcmaVM *ecmaVm, Local<Se
     for (int32_t i = 0; i < len; ++i) {
         // add Key
         Local<JSValueRef> jsValue = tagged->GetValue(ecmaVm, i);
+        if (jsValue->IsHole()) {
+            continue;
+        }
         // add Value
         if (jsValue->IsObject()) {
             description += "Object";
@@ -454,11 +464,12 @@ std::string ObjectRemoteObject::DescriptionForSet(const EcmaVM *ecmaVm, Local<Se
         } else {
             description += jsValue->ToString(ecmaVm)->ToString();
         }
-        if (i == len - 1 || i >= 4) { // 4:The count of elements
-            description += len > 5 ? ", ..." : ""; // 5:The count of elements
+        if (index == tagged->GetSize() - 1 || index >= 4) { // 4:The count of elements
+            description += tagged->GetSize() > 5 ? ", ..." : ""; // 5:The count of elements
             break;
         }
         description += ", ";
+        index++;
     }
     description += "}";
     return description;
