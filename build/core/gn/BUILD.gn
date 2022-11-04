@@ -43,6 +43,7 @@ group("linux_packages") {
 }
 
 group("unittest_packages") {
+  testonly = true
   if (host_os != "mac") {
     deps = [ "//arkcompiler/ets_runtime:ark_js_unittest" ]
   }
