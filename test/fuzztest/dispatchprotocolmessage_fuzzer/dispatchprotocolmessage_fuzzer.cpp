@@ -27,11 +27,11 @@ namespace OHOS {
         RuntimeOption option;
         option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
         auto vm = JSNApi::CreateJSVM(option);
-        if (size <= 0) {
+        if (size <= 0 || data == NULL) {
             return;
         }
-        std::string message(data, data+size);
-        OnMessage(vm, std::move(message));
+        std::string message((const char*)data, size);
+        OnMessage(vm, message+"hello");
         JSNApi::DestroyJSVM(vm);
     }
 }
