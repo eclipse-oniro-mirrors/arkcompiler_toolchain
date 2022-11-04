@@ -107,7 +107,6 @@ void WsServer::SendReply(const std::string& message) const
         LOGE("WsServer SendReply websocket has been closed unexpectedly");
         return;
     }
-    LOGI("WsServer SendReply: %{public}s", message.c_str());
     try {
         boost::beast::multi_buffer buffer;
         boost::beast::ostream(buffer) << message;
