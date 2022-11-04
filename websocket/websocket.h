@@ -47,8 +47,8 @@ public:
     bool HandleFrame(WebSocketFrame& wsFrame);
     bool ProtocolUpgrade(const HttpProtocol& req);
     void SendReply(const std::string& message) const;
-    bool StartForSimulator();
-    bool StartWebSocket(std::string sockName);
+    bool StartTcpWebSocket();
+    bool StartUnixWebSocket(std::string sockName);
     std::atomic<bool> connectState_;
 
 private:

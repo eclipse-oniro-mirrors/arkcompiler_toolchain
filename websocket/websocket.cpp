@@ -259,7 +259,7 @@ bool WebSocket::HttpHandShake()
 }
 
 #if !defined(OHOS_PLATFORM)
-bool WebSocket::StartForSimulator()
+bool WebSocket::StartTcpWebSocket()
 {
 #if defined(WINDOWS_PLATFORM)
     WORD sockVersion = MAKEWORD(2, 2); // 2: version 2.2
@@ -275,10 +275,11 @@ bool WebSocket::StartForSimulator()
         return false;
     }
 
-    sockaddr_in sin;
-    sin.sin_family = AF_INET;
-    sin.sin_port = htons(9230); // 9230: sockName for tcp
-    if (bind(fd_, reinterpret_cast<struct sockaddr*>(&sin), sizeof(sin)) < SOCKET_SUCCESS) {
+    sockaddr_in addr_sin;
+    addr_sin.sin_family = AF_INET;
+    addr_sin.sin_port = htons(9230); // 9230: sockName for tcp
+    addr_sin.sin_addr.s_addr = INADDR_ANY;
+    if (bind(fd_, reinterpret_cast<struct sockaddr*>(&addr_sin), sizeof(addr_sin)) < SOCKET_SUCCESS) {
         LOGE("StartWebSocket bind failed");
         return false;
     }
@@ -300,7 +301,7 @@ bool WebSocket::StartForSimulator()
     return true;
 }
 #else
-bool WebSocket::StartWebSocket(std::string sockName)
+bool WebSocket::StartUnixWebSocket(std::string sockName)
 {
     fd_ = socket(AF_UNIX, SOCK_STREAM, 0); // 0: defautlt protocol
     if (fd_ < SOCKET_SUCCESS) {
