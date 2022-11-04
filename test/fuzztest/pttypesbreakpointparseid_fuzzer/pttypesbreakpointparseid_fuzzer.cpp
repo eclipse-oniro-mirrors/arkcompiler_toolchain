@@ -30,7 +30,10 @@ namespace OHOS {
         if (size <= 0) {
             return;
         }
-        BreakpointDetails details = { .line_ = size, .column_ = size, .url_ = std::string((const char*)data, size)};
+        BreakpointDetails details;
+        details.line_ = size;
+        details.column_ = size;
+        details.url_ = std::string((const char*)data, size);
         BreakpointId id = BreakpointDetails::ToString(details);
         BreakpointDetails::ParseBreakpointId(id, &details);
         JSNApi::DestroyJSVM(vm);
