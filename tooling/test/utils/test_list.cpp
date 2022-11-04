@@ -30,6 +30,7 @@
 #include "test/testcases/js_syntax_exception_test.h"
 #include "test/testcases/js_throw_exception_test.h"
 #include "test/testcases/js_variable_test.h"
+#include "test/testcases/js_module_variable_test.h"
 
 namespace panda::ecmascript::tooling::test {
 static std::string g_currentTestName = "";
@@ -49,6 +50,7 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsStepOverTest", GetJsStepOverTest());
     TestUtil::RegisterTest("JsStepOutTest", GetJsStepOutTest());
     TestUtil::RegisterTest("JsVariableTest", GetJsVariableTest());
+    TestUtil::RegisterTest("JsModuleVariableTest", GetJsModuleVariableTest());
 }
 
 std::vector<const char *> GetTestList()
