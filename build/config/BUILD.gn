@@ -27,7 +27,6 @@ config("executable_ldconfig") {
     ldflags = [
       "-Wl,-rpath=\$ORIGIN/",
       "-Wl,-rpath-link=",
-      "-pie",
     ]
     if (current_os == "linux") {
       ldflags += [ "-lpthread" ]

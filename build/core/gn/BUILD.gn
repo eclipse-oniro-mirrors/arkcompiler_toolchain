@@ -42,6 +42,12 @@ group("linux_packages") {
   }
 }
 
+group("unittest_packages") {
+  if (host_os != "mac") {
+    deps = [ "//arkcompiler/ets_runtime:ark_js_unittest" ]
+  }
+}
+
 group("ets_runtime") {
   deps = [ "//arkcompiler/ets_runtime:ark_js_packages" ]
 }

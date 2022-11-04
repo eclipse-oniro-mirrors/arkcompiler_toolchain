@@ -29,7 +29,7 @@ ARCHES = ["x64", "arm", "arm64"]
 DEFAULT_ARCHES = "x64"
 MODES = ["release", "debug"]
 DEFAULT_MODES = "release"
-TARGETS = ["ets_runtime", "ets_frontend", "default", "all"]
+TARGETS = ["ets_runtime", "ets_frontend", "default", "unittest_packages", "all"]
 DEFAULT_TARGETS = "default"
 TARGETS_TEST = ["test262"]
 
@@ -52,6 +52,7 @@ for example , python ark.py x64.release
   clean: clear your data in output dir
 [test] 
   test262: run test262
+  unittest_packages: run unittest
 """
 
 def PrintHelp():
