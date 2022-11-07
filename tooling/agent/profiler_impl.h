@@ -75,8 +75,6 @@ public:
         explicit Frontend(ProtocolChannel *channel) : channel_(channel) {}
         ~Frontend() = default;
 
-        void ConsoleProfileFinished();
-        void ConsoleProfileStarted();
         void PreciseCoverageDeltaUpdate();
 
     private:
