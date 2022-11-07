@@ -16,10 +16,7 @@ group("fuzztest") {
   deps = []
 
   deps += [
-    "agent:fuzztest",
-    "backend:fuzztest",
-    "base:fuzztest",
-    "dispatchprotocolmessage_fuzzer:fuzztest",
-    "initializedebugger_fuzzer:fuzztest",
+    "baseptbase64decode_fuzzer:fuzztest",
+    "baseptbase64encode_fuzzer:fuzztest",
   ]
 }
