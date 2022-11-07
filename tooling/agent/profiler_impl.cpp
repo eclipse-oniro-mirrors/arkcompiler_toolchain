@@ -142,26 +142,6 @@ bool ProfilerImpl::Frontend::AllowNotify() const
     return channel_ != nullptr;
 }
 
-void ProfilerImpl::Frontend::ConsoleProfileFinished()
-{
-    if (!AllowNotify()) {
-        return;
-    }
-
-    tooling::ConsoleProfileFinished consoleProfileFinished;
-    channel_->SendNotification(consoleProfileFinished);
-}
-
-void ProfilerImpl::Frontend::ConsoleProfileStarted()
-{
-    if (!AllowNotify()) {
-        return;
-    }
-
-    tooling::ConsoleProfileStarted consoleProfileStarted;
-    channel_->SendNotification(consoleProfileStarted);
-}
-
 void ProfilerImpl::Frontend::PreciseCoverageDeltaUpdate()
 {
     if (!AllowNotify()) {
