@@ -18,6 +18,8 @@
 #include <string>
 #ifdef ANDROID_PLATFORM
 #include <android/log.h>
+#elif defined(IOS_PLATFORM)
+#include "securec.h"
 #endif
 
 namespace OHOS::ArkCompiler::Toolchain {
@@ -54,7 +56,7 @@ void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
     va_start(args, fmt);
 
     char buf[MAX_BUFFER_SIZE];
-    if (vsnprintf(buf, sizeof(buf), formatted.c_str(), args) < 0 && errno == EINVAL) {
+    if (vsnprintf_s(buf, sizeof(buf), sizeof(buf) - 1, formatted.c_str(), args) < 0 && errno == EINVAL) {
         return;
     }
     va_end(args);
@@ -83,7 +85,7 @@ void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
             break;
     }
 
-    if (snprintf(timeBuf, sizeof(timeBuf), "%s",
+    if (snprintf_s(timeBuf, sizeof(timeBuf), sizeof(timeBuf) - 1, "%s",
             domainTag, levelTag.c_str(), std::this_thread::get_id()) < 0) {
         return;
     }
