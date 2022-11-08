@@ -81,6 +81,7 @@ ohos_shared_library("ark_debugger") {
 ohos_source_set("ark_debugger_static") {
   deps = []
   defines = []
+  configs = []
 
   defines += [ "ACE_LOG_TAG=\"ArkDebugger\"" ]
 
@@ -108,12 +109,14 @@ ohos_source_set("ark_debugger_static") {
       "//arkcompiler/ets_runtime",
       "//arkcompiler/runtime_core",
     ]
+    configs += [ sdk_libc_secshared_config ]
+    public_deps = [ sdk_libc_secshared_dep ]
   } else {
     include_dirs +=
         [ "//base/hiviewdfx/hilog/interfaces/native/innerkits/include" ]
   }
 
-  configs = [
+  configs += [
     ":ark_debugger_config",
     ":ark_platform_config",
   ]
