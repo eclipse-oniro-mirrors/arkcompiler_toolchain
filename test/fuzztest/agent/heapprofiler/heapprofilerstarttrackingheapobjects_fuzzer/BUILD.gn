@@ -32,6 +32,7 @@ ohos_fuzztest("HeapprofilerStartTrackingHeapObjectsFuzzTest") {
     "//arkcompiler/ets_runtime:libark_jsruntime_test",
     "//arkcompiler/toolchain/tooling:libark_ecma_debugger_set",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
+    "//third_party/libuv:uv",
     sdk_libc_secshared_dep,
   ]
 }

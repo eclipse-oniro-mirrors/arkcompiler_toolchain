@@ -29,7 +29,7 @@ config("ark_toolchain_common_config") {
     "-fasynchronous-unwind-tables",
     "-Wformat=2",
   ]
-  include_dirs = [ "//third_party/libuv/include" ]
+
   if (is_linux) {
     defines += [
       "PANDA_TARGET_UNIX",
