@@ -18,6 +18,7 @@ group("fuzztest") {
   deps += [
     "agent:fuzztest",
     "backend:fuzztest",
+    "base:fuzztest",
     "dispatchprotocolmessage_fuzzer:fuzztest",
     "initializedebugger_fuzzer:fuzztest",
     "protocolhandler_fuzzer:fuzztest",
