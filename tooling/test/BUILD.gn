@@ -174,6 +174,7 @@ host_unittest_action("DebuggerTest") {
     "debugger_returns_test.cpp",
     "debugger_script_test.cpp",
     "debugger_types_test.cpp",
+    "heapprofiler_impl_test.cpp",
     "js_pt_hooks_test.cpp",
     "profiler_impl_test.cpp",
     "pt_base64_test.cpp",
