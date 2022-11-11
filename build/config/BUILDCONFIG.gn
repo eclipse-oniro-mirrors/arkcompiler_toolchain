@@ -115,7 +115,7 @@ if (custom_toolchain != "") {
 
 _shared_binary_target_configs = [ "$build_root/config:complier_defaults" ]
 
-default_compiler_configs = []
+default_compiler_configs = [ "$build_root/config/compiler:default_warnings" ]
 
 set_defaults("executable") {
   configs = _shared_binary_target_configs

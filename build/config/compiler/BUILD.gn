@@ -11,6 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("$build_root/toolchain/toolchain.gni")
+
+declare_args() {
+  treat_warnings_as_errors = true
+}
+
 config("rtti") {
   if (is_win) {
     cflags_cc = [ "/GR" ]
@@ -44,5 +50,137 @@ config("no_exceptions") {
     }
   } else {
     cflags_cc = [ "-fno-exceptions" ]
+  }
+}
+
+# default_warnings ------------------------------------------------------------
+#
+# Collects all warning flags that are used by default.This way these
+# flags are guaranteed to appear on the compile command line after -Wall.
+config("default_warnings") {
+  cflags = []
+  cflags_cc = []
+  ldflags = []
+
+  if (is_win) {
+    cflags += [
+      "/W3",  # Warning level 3.
+      "/wd4800",  # Disable warning when forcing value to bool.
+      "/wd4267",  # size_t to int.
+      "/wd4996",  # Deprecated function warning.
+    ]
+    defines += [
+      "_CRT_NONSTDC_NO_WARNINGS",
+      "_CRT_NONSTDC_NO_DEPRECATE",
+    ]
+  } else {
+    if (treat_warnings_as_errors && is_clang) {
+      cflags += [ "-Werror" ]
+      ldflags = [ "-Werror" ]
+    }
+    if (is_clang) {
+      cflags += [ "-Wall" ]
+    }
+  }
+
+  if (is_clang) {
+    cflags += [
+      # Lots of third-party libraries have unused variables. Instead of
+      # suppressing them individually, we just blanket suppress them here.
+      "-Wno-unused-variable",
+    ]
+  }
+
+  # Suppress warnings about ABI changes on ARM (Clang doesn't give this
+  # warning).
+  if (current_cpu == "arm" && !is_clang) {
+    cflags += [ "-Wno-psabi" ]
+  }
+
+  if (!is_clang) {
+    cflags_cc += [
+      # See comment for -Wno-c++11-narrowing.
+      "-Wno-narrowing",
+    ]
+
+    # -Wunused-local-typedefs is broken in gcc,
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63872
+    cflags += [ "-Wno-unused-local-typedefs" ]
+
+    # Don't warn about "maybe" uninitialized. Clang doesn't include this
+    # in -Wall but gcc does, and it gives false positives.
+    cflags += [ "-Wno-maybe-uninitialized" ]
+    cflags += [ "-Wno-deprecated-declarations" ]
+
+    # GCC assumes 'this' is never nullptr and optimizes away code
+    # like "if (this == nullptr) ...": [1].  However, some
+    # code relies on these types of null pointer checks [2], so
+    # disable this optimization.
+    # [1] https://gcc.gnu.org/gcc-6/porting_to.html#this-cannot-be-null
+    # [2] https://crbug.com/784492#c13
+    cflags += [ "-fno-delete-null-pointer-checks" ]
+
+    # -Wcomment gives too many false positives in the case a
+    # backslash ended comment line is followed by a new line of
+    # comments
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61638
+    cflags += [ "-Wno-comments" ]
+  }
+
+  # Common Clang and GCC warning setup.
+  if (!is_win || is_clang) {
+    cflags += [
+      # Disables.
+      "-Wno-missing-field-initializers",  # "struct foo f = {0};"
+      "-Wno-unused-parameter",  # Unused function parameters.
+    ]
+  }
+
+  if (is_mingw) {
+    cflags += [
+      "-Wno-error=c99-designator",
+      "-Wno-error=anon-enum-enum-conversion",
+      "-Wno-error=implicit-fallthrough",
+      "-Wno-error=sizeof-array-div",
+      "-Wno-error=reorder-init-list",
+      "-Wno-error=range-loop-construct",
+      "-Wno-error=deprecated-copy",
+      "-Wno-error=implicit-int-float-conversion",
+      "-Wno-error=inconsistent-dllimport",
+      "-Wno-error=unknown-warning-option",
+      "-Wno-error=abstract-final-class",
+      "-Wno-error=sign-compare",
+    ]
+  }
+
+  if (is_clang) {
+    cflags += [
+      # This warns on using ints as initializers for floats in
+      # initializer lists (e.g. |int a = f(); CGSize s = { a, a };|),
+      # which happens in several places in code. Not sure if
+      # this is worth fixing.
+      "-Wno-c++11-narrowing",
+      "-Wno-unneeded-internal-declaration",
+    ]
+    if (use_musl) {
+      cflags += [
+        "-Wno-error=c99-designator",
+        "-Wno-error=anon-enum-enum-conversion",
+        "-Wno-error=implicit-fallthrough",
+        "-Wno-error=sizeof-array-div",
+        "-Wno-error=reorder-init-list",
+        "-Wno-error=range-loop-construct",
+        "-Wno-error=deprecated-copy",
+        "-Wno-error=implicit-int-float-conversion",
+        "-Wno-error=inconsistent-dllimport",
+        "-Wno-error=unknown-warning-option",
+        "-Wno-error=abstract-final-class",
+        "-Wno-error=sign-compare",
+        "-Wno-error=int-in-bool-context",
+        "-Wno-error=xor-used-as-pow",
+        "-Wno-error=return-stack-address",
+        "-Wno-error=dangling-gsl",
+      ]
+    }
   }
 }
