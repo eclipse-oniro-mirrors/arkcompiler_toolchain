@@ -243,6 +243,8 @@ def main():
     if not os.path.exists(args.bin_dir):
         os.makedirs(args.bin_dir)
     copy_config = config_info.get(host_platform).get(host_cpu).get('copy_config')
+    node_config = config_info.get(host_platform).get('node_config')
+    copy_config.extend(node_config)
     if host_platform == 'linux':
         linux_copy_config = config_info.get(host_platform).get(host_cpu).get('linux_copy_config')
         copy_config.extend(linux_copy_config)
