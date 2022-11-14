@@ -30,7 +30,7 @@ config("ark_toolchain_common_config") {
     "-fasynchronous-unwind-tables",
     "-Wformat=2",
   ]
-
+  include_dirs = [ "//third_party/libuv/include" ]
   if (is_linux) {
     defines += [
       "PANDA_TARGET_UNIX",
@@ -125,6 +125,7 @@ group("ark_toolchain_packages") {
     deps += [
       "//arkcompiler/toolchain/inspector:ark_debugger",
       "//arkcompiler/toolchain/tooling:libark_ecma_debugger",
+      "//third_party/libuv:uv",
     ]
   }
 }
@@ -133,7 +134,10 @@ group("ark_toolchain_unittest") {
   testonly = true
   deps = []
   if (host_os != "mac") {
-    deps += [ "//arkcompiler/toolchain/tooling/test:unittest" ]
+    deps += [
+      "//arkcompiler/toolchain/tooling/test:unittest",
+      "//third_party/libuv:uv",
+    ]
     if (is_ohos && is_standard_system) {
       deps += [ "//arkcompiler/toolchain/test/fuzztest:fuzztest" ]
     }
@@ -154,5 +158,6 @@ group("ark_js_host_unittest") {
   deps = [
     "//arkcompiler/ets_runtime:ark_runtime_host_unittest",
     "//arkcompiler/toolchain:ark_toolchain_host_unittest",
+    "//third_party/libuv:uv",
   ]
 }

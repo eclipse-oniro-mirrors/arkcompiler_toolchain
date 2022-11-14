@@ -59,6 +59,7 @@ source_set("libark_ecma_debugger_set") {
   deps = [
     "$ark_root/libpandafile:arkfile_header_deps",
     "//third_party/cJSON:cjson_static",
+    "//third_party/libuv:uv",
   ]
 
   if (is_mingw || is_mac) {
@@ -96,6 +97,7 @@ ohos_shared_library("libark_ecma_debugger") {
   deps = [
     ":libark_ecma_debugger_set",
     "//arkcompiler/ets_runtime:libark_jsruntime",
+    "//third_party/libuv:uv",
   ]
 
   install_enable = true
@@ -135,6 +137,7 @@ source_set("libark_ecma_debugger_test_set") {
   deps = [
     "$ark_root/libpandafile:arkfile_header_deps",
     "//third_party/cJSON:cjson_static",
+    "//third_party/libuv:uv",
   ]
 }
 
@@ -142,6 +145,7 @@ ohos_shared_library("libark_ecma_debugger_test") {
   deps = [
     ":libark_ecma_debugger_test_set",
     "//arkcompiler/ets_runtime:libark_jsruntime_test",
+    "//third_party/libuv:uv",
   ]
 
   if (is_ohos && is_standard_system) {
