@@ -184,6 +184,7 @@ host_unittest_action("DebuggerTest") {
     "profiler_impl_test.cpp",
     "pt_base64_test.cpp",
     "pt_json_test.cpp",
+    "runtime_impl_test.cpp",
     "tracing_impl_test.cpp",
   ]
 
