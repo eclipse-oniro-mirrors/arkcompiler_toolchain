@@ -45,6 +45,7 @@ test_js_files = [
   "syntax_exception",
   "throw_exception",
   "variable",
+  "module_variable",
 ]
 
 foreach(file, test_js_files) {
@@ -57,6 +58,10 @@ foreach(file, test_js_files) {
     src_js = rebase_path(test_js)
     dst_file = rebase_path(test_abc)
     extra_args = [ "--debug" ]
+    if (file == "module_variable") {
+      extra_args += [ "--module" ]
+      extra_args += [ "--merge-abc" ]
+    }
 
     in_puts = [ test_js ]
     out_puts = [ test_abc ]
@@ -179,6 +184,7 @@ host_unittest_action("DebuggerTest") {
     "profiler_impl_test.cpp",
     "pt_base64_test.cpp",
     "pt_json_test.cpp",
+    "runtime_impl_test.cpp",
     "tracing_impl_test.cpp",
   ]
 
