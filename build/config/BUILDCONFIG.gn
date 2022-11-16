@@ -46,12 +46,12 @@ if (host_os == "linux") {
 declare_args() {
   # Debug build. Enabling official builds automatically sets is_debug to false.
   is_debug = false
+  is_standard_system = false
 }
 
 declare_args() {
   host_toolchain = ""
   custom_toolchain = ""
-  is_standard_system = true
 
   is_clang = current_os != "linux" ||
              (current_cpu != "s390x" && current_cpu != "s390" &&

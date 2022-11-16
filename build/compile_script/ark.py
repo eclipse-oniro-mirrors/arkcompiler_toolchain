@@ -35,7 +35,6 @@ TARGETS_TEST = ["test262"]
 
 
 USER_ARGS_TEMPLATE = """\
-is_standard_system = true
 %s
 """
 
