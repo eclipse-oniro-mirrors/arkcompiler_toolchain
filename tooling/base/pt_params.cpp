@@ -127,7 +127,7 @@ std::unique_ptr<GetPossibleBreakpointsParams> GetPossibleBreakpointsParams::Crea
         error += "Unknown 'start';";
     }
     std::unique_ptr<PtJson> end;
-    ret = params.GetObject("start", &end);
+    ret = params.GetObject("end", &end);
     if (ret == Result::SUCCESS) {
         std::unique_ptr<Location> location = Location::Create(*end);
         if (location == nullptr) {
@@ -367,13 +367,18 @@ std::unique_ptr<StepIntoParams> StepIntoParams::Create(const PtJson &params)
     ret = params.GetArray("skipList", &skipList);
     if (ret == Result::SUCCESS) {
         int32_t len = skipList->GetSize();
+        std::list<std::unique_ptr<LocationRange>> listLocation;
         for (int32_t i = 0; i < len; ++i) {
             std::unique_ptr<LocationRange> obj = LocationRange::Create(*skipList->Get(i));
             if (obj == nullptr) {
                 error += "'skipList' items LocationRange is invalid;";
+                break;
             } else {
-                paramsObject->skipList_->emplace_back(std::move(obj));
+                listLocation.emplace_back(std::move(obj));
             }
+        }
+        if (listLocation.size()) {
+            paramsObject->skipList_ = std::move(listLocation);
         }
     } else if (ret == Result::TYPE_ERROR) {  // optional value
         error += "Unknown 'skipList';";
@@ -397,13 +402,18 @@ std::unique_ptr<StepOverParams> StepOverParams::Create(const PtJson &params)
     ret = params.GetArray("skipList", &skipList);
     if (ret == Result::SUCCESS) {
         int32_t len = skipList->GetSize();
+        std::list<std::unique_ptr<LocationRange>> listLocation;
         for (int32_t i = 0; i < len; ++i) {
             std::unique_ptr<LocationRange> obj = LocationRange::Create(*skipList->Get(i));
             if (obj == nullptr) {
                 error += "'skipList' items LocationRange is invalid;";
+                break;
             } else {
-                paramsObject->skipList_->emplace_back(std::move(obj));
+                listLocation.emplace_back(std::move(obj));
             }
+        }
+        if (listLocation.size()) {
+            paramsObject->skipList_ = std::move(listLocation);
         }
     } else if (ret == Result::TYPE_ERROR) {  // optional value
         error += "Unknown 'skipList';";
@@ -530,13 +540,18 @@ std::unique_ptr<CallFunctionOnParams> CallFunctionOnParams::Create(const PtJson 
     ret = params.GetArray("arguments", &arguments);
     if (ret == Result::SUCCESS) {
         int32_t len = arguments->GetSize();
+        std::vector<std::unique_ptr<CallArgument>> callArgument;
         for (int32_t i = 0; i < len; ++i) {
             std::unique_ptr<CallArgument> obj = CallArgument::Create(*arguments->Get(i));
             if (obj == nullptr) {
                 error += "'arguments' items CallArgument is invaild;";
+                break;
             } else {
-                paramsObject->arguments_->emplace_back(std::move(obj));
+                callArgument.emplace_back(std::move(obj));
             }
+        }
+        if (callArgument.size()) {
+            paramsObject->arguments_ = std::move(callArgument);
         }
     } else if (ret == Result::TYPE_ERROR) {  // optional value
         error += "Unknown 'arguments';";
