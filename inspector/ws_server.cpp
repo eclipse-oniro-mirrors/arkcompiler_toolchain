@@ -15,6 +15,7 @@
 
 #include "ws_server.h"
 
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <shared_mutex>
@@ -58,6 +59,7 @@ void WsServer::RunServer()
                 connectFlag = true;
             }
         });
+        cv_.notify_one();
         ioContext_->run();
         if (terminateExecution_ || !connectState_) {
             return;
@@ -89,6 +91,10 @@ void WsServer::RunServer()
 
 void WsServer::StopServer()
 {
+    std::unique_lock<std::mutex> lock(mtx_);
+    if (ioContext_ == nullptr) {
+        cv_.wait_for(lock, std::chrono::milliseconds(100)); // 100: time for the socket thread to init
+    }
     LOGI("WsServer StopServer");
     terminateExecution_ = true;
     if (!connectState_) {

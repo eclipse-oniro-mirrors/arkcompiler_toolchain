@@ -26,6 +26,7 @@
 #include <boost/beast/websocket.hpp>
 #include <functional>
 #include <iostream>
+#include <mutex>
 #include <queue>
 
 #include <pthread.h>
@@ -55,6 +56,8 @@ private:
     [[maybe_unused]] int32_t instanceId_ {0};
     pthread_t tid_ {0};
     std::string componentName_ {};
+    std::mutex mtx_;
+    std::condition_variable cv_;
     std::function<void(std::string&&)> wsOnMessage_ {};
     std::unique_ptr<websocket::stream<CommProtocol::socket>> webSocket_ { nullptr };
     std::unique_ptr<boost::asio::io_context> ioContext_ { nullptr };
