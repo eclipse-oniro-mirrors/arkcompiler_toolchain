@@ -474,4 +474,432 @@ HWTEST_F_L0(DebuggerParamsTest, StartParamsCreateTest)
     EXPECT_EQ(objectData->GetPerfettoConfig(), "categories");
     EXPECT_EQ(objectData->GetTracingBackend(), "auto");
 }
+
+HWTEST_F_L0(DebuggerParamsTest, EvaluateOnCallFrameParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<EvaluateOnCallFrameParams> objectData;
+
+    // abnormal params of null msg
+    msg = std::string() + R"({})";
+    objectData = EvaluateOnCallFrameParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of unexist key params
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test"})";
+    objectData = EvaluateOnCallFrameParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of null params.sub-key
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    objectData = EvaluateOnCallFrameParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"callFrameId":1, "expression":true,
+        "objectGroup":1, "includeCommandLineAPI":"true", "silent":"true", "returnByValue":"true",
+        "generatePreview":"true", "throwOnSideEffect":"true", "timeout":"10"}})";
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"callFrameId":"1", "expression":"test",
+        "objectGroup":"testGroup", "includeCommandLineAPI":true, "silent":true, "returnByValue":true,
+        "generatePreview":true, "throwOnSideEffect":true, "timeout":10}})";
+    objectData = EvaluateOnCallFrameParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    EXPECT_EQ(objectData->GetCallFrameId(), 1);
+    EXPECT_EQ(objectData->GetExpression(), "test");
+}
+
+HWTEST_F_L0(DebuggerParamsTest, GetPossibleBreakpointsParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<GetPossibleBreakpointsParams> objectData;
+
+    // abnormal params of null msg
+    msg = std::string() + R"({})";
+    objectData = GetPossibleBreakpointsParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of unexist key params
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test"})";
+    objectData = GetPossibleBreakpointsParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of null params.sub-key
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    objectData = GetPossibleBreakpointsParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"start":10, "end":10,
+        "restrictToFunction":"true"}})";
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"start":{"scriptId":"1", "lineNumber":1,
+        "columnNumber":10}, "end":{"scriptId":"1", "lineNumber":10, "columnNumber":10}, "restrictToFunction":true}})";
+    objectData = GetPossibleBreakpointsParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    Location *start = objectData->GetStart();
+    Location *end = objectData->GetEnd();
+    EXPECT_EQ(start->GetScriptId(), 1);
+    EXPECT_EQ(start->GetLine(), 1);
+    EXPECT_EQ(start->GetColumn(), 10);
+    EXPECT_EQ(end->GetScriptId(), 1);
+    EXPECT_EQ(end->GetLine(), 10);
+    EXPECT_EQ(end->GetColumn(), 10);
+    ASSERT_TRUE(objectData->GetRestrictToFunction());
+}
+
+HWTEST_F_L0(DebuggerParamsTest, GetScriptSourceParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<GetScriptSourceParams> objectData;
+
+    // abnormal params of null msg
+    msg = std::string() + R"({})";
+    objectData = GetScriptSourceParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of unexist key params
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test"})";
+    objectData = GetScriptSourceParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of null params.sub-key
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    objectData = GetScriptSourceParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"scriptId":10}})";
+    objectData = GetScriptSourceParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"scriptId":"10"}})";
+    objectData = GetScriptSourceParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    EXPECT_EQ(objectData->GetScriptId(), 10);
+}
+
+HWTEST_F_L0(DebuggerParamsTest, RemoveBreakpointParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<RemoveBreakpointParams> objectData;
+
+    // abnormal params of null msg
+    msg = std::string() + R"({})";
+    objectData = RemoveBreakpointParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of unexist key params
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test"})";
+    objectData = RemoveBreakpointParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of null params.sub-key
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    objectData = RemoveBreakpointParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"breakpointId":10}})";
+    objectData = RemoveBreakpointParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"breakpointId":"10"}})";
+    objectData = RemoveBreakpointParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    EXPECT_EQ(objectData->GetBreakpointId(), "10");
+}
+
+HWTEST_F_L0(DebuggerParamsTest, ResumeParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<ResumeParams> objectData;
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"terminateOnResume":10}})";
+    objectData = ResumeParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"terminateOnResume":true}})";
+    objectData = ResumeParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    ASSERT_TRUE(objectData->GetTerminateOnResume());
+}
+
+HWTEST_F_L0(DebuggerParamsTest, SetAsyncCallStackDepthParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<SetAsyncCallStackDepthParams> objectData;
+
+    // abnormal params of null msg
+    msg = std::string() + R"({})";
+    objectData = SetAsyncCallStackDepthParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of unexist key params
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test"})";
+    objectData = SetAsyncCallStackDepthParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of null params.sub-key
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    objectData = SetAsyncCallStackDepthParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"maxDepth":true}})";
+    objectData = SetAsyncCallStackDepthParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"maxDepth":5}})";
+    objectData = SetAsyncCallStackDepthParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    EXPECT_EQ(objectData->GetMaxDepth(), 5);
+}
+
+HWTEST_F_L0(DebuggerParamsTest, SetBlackboxPatternsParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<SetBlackboxPatternsParams> objectData;
+
+    // abnormal params of null msg
+    msg = std::string() + R"({})";
+    objectData = SetBlackboxPatternsParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of unexist key params
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test"})";
+    objectData = SetBlackboxPatternsParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of null params.sub-key
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    objectData = SetBlackboxPatternsParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"patterns":"testpattern"}})";
+    objectData = SetBlackboxPatternsParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"patterns":["testpattern1", "testpattern2"]}})";
+    objectData = SetBlackboxPatternsParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    std::list<std::string> patterns = objectData->GetPatterns();
+    EXPECT_EQ(patterns.size(), 2U);
+}
+
+HWTEST_F_L0(DebuggerParamsTest, SetBreakpointByUrlParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<SetBreakpointByUrlParams> objectData;
+
+    // abnormal params of null msg
+    msg = std::string() + R"({})";
+    objectData = SetBreakpointByUrlParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of unexist key params
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test"})";
+    objectData = SetBreakpointByUrlParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of null params.sub-key
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    objectData = SetBreakpointByUrlParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"lineNumber":"10", "url":10,
+        "urlRegex":true, "scriptHash":true, "columnNumber":"10", "condition":10}})";
+    objectData = SetBreakpointByUrlParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"lineNumber":10, "url":"testURL",
+        "urlRegex":"testURLRegex", "scriptHash":"testScriptHash", "columnNumber":10, "condition":"testCondition"}})";
+    objectData = SetBreakpointByUrlParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    EXPECT_EQ(objectData->GetLine(), 10);
+    EXPECT_EQ(objectData->GetUrl(), "testURL");
+    EXPECT_EQ(objectData->GetUrlRegex(), "testURLRegex");
+    EXPECT_EQ(objectData->GetScriptHash(), "testScriptHash");
+    EXPECT_EQ(objectData->GetColumn(), 10);
+    EXPECT_EQ(objectData->GetCondition(), "testCondition");
+}
+
+HWTEST_F_L0(DebuggerParamsTest, SetPauseOnExceptionsParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<SetPauseOnExceptionsParams> objectData;
+
+    // abnormal params of null msg
+    msg = std::string() + R"({})";
+    objectData = SetPauseOnExceptionsParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of unexist key params
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test"})";
+    objectData = SetPauseOnExceptionsParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of null params.sub-key
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    objectData = SetPauseOnExceptionsParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"state":10}})";
+    objectData = SetPauseOnExceptionsParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"state":"none"}})";
+    objectData = SetPauseOnExceptionsParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    EXPECT_EQ(objectData->GetState(), PauseOnExceptionsState::NONE);
+}
+
+HWTEST_F_L0(DebuggerParamsTest, StepIntoParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<StepIntoParams> objectData;
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"breakOnAsyncCall":10, "skipList":true}})";
+    objectData = StepIntoParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"breakOnAsyncCall":true,
+        "skipList":[{"scriptId":"1", "start":{"lineNumber":1, "columnNumber":10}, "end":{"lineNumber":2,
+        "columnNumber":20}}, {"scriptId":"2", "start":{"lineNumber":3, "columnNumber":30}, "end":{"lineNumber":4,
+        "columnNumber":40}}]}})";
+    objectData = StepIntoParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    ASSERT_TRUE(objectData->GetBreakOnAsyncCall());
+    const std::list<std::unique_ptr<LocationRange>> *locationRangeList = objectData->GetSkipList();
+    EXPECT_EQ(locationRangeList->size(), 2U);
+}
+
+
+HWTEST_F_L0(DebuggerParamsTest, StepOverParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<StepOverParams> objectData;
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"skipList":true}})";
+    objectData = StepOverParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"skipList":[{"scriptId":"1",
+        "start":{"lineNumber":1, "columnNumber":10}, "end":{"lineNumber":2, "columnNumber":20}}, {"scriptId":"2",
+        "start":{"lineNumber":3, "columnNumber":30}, "end":{"lineNumber":4, "columnNumber":40}}]}})";
+    objectData = StepOverParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    const std::list<std::unique_ptr<LocationRange>> *locationRangeList = objectData->GetSkipList();
+    EXPECT_EQ(locationRangeList->size(), 2U);
+}
+
+HWTEST_F_L0(DebuggerParamsTest, SetMixedDebugParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<SetMixedDebugParams> objectData;
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"enabled":"test"}})";
+    objectData = SetMixedDebugParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"enabled":true}})";
+    objectData = SetMixedDebugParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    ASSERT_TRUE(objectData->GetEnabled());
+}
+
+HWTEST_F_L0(DebuggerParamsTest, ReplyNativeCallingParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<ReplyNativeCallingParams> objectData;
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"userCode":"test"}})";
+    objectData = ReplyNativeCallingParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"userCode":true}})";
+    objectData = ReplyNativeCallingParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    ASSERT_TRUE(objectData->GetUserCode());
+}
+
+HWTEST_F_L0(DebuggerParamsTest, GetPropertiesParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<GetPropertiesParams> objectData;
+
+    // abnormal params of null msg
+    msg = std::string() + R"({})";
+    objectData = GetPropertiesParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of unexist key params
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test"})";
+    objectData = GetPropertiesParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of null params.sub-key
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    objectData = GetPropertiesParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"objectId":10, "ownProperties":1,
+        "accessorPropertiesOnly":2, "generatePreview":3}})";
+    objectData = GetPropertiesParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"objectId":"10", "ownProperties":true,
+        "accessorPropertiesOnly":true, "generatePreview":true}})";
+    objectData = GetPropertiesParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    EXPECT_EQ(objectData->GetObjectId(), 10);
+    ASSERT_TRUE(objectData->GetOwnProperties());
+    ASSERT_TRUE(objectData->GetAccessPropertiesOnly());
+    ASSERT_TRUE(objectData->GetGeneratePreview());
+}
+
+HWTEST_F_L0(DebuggerParamsTest, CallFunctionOnParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<CallFunctionOnParams> objectData;
+
+    // abnormal params of null msg
+    msg = std::string() + R"({})";
+    objectData = CallFunctionOnParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of unexist key params
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test"})";
+    objectData = CallFunctionOnParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of null params.sub-key
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    objectData = CallFunctionOnParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"functionDeclaration":true, "objectId":1,
+        "arguments":[{"unserializableValue":1, "objectId":10}, {"unserializableValue":2, "objectId":20}],
+        "silent":"true", "returnByValue":"true", "generatePreview":"true", "userGesture":"true", "awaitPromise":"true",
+        "executionContextId":"1", "objectGroup":2, "throwOnSideEffect":"true"}})";
+    objectData = CallFunctionOnParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"functionDeclaration":"testFunction",
+        "objectId":"1", "arguments":[{"unserializableValue":"testValue1", "objectId":"10"},
+        {"unserializableValue":"testValue2", "objectId":"20"}], "silent":true, "returnByValue":true,
+        "generatePreview":true, "userGesture":true, "awaitPromise":true, "executionContextId":1,
+        "objectGroup":"testGrp", "throwOnSideEffect":true}})";
+    objectData = CallFunctionOnParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    EXPECT_EQ(objectData->GetFunctionDeclaration(), "testFunction");
+    EXPECT_EQ(objectData->GetObjectId(), 1);
+    const std::vector<std::unique_ptr<CallArgument>> *callArgument = objectData->GetArguments();
+    EXPECT_EQ(callArgument->size(), 2U);
+    ASSERT_TRUE(objectData->GetSilent());
+    ASSERT_TRUE(objectData->GetReturnByValue());
+    ASSERT_TRUE(objectData->GetGeneratePreview());
+    ASSERT_TRUE(objectData->GetUserGesture());
+    ASSERT_TRUE(objectData->GetAwaitPromise());
+    EXPECT_EQ(objectData->GetExecutionContextId(), 1);
+    EXPECT_EQ(objectData->GetObjectGroup(), "testGrp");
+    ASSERT_TRUE(objectData->GetThrowOnSideEffect());
+}
 }  // namespace panda::test
