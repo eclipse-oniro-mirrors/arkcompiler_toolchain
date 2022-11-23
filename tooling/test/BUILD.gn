@@ -173,6 +173,7 @@ host_unittest_action("DebuggerTest") {
     "js_pt_hooks_test.cpp",
     "pt_base64_test.cpp",
     "pt_json_test.cpp",
+    "runtime_impl_test.cpp",
   ]
 
   configs = [ "//arkcompiler/toolchain:toolchain_test_config" ]
