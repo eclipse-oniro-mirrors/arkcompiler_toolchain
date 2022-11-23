@@ -204,6 +204,10 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplCollectGarbage)
     DispatchRequest request(msg);
     dispatcherImpl->CollectGarbage(request);
     ASSERT_TRUE(result.find("CollectGarbage not support now") != std::string::npos);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
 }
 
 HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplEnable)
@@ -218,6 +222,10 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplEnable)
     DispatchRequest request(msg);
     dispatcherImpl->Enable(request);
     ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
 }
 
 HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplDisable)
@@ -232,6 +240,10 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplDisable)
     DispatchRequest request(msg);
     dispatcherImpl->Disable(request);
     ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
 }
 
 HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplGetHeapObjectId)
@@ -250,6 +262,10 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplGetHeapObjectId)
     DispatchRequest request1(msg);
     dispatcherImpl->GetHeapObjectId(request1);
     ASSERT_TRUE(result.find("GetHeapObjectId not support now") != std::string::npos);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
 }
 
 HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplGetObjectByHeapObjectId)
@@ -270,6 +286,10 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplGetObjectByHeapObjectId)
     DispatchRequest request1(msg);
     dispatcherImpl->GetObjectByHeapObjectId(request1);
     ASSERT_TRUE(result.find("GetObjectByHeapObjectId not support now") != std::string::npos);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
 }
 
 HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplGetSamplingProfile)
@@ -284,6 +304,10 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplGetSamplingProfile)
     DispatchRequest request(msg);
     dispatcherImpl->GetSamplingProfile(request);
     ASSERT_TRUE(result.find("GetSamplingProfile not support now") != std::string::npos);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
 }
 
 HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplStartSampling)
@@ -303,6 +327,10 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplStartSampling)
     DispatchRequest request1(msg);
     dispatcherImpl->StartSampling(request1);
     ASSERT_TRUE(result.find("StartSampling not support now") != std::string::npos);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
 }
 
 HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplStopSampling)
@@ -317,6 +345,10 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplStopSampling)
     DispatchRequest request(msg);
     dispatcherImpl->StopSampling(request);
     ASSERT_TRUE(result.find("StopSampling not support now") != std::string::npos);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
 }
 
 HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplTakeHeapSnapshot)
@@ -341,5 +373,9 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplTakeHeapSnapshot)
     DispatchRequest request1(msg);
     dispatcherImpl->TakeHeapSnapshot(request1);
     ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
 }
 }  // namespace panda::test
