@@ -32,7 +32,6 @@
 
 #include <sys/time.h>
 
-static const double INTERVAL = 0.2;
 namespace panda::ecmascript::tooling {
 class HeapProfilerImpl final {
 public:
@@ -156,7 +155,7 @@ private:
     public:
         explicit HeapProfilerProgress(Frontend *frontend)
             : frontend_(frontend) {}
-        
+
         void ReportProgress(int32_t done, int32_t total) override
         {
             frontend_->ReportHeapSnapshotProgress(done, total);
@@ -172,7 +171,7 @@ private:
     const EcmaVM *vm_ {nullptr};
     Frontend frontend_;
     HeapProfilerStream stream_;
-    uv_timer_t handle_;
+    uv_timer_t handle_ {};
 };
 }  // namespace panda::ecmascript::tooling
 #endif

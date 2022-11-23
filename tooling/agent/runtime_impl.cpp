@@ -544,12 +544,12 @@ void RuntimeImpl::GetDateTimeFormatValue(Local<JSValueRef> value,
     SetKeyValue(jsValueRef, outPropertyDesc, "format");
 }
 
-void RuntimeImpl::AddInternalProperties(Local<ObjectRef> objRef, ArkInternalValueType type)
+void RuntimeImpl::AddInternalProperties(Local<ObjectRef> object, ArkInternalValueType type)
 {
     if (internalObjects_.IsEmpty()) {
         internalObjects_ = Global<MapRef>(vm_, MapRef::New(vm_));
     }
-    internalObjects_->Set(vm_, objRef, NumberRef::New(vm_, static_cast<int32_t>(type)));
+    internalObjects_->Set(vm_, object, NumberRef::New(vm_, static_cast<int32_t>(type)));
 }
 
 void RuntimeImpl::GetMapValue(Local<JSValueRef> value,
