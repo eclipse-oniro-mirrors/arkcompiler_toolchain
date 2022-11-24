@@ -172,7 +172,7 @@ private:
     const EcmaVM *vm_ {nullptr};
     Frontend frontend_;
     HeapProfilerStream stream_;
-    uv_timer_t handle_;
+    uv_timer_t handle_ {};
 };
 }  // namespace panda::ecmascript::tooling
 #endif
