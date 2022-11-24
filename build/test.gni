@@ -74,6 +74,7 @@ template("ohos_unittest") {
       deps += invoker.deps
     }
 
-    # deps += [ "//third_party/googletest:gtest_main" ]
+    deps +=
+        [ "//arkcompiler/toolchain/build/third_party_gn/googletest:gtest_main" ]
   }
 }
