@@ -171,9 +171,11 @@ host_unittest_action("DebuggerTest") {
     "debugger_types_test.cpp",
     "heapprofiler_impl_test.cpp",
     "js_pt_hooks_test.cpp",
+    "profiler_impl_test.cpp",
     "pt_base64_test.cpp",
     "pt_json_test.cpp",
     "runtime_impl_test.cpp",
+    "tracing_impl_test.cpp",
   ]
 
   configs = [ "//arkcompiler/toolchain:toolchain_test_config" ]
