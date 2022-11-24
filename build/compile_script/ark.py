@@ -142,10 +142,10 @@ def Get_templete(args_list):
     target_cpu = "target_cpu = \"%s\"" % global_arche
 # Determine the target CPU
     if global_arche in ("arm", "arm64"):
-        ARK_os = "ohos"
+        ark_os = "ohos"
     else:
-        ARK_os = "linux"
-    target_os = "target_os = \"%s\"" % ARK_os
+        ark_os = "linux"
+    target_os = "target_os = \"%s\"" % ark_os
     if global_mode == "debug":
         is_debug = "is_debug = true"
     else:

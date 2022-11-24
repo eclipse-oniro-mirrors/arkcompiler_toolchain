@@ -17,6 +17,7 @@
 
 namespace panda::ecmascript::tooling {
 static constexpr int32_t MILLI_TO_MICRO = 1000;
+static constexpr double INTERVAL = 0.2;
 void HeapProfilerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
     static std::unordered_map<std::string, AgentHandler> dispatcherTable {

@@ -29,7 +29,7 @@ namespace OHOS::ArkCompiler::Toolchain {
 
 void WebSocket::SendReply(const std::string& message) const
 {
-    int32_t msgLen = message.length();
+    uint32_t msgLen = message.length();
     std::unique_ptr<char []> msgBuf = std::make_unique<char []>(msgLen + 11); // 11: the maximum expandable length
     char* sendBuf = msgBuf.get();
     int32_t sendMsgLen;
@@ -147,6 +147,10 @@ bool WebSocket::HandleFrame(WebSocketFrame& wsFrame)
 
 bool WebSocket::DecodeMessage(WebSocketFrame& wsFrame)
 {
+    if (wsFrame.payloadLen == 0 || wsFrame.payloadLen > UINT64_MAX) {
+        LOGE("ReadMsg length error, expected greater than zero and less than UINT64_MAX");
+        return false;
+    }
     wsFrame.payload = std::make_unique<char []>(wsFrame.payloadLen + 1);
     if (wsFrame.mask == 1) {
         char buf[wsFrame.payloadLen + 1];
@@ -161,25 +165,28 @@ bool WebSocket::DecodeMessage(WebSocketFrame& wsFrame)
             LOGE("DecodeMessage: memcpy_s failed");
             return false;
         }
-        uint64_t msgLen = recv(client_, buf, wsFrame.payloadLen, 0);
+        uint64_t msgLen = static_cast<uint64_t>(recv(static_cast<uint32_t>(client_), buf,
+                                                     static_cast<int64_t>(wsFrame.payloadLen), 0));
         while (msgLen < wsFrame.payloadLen) {
-            uint64_t len = recv(client_, buf + msgLen, wsFrame.payloadLen - msgLen, 0);
+            uint64_t len = static_cast<uint64_t>(recv(static_cast<uint32_t>(client_), buf + msgLen,
+                                                      static_cast<int64_t>(wsFrame.payloadLen - msgLen), 0));
             msgLen += len;
         }
         buf[wsFrame.payloadLen] = '\0';
-        for (uint64_t i = 0; i < wsFrame.payloadLen; i++) {
+        for (uint64_t i = 0; i < msgLen; i++) {
             uint64_t j = i % SOCKET_MASK_LEN;
             wsFrame.payload.get()[i] = buf[i] ^ wsFrame.maskingkey[j];
         }
     } else {
         char buf[wsFrame.payloadLen + 1];
-        uint64_t msgLen = recv(client_, buf, wsFrame.payloadLen, 0);
+        uint64_t msgLen = static_cast<uint64_t>(recv(static_cast<uint32_t>(client_), buf,
+                                                     static_cast<int64_t>(wsFrame.payloadLen), 0));
         if (msgLen != wsFrame.payloadLen) {
             LOGE("ReadMsg failed");
             return false;
         }
         buf[wsFrame.payloadLen] = '\0';
-        if (memcpy_s(wsFrame.payload.get(), wsFrame.payloadLen, buf, wsFrame.payloadLen) != EOK) {
+        if (memcpy_s(wsFrame.payload.get(), wsFrame.payloadLen, buf, msgLen) != EOK) {
             LOGE("DecodeMessage: memcpy_s failed");
             return false;
         }
@@ -319,8 +326,8 @@ bool WebSocket::StartUnixWebSocket(std::string sockName)
         return false;
     }
     un.sun_path[0] = '\0';
-    int32_t len = offsetof(struct sockaddr_un, sun_path) + strlen(sockName.c_str()) + 1;
-    if (bind(fd_, reinterpret_cast<struct sockaddr*>(&un), len) < SOCKET_SUCCESS) {
+    uint32_t len = offsetof(struct sockaddr_un, sun_path) + strlen(sockName.c_str()) + 1;
+    if (bind(fd_, reinterpret_cast<struct sockaddr*>(&un), static_cast<int32_t>(len)) < SOCKET_SUCCESS) {
         LOGE("StartWebSocket bind failed");
         return false;
     }

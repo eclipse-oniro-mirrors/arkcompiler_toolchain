@@ -37,7 +37,7 @@ public:
     DispatchResponse GetBestEffortCoverage();
     DispatchResponse StopPreciseCoverage();
     DispatchResponse TakePreciseCoverage();
-    DispatchResponse StartPreciseCoverage (const StartPreciseCoverageParams &params);
+    DispatchResponse StartPreciseCoverage(const StartPreciseCoverageParams &params);
     DispatchResponse StartTypeProfile();
     DispatchResponse StopTypeProfile();
     DispatchResponse TakeTypeProfile();
