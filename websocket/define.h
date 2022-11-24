@@ -38,9 +38,9 @@ namespace OHOS::ArkCompiler::Toolchain {
 std::vector<std::string> ProtocolSplit(const std::string& str, const std::string& input)
 {
     std::vector<std::string> result;
-    uint32_t prev = 0;
-    uint32_t len = input.length();
-    uint32_t cur = str.find(input);
+    size_t prev = 0;
+    size_t len = input.length();
+    size_t cur = str.find(input);
     while (cur != std::string::npos) {
         std::string tmp = str.substr(prev, cur - prev);
         result.push_back(tmp);
