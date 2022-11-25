@@ -32,7 +32,7 @@ void WebSocket::SendReply(const std::string& message) const
     uint32_t msgLen = message.length();
     std::unique_ptr<char []> msgBuf = std::make_unique<char []>(msgLen + 11); // 11: the maximum expandable length
     char* sendBuf = msgBuf.get();
-    int32_t sendMsgLen;
+    uint32_t sendMsgLen;
     sendBuf[0] = 0x81; // 0x81: the text message sent by the server should start with '0x81'.
 
     // Depending on the length of the messages, server will use shift operation to get the res
