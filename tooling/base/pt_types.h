@@ -1926,6 +1926,105 @@ public:
         return *this;
     }
 
+    int64_t GetGcTime() const
+    {
+        return gcTime_;
+    }
+
+    Profile &SetGcTime(int64_t gcTime)
+    {
+        gcTime_ = gcTime;
+        return *this;
+    }
+
+    int64_t GetCInterpreterTime() const
+    {
+        return cInterpreterTime_;
+    }
+
+    Profile &SetCInterpreterTime(int64_t cInterpreterTime)
+    {
+        cInterpreterTime_ = cInterpreterTime;
+        return *this;
+    }
+
+    int64_t GetAsmInterpreterTime() const
+    {
+        return asmInterpreterTime_;
+    }
+
+    Profile &SetAsmInterpreterTime(int64_t asmInterpreterTime)
+    {
+        asmInterpreterTime_ = asmInterpreterTime;
+        return *this;
+    }
+
+    int64_t GetAotTime() const
+    {
+        return aotTime_;
+    }
+
+    Profile &SetAotTime(int64_t aotTime)
+    {
+        aotTime_ = aotTime;
+        return *this;
+    }
+
+    int64_t GetBuiltinTime() const
+    {
+        return builtinTime_;
+    }
+
+    Profile &SetBuiltinTime(int64_t builtinTime)
+    {
+        builtinTime_ = builtinTime;
+        return *this;
+    }
+
+    int64_t GetNapiTime() const
+    {
+        return napiTime_;
+    }
+
+    Profile &SetNapiTime(int64_t napiTime)
+    {
+        napiTime_ = napiTime;
+        return *this;
+    }
+
+    int64_t GetArkuiEngineTime() const
+    {
+        return arkuiEngineTime_;
+    }
+
+    Profile &SetArkuiEngineTime(int64_t arkuiEngineTime)
+    {
+        arkuiEngineTime_ = arkuiEngineTime;
+        return *this;
+    }
+
+    int64_t GetRuntimeTime() const
+    {
+        return runtimeTime_;
+    }
+
+    Profile &SetRuntimeTime(int64_t runtimeTime)
+    {
+        runtimeTime_ = runtimeTime;
+        return *this;
+    }
+
+    int64_t GetOtherTime() const
+    {
+        return otherTime_;
+    }
+
+    Profile &SetOtherTime(int64_t otherTime)
+    {
+        otherTime_ = otherTime;
+        return *this;
+    }
+
     const std::vector<std::unique_ptr<ProfileNode>> *GetNodes() const
     {
         return &nodes_;
@@ -1982,6 +2081,15 @@ private:
     int64_t tid_ {0};
     int64_t startTime_ {0};
     int64_t endTime_ {0};
+    int64_t gcTime_ {0};
+    int64_t cInterpreterTime_ {0};
+    int64_t asmInterpreterTime_ {0};
+    int64_t aotTime_ {0};
+    int64_t builtinTime_ {0};
+    int64_t napiTime_ {0};
+    int64_t arkuiEngineTime_ {0};
+    int64_t runtimeTime_ {0};
+    int64_t otherTime_ {0};
     std::vector<std::unique_ptr<ProfileNode>> nodes_ {};
     std::optional<std::vector<int32_t>> samples_ {};
     std::optional<std::vector<int32_t>> timeDeltas_ {};
