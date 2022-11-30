@@ -2148,15 +2148,25 @@ HWTEST_F_L0(DebuggerTypesTest, ProfileCreateTest)
 
     // abnormal params of params.sub-key=[..]
     msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{
-          "tid":1000, "startTime":10, "endTime":25, "nodes":[{"id":12,
-          "callFrame": {"functionName":"Create", "scriptId":"10", "url":"url3", "lineNumber":100, "columnNumber":20}}],
-          "samples":[],"timeDeltas":[]}})";
+          "tid":1000, "startTime":10, "endTime":25, "gcTime":25, "cInterpreterTime":25, "asmInterpreterTime":25,
+          "aotTime":25, "builtinTime":25, "napiTime":25, "arkuiEngineTime":25, "runtimeTime":25, "otherTime":25,
+          "nodes":[{"id":12, "callFrame": {"functionName":"Create", "scriptId":"10", "url":"url3", "lineNumber":100,
+          "columnNumber":20}}], "samples":[],"timeDeltas":[]}})";
     profile = Profile::Create(DispatchRequest(msg).GetParams());
     ASSERT_NE(profile, nullptr);
 
     EXPECT_EQ(profile->GetTid(), 1000LL);
     EXPECT_EQ(profile->GetStartTime(), 10LL);
     EXPECT_EQ(profile->GetEndTime(), 25LL);
+    EXPECT_EQ(profile->GetGcTime(), 25LL);
+    EXPECT_EQ(profile->GetCInterpreterTime(), 25LL);
+    EXPECT_EQ(profile->GetAsmInterpreterTime(), 25LL);
+    EXPECT_EQ(profile->GetAotTime(), 25LL);
+    EXPECT_EQ(profile->GetBuiltinTime(), 25LL);
+    EXPECT_EQ(profile->GetNapiTime(), 25LL);
+    EXPECT_EQ(profile->GetArkuiEngineTime(), 25LL);
+    EXPECT_EQ(profile->GetRuntimeTime(), 25LL);
+    EXPECT_EQ(profile->GetOtherTime(), 25LL);
     const std::vector<std::unique_ptr<ProfileNode>> *profileNode = profile->GetNodes();
     ASSERT_NE(profileNode, nullptr);
     EXPECT_EQ((int)profileNode->size(), 1);
@@ -2172,9 +2182,10 @@ HWTEST_F_L0(DebuggerTypesTest, ProfileToJsonTest)
     Result ret;
 
     msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{
-          "tid":1000, "startTime":10, "endTime":25, "nodes":[{"id":12,
-          "callFrame": {"functionName":"Create", "scriptId":"10", "url":"url3", "lineNumber":100, "columnNumber":20}}],
-          "samples":[],"timeDeltas":[]}})";
+          "tid":1000, "startTime":10, "endTime":25, "gcTime":25, "cInterpreterTime":25, "asmInterpreterTime":25,
+          "aotTime":25, "builtinTime":25, "napiTime":25, "arkuiEngineTime":25, "runtimeTime":25, "otherTime":25,
+          "nodes":[{"id":12, "callFrame": {"functionName":"Create", "scriptId":"10", "url":"url3", "lineNumber":100,
+          "columnNumber":20}}], "samples":[],"timeDeltas":[]}})";
     profile = Profile::Create(DispatchRequest(msg).GetParams());
     ASSERT_NE(profile, nullptr);
     auto json = profile->ToJson();
@@ -2188,6 +2199,42 @@ HWTEST_F_L0(DebuggerTypesTest, ProfileToJsonTest)
     EXPECT_EQ(tmpInt, 10);
 
     ret = json->GetInt("endTime", &tmpInt);
+    EXPECT_EQ(ret, Result::SUCCESS);
+    EXPECT_EQ(tmpInt, 25);
+
+    ret = json->GetInt("gcTime", &tmpInt);
+    EXPECT_EQ(ret, Result::SUCCESS);
+    EXPECT_EQ(tmpInt, 25);
+
+    ret = json->GetInt("cInterpreterTime", &tmpInt);
+    EXPECT_EQ(ret, Result::SUCCESS);
+    EXPECT_EQ(tmpInt, 25);
+
+    ret = json->GetInt("asmInterpreterTime", &tmpInt);
+    EXPECT_EQ(ret, Result::SUCCESS);
+    EXPECT_EQ(tmpInt, 25);
+
+    ret = json->GetInt("aotTime", &tmpInt);
+    EXPECT_EQ(ret, Result::SUCCESS);
+    EXPECT_EQ(tmpInt, 25);
+
+    ret = json->GetInt("builtinTime", &tmpInt);
+    EXPECT_EQ(ret, Result::SUCCESS);
+    EXPECT_EQ(tmpInt, 25);
+
+    ret = json->GetInt("napiTime", &tmpInt);
+    EXPECT_EQ(ret, Result::SUCCESS);
+    EXPECT_EQ(tmpInt, 25);
+
+    ret = json->GetInt("arkuiEngineTime", &tmpInt);
+    EXPECT_EQ(ret, Result::SUCCESS);
+    EXPECT_EQ(tmpInt, 25);
+
+    ret = json->GetInt("runtimeTime", &tmpInt);
+    EXPECT_EQ(ret, Result::SUCCESS);
+    EXPECT_EQ(tmpInt, 25);
+
+    ret = json->GetInt("otherTime", &tmpInt);
     EXPECT_EQ(ret, Result::SUCCESS);
     EXPECT_EQ(tmpInt, 25);
 }
