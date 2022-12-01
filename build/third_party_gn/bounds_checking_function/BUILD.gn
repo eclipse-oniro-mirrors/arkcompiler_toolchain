@@ -16,7 +16,6 @@ import("$build_root/ark.gni")
 
 config("libsec_public_config") {
   include_dirs = [ "//third_party/bounds_checking_function/include" ]
-  cflags_cc = [ "-fPIC" ]
 }
 
 ohos_static_library("libsec_static") {

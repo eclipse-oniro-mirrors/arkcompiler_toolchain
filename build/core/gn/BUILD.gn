@@ -42,6 +42,16 @@ group("linux_packages") {
   }
 }
 
+group("mingw_packages") {
+  if (host_os != "mac") {
+    deps = [
+      # ":ets_frontend($build_root/toolchain/mingw:mingw_x86_64)",
+      ":ets_runtime($build_root/toolchain/mingw:mingw_x86_64)",
+      # ":runtime_core($build_root/toolchain/mingw:mingw_x86_64)",
+    ]
+  }
+}
+
 group("unittest_packages") {
   testonly = true
   if (host_os != "mac") {

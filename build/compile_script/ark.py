@@ -29,7 +29,7 @@ ARCHES = ["x64", "arm", "arm64"]
 DEFAULT_ARCHES = "x64"
 MODES = ["release", "debug"]
 DEFAULT_MODES = "release"
-TARGETS = ["ets_runtime", "ets_frontend", "default", "unittest_packages", "all"]
+TARGETS = ["ets_runtime", "ets_frontend", "default", "unittest_packages", "mingw_packages", "all"]
 DEFAULT_TARGETS = "default"
 TARGETS_TEST = ["test262"]
 
