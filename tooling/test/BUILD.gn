@@ -186,6 +186,7 @@ host_unittest_action("DebuggerTest") {
     "pt_base64_test.cpp",
     "pt_json_test.cpp",
     "pt_params_test.cpp",
+    "pt_returns_test.cpp",
     "pt_types_test.cpp",
     "runtime_impl_test.cpp",
     "tracing_impl_test.cpp",
