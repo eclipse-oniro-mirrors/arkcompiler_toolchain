@@ -1060,6 +1060,28 @@ public:
     static std::unique_ptr<SearchMatch> Create(const PtJson &params);
     std::unique_ptr<PtJson> ToJson() const override;
 
+    int32_t GetLine() const
+    {
+        return lineNumber_;
+    }
+
+    SearchMatch &SetLine(int32_t line)
+    {
+        lineNumber_ = line;
+        return *this;
+    }
+
+    std::string GetLineContent() const
+    {
+        return lineContent_;
+    }
+
+    SearchMatch &SetLineContent(const std::string lineContent)
+    {
+        lineContent_ = lineContent;
+        return *this;
+    }
+
 private:
     NO_COPY_SEMANTIC(SearchMatch);
     NO_MOVE_SEMANTIC(SearchMatch);
