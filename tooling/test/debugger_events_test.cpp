@@ -100,6 +100,31 @@ HWTEST_F_L0(DebuggerEventsTest, PausedToJsonTest)
     EXPECT_EQ("exception", reason);
     std::unique_ptr<PtJson> callFrames;
     ASSERT_EQ(params->GetArray("callFrames", &callFrames), Result::SUCCESS);
+
+    Paused paused1;
+    std::unique_ptr<RemoteObject> obj = std::make_unique<RemoteObject>();
+    paused1.SetData(std::move(obj)).SetReason(PauseReason::AMBIGUOUS).SetReason(PauseReason::ASSERT)
+        .SetReason(PauseReason::DEBUGCOMMAND).SetReason(PauseReason::DOM).SetReason(PauseReason::EVENTLISTENER)
+        .SetReason(PauseReason::OOM).SetReason(PauseReason::OTHER).SetReason(PauseReason::PROMISEREJECTION)
+        .SetReason(PauseReason::XHR).SetReason(PauseReason::BREAK_ON_START);
+    std::unique_ptr<PtJson> json1 = paused1.ToJson();
+    ASSERT_EQ(json1->GetObject("params", &params), Result::SUCCESS);
+}
+
+HWTEST_F_L0(DebuggerEventsTest, NativeCallingToJsonTest)
+{
+    NativeCalling nativeCalling;
+    nativeCalling.SetNativeAddress(nullptr);
+    std::unique_ptr<PtJson> json = nativeCalling.ToJson();
+
+    std::string method;
+    ASSERT_EQ(json->GetString("method", &method), Result::SUCCESS);
+    EXPECT_EQ(nativeCalling.GetName(), method);
+    std::unique_ptr<PtJson> params;
+    ASSERT_EQ(json->GetObject("params", &params), Result::SUCCESS);
+
+    int64_t nativeAddress;
+    ASSERT_EQ(params->GetInt64("nativeAddress", &nativeAddress), Result::SUCCESS);
 }
 
 HWTEST_F_L0(DebuggerEventsTest, ResumedToJsonTest)
@@ -184,6 +209,10 @@ HWTEST_F_L0(DebuggerEventsTest, ScriptFailedToParseToJsonTest)
 
     ASSERT_EQ(params->GetString("embedderName", &tmpStr), Result::SUCCESS);
     EXPECT_EQ("hh", tmpStr);
+
+    ScriptFailedToParse parsed1;
+    json = parsed1.ToJson();
+    ASSERT_EQ(json->GetObject("params", &params), Result::SUCCESS);
 }
 
 HWTEST_F_L0(DebuggerEventsTest, ScriptParsedToJsonTest)
@@ -291,6 +320,13 @@ HWTEST_F_L0(DebuggerEventsTest, ConsoleProfileFinishedToJsonTest)
 
     ASSERT_EQ(params->GetString("title", &tmpStr), Result::SUCCESS);
     EXPECT_EQ("001", tmpStr);
+
+    ConsoleProfileFinished consoleProfileFinished1;
+    auto location1 = std::make_unique<Location>();
+    auto profile1 = std::make_unique<Profile>();
+    consoleProfileFinished1.SetLocation(std::move(location1)).SetProfile(std::move(profile1));
+    json = consoleProfileFinished1.ToJson();
+    ASSERT_EQ(json->GetObject("params", &params), Result::SUCCESS);
 }
 
 HWTEST_F_L0(DebuggerEventsTest, ConsoleProfileStartedToJsonTest)
@@ -318,6 +354,12 @@ HWTEST_F_L0(DebuggerEventsTest, ConsoleProfileStartedToJsonTest)
 
     ASSERT_EQ(params->GetString("title", &tmpStr), Result::SUCCESS);
     EXPECT_EQ("002", tmpStr);
+
+    ConsoleProfileStarted consoleProfileStarted1;
+    auto location1 = std::make_unique<Location>();
+    consoleProfileStarted1.SetLocation(std::move(location1));
+    json = consoleProfileStarted1.ToJson();
+    ASSERT_EQ(json->GetObject("params", &params), Result::SUCCESS);
 }
 
 HWTEST_F_L0(DebuggerEventsTest, PreciseCoverageDeltaUpdateToJsonTest)
@@ -343,6 +385,21 @@ HWTEST_F_L0(DebuggerEventsTest, PreciseCoverageDeltaUpdateToJsonTest)
 
     std::unique_ptr<PtJson> tmpArray;
     ASSERT_EQ(params->GetArray("result", &tmpArray), Result::SUCCESS);
+
+    PreciseCoverageDeltaUpdate preciseCoverageDeltaUpdate1;
+    std::unique_ptr<ScriptCoverage> scriptCoverage;
+    std::string msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{
+          "scriptId":"1001",
+          "url":"url17",
+          "functions":[{"functionName":"Create0",
+          "ranges":[{"startOffset":0, "endOffset":13, "count":13}],
+          "isBlockCoverage":true}]}})";
+    scriptCoverage = ScriptCoverage::Create(DispatchRequest(msg).GetParams());
+    v.push_back(std::move(scriptCoverage));
+    preciseCoverageDeltaUpdate1.SetResult(std::move(v));
+    json = preciseCoverageDeltaUpdate1.ToJson();
+    ASSERT_EQ(json->GetObject("params", &params), Result::SUCCESS);
+    ASSERT_EQ(params->GetArray("result", &tmpArray), Result::SUCCESS);
 }
 
 HWTEST_F_L0(DebuggerEventsTest, HeapStatsUpdateToJsonTest)
@@ -356,6 +413,11 @@ HWTEST_F_L0(DebuggerEventsTest, HeapStatsUpdateToJsonTest)
 
     std::unique_ptr<PtJson> tmpArray;
     ASSERT_EQ(params->GetArray("statsUpdate", &tmpArray), Result::SUCCESS);
+
+    HeapStatsUpdate heapStatsUpdate1;
+    heapStatsUpdate1.SetStatsUpdate(std::vector<int32_t> {1, 12, 20});
+    json = heapStatsUpdate1.ToJson();
+    ASSERT_EQ(json->GetObject("params", &params), Result::SUCCESS);
 }
 
 HWTEST_F_L0(DebuggerEventsTest, LastSeenObjectIdToJsonTest)
@@ -411,6 +473,26 @@ HWTEST_F_L0(DebuggerEventsTest, BufferUsageToJsonTest)
 
     ASSERT_EQ(params->GetInt("value", &tmpInt), Result::SUCCESS);
     EXPECT_EQ(tmpInt, 12);
+}
+
+HWTEST_F_L0(DebuggerEventsTest, DataCollectedToJsonTest)
+{
+    DataCollected dataCollected;
+    std::unique_ptr<PtJson> jsonV = PtJson::CreateObject();
+    std::vector<std::unique_ptr<PtJson>> v;
+    v.push_back(std::move(jsonV));
+    dataCollected.SetValue(std::move(v));
+
+    std::unique_ptr<PtJson> json = dataCollected.ToJson();
+    std::string method;
+    ASSERT_EQ(json->GetString("method", &method), Result::SUCCESS);
+    EXPECT_EQ(dataCollected.GetName(), method);
+
+    std::unique_ptr<PtJson> params;
+    ASSERT_EQ(json->GetObject("params", &params), Result::SUCCESS);
+
+    std::unique_ptr<PtJson> tmpArray;
+    ASSERT_EQ(params->GetArray("value", &tmpArray), Result::SUCCESS);
 }
 
 HWTEST_F_L0(DebuggerEventsTest, TracingCompleteToJsonTest)
