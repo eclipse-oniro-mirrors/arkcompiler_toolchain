@@ -34,7 +34,7 @@ using ObjectSubType = RemoteObject::SubTypeName;
 using ObjectClassName = RemoteObject::ClassName;
 using StepperType = SingleStepper::Type;
 
-#ifdef DEBUGGER_TEST
+#ifdef OHOS_UNIT_TEST
 const std::string DATA_APP_PATH = "/";
 #else
 const std::string DATA_APP_PATH = "/data/";
@@ -294,7 +294,8 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         { "stepOut", &DebuggerImpl::DispatcherImpl::StepOut },
         { "stepOver", &DebuggerImpl::DispatcherImpl::StepOver },
         { "setMixedDebugEnabled", &DebuggerImpl::DispatcherImpl::SetMixedDebugEnabled },
-        { "replyNativeCalling", &DebuggerImpl::DispatcherImpl::ReplyNativeCalling }
+        { "setBlackboxPatterns", &DebuggerImpl::DispatcherImpl::SetBlackboxPatterns },
+	{ "replyNativeCalling", &DebuggerImpl::DispatcherImpl::ReplyNativeCalling }
     };
 
     const std::string &method = request.GetMethod();
@@ -464,6 +465,10 @@ void DebuggerImpl::DispatcherImpl::StepOver(const DispatchRequest &request)
 void DebuggerImpl::DispatcherImpl::SetMixedDebugEnabled(const DispatchRequest &request)
 {
     std::unique_ptr<SetMixedDebugParams> params = SetMixedDebugParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
     DispatchResponse response = debugger_->SetMixedDebugEnabled(*params);
     SendResponse(request, response);
 }
@@ -471,6 +476,10 @@ void DebuggerImpl::DispatcherImpl::SetMixedDebugEnabled(const DispatchRequest &r
 void DebuggerImpl::DispatcherImpl::ReplyNativeCalling(const DispatchRequest &request)
 {
     std::unique_ptr<ReplyNativeCallingParams> params = ReplyNativeCallingParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
     DispatchResponse response = debugger_->ReplyNativeCalling(*params);
     SendResponse(request, response);
 }
