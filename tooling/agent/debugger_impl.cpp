@@ -72,9 +72,9 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
 
     const JSPandaFile *jsPandaFile = nullptr;
     JSPandaFileManager::GetInstance()->EnumerateJSPandaFiles([&jsPandaFile, &fileName](
-        const panda::ecmascript::JSPandaFile *pf) {
-        if (fileName == pf->GetJSPandaFileDesc().c_str()) {
-            jsPandaFile = pf;
+        const panda::ecmascript::JSPandaFile *pandaFile) {
+        if (fileName == pandaFile->GetJSPandaFileDesc().c_str()) {
+            jsPandaFile = pandaFile;
             return false;
         }
         return true;
@@ -169,7 +169,7 @@ bool DebuggerImpl::IsSkipLine(const JSPtLocation &location)
     auto callbackFunc = [](int32_t line) -> bool {
         return line == DebugInfoExtractor::SPECIAL_LINE_MARK;
     };
-    File::EntityId methodId = location.GetMethodId();
+    panda_file::File::EntityId methodId = location.GetMethodId();
     uint32_t offset = location.GetBytecodeOffset();
     if (extractor->MatchLineWithOffset(callbackFunc, methodId, offset)) {
         LOG_DEBUGGER(INFO) << "StepComplete: skip -1";
@@ -217,7 +217,7 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
             detail.column_ = column;
             return true;
         };
-        File::EntityId methodId = location->GetMethodId();
+        panda_file::File::EntityId methodId = location->GetMethodId();
         uint32_t offset = location->GetBytecodeOffset();
         // In merge abc scenario, need to use the source file to match to get right url
         if (!MatchScripts(scriptFunc, location->GetSourceFile(), ScriptMatchType::URL) ||
@@ -1214,8 +1214,8 @@ Local<JSValueRef> DebuggerImpl::ConvertToLocal(const std::string &varValue)
 bool DebuggerImpl::DecodeAndCheckBase64(const std::string &src, std::string &dest)
 {
     uint32_t numOctets = PtBase64::Decode(src, dest);
-    if (numOctets > File::MAGIC_SIZE &&
-        memcmp(dest.data(), File::MAGIC.data(), File::MAGIC_SIZE) == 0) {
+    if (numOctets > panda_file::File::MAGIC_SIZE &&
+        memcmp(dest.data(), panda_file::File::MAGIC.data(), panda_file::File::MAGIC_SIZE) == 0) {
         return true;
     }
     return false;
