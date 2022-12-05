@@ -93,8 +93,7 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
     auto mainMethodIndex = panda_file::File::EntityId(jsPandaFile->GetMainMethodIndex(entryPoint.data()));
     const std::string &source = extractor->GetSourceCode(mainMethodIndex);
     const std::string &url = extractor->GetSourceFile(mainMethodIndex);
-    const uint32_t MIN_SOURCE_CODE_LENGTH = 5;  // maybe return 'ANDA' when source code is empty
-    if (source.size() < MIN_SOURCE_CODE_LENGTH) {
+    if (source.empty()) {
         LOG_DEBUGGER(ERROR) << "NotifyScriptParsed: invalid file: " << fileName;
         return false;
     }
