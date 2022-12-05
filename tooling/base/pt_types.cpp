@@ -2212,6 +2212,78 @@ std::unique_ptr<Profile> Profile::Create(const PtJson &params)
         error += "Unknown 'endTime';";
     }
 
+    int64_t gcTime;
+    ret = params.GetInt64("gcTime", &gcTime);
+    if (ret == Result::SUCCESS) {
+        profile->gcTime_ = gcTime;
+    } else {
+        error += "Unknown 'gcTime';";
+    }
+
+    int64_t cInterpreterTime;
+    ret = params.GetInt64("cInterpreterTime", &cInterpreterTime);
+    if (ret == Result::SUCCESS) {
+        profile->cInterpreterTime_ = cInterpreterTime;
+    } else {
+        error += "Unknown 'cInterpreterTime';";
+    }
+
+    int64_t asmInterpreterTime;
+    ret = params.GetInt64("asmInterpreterTime", &asmInterpreterTime);
+    if (ret == Result::SUCCESS) {
+        profile->asmInterpreterTime_ = asmInterpreterTime;
+    } else {
+        error += "Unknown 'asmInterpreterTime';";
+    }
+
+    int64_t aotTime;
+    ret = params.GetInt64("aotTime", &aotTime);
+    if (ret == Result::SUCCESS) {
+        profile->aotTime_ = aotTime;
+    } else {
+        error += "Unknown 'aotTime';";
+    }
+
+    int64_t builtinTime;
+    ret = params.GetInt64("builtinTime", &builtinTime);
+    if (ret == Result::SUCCESS) {
+        profile->builtinTime_ = builtinTime;
+    } else {
+        error += "Unknown 'builtinTime';";
+    }
+
+    int64_t napiTime;
+    ret = params.GetInt64("napiTime", &napiTime);
+    if (ret == Result::SUCCESS) {
+        profile->napiTime_ = napiTime;
+    } else {
+        error += "Unknown 'napiTime';";
+    }
+
+    int64_t arkuiEngineTime;
+    ret = params.GetInt64("arkuiEngineTime", &arkuiEngineTime);
+    if (ret == Result::SUCCESS) {
+        profile->arkuiEngineTime_ = arkuiEngineTime;
+    } else {
+        error += "Unknown 'arkuiEngineTime';";
+    }
+
+    int64_t runtimeTime;
+    ret = params.GetInt64("runtimeTime", &runtimeTime);
+    if (ret == Result::SUCCESS) {
+        profile->runtimeTime_ = runtimeTime;
+    } else {
+        error += "Unknown 'runtimeTime';";
+    }
+
+    int64_t otherTime;
+    ret = params.GetInt64("otherTime", &otherTime);
+    if (ret == Result::SUCCESS) {
+        profile->otherTime_ = otherTime;
+    } else {
+        error += "Unknown 'otherTime';";
+    }
+
     std::unique_ptr<PtJson> samples;
     ret = params.GetArray("samples", &samples);
     if (ret == Result::SUCCESS) {
@@ -2250,6 +2322,15 @@ std::unique_ptr<Profile> Profile::FromProfileInfo(const ProfileInfo &profileInfo
     profile->SetTid(static_cast<int64_t>(profileInfo.tid));
     profile->SetStartTime(static_cast<int64_t>(profileInfo.startTime));
     profile->SetEndTime(static_cast<int64_t>(profileInfo.stopTime));
+    profile->SetGcTime(static_cast<int64_t>(profileInfo.gcTime));
+    profile->SetCInterpreterTime(static_cast<int64_t>(profileInfo.cInterpreterTime));
+    profile->SetAsmInterpreterTime(static_cast<int64_t>(profileInfo.asmInterpreterTime));
+    profile->SetAotTime(static_cast<int64_t>(profileInfo.aotTime));
+    profile->SetBuiltinTime(static_cast<int64_t>(profileInfo.builtinTime));
+    profile->SetNapiTime(static_cast<int64_t>(profileInfo.napiTime));
+    profile->SetArkuiEngineTime(static_cast<int64_t>(profileInfo.arkuiEngineTime));
+    profile->SetRuntimeTime(static_cast<int64_t>(profileInfo.runtimeTime));
+    profile->SetOtherTime(static_cast<int64_t>(profileInfo.otherTime));
     size_t samplesLen = profileInfo.samples.size();
     std::vector<int32_t> tmpSamples;
     tmpSamples.reserve(samplesLen);
@@ -2283,6 +2364,15 @@ std::unique_ptr<PtJson> Profile::ToJson() const
     result->Add("tid", tid_);
     result->Add("startTime", startTime_);
     result->Add("endTime", endTime_);
+    result->Add("gcTime", gcTime_);
+    result->Add("cInterpreterTime", cInterpreterTime_);
+    result->Add("asmInterpreterTime", asmInterpreterTime_);
+    result->Add("aotTime", aotTime_);
+    result->Add("builtinTime", builtinTime_);
+    result->Add("napiTime", napiTime_);
+    result->Add("arkuiEngineTime", arkuiEngineTime_);
+    result->Add("runtimeTime", runtimeTime_);
+    result->Add("otherTime", otherTime_);
 
     std::unique_ptr<PtJson> nodes = PtJson::CreateArray();
     size_t nodesLen = nodes_.size();
