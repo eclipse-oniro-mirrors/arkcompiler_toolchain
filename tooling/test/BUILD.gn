@@ -173,6 +173,7 @@ host_unittest_action("DebuggerTest") {
     # test file
     "debugger_commands_test.cpp",
     "debugger_events_test.cpp",
+    "debugger_impl_test.cpp",
     "debugger_params_test.cpp",
     "debugger_returns_test.cpp",
     "debugger_script_test.cpp",
