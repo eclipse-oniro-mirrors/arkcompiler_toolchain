@@ -30,11 +30,13 @@ namespace OHOS {
     {
         auto cn = std::make_unique<common_fuzzer>();
         auto vm = cn->GetEcvm();
-        auto str = cn->GetString(data, size);
-        std::string output;
-        std::string input;
-        panda::ecmascript::tooling::PtBase64::Encode(str, output);
-        panda::ecmascript::tooling::PtBase64::Decode(input, output);
+        auto src = cn->GetString(data, size);
+        std::string dest;
+        dest.resize(PtBase64::EncodedSize(src.size()));
+        PtBase64::Encode(dest.data(), src.data(), src.size());
+        src = dest;
+        dest.resize(PtBase64::DecodedSize(src.size()));
+        PtBase64::Decode(dest.data(), src.data(), src.size());
         cn->DestroyEcvm(vm);
     }
 }

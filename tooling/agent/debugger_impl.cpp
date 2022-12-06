@@ -597,7 +597,7 @@ DispatchResponse DebuggerImpl::EvaluateOnCallFrame(const EvaluateOnCallFramePara
         return DispatchResponse::Fail("Invalid callFrameId.");
     }
 
-    std::string dest;
+    std::vector<uint8_t> dest;
     if (!DecodeAndCheckBase64(expression, dest)) {
         LOG_DEBUGGER(ERROR) << "EvaluateValue: base64 decode failed";
         auto ret = CmptEvaluateValue(callFrameId, expression, result);
@@ -751,7 +751,7 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
         LOG_DEBUGGER(INFO) << "set breakpoint location: " << location.ToString();
         Local<FunctionRef> condFuncRef = FunctionRef::Undefined(vm_);
         if (condition.has_value() && !condition.value().empty()) {
-            std::string dest;
+            std::vector<uint8_t> dest;
             if (!DecodeAndCheckBase64(condition.value(), dest)) {
                 LOG_DEBUGGER(ERROR) << "SetBreakpointByUrl: base64 decode failed";
                 return false;
@@ -1239,10 +1239,12 @@ Local<JSValueRef> DebuggerImpl::ConvertToLocal(const std::string &varValue)
     return taggedValue;
 }
 
-bool DebuggerImpl::DecodeAndCheckBase64(const std::string &src, std::string &dest)
+bool DebuggerImpl::DecodeAndCheckBase64(const std::string &src, std::vector<uint8_t> &dest)
 {
-    uint32_t numOctets = PtBase64::Decode(src, dest);
-    if (numOctets > panda_file::File::MAGIC_SIZE &&
+    dest.resize(PtBase64::DecodedSize(src.size()));
+    auto [numOctets, done] = PtBase64::Decode(dest.data(), src.data(), src.size());
+    dest.resize(numOctets);
+    if ((done && numOctets > panda_file::File::MAGIC_SIZE) &&
         memcmp(dest.data(), panda_file::File::MAGIC.data(), panda_file::File::MAGIC_SIZE) == 0) {
         return true;
     }
