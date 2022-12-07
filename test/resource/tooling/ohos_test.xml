@@ -23,7 +23,8 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/syntax_exception.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/throw_exception.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/step.abc -> /data/test" src="out"/>
-            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/variable.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/variable_first.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/variable_second.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/module_variable.abc -> /data/test" src="out"/>
             <option name="push" value="test/test/libjsdebugtest.so -> /data/test" src="out"/>
             <option name="push" value="test/test/libdebugger_entry.so -> /data/test" src="out"/>

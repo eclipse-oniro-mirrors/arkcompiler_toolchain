@@ -19,12 +19,9 @@
 #include "test/utils/test_util.h"
 
 namespace panda::ecmascript::tooling::test {
-std::string g_pandaFile = DEBUGGER_ABC_DIR "variable.abc";
-std::string g_sourceFile = DEBUGGER_JS_DIR "variable.js";
-
-class JsVariableTest : public TestEvents {
+class JsVariableFirstTest : public TestEvents {
 public:
-    JsVariableTest()
+    JsVariableFirstTest()
     {
         breakpoint = [this](const JSPtLocation &location) {
             ASSERT_TRUE(location.GetMethodId().IsValid());
@@ -36,13 +33,15 @@ public:
         };
 
         loadModule = [this](std::string_view moduleName) {
-            static_cast<JsVariableTestChannel *>(channel_)->Initial(vm_, runtime_);
-            // 328: breakpointer line
-            location_ = TestUtil::GetLocation(g_sourceFile.c_str(), 328, 0, g_pandaFile.c_str());
+            std::string pandaFile = DEBUGGER_ABC_DIR "variable_first.abc";
+            std::string sourceFile = DEBUGGER_JS_DIR "variable_first.js";
+            static_cast<JsVariableFirstTestChannel *>(channel_)->Initial(vm_, runtime_);
+            // 269: breakpointer line
+            location_ = TestUtil::GetLocation(sourceFile.c_str(), 269, 0, pandaFile.c_str());
             ASSERT_TRUE(location_.GetMethodId().IsValid());
             TestUtil::SuspendUntilContinue(DebugEvent::LOAD_MODULE);
-            ASSERT_EQ(moduleName, g_pandaFile);
-            ASSERT_TRUE(debugger_->NotifyScriptParsed(0, g_pandaFile));
+            ASSERT_EQ(moduleName, pandaFile);
+            ASSERT_TRUE(debugger_->NotifyScriptParsed(0, pandaFile));
             auto condFuncRef = FunctionRef::Undefined(vm_);
             auto ret = debugInterface_->SetBreakpoint(location_, condFuncRef);
             ASSERT_TRUE(ret);
@@ -65,24 +64,25 @@ public:
             return true;
         };
 
-        channel_ = new JsVariableTestChannel();
+        channel_ = new JsVariableFirstTestChannel();
     }
 
     std::pair<std::string, std::string> GetEntryPoint() override
     {
-        return {g_pandaFile, entryPoint_};
+        std::string pandaFile = DEBUGGER_ABC_DIR "variable_first.abc";
+        return {pandaFile, entryPoint_};
     }
-    ~JsVariableTest()
+    ~JsVariableFirstTest()
     {
         delete channel_;
         channel_ = nullptr;
     }
 
 private:
-    class JsVariableTestChannel : public TestChannel {
+    class JsVariableFirstTestChannel : public TestChannel {
     public:
-        JsVariableTestChannel() = default;
-        ~JsVariableTestChannel() = default;
+        JsVariableFirstTestChannel() = default;
+        ~JsVariableFirstTestChannel() = default;
         void Initial(const EcmaVM *vm, RuntimeImpl *runtime)
         {
             vm_ = vm;
@@ -93,18 +93,19 @@ private:
         {
             const static std::vector<std::function<bool(const PtBaseEvents &events)>> eventList = {
                 [](const PtBaseEvents &events) -> bool {
+                    std::string sourceFile = DEBUGGER_JS_DIR "variable_first.js";
                     auto parsed = static_cast<const ScriptParsed *>(&events);
                     std::string str = parsed->ToJson()->Stringify();
-                    std::cout << "JsVariableTestChannel: SendNotification 0:\n" << str << std::endl;
+                    std::cout << "JsVariableFirstTestChannel: SendNotification 0:\n" << str << std::endl;
 
                     ASSERT_EQ(parsed->GetName(), "Debugger.scriptParsed");
-                    ASSERT_EQ(parsed->GetUrl(), g_sourceFile);
+                    ASSERT_EQ(parsed->GetUrl(), sourceFile);
                     return true;
                 },
                 [this](const PtBaseEvents &events) -> bool {
                     auto paused = static_cast<const Paused *>(&events);
                     std::string str = paused->ToJson()->Stringify();
-                    std::cout << "JsVariableTestChannel: SendNotification 1:\n" << str << std::endl;
+                    std::cout << "JsVariableFirstTestChannel: SendNotification 1:\n" << str << std::endl;
 
                     ASSERT_EQ(paused->GetName(), "Debugger.paused");
                     auto frame = paused->GetCallFrames()->at(0).get();
@@ -158,8 +159,8 @@ private:
         }
 
     private:
-        NO_COPY_SEMANTIC(JsVariableTestChannel);
-        NO_MOVE_SEMANTIC(JsVariableTestChannel);
+        NO_COPY_SEMANTIC(JsVariableFirstTestChannel);
+        NO_MOVE_SEMANTIC(JsVariableFirstTestChannel);
 
         void PushValueInfo(RemoteObject *value, std::vector<std::string> &infos)
         {
@@ -209,7 +210,7 @@ private:
         const std::map<std::string, std::vector<std::string>> variableMap_ = {
             { "nop", { "undefined" } },
             { "foo", { "function", "Function", "function foo( { [js code] }",
-                        "Cannot get source code of funtion"} },
+                       "Cannot get source code of funtion"} },
             { "string0", { "string", "helloworld", "helloworld" } },
             { "boolean0", { "object", "Object", "Boolean{[[PrimitiveValue]]: false}", "false", "[[PrimitiveValue]]",
                             "boolean", "false", "false" } },
@@ -786,101 +787,6 @@ private:
                             "boolean", "false", "false", "unicode", "boolean", "true", "true", "sticky", "boolean",
                             "false", "false", "flags", "string", "u", "u", "source", "string", "^[0-9a-zA-Z_]{1,}$",
                             "^[0-9a-zA-Z_]{1,}$", "lastIndex", "number", "0", "0" } },
-            { "array1", { "object", "array", "Array", "Array(3)", "banana,apple,peach", "0", "string", "banana",
-                          "banana", "1", "string", "apple", "apple", "2", "string", "peach", "peach", "length",
-                          "number", "3", "3" } },
-            { "array2", { "object", "array", "Array", "Array(3)", "banana,apple,peach", "0", "string", "banana",
-                          "banana", "1", "string", "apple", "apple", "2", "string", "peach", "peach", "length",
-                          "number", "3", "3" } },
-            { "array3", { "object", "array", "Array", "Array(1)", "apple", "0", "string", "apple", "apple",
-                          "length", "number", "1", "1" } },
-            { "array4", { "string", "banana", "banana" } },
-            { "array5", { "object", "array", "Array", "Array(1)", "", "length", "number", "1", "1" } },
-            { "array6", { "object", "array", "Array", "Array(1)", "helloworld", "0", "string", "helloworld",
-                          "helloworld", "length", "number", "1", "1" } },
-            { "array7", { "object", "array", "Array", "Array(1)", "false", "0", "object", "Object",
-                          "Boolean{[[PrimitiveValue]]: false}", "false", "length", "number", "1", "1" } },
-            { "array8", { "object", "array", "Array", "Array(1)", "[object Object]", "0", "object", "Object",
-                          "Object", "[object Object]", "length", "number", "1", "1" } },
-            { "array9", { "object", "array", "Array", "Array(1)", "Cannot get source code of funtion", "0", "function",
-                          "Function", "function function0( { [js code] }", "Cannot get source code of funtion",
-                          "length", "number", "1", "1" } },
-            { "array10", { "object", "array", "Array", "Array(1)", "[object Map]", "0", "object", "map", "Map",
-                           "Map(0)", "[object Map]", "length", "number", "1", "1" } },
-            { "array11", { "object", "array", "Array", "Array(1)", "[object Set]", "0", "object", "set", "Set",
-                           "Set(0)", "[object Set]", "length", "number", "1", "1" } },
-            { "array12", { "object", "array", "Array", "Array(1)", "", "0", "undefined", "length", "number",
-                           "1", "1" } },
-            { "array13", { "object", "array", "Array", "Array(1)", "Apple,Banana", "0", "object", "array", "Array",
-                           "Array(2)", "Apple,Banana", "length", "number", "1", "1" } },
-            { "array14", { "object", "array", "Array", "Array(1)", "Cannot get source code of funtion", "0",
-                           "function", "Generator", "function* generator0( { [js code] }",
-                           "Cannot get source code of funtion", "length", "number", "1", "1" } },
-            { "array15", { "object", "array", "Array", "Array(1)", "/^\\d+\\.\\d+$/i", "0", "object", "regexp",
-                           "RegExp", "/^\\d+\\.\\d+$/i", "/^\\d+\\.\\d+$/i", "length", "number", "1", "1" } },
-            { "array16", { "object", "array", "Array", "Array(1)", "[object ArrayBuffer]", "0", "object",
-                           "arraybuffer", "Arraybuffer", "ArrayBuffer(24)", "[object ArrayBuffer]",
-                           "length", "number", "1", "1" } },
-            { "array17", { "object", "array", "Array", "Array(1)",
-                           "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", "0", "object", "Object",
-                           "Uint8Array(24)", "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
-                           "length", "number", "1", "1" } },
-            { "array18", { "object", "array", "Array", "Array(1)", "[object DataView]", "0", "object", "Object",
-                           "Object", "[object DataView]", "length", "number", "1", "1" } },
-            { "array19", { "object", "array", "Array", "Array(1)", "999", "0", "bigint", "999n", "999", "length",
-                           "number", "1", "1" } },
-            { "array20", { "object", "array", "Array", "Array(3)", "banana,apple,peach", "0", "string", "banana",
-                           "banana", "1", "string", "apple", "apple", "2", "string", "peach", "peach", "length",
-                           "number", "3", "3" } },
-            { "array21", { "string", "banana", "banana" } },
-            { "typedarray1", { "object", "Object", "Int8Array(0)", "", "none" } },
-            { "typedarray2", { "object", "Object", "Object", "", "none" } },
-            { "typedarray3", { "object", "Object", "Int16Array(0)", "", "none" } },
-            { "typedarray4", { "object", "Object", "Object", "", "none" } },
-            { "typedarray5", { "object", "Object", "Int32Array(0)", "", "none" } },
-            { "typedarray6", { "object", "Object", "Object", "", "none" } },
-            { "typedarray7", { "object", "Object", "Object", "", "none" } },
-            { "typedarray8", { "object", "Object", "Object", "", "none" } },
-            { "typedarray9", { "object", "Object", "Object", "", "none" } },
-            { "typedarray10", { "object", "Object", "Object", "", "none" } },
-            { "typedarray11", { "object", "Object", "Uint8Array(1)", "0", "         0", "number", "0", "0" } },
-            { "iterator1", { "function", "Function", "function values( { [native code] }",
-                             "function values() { [native code] }" } },
-            { "iterator3", { "function", "Function", "function values( { [native code] }",
-                             "function values() { [native code] }" } },
-            { "iterator2", { "function", "Function", "function entries( { [native code] }",
-                             "function entries() { [native code] }" } },
-            { "iterator4", { "function", "Function", "function values( { [native code] }",
-                             "function values() { [native code] }" } },
-            { "iterator5", { "function", "Function", "function [Symbol.iterator]( { [native code] }",
-                             "function [Symbol.iterator]() { [native code] }" } },
-            { "iterator6", { "function", "Function", "function values( { [native code] }",
-                             "function values() { [native code] }" } },
-            { "iterator7", { "function", "Function", "function values( { [native code] }",
-                             "function values() { [native code] }" } },
-            { "iterator8", { "function", "Function", "function values( { [native code] }",
-                             "function values() { [native code] }" } },
-            { "iterator9", { "function", "Function", "function values( { [native code] }",
-                             "function values() { [native code] }" } },
-            { "iterator10", { "function", "Function", "function values( { [native code] }",
-                              "function values() { [native code] }" } },
-            { "iterator11", { "function", "Function", "function values( { [native code] }",
-                              "function values() { [native code] }" } },
-            { "iterator12", { "function", "Function", "function values( { [native code] }",
-                              "function values() { [native code] }" } },
-            { "iterator13", { "function", "Function", "function values( { [native code] }",
-                              "function values() { [native code] }" } },
-            { "iterator14", { "function", "Function", "function values( { [native code] }",
-                              "function values() { [native code] }" } },
-            { "iterator15", { "function", "Function", "function values( { [native code] }",
-                              "function values() { [native code] }" } },
-            { "iterator16", { "function", "Function", "function values( { [native code] }",
-                              "function values() { [native code] }" } },
-            { "iterator17", { "undefined" } },
-            { "iterator18", { "undefined" } },
-            { "iterator19", { "undefined" } },
-            { "weakMap", { "object", "weakmap", "Weakmap", "WeakMap", "[object WeakMap]", "none" } },
-            { "weakSet", { "object", "weakset", "Weakset", "WeakSet", "[object WeakSet]", "none" } },
         };
 
         int32_t index_ {0};
@@ -893,9 +799,9 @@ private:
     size_t breakpointCounter_ = 0;
 };
 
-std::unique_ptr<TestEvents> GetJsVariableTest()
+std::unique_ptr<TestEvents> GetJsVariableFirstTest()
 {
-    return std::make_unique<JsVariableTest>();
+    return std::make_unique<JsVariableFirstTest>();
 }
 }  // namespace panda::ecmascript::tooling::test
 
