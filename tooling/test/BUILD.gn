@@ -42,7 +42,8 @@ test_js_files = [
   "step",
   "syntax_exception",
   "throw_exception",
-  "variable",
+  "variable_first",
+  "variable_second",
   "module_variable",
 ]
 
