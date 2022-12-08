@@ -96,7 +96,7 @@ Local<JSValueRef> DebuggerExecutor::GetValue(const EcmaVM *vm, const FrameHandle
     if (!value.IsEmpty()) {
         return value;
     }
-    value = GetModuleValue(vm, name);
+    value = GetModuleValue(vm, frameHandler, name);
     if (!value.IsEmpty()) {
         return value;
     }
@@ -117,7 +117,7 @@ bool DebuggerExecutor::SetValue(const EcmaVM *vm, FrameHandler *frameHandler,
     if (SetLexicalValue(vm, frameHandler, name, value)) {
         return true;
     }
-    if (SetModuleValue(vm, name, value)) {
+    if (SetModuleValue(vm, frameHandler, name, value)) {
         return true;
     }
     if (SetGlobalValue(vm, name, value)) {
@@ -200,18 +200,20 @@ bool DebuggerExecutor::SetGlobalValue(const EcmaVM *vm, Local<StringRef> name, L
     return DebuggerApi::SetGlobalValue(vm, name, value);
 }
 
-Local<JSValueRef> DebuggerExecutor::GetModuleValue(const EcmaVM *vm, Local<StringRef> name)
+Local<JSValueRef> DebuggerExecutor::GetModuleValue(const EcmaVM *vm, const FrameHandler *frameHandler,
+                                                   Local<StringRef> name)
 {
     Local<JSValueRef> result;
     std::string varName = name->ToString();
-    result = DebuggerApi::GetModuleValue(vm, varName);
+    result = DebuggerApi::GetModuleValue(vm, frameHandler, varName);
     return result;
 }
 
-bool DebuggerExecutor::SetModuleValue(const EcmaVM *vm, Local<StringRef> name, Local<JSValueRef> value)
+bool DebuggerExecutor::SetModuleValue(const EcmaVM *vm, const FrameHandler *frameHandler,
+                                      Local<StringRef> name, Local<JSValueRef> value)
 {
     std::string varName = name->ToString();
-    DebuggerApi::SetModuleValue(vm, varName, value);
+    DebuggerApi::SetModuleValue(vm, frameHandler, varName, value);
     return true;
 }
 }  // namespace panda::ecmascript::tooling
