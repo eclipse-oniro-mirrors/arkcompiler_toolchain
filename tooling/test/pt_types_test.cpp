@@ -363,9 +363,9 @@ HWTEST_F_L0(PtTypesTest, TypeProfileEntryCreateTest)
     std::unique_ptr<PtJson> ptJson = PtJson::CreateObject();
     std::unique_ptr<PtJson> array = PtJson::CreateArray();
     std::unique_ptr<PtJson> object = PtJson::CreateObject();
-    object->Add("test", 0);
+    object->Add("name", 0);
     array->Push(object);
-    ptJson->Add("entries", array);
+    ptJson->Add("types", array);
     std::unique_ptr<TypeProfileEntry> entry = TypeProfileEntry::Create(*ptJson);
     ASSERT_TRUE(!entry);
 }
@@ -504,18 +504,18 @@ HWTEST_F_L0(PtTypesTest, SearchMatchCreate)
     ASSERT_TRUE(ret != nullptr);
 
     std::unique_ptr<PtJson> ptJson1 = PtJson::CreateObject();
-    int32_t lineNumber1 = 20;
-    ptJson1->Add("lineNumber", lineNumber1);
-    ret = SearchMatch::Create(*ptJson1);
-    ASSERT_TRUE(ret == nullptr);
+    std::string attribute = "32";
+    ptJson1->Add("lineNumber", attribute.c_str());
+    std::unique_ptr<SearchMatch> ret1 = SearchMatch::Create(*ptJson1);
+    ASSERT_TRUE(ret1 == nullptr);
 
     std::unique_ptr<PtJson> ptJson2 = PtJson::CreateObject();
     int32_t lineNumber2 = 14;
     std::string lineContent2 = "12";
     ptJson1->Add("lineNumber1", lineNumber2);
     ptJson1->Add("lineContent2", lineContent2.c_str());
-    ret = SearchMatch::Create(*ptJson1);
-    ASSERT_TRUE(ret == nullptr);
+    std::unique_ptr<SearchMatch> ret2 = SearchMatch::Create(*ptJson1);
+    ASSERT_TRUE(ret2 == nullptr);
 }
 
 HWTEST_F_L0(PtTypesTest, LocationRangeCreate)
@@ -613,8 +613,13 @@ HWTEST_F_L0(PtTypesTest, SamplingHeapProfileNodeCreate)
 {
     std::unique_ptr<PtJson> ptJson = PtJson::CreateObject();
     std::unique_ptr<PtJson> callFrame = PtJson::CreateObject();
+    std::unique_ptr<PtJson> array = PtJson::CreateArray();
+    std::unique_ptr<PtJson> object = PtJson::CreateObject();
     callFrame->Add("callFrame", "test");
     ptJson->Add("callFrame", callFrame);
+    object->Add("test", 0);
+    array->Push(object);
+    ptJson->Add("children", array);
     std::unique_ptr<SamplingHeapProfileNode> ret = SamplingHeapProfileNode::Create(*ptJson);
     ASSERT_TRUE(ret == nullptr);
 }
@@ -623,8 +628,13 @@ HWTEST_F_L0(PtTypesTest, SamplingHeapProfileCreate)
 {
     std::unique_ptr<PtJson> ptJson = PtJson::CreateObject();
     std::unique_ptr<PtJson> head = PtJson::CreateObject();
+    std::unique_ptr<PtJson> array = PtJson::CreateArray();
+    std::unique_ptr<PtJson> object = PtJson::CreateObject();
     head->Add("head", "headTest");
     ptJson->Add("head", head);
+    object->Add("test", 0);
+    array->Push(object);
+    ptJson->Add("samples", array);
     std::unique_ptr<SamplingHeapProfile> ret = SamplingHeapProfile::Create(*ptJson);
     ASSERT_TRUE(ret == nullptr);
 }
@@ -754,6 +764,73 @@ HWTEST_F_L0(PtTypesTest, CallFrameCreateTest)
     array->Push(object);
     ptJson->Add("scopeChain", array);
     std::unique_ptr<CallFrame> result = CallFrame::Create(*ptJson);
+    ASSERT_TRUE(!result);
+}
+
+HWTEST_F_L0(PtTypesTest, ProfileCreate)
+{
+    std::unique_ptr<PtJson> ptJson = PtJson::CreateObject();
+    std::unique_ptr<PtJson> array = PtJson::CreateArray();
+    std::unique_ptr<PtJson> object = PtJson::CreateObject();
+    std::unique_ptr<PtJson> object1 = PtJson::CreateObject();
+    object->Add("type", 0);
+    array->Push(object);
+    ptJson->Add("nodes", array);
+    std::unique_ptr<Profile> result = Profile::Create(*ptJson);
+    ASSERT_TRUE(!result);
+    std::unique_ptr<PtJson> ptJson1 = PtJson::CreateObject();
+    ptJson1->Add("samples", 0);
+    ptJson1->Add("timeDeltas", 0);
+    std::unique_ptr<Profile> result1 = Profile::Create(*ptJson1);
+    ASSERT_TRUE(!result1);
+}
+
+HWTEST_F_L0(PtTypesTest, ProfileNodeCreate)
+{
+    std::unique_ptr<PtJson> ptJson = PtJson::CreateObject();
+    std::string attribute = "test";
+    std::unique_ptr<PtJson> object = PtJson::CreateObject();
+    object->Add("functionName", 0);
+    ptJson->Add("callFrame", object);
+    ptJson->Add("hitCount", attribute.c_str());
+    ptJson->Add("children", attribute.c_str());
+    ptJson->Add("positionTicks", attribute.c_str());
+    ptJson->Add("deoptReason", 0);
+    std::unique_ptr<ProfileNode> result = ProfileNode::Create(*ptJson);
+    ASSERT_TRUE(!result);
+    std::unique_ptr<PtJson> ptJson1 = PtJson::CreateObject();
+    std::unique_ptr<PtJson> object1 = PtJson::CreateObject();
+    std::unique_ptr<PtJson> array = PtJson::CreateArray();
+    object1->Add("attribute", attribute.c_str());
+    array->Push(object1);
+    ptJson1->Add("positionTicks", array);
+    std::unique_ptr<ProfileNode> result1 = ProfileNode::Create(*ptJson1);
+    ASSERT_TRUE(!result1);
+}
+
+HWTEST_F_L0(PtTypesTest, LocationCreate)
+{
+    std::unique_ptr<PtJson> ptJson = PtJson::CreateObject();
+    std::string attribute = "test";
+    ptJson->Add("columnNumber", attribute.c_str());
+    std::unique_ptr<Location> result = Location::Create(*ptJson);
+    ASSERT_TRUE(!result);
+}
+
+HWTEST_F_L0(PtTypesTest, PropertyDescriptorCreate)
+{
+    std::unique_ptr<PtJson> ptJson = PtJson::CreateObject();
+    std::unique_ptr<PtJson> get = PtJson::CreateObject();
+    std::unique_ptr<PtJson> set = PtJson::CreateObject();
+    std::unique_ptr<PtJson> symbol = PtJson::CreateObject();
+    std::string attribute = "test";
+    get->Add("type", attribute.c_str());
+    set->Add("type", attribute.c_str());
+    symbol->Add("type", attribute.c_str());
+    ptJson->Add("get", get);
+    ptJson->Add("set", set);
+    ptJson->Add("symbol", symbol);
+    std::unique_ptr<tooling::PropertyDescriptor> result = tooling::PropertyDescriptor::Create(*ptJson);
     ASSERT_TRUE(!result);
 }
 }  // namespace panda::test
