@@ -29,6 +29,10 @@ namespace OHOS::ArkCompiler::Toolchain {
 
 void WebSocket::SendReply(const std::string& message) const
 {
+    if (socketState_ != SocketState::CONNECTED) {
+        LOGE("SendReply failed, websocket not connected");
+        return;
+    }
     uint32_t msgLen = message.length();
     std::unique_ptr<char []> msgBuf = std::make_unique<char []>(msgLen + 11); // 11: the maximum expandable length
     char* sendBuf = msgBuf.get();
@@ -167,9 +171,17 @@ bool WebSocket::DecodeMessage(WebSocketFrame& wsFrame)
         }
         uint64_t msgLen = static_cast<uint64_t>(recv(static_cast<uint32_t>(client_), buf,
                                                      static_cast<int64_t>(wsFrame.payloadLen), 0));
+        if (msgLen == 0) {
+            LOGE("DecodeMessage recv payload failed, client disconnect");
+            return false;
+        }
         while (msgLen < wsFrame.payloadLen) {
             uint64_t len = static_cast<uint64_t>(recv(static_cast<uint32_t>(client_), buf + msgLen,
                                                       static_cast<int64_t>(wsFrame.payloadLen - msgLen), 0));
+            if (len == 0) {
+                LOGE("DecodeMessage recv payload in while failed, client disconnect");
+                return false;
+            }
             msgLen += len;
         }
         buf[wsFrame.payloadLen] = '\0';
@@ -223,9 +235,22 @@ bool WebSocket::ProtocolUpgrade(const HttpProtocol& req)
 
 std::string WebSocket::Decode()
 {
+    if (socketState_ != SocketState::CONNECTED) {
+        LOGE("Decode failed, websocket not connected");
+        return {};
+    }
     char recvbuf[SOCKET_HEADER_LEN + 1];
     int32_t msgLen = recv(client_, recvbuf, SOCKET_HEADER_LEN, 0);
     if (msgLen != SOCKET_HEADER_LEN) {
+        // msgLen 0 means client disconnect socket.
+        if (msgLen == 0) {
+            LOGE("Decode failed, client websocket disconnect");
+            socketState_ = SocketState::INITED;
+#if defined(OHOS_PLATFORM)
+            shutdown(client_, SHUT_RDWR);
+            close(client_);
+#endif
+        }
         return {};
     }
     recvbuf[SOCKET_HEADER_LEN] = '\0';
@@ -246,7 +271,6 @@ std::string WebSocket::Decode()
 bool WebSocket::HttpHandShake()
 {
     char msgBuf[SOCKET_HANDSHAKE_LEN];
-    connectState_ = true;
     int32_t msgLen = recv(client_, msgBuf, SOCKET_HANDSHAKE_LEN, 0);
     if (msgLen <= 0) {
         LOGE("ReadMsg failed readRet=%{public}d", msgLen);
@@ -266,19 +290,23 @@ bool WebSocket::HttpHandShake()
 }
 
 #if !defined(OHOS_PLATFORM)
-bool WebSocket::StartTcpWebSocket()
+bool WebSocket::InitTcpWebSocket()
 {
+    if (socketState_ != SocketState::UNINITED) {
+        LOGI("InitTcpWebSocket websocket has inited");
+        return true;
+    }
 #if defined(WINDOWS_PLATFORM)
     WORD sockVersion = MAKEWORD(2, 2); // 2: version 2.2
     WSADATA wsaData;
     if (WSAStartup(sockVersion, &wsaData) != 0) {
-        LOGE("StartWebSocket WSA init failed");
+        LOGE("InitTcpWebSocket WSA init failed");
         return false;
     }
 #endif
     fd_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (fd_ < SOCKET_SUCCESS) {
-        LOGE("StartWebSocket socket init failed");
+        LOGE("InitTcpWebSocket socket init failed");
         return false;
     }
 
@@ -287,77 +315,137 @@ bool WebSocket::StartTcpWebSocket()
     addr_sin.sin_port = htons(9230); // 9230: sockName for tcp
     addr_sin.sin_addr.s_addr = INADDR_ANY;
     if (bind(fd_, reinterpret_cast<struct sockaddr*>(&addr_sin), sizeof(addr_sin)) < SOCKET_SUCCESS) {
-        LOGE("StartWebSocket bind failed");
+        LOGE("InitTcpWebSocket bind failed");
+        close(fd_);
         return false;
     }
 
     if (listen(fd_, 1) < SOCKET_SUCCESS) {
-        LOGE("StartWebSocket listen failed");
+        LOGE("InitTcpWebSocket listen failed");
+        close(fd_);
         return false;
+    }
+    socketState_ = SocketState::INITED;
+    return true;
+}
+
+bool WebSocket::ConnectTcpWebSocket()
+{
+    if (socketState_ == SocketState::UNINITED) {
+        LOGE("ConnectTcpWebSocket failed, websocket not inited");
+        return false;
+    }
+    if (socketState_ == SocketState::CONNECTED) {
+        LOGI("ConnectTcpWebSocket websocket has connected");
+        return true;
     }
 
     if ((client_ = accept(fd_, nullptr, nullptr)) < SOCKET_SUCCESS) {
-        LOGE("StartWebSocket accept failed");
+        LOGE("ConnectTcpWebSocket accept failed");
+        socketState_ = SocketState::UNINITED;
+        close(fd_);
         return false;
     }
 
     if (!HttpHandShake()) {
-        LOGE("StartWebSocket HttpHandShake failed");
+        LOGE("ConnectTcpWebSocket HttpHandShake failed");
+        socketState_ = SocketState::UNINITED;
+        close(fd_);
         return false;
     }
+    socketState_ = SocketState::CONNECTED;
     return true;
 }
 #else
-bool WebSocket::StartUnixWebSocket(std::string sockName)
+bool WebSocket::InitUnixWebSocket(const std::string& sockName)
 {
+    if (socketState_ != SocketState::UNINITED) {
+        LOGI("InitUnixWebSocket websocket has inited");
+        return true;
+    }
     fd_ = socket(AF_UNIX, SOCK_STREAM, 0); // 0: defautlt protocol
     if (fd_ < SOCKET_SUCCESS) {
-        LOGE("StartWebSocket socket init failed");
+        LOGE("InitUnixWebSocket socket init failed");
         return false;
     }
+
     struct sockaddr_un un;
     if (memset_s(&un, sizeof(un), 0, sizeof(un)) != EOK) {
-        LOGE("StartWebSocket memset_s failed");
+        LOGE("InitUnixWebSocket memset_s failed");
+        close(fd_);
         return false;
     }
     un.sun_family = AF_UNIX;
     if (strcpy_s(un.sun_path + 1, sizeof(un.sun_path) - 1, sockName.c_str()) != EOK) {
-        LOGE("StartWebSocket strcpy_s failed");
+        LOGE("InitUnixWebSocket strcpy_s failed");
+        close(fd_);
         return false;
     }
     un.sun_path[0] = '\0';
     uint32_t len = offsetof(struct sockaddr_un, sun_path) + strlen(sockName.c_str()) + 1;
     if (bind(fd_, reinterpret_cast<struct sockaddr*>(&un), static_cast<int32_t>(len)) < SOCKET_SUCCESS) {
-        LOGE("StartWebSocket bind failed");
+        LOGE("InitUnixWebSocket bind failed");
+        close(fd_);
         return false;
     }
     if (listen(fd_, 1) < SOCKET_SUCCESS) { // 1: connection num
-        LOGE("StartWebSocket listen failed");
+        LOGE("InitUnixWebSocket listen failed");
+        close(fd_);
         return false;
     }
+    socketState_ = SocketState::INITED;
+    return true;
+}
+
+bool WebSocket::ConnectUnixWebSocket()
+{
+    if (socketState_ == SocketState::UNINITED) {
+        LOGE("ConnectUnixWebSocket failed, websocket not inited");
+        return false;
+    }
+    if (socketState_ == SocketState::CONNECTED) {
+        LOGI("ConnectUnixWebSocket websocket has connected");
+        return true;
+    }
+
     if ((client_ = accept(fd_, nullptr, nullptr)) < SOCKET_SUCCESS) {
-        LOGD("StartWebSocket accept failed");
+        LOGE("ConnectUnixWebSocket accept failed");
+        socketState_ = SocketState::UNINITED;
+        close(fd_);
         return false;
     }
     if (!HttpHandShake()) {
-        LOGE("StartWebSocket HttpHandShake failed");
+        LOGE("ConnectUnixWebSocket HttpHandShake failed");
+        socketState_ = SocketState::UNINITED;
+        shutdown(client_, SHUT_RDWR);
+        close(client_);
+        shutdown(fd_, SHUT_RDWR);
+        close(fd_);
         return false;
     }
+    socketState_ = SocketState::CONNECTED;
     return true;
 }
 #endif
 
+bool WebSocket::IsConnected()
+{
+    return socketState_ == SocketState::CONNECTED;
+}
+
 void WebSocket::Close()
 {
-    if (fd_ >= SOCKET_SUCCESS) {
-#if defined(OHOS_PLATFORM)
-        if (connectState_) {
-            shutdown(client_, SHUT_RDWR);
-            close(client_);
-        }
-        shutdown(fd_, SHUT_RDWR);
-#endif
-        close(fd_);
+    if (socketState_ == SocketState::UNINITED) {
+        return;
     }
+#if defined(OHOS_PLATFORM)
+    if (socketState_ == SocketState::CONNECTED) {
+        shutdown(client_, SHUT_RDWR);
+        close(client_);
+    }
+    shutdown(fd_, SHUT_RDWR);
+#endif
+    close(fd_);
+    socketState_ = SocketState::UNINITED;
 }
 } // namespace OHOS::ArkCompiler::Toolchain
