@@ -152,7 +152,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplDispatch)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) {result = temp;};
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -174,7 +174,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplAddInspectedHeapObject)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) {result = temp;};
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -196,7 +196,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplCollectGarbage)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) {result = temp;};
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -214,7 +214,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplEnable)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) {result = temp;};
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -232,7 +232,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplDisable)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) {result = temp;};
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -250,7 +250,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplGetHeapObjectId)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) {result = temp;};
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -272,7 +272,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplGetObjectByHeapObjectId)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) {result = temp;};
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -296,7 +296,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplGetSamplingProfile)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) {result = temp;};
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -314,7 +314,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplStartSampling)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) {result = temp;};
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -337,7 +337,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplStopSampling)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) {result = temp;};
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -355,7 +355,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplTakeHeapSnapshot)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) {result = temp;};
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));

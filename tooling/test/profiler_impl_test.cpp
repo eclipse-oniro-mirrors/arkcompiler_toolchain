@@ -163,7 +163,7 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplDispatch)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -185,7 +185,7 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplEnable)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -203,7 +203,7 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplDisable)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -221,7 +221,7 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplStart)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -242,7 +242,7 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplStop)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -260,7 +260,7 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplSetSamplingInterval)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -282,7 +282,7 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplGetBestEffortCoverage)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -300,7 +300,7 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplStopPreciseCoverage)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -318,7 +318,7 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplTakePreciseCoverage)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -336,7 +336,7 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplStartPreciseCoverage)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -354,7 +354,7 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplStartTypeProfile)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -372,7 +372,7 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplStopTypeProfile)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -390,7 +390,7 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplTakeTypeProfile)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -408,7 +408,7 @@ HWTEST_F_L0(ProfilerImplTest, FrontendPreciseCoverageDeltaUpdate)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = nullptr;
     auto frontend = std::make_unique<ProfilerImpl::Frontend>(channel);
     frontend->PreciseCoverageDeltaUpdate();

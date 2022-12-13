@@ -79,7 +79,7 @@ HWTEST_F_L0(DebuggerServiceTest, OnMessageTest)
     ASSERT_TRUE(handler == nullptr);
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     InitializeDebugger(ecmaVm, callback);
     std::string msg = std::string() + R"({"id":0,"method":"Tracing.Test","params":{}})";
     OnMessage(ecmaVm, msg + "");
@@ -101,7 +101,7 @@ HWTEST_F_L0(DebuggerServiceTest, ProcessMessageTest)
     ASSERT_TRUE(handler == nullptr);
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     InitializeDebugger(ecmaVm, callback);
     std::string msg = std::string() + R"({"id":0,"method":"Tracing.end","params":{}})";
     OnMessage(ecmaVm, msg + "");
@@ -115,7 +115,7 @@ HWTEST_F_L0(DebuggerServiceTest, GetDispatchStatusTest)
     ASSERT_TRUE(status == ProtocolHandler::DispatchStatus::UNKNOWN);
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     InitializeDebugger(ecmaVm, callback);
     status = ProtocolHandler::DispatchStatus(GetDispatchStatus(ecmaVm));
     ASSERT_TRUE(status == ProtocolHandler::DispatchStatus::DISPATCHED);

@@ -136,7 +136,7 @@ HWTEST_F_L0(DispatcherTest, DispatcherDispatchTest)
     DispatchRequest dispatchRequest2(msg);
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel =  new ProtocolHandler(callback, ecmaVm);
     auto dispatcher = std::make_unique<Dispatcher>(ecmaVm, channel);
     dispatcher->Dispatch(dispatchRequest);
