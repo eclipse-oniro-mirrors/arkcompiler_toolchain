@@ -289,12 +289,12 @@ DispatchResponse HeapProfilerImpl::GetObjectByHeapObjectId([[maybe_unused]] cons
     return DispatchResponse::Fail("GetObjectByHeapObjectId not support now");
 }
 
-DispatchResponse HeapProfilerImpl::GetSamplingProfile([[maybe_unused]]std::unique_ptr<SamplingHeapProfile> *profile)
+DispatchResponse HeapProfilerImpl::GetSamplingProfile([[maybe_unused]] std::unique_ptr<SamplingHeapProfile> *profile)
 {
     return DispatchResponse::Fail("GetSamplingProfile not support now");
 }
 
-DispatchResponse HeapProfilerImpl::StartSampling([[maybe_unused]]const StartSamplingParams &params)
+DispatchResponse HeapProfilerImpl::StartSampling([[maybe_unused]] const StartSamplingParams &params)
 {
     return DispatchResponse::Fail("StartSampling not support now");
 }
@@ -328,7 +328,7 @@ void HeapProfilerImpl::HeapTrackingCallback(uv_timer_t* handle)
     panda::DFXJSNApi::UpdateHeapTracking(heapProfilerImpl->vm_, &(heapProfilerImpl->stream_));
 }
 
-DispatchResponse HeapProfilerImpl::StopSampling([[maybe_unused]]std::unique_ptr<SamplingHeapProfile> *profile)
+DispatchResponse HeapProfilerImpl::StopSampling([[maybe_unused]] std::unique_ptr<SamplingHeapProfile> *profile)
 {
     return DispatchResponse::Fail("StopSampling not support now.");
 }

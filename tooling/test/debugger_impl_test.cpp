@@ -54,7 +54,7 @@ HWTEST_F_L0(DebuggerImplTest, NotifyScriptParsed__001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -82,7 +82,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_Enable__001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -112,7 +112,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_Enable__002)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -143,7 +143,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_Disable__001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -171,7 +171,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_EvaluateOnCallFrame__001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -199,7 +199,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_EvaluateOnCallFrame__002)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -230,7 +230,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_EvaluateOnCallFrame__003)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -261,7 +261,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleBreakpoints__001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -289,7 +289,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleBreakpoints__002)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -329,7 +329,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetScriptSource__001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -357,7 +357,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetScriptSource__002)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -387,7 +387,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_Pause__001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -414,7 +414,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_RemoveBreakpoint__001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -442,7 +442,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_RemoveBreakpoint__002)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -473,7 +473,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_RemoveBreakpoint__003)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -504,7 +504,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_Resume__001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -534,7 +534,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_Resume__002)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -563,7 +563,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetAsyncCallStackDepth__001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -590,7 +590,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetBreakpointByUrl__001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -618,7 +618,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetBreakpointByUrl__002)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -653,7 +653,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetPauseOnExceptions__001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -681,7 +681,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetPauseOnExceptions__002)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -710,7 +710,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_StepInto__001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -740,7 +740,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetMixedDebugEnabled__001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -770,7 +770,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetMixedDebugEnabled__002)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -801,7 +801,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetBlackboxPatterns__001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -828,7 +828,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_ReplyNativeCalling__001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
@@ -858,7 +858,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_ReplyNativeCalling__002)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&outStrForCallbackCheck]([[maybe_unused]]const void* ptr, const std::string &inStrOfReply) {
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
             outStrForCallbackCheck = inStrOfReply;};
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);

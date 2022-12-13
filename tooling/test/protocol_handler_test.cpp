@@ -52,7 +52,7 @@ HWTEST_F_L0(ProtocolHandlerTest, DispatchCommandTest)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     auto protocol = std::make_unique<ProtocolHandler>(callback, ecmaVm);
     std::string msg = std::string() + R"({"id":0,"method":"Tracing.Test","params":{}})";
     protocol->DispatchCommand(msg + "");
@@ -64,7 +64,7 @@ HWTEST_F_L0(ProtocolHandlerTest, GetDispatchStatusTest)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     auto protocol = std::make_unique<ProtocolHandler>(callback, ecmaVm);
     std::string msg = std::string() + R"({"id":0,"method":"Tracing.Test","params":{}})";
     ProtocolHandler::DispatchStatus status = ProtocolHandler::DispatchStatus(protocol->GetDispatchStatus());
@@ -78,7 +78,7 @@ HWTEST_F_L0(ProtocolHandlerTest, ProcessCommandTest)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     auto protocol = std::make_unique<ProtocolHandler>(callback, ecmaVm);
     std::string msg = std::string() + R"({"id":0,"method":"Tracing.Test","params":{}})";
     protocol->ProcessCommand();
@@ -92,7 +92,7 @@ HWTEST_F_L0(ProtocolHandlerTest, SendResponseTest)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     auto protocol = std::make_unique<ProtocolHandler>(callback, ecmaVm);
     std::string msg = std::string() + R"({"id":0,"method":"Tracing.Test","params":{}})";
     DispatchRequest request(msg);
