@@ -522,7 +522,7 @@ ohos_shared_library("shared_icuuc") {
     "-shared",
     "-lm",
   ]
-  if (is_standard_system) {
+  if (is_standard_system || ark_standalone_build) {
     part_name = "icu"
     subsystem_name = "thirdparty"
   } else {
@@ -573,7 +573,7 @@ ohos_shared_library("shared_icui18n") {
     cflags_cc += [ "-fPIC" ]
     ldflags += [ "-ldl" ]
   }
-  if (is_standard_system) {
+  if (is_standard_system || ark_standalone_build) {
     part_name = "icu"
     subsystem_name = "thirdparty"
   } else {

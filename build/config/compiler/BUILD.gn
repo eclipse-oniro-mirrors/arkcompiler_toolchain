@@ -160,6 +160,7 @@ config("default_warnings") {
       # which happens in several places in code. Not sure if
       # this is worth fixing.
       "-Wno-c++11-narrowing",
+      "-Wno-c++17-extensions",
       "-Wno-unneeded-internal-declaration",
     ]
     if (use_musl) {
