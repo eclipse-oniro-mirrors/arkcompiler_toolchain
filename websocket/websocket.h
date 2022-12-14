@@ -37,23 +37,35 @@ struct HttpProtocol {
 
 class WebSocket {
 public:
+    enum SocketState : uint8_t {
+        UNINITED,
+        INITED,
+        CONNECTED,
+    };
     WebSocket() = default;
     ~WebSocket() = default;
     std::string Decode();
     void Close();
+    void SendReply(const std::string& message) const;
+#if !defined(OHOS_PLATFORM)
+    bool InitTcpWebSocket();
+    bool ConnectTcpWebSocket();
+#else
+    bool InitUnixWebSocket(const std::string& sockName);
+    bool ConnectUnixWebSocket();
+#endif
+    bool IsConnected();
+
+private:
     bool DecodeMessage(WebSocketFrame& wsFrame);
     bool HttpHandShake();
     bool HttpProtocolDecode(const std::string& request, HttpProtocol& req);
     bool HandleFrame(WebSocketFrame& wsFrame);
     bool ProtocolUpgrade(const HttpProtocol& req);
-    void SendReply(const std::string& message) const;
-    bool StartTcpWebSocket();
-    bool StartUnixWebSocket(std::string sockName);
-    std::atomic<bool> connectState_;
 
-private:
-    int32_t client_ {0};
-    int32_t fd_ {0};
+    int32_t client_ {-1};
+    int32_t fd_ {-1};
+    std::atomic<SocketState> socketState_ {SocketState::UNINITED};
     static constexpr int32_t ENCODED_KEY_LEN = 128;
     static constexpr char EOL[] = "\r\n";
     static constexpr int32_t SOCKET_HANDSHAKE_LEN = 1024;
