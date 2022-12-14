@@ -995,8 +995,10 @@ std::unique_ptr<Scope> DebuggerImpl::GetLocalScopeChain(const FrameHandler *fram
     scopeObjects_[sp] = runtime_->curObjectId_;
     runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, localObj);
 
-    Local<JSValueRef> thisVal = JSValueRef::Undefined(vm_);
+    Local<JSValueRef> thisVal = JSNApiHelper::ToLocal<JSValueRef>(
+        JSHandle<JSTaggedValue>(vm_->GetJSThread(), JSTaggedValue::Hole()));
     GetLocalVariables(frameHandler, methodId, jsPandaFile, thisVal, localObj);
+    GetClosureVariables(frameHandler, thisVal, localObj);
     *thisObj = RemoteObject::FromTagged(vm_, thisVal);
     runtime_->CacheObjectIfNeeded(thisVal, (*thisObj).get());
 
@@ -1045,7 +1047,6 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
     auto *extractor = GetExtractor(jsPandaFile);
     Local<JSValueRef> value = JSValueRef::Undefined(vm_);
     // in case of arrow function, which doesn't have this in local variable table
-    bool hasThis = false;
     for (const auto &[varName, regIndex] : extractor->GetLocalVariableTable(methodId)) {
         value = DebuggerApi::GetVRegValue(vm_, frameHandler, regIndex);
         if (varName == "4newTarget") {
@@ -1053,8 +1054,8 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
         }
 
         if (varName == "this") {
+            LOG_DEBUGGER(INFO) << "find 'this' in local variable table";
             thisVal = value;
-            hasThis = true;
             continue;
         }
         Local<JSValueRef> name = JSValueRef::Undefined(vm_);
@@ -1071,26 +1072,30 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
         PropertyAttribute descriptor(value, true, true, true);
         localObj->DefineProperty(vm_, name, descriptor);
     }
+}
 
-    // closure variables are stored in env
+void DebuggerImpl::GetClosureVariables(const FrameHandler *frameHandler, Local<JSValueRef> &thisVal,
+    Local<ObjectRef> &localObj)
+{
     JSTaggedValue env = DebuggerApi::GetEnv(frameHandler);
     if (env.IsTaggedArray() && DebuggerApi::GetBytecodeOffset(frameHandler) != 0) {
         LexicalEnv *lexEnv = LexicalEnv::Cast(env.GetTaggedObject());
         if (lexEnv->GetScopeInfo().IsHole()) {
             return;
         }
-        auto ptr = JSNativePointer::Cast(lexEnv->GetScopeInfo().GetTaggedObject())->GetExternalPointer();
-        auto *scopeDebugInfo = reinterpret_cast<ScopeDebugInfo *>(ptr);
+        auto *scopeDebugInfo = reinterpret_cast<ScopeDebugInfo *>(JSNativePointer::Cast(
+            lexEnv->GetScopeInfo().GetTaggedObject())->GetExternalPointer());
         JSThread *thread = vm_->GetJSThread();
         for (const auto &[varName, slot] : scopeDebugInfo->scopeInfo) {
             // skip possible duplicate variables both in local variable table and env
             if (varName == "4newTarget") {
                 continue;
             }
-            value = JSNApiHelper::ToLocal<JSValueRef>(
+            Local<JSValueRef> value = JSNApiHelper::ToLocal<JSValueRef>(
                 JSHandle<JSTaggedValue>(thread, lexEnv->GetProperties(slot)));
             if (varName == "this") {
-                if (!hasThis) {
+                if (thisVal->IsHole()) {
+                    LOG_DEBUGGER(INFO) << "find 'this' in current lexical env";
                     thisVal = value;
                 }
                 continue;
@@ -1098,6 +1103,17 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
             Local<JSValueRef> name = StringRef::NewFromUtf8(vm_, varName.c_str());
             PropertyAttribute descriptor(value, true, true, true);
             localObj->DefineProperty(vm_, name, descriptor);
+        }
+    }
+
+    // if 'this' is not in current lexical env, we should try to find from it's parent env
+    if (thisVal->IsHole()) {
+        auto [level, slot] = DebuggerApi::GetLevelSlot(frameHandler, "this");
+        if (LIKELY(level != -1)) {
+            LOG_DEBUGGER(INFO) << "find 'this' in parent lexical env";
+            thisVal = DebuggerApi::GetProperties(vm_, frameHandler, level, slot);
+        } else {
+            thisVal = JSValueRef::Undefined(vm_);
         }
     }
 }
