@@ -205,14 +205,7 @@ Local<JSValueRef> DebuggerExecutor::GetModuleValue(const EcmaVM *vm, const Frame
 {
     Local<JSValueRef> result;
     std::string varName = name->ToString();
-    Method *method = DebuggerApi::GetMethod(frameHandler);
-    const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
-    if (jsPandaFile != nullptr && jsPandaFile->IsBundlePack()) {
-        return result;
-    }
-
-    JSTaggedValue currentModule = DebuggerApi::GetCurrentModule(vm);
-    result = DebuggerApi::GetModuleValue(vm, currentModule, varName);
+    result = DebuggerApi::GetModuleValue(vm, frameHandler, varName);
     return result;
 }
 
@@ -220,14 +213,7 @@ bool DebuggerExecutor::SetModuleValue(const EcmaVM *vm, const FrameHandler *fram
                                       Local<StringRef> name, Local<JSValueRef> value)
 {
     std::string varName = name->ToString();
-    Method *method = DebuggerApi::GetMethod(frameHandler);
-    const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
-    if (jsPandaFile != nullptr && jsPandaFile->IsBundlePack()) {
-        return -1;
-    }
-
-    JSTaggedValue currentModule = DebuggerApi::GetCurrentModule(vm);
-    DebuggerApi::SetModuleValue(vm, currentModule, varName, value);
+    DebuggerApi::SetModuleValue(vm, frameHandler, varName, value);
     return true;
 }
 }  // namespace panda::ecmascript::tooling
