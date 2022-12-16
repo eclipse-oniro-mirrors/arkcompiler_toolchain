@@ -1036,8 +1036,9 @@ std::unique_ptr<Scope> DebuggerImpl::GetModuleScopeChain()
         .SetDescription(RemoteObject::ObjectDescription);
     moduleScope->SetType(Scope::Type::Module()).SetObject(std::move(module));
     runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, moduleObj);
-    JSThread *thread = vm_->GetJSThread();
-    DebuggerApi::GetModuleVariables(vm_, moduleObj, thread);
+    JSTaggedValue currentModule = DebuggerApi::GetCurrentModule(vm_);
+    DebuggerApi::GetExportVariables(vm_, moduleObj, currentModule);
+    DebuggerApi::GetImportVariables(vm_, moduleObj, currentModule);
     return moduleScope;
 }
 
