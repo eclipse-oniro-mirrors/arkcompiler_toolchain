@@ -22,14 +22,16 @@ config("complier_defaults") {
 
 config("executable_ldconfig") {
   if (!is_mac) {
-    cflags = [ "-fPIE" ]
-    asmflags = [ "-fPIE" ]
-    ldflags = [
-      "-Wl,-rpath=\$ORIGIN/",
-      "-Wl,-rpath-link=",
-    ]
-    if (current_os == "linux") {
-      ldflags += [ "-lpthread" ]
+    if (!is_mingw) {
+      cflags = [ "-fPIE" ]
+      asmflags = [ "-fPIE" ]
+      ldflags = [
+        "-Wl,-rpath=\$ORIGIN/",
+        "-Wl,-rpath-link=",
+      ]
+      if (current_os == "linux") {
+        ldflags += [ "-lpthread" ]
+      }
     }
   }
 }

@@ -42,7 +42,8 @@ test_js_files = [
   "step",
   "syntax_exception",
   "throw_exception",
-  "variable",
+  "variable_first",
+  "variable_second",
   "module_variable",
 ]
 
@@ -173,6 +174,7 @@ host_unittest_action("DebuggerTest") {
     # test file
     "debugger_commands_test.cpp",
     "debugger_events_test.cpp",
+    "debugger_impl_test.cpp",
     "debugger_params_test.cpp",
     "debugger_returns_test.cpp",
     "debugger_script_test.cpp",
@@ -186,6 +188,7 @@ host_unittest_action("DebuggerTest") {
     "pt_base64_test.cpp",
     "pt_json_test.cpp",
     "pt_params_test.cpp",
+    "pt_returns_test.cpp",
     "pt_types_test.cpp",
     "runtime_impl_test.cpp",
     "tracing_impl_test.cpp",

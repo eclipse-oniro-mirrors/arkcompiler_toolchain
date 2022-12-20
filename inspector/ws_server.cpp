@@ -31,7 +31,7 @@ void WsServer::RunServer()
     terminateExecution_ = false;
     webSocket_ = std::make_unique<WebSocket>();
 #if !defined(OHOS_PLATFORM)
-    if (!webSocket_->StartTcpWebSocket()) {
+    if (!webSocket_->InitTcpWebSocket()) {
         return;
     }
 #else
@@ -45,15 +45,26 @@ void WsServer::RunServer()
     }
     std::string sockName = pidStr + instanceIdStr + componentName_;
     LOGI("WsServer RunServer: %{public}d%{public}s%{public}s", appPid, instanceIdStr.c_str(), componentName_.c_str());
-    if (!webSocket_->StartUnixWebSocket(sockName)) {
+    if (!webSocket_->InitUnixWebSocket(sockName)) {
         return;
     }
 #endif
     while (!terminateExecution_) {
-        std::string message = webSocket_->Decode();
-        if (!message.empty()) {
-            LOGI("WsServer OnMessage: %{public}s", message.c_str());
-            wsOnMessage_(std::move(message));
+#if !defined(OHOS_PLATFORM)
+        if (!webSocket_->ConnectTcpWebSocket()) {
+            return;
+        }
+#else
+        if (!webSocket_->ConnectUnixWebSocket()) {
+            return;
+        }
+#endif
+        while (webSocket_->IsConnected()) {
+            std::string message = webSocket_->Decode();
+            if (!message.empty()) {
+                LOGI("WsServer OnMessage: %{public}s", message.c_str());
+                wsOnMessage_(std::move(message));
+            }
         }
     }
 }

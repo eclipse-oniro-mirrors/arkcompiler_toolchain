@@ -37,10 +37,14 @@ var o = {
             yield 3;
         }
         var regexp0 = /^\d+\.\d+$/i;
-        var arraybuffer0 = new ArrayBuffer(10);
+        var arraybuffer0 = new ArrayBuffer(24);
         var uint8array0 = new Uint8Array(arraybuffer0);
         const dataview0 = new DataView(arraybuffer0, 0);
         var bigint0 = BigInt(999n);
+        var typedarray0 = new Uint8Array();
+        var sharedarraybuffer0 = new SharedArrayBuffer(32);
+        var iterator0 = string0[Symbol.iterator];
+        var weakref0 = new WeakRef(obj0);
 
         var set1 = new Set();
         set1.add(number0);

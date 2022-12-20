@@ -113,4 +113,20 @@ HWTEST_F_L0(JSPtHooksTest, VmDeathTest)
     jspthooks->VmDeath();
     ASSERT_NE(jspthooks, nullptr);
 }
+
+HWTEST_F_L0(JSPtHooksTest, PendingJobEntryTest)
+{
+    auto debugger = std::make_unique<DebuggerImpl>(ecmaVm, nullptr, nullptr);
+    std::unique_ptr<JSPtHooks> jspthooks = std::make_unique<JSPtHooks>(debugger.get());
+    jspthooks->PendingJobEntry();
+    ASSERT_NE(jspthooks, nullptr);
+}
+
+HWTEST_F_L0(JSPtHooksTest, NativeCallingTest)
+{
+    auto debugger = std::make_unique<DebuggerImpl>(ecmaVm, nullptr, nullptr);
+    std::unique_ptr<JSPtHooks> jspthooks = std::make_unique<JSPtHooks>(debugger.get());
+    jspthooks->NativeCalling(nullptr);
+    ASSERT_NE(jspthooks, nullptr);
+}
 }

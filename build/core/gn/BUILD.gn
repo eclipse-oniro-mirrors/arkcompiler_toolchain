@@ -45,9 +45,9 @@ group("linux_packages") {
 group("mingw_packages") {
   if (host_os != "mac") {
     deps = [
-      # ":ets_frontend($build_root/toolchain/mingw:mingw_x86_64)",
+      ":ets_frontend_win($build_root/toolchain/mingw:mingw_x86_64)",
       ":ets_runtime($build_root/toolchain/mingw:mingw_x86_64)",
-      # ":runtime_core($build_root/toolchain/mingw:mingw_x86_64)",
+      ":runtime_core($build_root/toolchain/mingw:mingw_x86_64)",
     ]
   }
 }
@@ -68,6 +68,14 @@ group("ets_frontend") {
     "//arkcompiler/ets_frontend/es2panda:es2panda",
     "//arkcompiler/ets_frontend/merge_abc:merge_abc",
     "//arkcompiler/ets_frontend/ts2panda:ts2abc_build",
+  ]
+}
+
+group("ets_frontend_win") {
+  deps = [
+    "//arkcompiler/ets_frontend/es2panda:es2panda",
+    "//arkcompiler/ets_frontend/merge_abc:merge_abc",
+    "//arkcompiler/ets_frontend/ts2panda:ark_ts2abc_build_win",
   ]
 }
 

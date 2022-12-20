@@ -178,4 +178,108 @@ HWTEST_F_L0(PtJsonTest, ObjectTest)
         "{\"a\":false,\"b\":100,\"c\":100.2,\"d\":200,\"e\":\"abc\",\"f\":{\"ch\":\"child_2\"},\"g\":[100]}");
     root->ReleaseRoot();
 }
+
+HWTEST_F_L0(PtJsonTest, StringifyTest)
+{
+    PtJson ptJson;
+    std::string result = ptJson.Stringify();
+    ASSERT_EQ(result, "");
+}
+
+HWTEST_F_L0(PtJsonTest, GetKeyTest)
+{
+    PtJson ptJson;
+    std::string result = ptJson.GetKey();
+    ASSERT_EQ(result, "");
+    cJSON temp;
+    char test[] = "test";
+    temp.string = test;
+    PtJson ptJson1(&temp);
+    result = ptJson1.GetKey();
+    ASSERT_EQ(result, "test");
+    cJSON temp1;
+    temp1.string = nullptr;
+    PtJson ptJson2(&temp1);
+    result = ptJson2.GetKey();
+    ASSERT_EQ(result, "");
+    std::unique_ptr<PtJson> ptr = std::make_unique<PtJson>();
+    Result result1 = ptJson.GetAny(test, &ptr);
+    ASSERT_EQ(result1, Result::NOT_EXIST);
+    cJSON json;
+    cJSON son;
+    son.string = test;
+    json.string = test;
+    json.child = &son;
+    PtJson ptJson3(&json);
+    std::unique_ptr<PtJson> ptr1 = std::make_unique<PtJson>();
+    result1 = ptJson3.GetAny(test, &ptr1);
+    ASSERT_EQ(result1, Result::SUCCESS);
+}
+
+HWTEST_F_L0(PtJsonTest, GetTypeTest)
+{
+    cJSON *node = cJSON_CreateNumber(0);
+    PtJson num(node);
+    cJSON *node1 = cJSON_CreateString("test");
+    PtJson str(node1);
+    bool result = str.GetBool(false);
+    ASSERT_EQ(result, false);
+    int32_t result1 = str.GetInt(int32_t(0));
+    ASSERT_EQ(result1, 0);
+    int64_t result2 = str.GetInt64(int64_t(0));
+    ASSERT_EQ(result2, 0);
+    double result3 = str.GetDouble(0.1); // 0.1:num
+    ASSERT_EQ(result3, 0.1); // 0.1:num
+    std::string result4 = num.GetString();
+    ASSERT_EQ(result4, "");
+}
+
+HWTEST_F_L0(PtJsonTest, PushTest)
+{
+    char *ptr = nullptr;
+    PtJson ptJson;
+    bool result = ptJson.Push(ptr);
+    ASSERT_EQ(result, false);
+    char cPtr[] = "value";
+    result = ptJson.Push(cPtr);
+    ASSERT_EQ(result, false);
+    bool value = true;
+    result = ptJson.Push(value);
+    ASSERT_EQ(result, false);
+    double value1 = 0.1; // 0.1:value
+    result = ptJson.Push(value1);
+    ASSERT_EQ(result, false);
+    std::unique_ptr<PtJson> ptr1;
+    result = ptJson.Push(std::move(ptr1));
+    ASSERT_EQ(result, false);
+    std::unique_ptr<PtJson> ptr2 = std::make_unique<PtJson>();
+    result = ptJson.Push(std::move(ptr2));
+    ASSERT_EQ(result, false);
+    cJSON json;
+    std::unique_ptr<PtJson> ptr3 = std::make_unique<PtJson>(&json);
+    result = ptJson.Push(std::move(ptr3));
+    ASSERT_EQ(result, false);
+}
+
+HWTEST_F_L0(PtJsonTest, AddTest)
+{
+    char key[] = "key";
+    double value = 0.1; // 0.1:value
+    PtJson ptJson;
+    bool result = ptJson.Add(key, value);
+    ASSERT_EQ(result, false);
+    char value1[] = "value";
+    result = ptJson.Add(key, value1);
+    ASSERT_EQ(result, false);
+    std::unique_ptr<PtJson> ptr = std::make_unique<PtJson>();
+    result = ptJson.Add(key, std::move(ptr));
+    ASSERT_EQ(result, false);
+    cJSON json;
+    std::unique_ptr<PtJson> ptr1 = std::make_unique<PtJson>(&json);
+    result = ptJson.Add(key, std::move(ptr1));
+    ASSERT_EQ(result, false);
+    bool value2 = true;
+    result = ptJson.Add(key, value2);
+    ASSERT_EQ(result, false);
+}
 }

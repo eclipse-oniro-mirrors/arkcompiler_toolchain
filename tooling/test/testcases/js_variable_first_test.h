@@ -19,12 +19,9 @@
 #include "test/utils/test_util.h"
 
 namespace panda::ecmascript::tooling::test {
-std::string g_pandaFile = DEBUGGER_ABC_DIR "variable.abc";
-std::string g_sourceFile = DEBUGGER_JS_DIR "variable.js";
-
-class JsVariableTest : public TestEvents {
+class JsVariableFirstTest : public TestEvents {
 public:
-    JsVariableTest()
+    JsVariableFirstTest()
     {
         breakpoint = [this](const JSPtLocation &location) {
             ASSERT_TRUE(location.GetMethodId().IsValid());
@@ -36,13 +33,15 @@ public:
         };
 
         loadModule = [this](std::string_view moduleName) {
-            static_cast<JsVariableTestChannel *>(channel_)->Initial(vm_, runtime_);
-            // 265: breakpointer line
-            location_ = TestUtil::GetLocation(g_sourceFile.c_str(), 265, 0, g_pandaFile.c_str());
+            std::string pandaFile = DEBUGGER_ABC_DIR "variable_first.abc";
+            std::string sourceFile = DEBUGGER_JS_DIR "variable_first.js";
+            static_cast<JsVariableFirstTestChannel *>(channel_)->Initial(vm_, runtime_);
+            // 269: breakpointer line
+            location_ = TestUtil::GetLocation(sourceFile.c_str(), 269, 0, pandaFile.c_str());
             ASSERT_TRUE(location_.GetMethodId().IsValid());
             TestUtil::SuspendUntilContinue(DebugEvent::LOAD_MODULE);
-            ASSERT_EQ(moduleName, g_pandaFile);
-            ASSERT_TRUE(debugger_->NotifyScriptParsed(0, g_pandaFile));
+            ASSERT_EQ(moduleName, pandaFile);
+            ASSERT_TRUE(debugger_->NotifyScriptParsed(0, pandaFile));
             auto condFuncRef = FunctionRef::Undefined(vm_);
             auto ret = debugInterface_->SetBreakpoint(location_, condFuncRef);
             ASSERT_TRUE(ret);
@@ -65,24 +64,25 @@ public:
             return true;
         };
 
-        channel_ = new JsVariableTestChannel();
+        channel_ = new JsVariableFirstTestChannel();
     }
 
     std::pair<std::string, std::string> GetEntryPoint() override
     {
-        return {g_pandaFile, entryPoint_};
+        std::string pandaFile = DEBUGGER_ABC_DIR "variable_first.abc";
+        return {pandaFile, entryPoint_};
     }
-    ~JsVariableTest()
+    ~JsVariableFirstTest()
     {
         delete channel_;
         channel_ = nullptr;
     }
 
 private:
-    class JsVariableTestChannel : public TestChannel {
+    class JsVariableFirstTestChannel : public TestChannel {
     public:
-        JsVariableTestChannel() = default;
-        ~JsVariableTestChannel() = default;
+        JsVariableFirstTestChannel() = default;
+        ~JsVariableFirstTestChannel() = default;
         void Initial(const EcmaVM *vm, RuntimeImpl *runtime)
         {
             vm_ = vm;
@@ -93,18 +93,19 @@ private:
         {
             const static std::vector<std::function<bool(const PtBaseEvents &events)>> eventList = {
                 [](const PtBaseEvents &events) -> bool {
+                    std::string sourceFile = DEBUGGER_JS_DIR "variable_first.js";
                     auto parsed = static_cast<const ScriptParsed *>(&events);
                     std::string str = parsed->ToJson()->Stringify();
-                    std::cout << "JsVariableTestChannel: SendNotification 0:\n" << str << std::endl;
+                    std::cout << "JsVariableFirstTestChannel: SendNotification 0:\n" << str << std::endl;
 
                     ASSERT_EQ(parsed->GetName(), "Debugger.scriptParsed");
-                    ASSERT_EQ(parsed->GetUrl(), g_sourceFile);
+                    ASSERT_EQ(parsed->GetUrl(), sourceFile);
                     return true;
                 },
                 [this](const PtBaseEvents &events) -> bool {
                     auto paused = static_cast<const Paused *>(&events);
                     std::string str = paused->ToJson()->Stringify();
-                    std::cout << "JsVariableTestChannel: SendNotification 1:\n" << str << std::endl;
+                    std::cout << "JsVariableFirstTestChannel: SendNotification 1:\n" << str << std::endl;
 
                     ASSERT_EQ(paused->GetName(), "Debugger.paused");
                     auto frame = paused->GetCallFrames()->at(0).get();
@@ -158,8 +159,8 @@ private:
         }
 
     private:
-        NO_COPY_SEMANTIC(JsVariableTestChannel);
-        NO_MOVE_SEMANTIC(JsVariableTestChannel);
+        NO_COPY_SEMANTIC(JsVariableFirstTestChannel);
+        NO_MOVE_SEMANTIC(JsVariableFirstTestChannel);
 
         void PushValueInfo(RemoteObject *value, std::vector<std::string> &infos)
         {
@@ -209,7 +210,7 @@ private:
         const std::map<std::string, std::vector<std::string>> variableMap_ = {
             { "nop", { "undefined" } },
             { "foo", { "function", "Function", "function foo( { [js code] }",
-                        "Cannot get source code of funtion"} },
+                       "Cannot get source code of funtion"} },
             { "string0", { "string", "helloworld", "helloworld" } },
             { "boolean0", { "object", "Object", "Boolean{[[PrimitiveValue]]: false}", "false", "[[PrimitiveValue]]",
                             "boolean", "false", "false" } },
@@ -217,12 +218,19 @@ private:
             { "obj0", { "object", "Object", "Object", "[object Object]",
                         "key0", "string", "value0", "value0",
                         "key1", "number", "100", "100" } },
-            { "arraybuffer0", { "object", "arraybuffer", "Arraybuffer", "ArrayBuffer(10)", "[object ArrayBuffer]",
-                                "[[Int8Array]]", "object", "Object", "Int8Array(10)", "0,0,0,0,0,0,0,0,0,0",
-                                "[[Uint8Array]]", "object", "Object", "Uint8Array(10)", "0,0,0,0,0,0,0,0,0,0",
-                                "[[Uint8ClampedArray]]", "object", "Object", "Object", "0,0,0,0,0,0,0,0,0,0",
-                                "[[Int16Array]]", "object", "Object", "Int16Array(5)", "0,0,0,0,0", "[[Uint16Array]]",
-                                "object", "Object", "Object", "0,0,0,0,0" } },
+            { "arraybuffer0", { "object", "arraybuffer", "Arraybuffer", "ArrayBuffer(24)", "[object ArrayBuffer]",
+                                "[[Int8Array]]", "object", "Object", "Int8Array(24)",
+                                "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", "[[Uint8Array]]", "object",
+                                "Object", "Uint8Array(24)", "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
+                                "[[Uint8ClampedArray]]", "object", "Object", "Object",
+                                "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", "[[Int16Array]]", "object",
+                                "Object", "Int16Array(12)", "0,0,0,0,0,0,0,0,0,0,0,0", "[[Uint16Array]]", "object",
+                                "Object", "Object", "0,0,0,0,0,0,0,0,0,0,0,0", "[[Int32Array]]", "object", "Object",
+                                "Int32Array(6)", "0,0,0,0,0,0", "[[Uint32Array]]", "object", "Object", "Object",
+                                "0,0,0,0,0,0", "[[Float32Array]]", "object", "Object", "Object", "0,0,0,0,0,0",
+                                "[[Float64Array]]", "object", "Object", "Object", "0,0,0", "[[BigInt64Array]]",
+                                "object", "Object", "Object", "0,0,0", "[[BigUint64Array]]", "object", "Object",
+                                "Object", "0,0,0" } },
             { "function0", { "function", "Function", "function function0( { [js code] }",
                              "Cannot get source code of funtion" } },
             { "generator0", { "function", "Generator", "function* generator0( { [js code] }",
@@ -240,13 +248,33 @@ private:
                            "unicode", "boolean", "false", "false", "sticky", "boolean", "false", "false", "flags",
                            "string", "i", "i", "source", "string", "^\\d+\\.\\d+$", "^\\d+\\.\\d+$", "lastIndex",
                            "number", "0", "0" } },
-            { "uint8array0", { "object", "Object", "Uint8Array(10)", "0,0,0,0,0,0,0,0,0,0", "         0", "number",
-                               "0", "0", "         1", "number", "0", "0", "         2", "number", "0", "0",
-                               "         3", "number", "0", "0", "         4", "number", "0", "0", "         5",
-                               "number", "0", "0", "         6", "number", "0", "0", "         7", "number", "0", "0",
-                               "         8", "number", "0", "0", "         9", "number", "0", "0" } },
+            { "uint8array0", { "object", "Object", "Uint8Array(24)",
+                               "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", "         0", "number", "0", "0",
+                               "         1", "number", "0", "0", "         2", "number", "0", "0", "         3",
+                               "number", "0", "0", "         4", "number", "0", "0", "         5", "number", "0",
+                               "0", "         6", "number", "0", "0", "         7", "number", "0", "0", "         8",
+                               "number", "0", "0", "         9", "number", "0", "0", "        10", "number", "0",
+                               "0", "        11", "number", "0", "0", "        12", "number", "0", "0", "        13",
+                               "number", "0", "0", "        14", "number", "0", "0", "        15", "number", "0",
+                               "0", "        16", "number", "0", "0", "        17", "number", "0", "0", "        18",
+                               "number", "0", "0", "        19", "number", "0", "0", "        20", "number", "0",
+                               "0", "        21", "number", "0", "0", "        22", "number", "0", "0", "        23",
+                               "number", "0", "0" } },
             { "dataview0", { "object", "Object", "Object", "[object DataView]", "none" } },
             { "bigint0", { "bigint", "999n", "999" } },
+            { "typedarray0", { "object", "Object", "Uint8Array(0)", "", "none" } },
+            { "sharedarraybuffer0", { "object", "Object", "SharedArrayBuffer(32)", "[object SharedArrayBuffer]",
+                                      "[[Int8Array]]", "object", "Object", "Int8Array(32)",
+                                      "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
+                                      "[[Uint8Array]]", "object", "Object", "Uint8Array(32)",
+                                      "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
+                                      "[[Int16Array]]", "object", "Object", "Int16Array(16)",
+                                      "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", "[[Int32Array]]", "object", "Object",
+                                      "Int32Array(8)", "0,0,0,0,0,0,0,0", "[[ArrayBufferByteLength]]", "number", "32",
+                                      "32", "byteLength", "number", "32", "32" } },
+            { "weakref0", { "object", "Object", "WeakRef {}", "[object WeakRef]", "none" } },
+            { "iterator0", { "function", "Function", "function [Symbol.iterator]( { [native code] }",
+                             "function [Symbol.iterator]() { [native code] }" } },
             { "set1", { "object", "set", "Set", "Set(1) {1}", "[object Set]", "size", "number", "1", "1",
                         "[[Entries]]", "object", "array", "Array", "Array(1)", "1" } },
             { "set2", { "object", "set", "Set", "Set(7) {'h', 'e', 'l', 'o', 'w', ...}", "[object Set]", "size",
@@ -400,15 +428,25 @@ private:
                             "string", "B", "B", "14", "string", "u", "u", "15", "string", "f", "f", "16", "string",
                             "f", "f", "17", "string", "e", "e", "18", "string", "r", "r", "19", "string", "]", "]",
                             "length", "number", "20", "20" } },
-            { "string18", { "object", "Object", "String{[[PrimitiveValue]]: 0,0,0,0,0,0,0,0,0,0}",
-                            "0,0,0,0,0,0,0,0,0,0", "[[PrimitiveValue]]", "string", "0,0,0,0,0,0,0,0,0,0",
-                            "0,0,0,0,0,0,0,0,0,0", "0", "string", "0", "0", "1", "string", ",", ",", "2", "string",
-                            "0", "0", "3", "string", ",", ",", "4", "string", "0", "0", "5", "string", ",", ",", "6",
-                            "string", "0", "0", "7", "string", ",", ",", "8", "string", "0", "0", "9", "string", ",",
-                            ",", "10", "string", "0", "0", "11", "string", ",", ",", "12", "string", "0", "0", "13",
-                            "string", ",", ",", "14", "string", "0", "0", "15", "string", ",", ",", "16", "string",
-                            "0", "0", "17", "string", ",", ",", "18", "string", "0", "0", "length", "number", "19",
-                            "19" } },
+            { "string18", { "object", "Object",
+                            "String{[[PrimitiveValue]]: 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}",
+                            "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", "[[PrimitiveValue]]", "string",
+                            "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
+                            "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", "0", "string", "0", "0", "1",
+                            "string", ",", ",", "2", "string", "0", "0", "3", "string", ",", ",", "4", "string", "0",
+                            "0", "5", "string", ",", ",", "6", "string", "0", "0", "7", "string", ",", ",", "8",
+                            "string", "0", "0", "9", "string", ",", ",", "10", "string", "0", "0", "11", "string",
+                            ",", ",", "12", "string", "0", "0", "13", "string", ",", ",", "14", "string", "0", "0",
+                            "15", "string", ",", ",", "16", "string", "0", "0", "17", "string", ",", ",", "18",
+                            "string", "0", "0", "19", "string", ",", ",", "20", "string", "0", "0", "21", "string",
+                            ",", ",", "22", "string", "0", "0", "23", "string", ",", ",", "24", "string", "0", "0",
+                            "25", "string", ",", ",", "26", "string", "0", "0", "27", "string", ",", ",", "28",
+                            "string", "0", "0", "29", "string", ",", ",", "30", "string", "0", "0", "31", "string",
+                            ",", ",", "32", "string", "0", "0", "33", "string", ",", ",", "34", "string", "0", "0",
+                            "35", "string", ",", ",", "36", "string", "0", "0", "37", "string", ",", ",", "38",
+                            "string", "0", "0", "39", "string", ",", ",", "40", "string", "0", "0", "41", "string",
+                            ",", ",", "42", "string", "0", "0", "43", "string", ",", ",", "44", "string", "0", "0",
+                            "45", "string", ",", ",", "46", "string", "0", "0", "length", "number", "47", "47" } },
             { "string19", { "object", "Object", "String{[[PrimitiveValue]]: [object DataView]}", "[object DataView]",
                             "[[PrimitiveValue]]", "string", "[object DataView]", "[object DataView]",
                             "0", "string", "[", "[", "1", "string", "o", "o", "2", "string", "b", "b", "3", "string",
@@ -591,17 +629,30 @@ private:
                             "string", "i", "i", "source", "string", "^\\d+\\.\\d+$", "^\\d+\\.\\d+$", "lastIndex",
                             "number", "0", "0" } },
             { "object14", { "object", "Object", "Object", "999", "none" } },
-            { "object15", { "object", "arraybuffer", "Arraybuffer", "ArrayBuffer(10)", "[object ArrayBuffer]",
-                            "[[Int8Array]]", "object", "Object", "Int8Array(10)", "0,0,0,0,0,0,0,0,0,0",
-                            "[[Uint8Array]]", "object", "Object", "Uint8Array(10)", "0,0,0,0,0,0,0,0,0,0",
-                            "[[Uint8ClampedArray]]", "object", "Object", "Object", "0,0,0,0,0,0,0,0,0,0",
-                            "[[Int16Array]]", "object", "Object", "Int16Array(5)", "0,0,0,0,0", "[[Uint16Array]]",
-                            "object", "Object", "Object", "0,0,0,0,0" } },
-            { "object16", { "object", "Object", "Uint8Array(10)", "0,0,0,0,0,0,0,0,0,0", "         0", "number", "0",
-                            "0", "         1", "number", "0", "0", "         2", "number", "0", "0", "         3",
-                            "number", "0", "0", "         4", "number", "0", "0", "         5", "number", "0", "0",
-                            "         6", "number", "0", "0", "         7", "number", "0", "0", "         8",
-                            "number", "0", "0", "         9", "number", "0", "0" } },
+            { "object15", { "object", "arraybuffer", "Arraybuffer", "ArrayBuffer(24)", "[object ArrayBuffer]",
+                            "[[Int8Array]]", "object", "Object", "Int8Array(24)",
+                            "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", "[[Uint8Array]]", "object", "Object",
+                            "Uint8Array(24)", "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
+                            "[[Uint8ClampedArray]]", "object", "Object", "Object",
+                            "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", "[[Int16Array]]", "object", "Object",
+                            "Int16Array(12)", "0,0,0,0,0,0,0,0,0,0,0,0", "[[Uint16Array]]", "object", "Object",
+                            "Object", "0,0,0,0,0,0,0,0,0,0,0,0", "[[Int32Array]]", "object", "Object",
+                            "Int32Array(6)", "0,0,0,0,0,0", "[[Uint32Array]]", "object", "Object", "Object",
+                            "0,0,0,0,0,0", "[[Float32Array]]", "object", "Object", "Object", "0,0,0,0,0,0",
+                            "[[Float64Array]]", "object", "Object", "Object", "0,0,0", "[[BigInt64Array]]", "object",
+                            "Object", "Object", "0,0,0", "[[BigUint64Array]]",
+                            "object", "Object", "Object", "0,0,0" } },
+            { "object16", { "object", "Object", "Uint8Array(24)", "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
+                            "         0", "number", "0", "0", "         1", "number", "0", "0", "         2",
+                            "number", "0", "0", "         3", "number", "0", "0", "         4", "number", "0", "0",
+                            "         5", "number", "0", "0", "         6", "number", "0", "0", "         7",
+                            "number", "0", "0", "         8", "number", "0", "0", "         9", "number", "0", "0",
+                            "        10", "number", "0", "0", "        11", "number", "0", "0", "        12",
+                            "number", "0", "0", "        13", "number", "0", "0", "        14", "number", "0", "0",
+                            "        15", "number", "0", "0", "        16", "number", "0", "0", "        17",
+                            "number", "0", "0", "        18", "number", "0", "0", "        19", "number", "0", "0",
+                            "        20", "number", "0", "0", "        21", "number", "0", "0", "        22",
+                            "number", "0", "0", "        23", "number", "0", "0" } },
             { "object17", { "object", "Object", "Object", "[object DataView]", "none" } },
             { "object18", { "object", "Object", "Boolean{[[PrimitiveValue]]: false}", "false", "[[PrimitiveValue]]",
                             "boolean", "false", "false" } },
@@ -748,9 +799,9 @@ private:
     size_t breakpointCounter_ = 0;
 };
 
-std::unique_ptr<TestEvents> GetJsVariableTest()
+std::unique_ptr<TestEvents> GetJsVariableFirstTest()
 {
-    return std::make_unique<JsVariableTest>();
+    return std::make_unique<JsVariableFirstTest>();
 }
 }  // namespace panda::ecmascript::tooling::test
 

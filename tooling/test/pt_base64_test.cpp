@@ -82,4 +82,36 @@ HWTEST_F_L0(PtBase64Test, ErrorTextTest)
     EXPECT_EQ(static_cast<int>(len), 0);
     EXPECT_EQ(des, "");
 }
+
+HWTEST_F_L0(PtBase64Test, EncodeTest)
+{
+    std::string src = "a";
+    std::string des;
+    uint32_t len = PtBase64::Encode(src, des);
+    EXPECT_EQ(static_cast<int>(len), 4);
+
+    src = "aa";
+    len = PtBase64::Encode(src, des);
+    EXPECT_EQ(static_cast<int>(len), 4);
+
+    src = "aaa";
+    len = PtBase64::Encode(src, des);
+    EXPECT_EQ(static_cast<int>(len), 4);
+}
+
+HWTEST_F_L0(PtBase64Test, DecodeTest)
+{
+    std::string str = "";
+    std::string des;
+    uint32_t len = PtBase64::Decode(str, des);
+    EXPECT_EQ(static_cast<int>(len), 0);
+
+    str = "Hello";
+    len = PtBase64::Decode(str, des);
+    EXPECT_EQ(static_cast<int>(len), 0);
+
+    str = "HelloABC";
+    len = PtBase64::Decode(str, des);
+    EXPECT_EQ(static_cast<int>(len), 6);
+}
 }

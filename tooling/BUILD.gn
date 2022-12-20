@@ -125,7 +125,7 @@ source_set("libark_ecma_debugger_test_set") {
 
   public_configs = [ ":ark_ecma_debugger_config" ]
 
-  defines = [ "DEBUGGER_TEST" ]
+  defines = [ "OHOS_UNIT_TEST" ]
 
   if (is_ohos && is_standard_system) {
     if (enable_hilog) {
