@@ -1040,7 +1040,7 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
     bool hasThis = false;
     for (const auto &[varName, regIndex] : extractor->GetLocalVariableTable(methodId)) {
         value = DebuggerApi::GetVRegValue(vm_, frameHandler, regIndex);
-        if (varName == "4newTarget") {
+        if (varName == "4newTarget" || varName == "0this" || varName == "0newTarget" || varName == "0funcObj") {
             continue;
         }
 
