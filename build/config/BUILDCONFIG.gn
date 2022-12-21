@@ -57,7 +57,15 @@ declare_args() {
              (current_cpu != "s390x" && current_cpu != "s390" &&
               current_cpu != "ppc64" && current_cpu != "ppc" &&
               current_cpu != "mips" && current_cpu != "mips64")
+
+  target_platform = "phone"
+
+  is_official_build = false
+
+  is_component_build = false
 }
+
+is_wearable_product = "${target_platform}" == "wearable"
 
 if (current_os == "ohos") {
   is_ohos = true
@@ -113,23 +121,44 @@ if (custom_toolchain != "") {
   set_default_toolchain(_default_toolchain)
 }
 
-_shared_binary_target_configs = [ "$build_root/config:complier_defaults" ]
+default_compiler_configs = [
+  "$build_root/config/compiler:default_warnings",
+  "$build_root/config/compiler:compiler",
+  "$build_root/config:complier_defaults",
+  "$build_root/config/compiler:no_exceptions",
+]
 
-default_compiler_configs = [ "$build_root/config/compiler:default_warnings" ]
+default_static_library_configs = [
+  "$build_root/config/compiler:default_warnings",
+  "$build_root/config:complier_defaults",
+  "$build_root/config/compiler:compiler",
+]
+
+default_source_set_configs = default_compiler_configs
+
+# Executable defaults.
+default_executable_configs = default_compiler_configs + [
+                               "$build_root/config:default_libs",
+                               "$build_root/config:executable_ldconfig",
+                             ]
+
+# Shared library and loadable module defaults (also for components in component
+# mode).
+default_shared_library_configs =
+    default_compiler_configs + [ "$build_root/config:default_libs" ]
 
 set_defaults("executable") {
-  configs = _shared_binary_target_configs
-  configs += [ "$build_root/config:executable_ldconfig" ]
+  configs = default_executable_configs
 }
 
 set_defaults("static_library") {
-  configs = _shared_binary_target_configs
+  configs = default_static_library_configs
 }
 
 set_defaults("shared_library") {
-  configs = _shared_binary_target_configs
+  configs = default_shared_library_configs
 }
 
 set_defaults("source_set") {
-  configs = default_compiler_configs
+  configs = default_source_set_configs
 }
