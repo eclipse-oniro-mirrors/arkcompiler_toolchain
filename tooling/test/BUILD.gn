@@ -199,6 +199,7 @@ host_unittest_action("DebuggerTest") {
   deps = [
     "//arkcompiler/ets_runtime:libark_jsruntime_test",
     "//arkcompiler/toolchain/tooling:libark_ecma_debugger_test",
+    "//third_party/cJSON:cjson",
     sdk_libc_secshared_dep,
   ]
 }
