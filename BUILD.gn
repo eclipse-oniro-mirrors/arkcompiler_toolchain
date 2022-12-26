@@ -135,6 +135,7 @@ group("ark_toolchain_unittest") {
   if (host_os != "mac") {
     deps += [
       "//arkcompiler/toolchain/tooling/test:unittest",
+      "//arkcompiler/toolchain/websocket/test:unittest",
       "//third_party/libuv:uv",
     ]
     if (is_ohos && is_standard_system) {
@@ -148,7 +149,10 @@ group("ark_toolchain_host_unittest") {
   deps = []
   if (host_os != "mac") {
     # js unittest
-    deps += [ "//arkcompiler/toolchain/tooling/test:host_unittest" ]
+    deps += [
+      "//arkcompiler/toolchain/tooling/test:host_unittest",
+      "//arkcompiler/toolchain/websocket/test:host_unittest",
+    ]
   }
 }
 
