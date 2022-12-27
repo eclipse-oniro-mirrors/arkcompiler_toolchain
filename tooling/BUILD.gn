@@ -13,6 +13,9 @@
 
 import("//arkcompiler/ets_runtime/js_runtime_config.gni")
 
+is_cross_platform_build =
+    defined(build_cross_platform_version) && build_cross_platform_version
+
 config("ark_ecma_debugger_config") {
   configs = [
     "//arkcompiler/ets_runtime:ark_jsruntime_common_config",
@@ -58,10 +61,13 @@ source_set("libark_ecma_debugger_set") {
 
   public_configs = [ ":ark_ecma_debugger_config" ]
 
-  deps = [
-    "$ark_root/libpandafile:arkfile_header_deps",
-    "$ark_third_party_root/cJSON:cjson_static",
-  ]
+  deps = [ "$ark_root/libpandafile:arkfile_header_deps" ]
+
+  if (is_cross_platform_build || ark_standalone_build) {
+    deps += [ "$ark_third_party_root/cJSON:cjson_static" ]
+  } else {
+    deps += [ "$ark_third_party_root/cJSON:cjson" ]
+  }
 
   if (is_mingw || is_mac) {
     if (is_mingw) {
@@ -137,10 +143,13 @@ source_set("libark_ecma_debugger_test_set") {
     }
   }
 
-  deps = [
-    "$ark_root/libpandafile:arkfile_header_deps",
-    "$ark_third_party_root/cJSON:cjson_static",
-  ]
+  deps = [ "$ark_root/libpandafile:arkfile_header_deps" ]
+
+  if (is_cross_platform_build || ark_standalone_build) {
+    deps += [ "$ark_third_party_root/cJSON:cjson_static" ]
+  } else {
+    deps += [ "$ark_third_party_root/cJSON:cjson" ]
+  }
 }
 
 ohos_shared_library("libark_ecma_debugger_test") {

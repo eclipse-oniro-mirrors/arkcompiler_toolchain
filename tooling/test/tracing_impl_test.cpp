@@ -99,7 +99,7 @@ HWTEST_F_L0(TracingImplTest, DispatcherImplDispatchTest)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel =  new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<TracingImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<TracingImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -121,7 +121,7 @@ HWTEST_F_L0(TracingImplTest, DispatcherImplEndTest)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel =  new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<TracingImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<TracingImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -139,7 +139,7 @@ HWTEST_F_L0(TracingImplTest, DispatcherImplGetCategoriesTest)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel =  new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<TracingImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<TracingImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -157,7 +157,7 @@ HWTEST_F_L0(TracingImplTest, DispatcherImplRecordClockSyncMarkerTest)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel =  new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<TracingImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<TracingImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -175,7 +175,7 @@ HWTEST_F_L0(TracingImplTest, DispatcherImplRequestMemoryDumpTest)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel =  new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<TracingImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<TracingImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -193,7 +193,7 @@ HWTEST_F_L0(TracingImplTest, DispatcherImplStartDumpTest)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel =  new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<TracingImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<TracingImpl::DispatcherImpl>(channel, std::move(tracing));
@@ -211,7 +211,7 @@ HWTEST_F_L0(TracingImplTest, FrontendBufferUsageTest)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = nullptr;
     auto frontend = std::make_unique<TracingImpl::Frontend>(channel);
     frontend->BufferUsage();
@@ -233,7 +233,7 @@ HWTEST_F_L0(TracingImplTest, FrontendDataCollectedTest)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = nullptr;
     auto frontend = std::make_unique<TracingImpl::Frontend>(channel);
     frontend->DataCollected();
@@ -254,7 +254,7 @@ HWTEST_F_L0(TracingImplTest, FrontendTracingCompleteTest)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]]const void* ptr, const std::string &temp) { result = temp; };
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = nullptr;
     auto frontend = std::make_unique<TracingImpl::Frontend>(channel);
     frontend->TracingComplete();

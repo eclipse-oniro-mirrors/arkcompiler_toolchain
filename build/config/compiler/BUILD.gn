@@ -185,3 +185,176 @@ config("default_warnings") {
     }
   }
 }
+
+config("compiler") {
+  asmflags = []
+  cflags = []
+  cflags_c = []
+  cflags_cc = []
+  cflags_objc = []
+  cflags_objcc = []
+  ldflags = []
+  defines = []
+  configs = []
+  inputs = []
+
+  # System-specific flags. If your compiler flags apply to one of the
+  # categories here, add it to the associated file to keep this shared config
+  # smaller.
+  if (is_mingw) {
+    configs += [ "$build_root/config/mingw:compiler" ]
+    cflags += [ "-fno-stack-protector" ]
+  }
+  if (is_linux || is_ohos) {
+    cflags += [ "-fPIC" ]
+    ldflags += [ "-fPIC" ]
+
+    if (!is_clang) {
+      # Use pipes for communicating between sub-processes. Faster.
+      # (This flag doesn't do anything with Clang.)
+      cflags += [ "-pipe" ]
+    }
+
+    ldflags += [
+      "-Wl,-z,noexecstack",
+      "-Wl,-z,now",
+      "-Wl,-z,relro",
+    ]
+
+    # Compiler instrumentation can introduce dependencies in DSOs to symbols in
+    # the executable they are loaded into, so they are unresolved at link-time.
+    using_sanitizer = false
+    is_safestack = false
+    if (is_ohos || (!using_sanitizer && !is_safestack)) {
+      ldflags += [
+        "-Wl,-z,defs",
+        "-Wl,--as-needed",
+      ]
+    }
+
+    # # Change default thread stack size to 2MB for asan.
+    if (is_ohos && using_sanitizer) {
+      ldflags += [ "-Wl,-z,stack-size=2097152" ]
+    }
+  }
+
+  configs += [
+    # See the definitions below.
+    ":compiler_cpu_abi",
+    ":compiler_codegen",
+  ]
+
+  if (is_linux) {
+    cflags += [ "-pthread" ]
+    # Do not use the -pthread ldflag here since it becomes a no-op
+    # when using -nodefaultlibs, which would cause an unused argument
+    # error.  "-lpthread" is added in $build_root/config:default_libs.
+  }
+  if (is_clang) {
+    cflags += [ "-fcolor-diagnostics" ]
+    cflags += [ "-fmerge-all-constants" ]
+  }
+
+  use_xcode_clang = false
+  if (is_clang && !use_xcode_clang) {
+    cflags += [
+      "-Xclang",
+      "-mllvm",
+      "-Xclang",
+      "-instcombine-lower-dbg-declare=0",
+    ]
+  }
+
+  if (is_clang) {
+    cflags += [ "-no-canonical-prefixes" ]
+  }
+}
+
+# This provides the basic options to select the target CPU and ABI.
+# It is factored out of "compiler" so that special cases can use this
+# without using everything that "compiler" brings in.  Options that
+# tweak code generation for a particular CPU do not belong here!
+# See "compiler_codegen", below.
+config("compiler_cpu_abi") {
+  cflags = []
+  ldflags = []
+  defines = []
+
+  if (is_posix && !is_mac) {
+    # CPU architecture. We may or may not be doing a cross compile now, so for
+    # simplicity we always explicitly set the architecture.
+    if (current_cpu == "x64") {
+      cflags += [
+        "-m64",
+        "-march=x86-64",
+      ]
+      ldflags += [ "-m64" ]
+    } else if (current_cpu == "x86") {
+      cflags += [ "-m32" ]
+      ldflags += [ "-m32" ]
+      if (!is_nacl) {
+        cflags += [
+          "-msse2",
+          "-mfpmath=sse",
+          "-mmmx",
+        ]
+      }
+    } else if (current_cpu == "arm") {
+      if (is_clang && !is_ohos && !is_nacl) {
+        cflags += [ "--target=arm-linux-gnueabihf" ]
+        ldflags += [ "--target=arm-linux-gnueabihf" ]
+      }
+      if (!is_nacl) {
+        cflags += [
+          "-march=$arm_arch",
+          "-mfloat-abi=$arm_float_abi",
+        ]
+      }
+      if (arm_tune != "") {
+        cflags += [ "-mtune=$arm_tune" ]
+      }
+    } else if (current_cpu == "arm64") {
+      if (is_clang && !is_ohos && !is_nacl) {
+        cflags += [ "--target=aarch64-linux-gnu" ]
+        ldflags += [ "--target=aarch64-linux-gnu" ]
+      }
+      if (is_clang && is_ohos) {
+        ldflags += [ "-Wl,--hash-style=gnu" ]
+      }
+      cflags += [
+        "-march=$arm_arch",
+        "-mfloat-abi=$arm_float_abi",
+        "-mfpu=$arm_fpu",
+      ]
+      ldflags += [ "-march=$arm_arch" ]
+    }
+  }
+
+  asmflags = cflags
+  if (current_cpu == "arm64") {
+    asmflags += [ "-march=armv8.2-a+dotprod+fp16" ]
+  }
+}
+
+config("compiler_codegen") {
+  configs = []
+  cflags = []
+
+  if (is_posix && !is_mac) {
+    if (current_cpu == "x86") {
+      if (is_clang) {
+        cflags += [ "-momit-leaf-frame-pointer" ]
+      }
+    } else if (current_cpu == "arm") {
+      if (is_ohos && !is_clang) {
+        # Clang doesn't support these flags.
+        cflags += [
+          "-fno-tree-sra",
+          "-fno-caller-saves",
+        ]
+      }
+    }
+  }
+
+  asmflags = cflags
+}

@@ -29,7 +29,7 @@ ARCHES = ["x64", "arm", "arm64"]
 DEFAULT_ARCHES = "x64"
 MODES = ["release", "debug"]
 DEFAULT_MODES = "release"
-TARGETS = ["ets_runtime", "ets_frontend", "default", "all"]
+TARGETS = ["ets_runtime", "ets_frontend", "default", "mingw_packages", "all"]
 DEFAULT_TARGETS = "default"
 TARGETS_TEST = ["test262", "unittest"]
 
@@ -47,7 +47,7 @@ for example , python ark.py x64.release
 [arch] only support "x64" now 
 [mode] can be one of ["release", "debug"]
 [options]
-  target: only support [ets_runtime | ets_frontend | default | all] now
+  target: only support [ets_runtime | ets_frontend | default | mingw_packages | all] now
   clean: clear your data in output dir
 [test] 
   test262: run test262

@@ -76,8 +76,6 @@ ohos_source_set("websocket") {
 
   include_dirs += [
     "$toolchain_root/inspector",
-    "//third_party/openssl/include",
-    "//third_party/openssl:libcrypto_static",
     "//utils/native/base/include",
   ]
 
@@ -85,10 +83,7 @@ ohos_source_set("websocket") {
 
   deps += [ sdk_libc_secshared_dep ]
   if (!ark_standalone_build) {
-    deps += [
-      "//third_party/openssl:libcrypto_static",
-      "//third_party/openssl:ssl_source",
-    ]
+    deps += [ "//third_party/openssl:libcrypto_shared" ]
   }
 
   configs += [

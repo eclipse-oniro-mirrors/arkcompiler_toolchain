@@ -17,13 +17,13 @@ config("zlib_config") {
   cflags = [
     "-Wno-incompatible-pointer-types",
     "-Werror",
+    "-Wno-strict-prototypes",
     "-Wimplicit-function-declaration",
-    "-fPIC",
   ]
 }
 
 config("zlib_public_config") {
-  include_dirs = [ "." ]
+  include_dirs = [ "//third_party/zlib" ]
 }
 
 ohos_static_library("libz") {
