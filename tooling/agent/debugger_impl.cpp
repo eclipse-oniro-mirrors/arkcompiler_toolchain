@@ -105,8 +105,8 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
         frontend_.ScriptParsed(vm_, *script);
         return true;
     };
-    if (MatchScripts(scriptFunc, fileName, ScriptMatchType::URL)) {
-        LOG_DEBUGGER(WARN) << "NotifyScriptParsed: already loaded: " << fileName;
+    if (MatchScripts(scriptFunc, url, ScriptMatchType::URL)) {
+        LOG_DEBUGGER(WARN) << "NotifyScriptParsed: already loaded: " << url;
         return false;
     }
 
