@@ -118,33 +118,28 @@ bool WebSocket::HttpProtocolDecode(const std::string& request, HttpProtocol& req
 bool WebSocket::HandleFrame(WebSocketFrame& wsFrame)
 {
     if (wsFrame.payloadLen == 126) { // 126: the payloadLen read from frame
-        char recvbuf[PAYLOAD_LEN + 1];
+        char recvbuf[PAYLOAD_LEN + 1] = {0};
         int32_t bufLen = recv(client_, recvbuf, PAYLOAD_LEN, 0);
         if (bufLen < PAYLOAD_LEN) {
             LOGE("ReadMsg failed readRet=%{public}d", bufLen);
             return false;
         }
         recvbuf[PAYLOAD_LEN] = '\0';
-        uint16_t msgLen;
+        uint16_t msgLen = 0;
         if (memcpy_s(&msgLen, sizeof(recvbuf), recvbuf, sizeof(recvbuf) - 1) != EOK) {
             LOGE("HandleFrame: memcpy_s failed");
             return false;
         }
         wsFrame.payloadLen = ntohs(msgLen);
     } else if (wsFrame.payloadLen > 126) { // 126: the payloadLen read from frame
-        char recvbuf[EXTEND_PATLOAD_LEN + 1];
+        char recvbuf[EXTEND_PATLOAD_LEN + 1] = {0};
         int32_t bufLen = recv(client_, recvbuf, EXTEND_PATLOAD_LEN, 0);
         if (bufLen < EXTEND_PATLOAD_LEN) {
             LOGE("ReadMsg failed readRet=%{public}d", bufLen);
             return false;
         }
         recvbuf[EXTEND_PATLOAD_LEN] = '\0';
-        uint64_t msgLen;
-        if (memcpy_s(&msgLen, sizeof(recvbuf), recvbuf, sizeof(recvbuf) - 1) != EOK) {
-            LOGE("HandleFrame: memcpy_s failed");
-            return false;
-        }
-        wsFrame.payloadLen = ntohl(msgLen);
+        wsFrame.payloadLen = NetToHostLongLong(recvbuf, EXTEND_PATLOAD_LEN);
     }
     return DecodeMessage(wsFrame);
 }
@@ -249,6 +244,8 @@ std::string WebSocket::Decode()
 #if defined(OHOS_PLATFORM)
             shutdown(client_, SHUT_RDWR);
             close(client_);
+#else
+            close(client_);
 #endif
         }
         return {};
@@ -290,7 +287,7 @@ bool WebSocket::HttpHandShake()
 }
 
 #if !defined(OHOS_PLATFORM)
-bool WebSocket::InitTcpWebSocket()
+bool WebSocket::InitTcpWebSocket(uint32_t timeoutLimit)
 {
     if (socketState_ != SocketState::UNINITED) {
         LOGI("InitTcpWebSocket websocket has inited");
@@ -309,8 +306,22 @@ bool WebSocket::InitTcpWebSocket()
         LOGE("InitTcpWebSocket socket init failed");
         return false;
     }
+    // allow specified port can be used at once and not wait TIME_WAIT status ending
+    int sockOptVal = 1;
+    if ((setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, &sockOptVal, sizeof(sockOptVal))) != SOCKET_SUCCESS) {
+        LOGE("InitTcpWebSocket setsockopt SO_REUSEADDR failed");
+        close(fd_);
+        return false;
+    }
 
-    sockaddr_in addr_sin;
+    // set send and recv timeout
+    if (!SetWebSocketTimeOut(fd_, timeoutLimit)) {
+        LOGE("InitTcpWebSocket SetWebSocketTimeOut failed");
+        close(fd_);
+        return false;
+    }
+
+    sockaddr_in addr_sin = {0};
     addr_sin.sin_family = AF_INET;
     addr_sin.sin_port = htons(9230); // 9230: sockName for tcp
     addr_sin.sin_addr.s_addr = INADDR_ANY;
@@ -319,7 +330,6 @@ bool WebSocket::InitTcpWebSocket()
         close(fd_);
         return false;
     }
-
     if (listen(fd_, 1) < SOCKET_SUCCESS) {
         LOGE("InitTcpWebSocket listen failed");
         close(fd_);
@@ -350,6 +360,7 @@ bool WebSocket::ConnectTcpWebSocket()
     if (!HttpHandShake()) {
         LOGE("ConnectTcpWebSocket HttpHandShake failed");
         socketState_ = SocketState::UNINITED;
+        close(client_);
         close(fd_);
         return false;
     }
@@ -357,7 +368,7 @@ bool WebSocket::ConnectTcpWebSocket()
     return true;
 }
 #else
-bool WebSocket::InitUnixWebSocket(const std::string& sockName)
+bool WebSocket::InitUnixWebSocket(const std::string& sockName, uint32_t timeoutLimit)
 {
     if (socketState_ != SocketState::UNINITED) {
         LOGI("InitUnixWebSocket websocket has inited");
@@ -366,6 +377,12 @@ bool WebSocket::InitUnixWebSocket(const std::string& sockName)
     fd_ = socket(AF_UNIX, SOCK_STREAM, 0); // 0: defautlt protocol
     if (fd_ < SOCKET_SUCCESS) {
         LOGE("InitUnixWebSocket socket init failed");
+        return false;
+    }
+    // set send and recv timeout
+    if (!SetWebSocketTimeOut(fd_, timeoutLimit)) {
+        LOGE("InitUnixWebSocket SetWebSocketTimeOut failed");
+        close(fd_);
         return false;
     }
 
@@ -438,14 +455,44 @@ void WebSocket::Close()
     if (socketState_ == SocketState::UNINITED) {
         return;
     }
-#if defined(OHOS_PLATFORM)
     if (socketState_ == SocketState::CONNECTED) {
+#if defined(OHOS_PLATFORM)
         shutdown(client_, SHUT_RDWR);
+#endif
         close(client_);
     }
+#if defined(OHOS_PLATFORM)
     shutdown(fd_, SHUT_RDWR);
 #endif
     close(fd_);
     socketState_ = SocketState::UNINITED;
+}
+
+uint64_t WebSocket::NetToHostLongLong(char* buf, uint32_t len)
+{
+    uint64_t result = 0;
+    for (uint32_t i = 0; i < len; i++) {
+        result |= static_cast<unsigned char>(buf[i]);
+        if ((i + 1) < len) {
+            result <<= 8; // 8: result need shift left 8 bits in order to big endian convert to int
+        }
+    }
+    return result;
+}
+
+bool WebSocket::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
+{
+    if (timeoutLimit > 0) {
+        struct timeval timeout = {timeoutLimit, 0};
+        if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) != SOCKET_SUCCESS) {
+            LOGE("SetWebSocketTimeOut setsockopt SO_SNDTIMEO failed");
+            return false;
+        }
+        if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) != SOCKET_SUCCESS) {
+            LOGE("SetWebSocketTimeOut setsockopt SO_RCVTIMEO failed");
+            return false;
+        }
+    }
+    return true;
 }
 } // namespace OHOS::ArkCompiler::Toolchain

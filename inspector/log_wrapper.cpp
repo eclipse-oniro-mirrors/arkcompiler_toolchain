@@ -18,7 +18,8 @@
 #include <string>
 #ifdef ANDROID_PLATFORM
 #include <android/log.h>
-#elif defined(IOS_PLATFORM)
+#elif defined(IOS_PLATFORM) || defined(PANDA_TARGET_AMD64)
+#include <thread>
 #include "securec.h"
 #endif
 
@@ -37,6 +38,7 @@ std::string StripFormatString(const char* fmt)
     StripString("{private}", newFmt);
     return newFmt;
 }
+
 #ifdef ANDROID_PLATFORM
 const char* tag = "ArkCompiler";
 void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
@@ -47,7 +49,7 @@ void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
     __android_log_vprint(static_cast<int>(level), tag, formatted.c_str(), args);
     va_end(args);
 }
-#elif defined(IOS_PLATFORM)
+#elif defined(IOS_PLATFORM) || defined(PANDA_TARGET_AMD64)
 constexpr int32_t MAX_BUFFER_SIZE = 100;
 void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
 {
