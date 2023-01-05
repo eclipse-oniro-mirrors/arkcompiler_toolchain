@@ -24,8 +24,6 @@
 #include "libpandabase/macros.h"
 
 namespace panda::ecmascript::tooling {
-using panda::panda_file::File;
-
 class SingleStepper {
 public:
     enum class Type { STEP_INTO, STEP_OVER, STEP_OUT };
@@ -55,7 +53,7 @@ private:
     uint32_t GetStackDepth() const;
     bool InStepRange(uint32_t pc) const;
     static std::list<JSPtStepRange> GetStepRanges(DebugInfoExtractor *extractor,
-        File::EntityId methodId, uint32_t offset);
+        panda_file::File::EntityId methodId, uint32_t offset);
     static std::unique_ptr<SingleStepper> GetStepper(const EcmaVM *ecmaVm, SingleStepper::Type type);
 
     const EcmaVM *ecmaVm_;
