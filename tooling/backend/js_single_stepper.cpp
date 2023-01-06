@@ -88,7 +88,7 @@ std::unique_ptr<SingleStepper> SingleStepper::GetStepOutStepper(const EcmaVM *ec
 }
 
 std::list<JSPtStepRange> SingleStepper::GetStepRanges(DebugInfoExtractor *extractor,
-    File::EntityId methodId, uint32_t offset)
+    panda_file::File::EntityId methodId, uint32_t offset)
 {
     std::list<JSPtStepRange> ranges {};
     const LineNumberTable &table = extractor->GetLineNumberTable(methodId);

@@ -17,7 +17,12 @@
 #define ARKCOMPILER_TOOLCHAIN_WEBSOCKET_WEBSOCKET_H
 
 #include <iostream>
+#include <memory>
+#include <atomic>
 
+namespace panda::test {
+class WebSocketTest;
+}
 namespace OHOS::ArkCompiler::Toolchain {
 struct WebSocketFrame {
     uint8_t fin;
@@ -48,20 +53,24 @@ public:
     void Close();
     void SendReply(const std::string& message) const;
 #if !defined(OHOS_PLATFORM)
-    bool InitTcpWebSocket();
+    bool InitTcpWebSocket(uint32_t timeoutLimit = 0);
     bool ConnectTcpWebSocket();
 #else
-    bool InitUnixWebSocket(const std::string& sockName);
+    bool InitUnixWebSocket(const std::string& sockName, uint32_t timeoutLimit = 0);
     bool ConnectUnixWebSocket();
 #endif
     bool IsConnected();
 
 private:
+    friend class panda::test::WebSocketTest;
+
     bool DecodeMessage(WebSocketFrame& wsFrame);
     bool HttpHandShake();
     bool HttpProtocolDecode(const std::string& request, HttpProtocol& req);
     bool HandleFrame(WebSocketFrame& wsFrame);
     bool ProtocolUpgrade(const HttpProtocol& req);
+    uint64_t NetToHostLongLong(char* buf, uint32_t len);
+    bool SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit);
 
     int32_t client_ {-1};
     int32_t fd_ {-1};

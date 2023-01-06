@@ -162,6 +162,8 @@ host_unittest_action("DebuggerEntryTest") {
   deps = [
     ":debugger_entry_resource",
     ":jsdebugtest",
+    "$ark_third_party_root/icu/icu4c:shared_icui18n",
+    "$ark_third_party_root/icu/icu4c:shared_icuuc",
     "//arkcompiler/ets_runtime:libark_jsruntime_test",
     "//arkcompiler/toolchain/tooling:libark_ecma_debugger_test",
   ]
@@ -198,6 +200,8 @@ host_unittest_action("DebuggerTest") {
 
   deps = [
     "$ark_third_party_root/cJSON:cjson",
+    "$ark_third_party_root/icu/icu4c:shared_icui18n",
+    "$ark_third_party_root/icu/icu4c:shared_icuuc",
     "//arkcompiler/ets_runtime:libark_jsruntime_test",
     "//arkcompiler/toolchain/tooling:libark_ecma_debugger_test",
     sdk_libc_secshared_dep,

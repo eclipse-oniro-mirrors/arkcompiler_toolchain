@@ -136,5 +136,11 @@ template("ohos_source_set") {
                              "subsystem_name",
                              "part_name",
                            ])
+    if (defined(invoker.configs)) {
+      configs += invoker.configs
+    }
+    if (defined(invoker.remove_configs)) {
+      configs -= invoker.remove_configs
+    }
   }
 }
