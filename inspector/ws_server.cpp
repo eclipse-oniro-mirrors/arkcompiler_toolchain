@@ -20,6 +20,7 @@
 #include <iostream>
 #include <shared_mutex>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include "log_wrapper.h"
 
@@ -29,81 +30,57 @@ std::shared_mutex g_mutex;
 void WsServer::RunServer()
 {
     terminateExecution_ = false;
-    try {
-        tid_ = pthread_self();
+    webSocket_ = std::make_unique<WebSocket>();
 #if !defined(OHOS_PLATFORM)
-        constexpr int32_t DEFAULT_INSEPTOR_PORT = 9230;
-        CommProtocol::endpoint endPoint(CommProtocol::v4(), DEFAULT_INSEPTOR_PORT);
+    if (!webSocket_->InitTcpWebSocket()) {
+        return;
+    }
 #else
-        int appPid = getpid();
-        std::string pidStr = std::to_string(appPid);
-        std::string instanceIdStr("");
-        /**
-         * The old version of IDE is not compatible with the new images due to the connect server.
-         * The First instance will use "pid" instead of "pid + instanceId" to avoid this.
-         * If old version of IDE does not get the instanceId by connect server, it can still connect the debug server.
-         */
-        if (instanceId_ != 0) {
-            instanceIdStr = std::to_string(instanceId_);
-        }
-        std::string sockName = '\0' + pidStr + instanceIdStr + componentName_;
-        LOGI("WsServer RunServer: %{public}d%{public}d%{public}s", appPid, instanceId_, componentName_.c_str());
-        CommProtocol::endpoint endPoint(sockName);
+    tid_ = pthread_self();
+    int appPid = getpid();
+    std::string pidStr = std::to_string(appPid);
+    std::string instanceIdStr("");
+
+    if (instanceId_ != 0) {
+        instanceIdStr = std::to_string(instanceId_);
+    }
+    std::string sockName = pidStr + instanceIdStr + componentName_;
+    LOGI("WsServer RunServer: %{public}d%{public}s%{public}s", appPid, instanceIdStr.c_str(), componentName_.c_str());
+    if (!webSocket_->InitUnixWebSocket(sockName)) {
+        return;
+    }
 #endif
-        ioContext_ = std::make_unique<boost::asio::io_context>();
-        CommProtocol::socket socket(*ioContext_);
-        CommProtocol::acceptor acceptor(*ioContext_, endPoint);
-        auto& connectFlag = connectState_;
-        acceptor.async_accept(socket, [&connectFlag](const boost::system::error_code& error) {
-            if (!error) {
-                connectFlag = true;
-            }
-        });
-        cv_.notify_one();
-        ioContext_->run();
-        if (terminateExecution_ || !connectState_) {
+    while (!terminateExecution_) {
+#if !defined(OHOS_PLATFORM)
+        if (!webSocket_->ConnectTcpWebSocket()) {
             return;
         }
-        webSocket_ = std::unique_ptr<websocket::stream<CommProtocol::socket>>(
-            std::make_unique<websocket::stream<CommProtocol::socket>>(std::move(socket)));
-        webSocket_->accept();
-        while (!terminateExecution_) {
-            beast::flat_buffer buffer;
-            boost::system::error_code error;
-            webSocket_->read(buffer, error);
-            if (error) {
-                webSocket_.reset();
-                return;
+#else
+        if (!webSocket_->ConnectUnixWebSocket()) {
+            return;
+        }
+#endif
+        while (webSocket_->IsConnected()) {
+            std::string message = webSocket_->Decode();
+            if (!message.empty()) {
+                LOGI("WsServer OnMessage: %{public}s", message.c_str());
+                wsOnMessage_(std::move(message));
             }
-            std::string message = boost::beast::buffers_to_string(buffer.data());
-            LOGI("WsServer OnMessage: %{public}s", message.c_str());
-            wsOnMessage_(std::move(message));
         }
-    } catch (const beast::system_error& se) {
-        if (se.code() != websocket::error::closed) {
-            webSocket_.reset();
-            LOGE("Error system_error, %{public}s", se.what());
-        }
-    } catch (const std::exception& e) {
-        LOGE("Error exception, %{public}s", e.what());
     }
 }
 
 void WsServer::StopServer()
 {
-    std::unique_lock<std::mutex> lock(mtx_);
-    if (ioContext_ == nullptr) {
-        cv_.wait_for(lock, std::chrono::milliseconds(100)); // 100: time for the socket thread to init
-    }
     LOGI("WsServer StopServer");
     terminateExecution_ = true;
-    if (!connectState_) {
-        ioContext_->stop();
-    } else if (webSocket_ != nullptr) {
-        boost::system::error_code error;
-        webSocket_->close(websocket::close_code::normal, error);
+    if (webSocket_ != nullptr) {
+        webSocket_->Close();
+#if defined(OHOS_PLATFORM)
+        pthread_join(tid_, nullptr);
+#endif
+        webSocket_.reset();
     }
-    pthread_join(tid_, nullptr);
 }
 
 void WsServer::SendReply(const std::string& message) const
@@ -114,18 +91,6 @@ void WsServer::SendReply(const std::string& message) const
         return;
     }
     LOGI("WsServer SendReply: %{public}s", message.c_str());
-    try {
-        boost::beast::multi_buffer buffer;
-        boost::beast::ostream(buffer) << message;
-
-        webSocket_->text(webSocket_->got_text());
-        webSocket_->write(buffer.data());
-    } catch (const beast::system_error& se) {
-        if (se.code() != websocket::error::closed) {
-            LOGE("SendReply Error system_error");
-        }
-    } catch (const std::exception& e) {
-        LOGE("SendReply Error exception");
-    }
+    webSocket_->SendReply(message);
 }
 } // namespace OHOS::ArkCompiler::Toolchain

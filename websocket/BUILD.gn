@@ -12,12 +12,9 @@
 # limitations under the License.
 
 import("//arkcompiler/toolchain/toolchain.gni")
-import("//build/ohos.gni")
-import("//foundation/arkui/ace_engine/ace_config.gni")
 
-config("ark_debugger_config") {
+config("websocket_config") {
   cflags_cc = [
-    "-fexceptions",
     "-fno-complete-member-pointers",
     "-Wno-implicit-fallthrough",
     "-fvisibility=default",
@@ -25,7 +22,7 @@ config("ark_debugger_config") {
   ]
 }
 
-config("ark_platform_config") {
+config("websocket_platform_config") {
   defines = []
   if (is_ohos) {
     defines += [
@@ -52,18 +49,41 @@ config("ark_platform_config") {
   } else {
     defines += [ "UNIX_PLATFORM" ]
   }
+
+  if (current_cpu == "arm") {
+    defines += [
+      "PANDA_TARGET_ARM32_ABI_SOFT=1",
+      "PANDA_TARGET_ARM32",
+      "PANDA_TARGET_32",
+    ]
+  } else if (current_cpu == "arm64") {
+    defines += [
+      "PANDA_TARGET_ARM64",
+      "PANDA_TARGET_64",
+      "PANDA_ENABLE_GLOBAL_REGISTER_VARIABLES",
+      "PANDA_USE_32_BIT_POINTER",
+    ]
+  } else if (current_cpu == "x86") {
+    defines += [ "PANDA_TARGET_X86" ]
+  } else if (current_cpu == "amd64" || current_cpu == "x64" ||
+             current_cpu == "x86_64") {
+    defines += [
+      "PANDA_TARGET_64",
+      "PANDA_TARGET_AMD64",
+      "PANDA_USE_32_BIT_POINTER",
+    ]
+  }
 }
 
-ohos_shared_library("ark_debugger") {
-  deps = [ ":ark_debugger_static" ]
+ohos_source_set("websocket") {
+  defines = []
+  deps = []
 
+  configs = [ sdk_libc_secshared_config ]
   if (is_mingw || is_mac) {
+    cflags = [ "-std=c++17" ]
     if (is_mingw) {
       platform = "windows"
-      ldflags = [
-        "-lwsock32",
-        "-lws2_32",
-      ]
     } else {
       platform = "mac"
     }
@@ -72,54 +92,29 @@ ohos_shared_library("ark_debugger") {
     ]
   } else if (target_os == "android") {
     aosp_deps = [ "shared_library:liblog" ]
-  } else {
+  } else if (is_ohos && is_standard_system) {
     external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
   }
 
-  part_name = "toolchain"
-  subsystem_name = "arkcompiler"
-}
+  include_dirs = []
 
-ohos_source_set("ark_debugger_static") {
-  deps = []
-  defines = []
-  configs = []
-
-  defines += [ "ACE_LOG_TAG=\"ArkDebugger\"" ]
-
-  if (is_mingw || is_mac) {
-    cflags = [ "-std=c++17" ]
-  }
-
-  include_dirs = [
-    "$toolchain_root",
-    "$toolchain_root/websocket",
+  include_dirs += [
+    "$toolchain_root/inspector",
+    "//utils/native/base/include",
   ]
 
-  deps += [ "$toolchain_root/websocket:websocket" ]
-  sources = [
-    "inspector.cpp",
-    "library_loader.cpp",
-    "ws_server.cpp",
+  sources = [ "websocket.cpp" ]
+
+  deps += [
+    "//third_party/openssl:libcrypto_shared",
+    sdk_libc_secshared_dep,
   ]
-  if (target_os == "android") {
-    sources += [ "log_wrapper.cpp" ]
-  } else if (target_os == "ios") {
-    sources += [ "log_wrapper.cpp" ]
-    include_dirs += [
-      "//arkcompiler/toolchain",
-      "//arkcompiler/ets_runtime",
-      "//arkcompiler/runtime_core",
-    ]
-    configs += [ sdk_libc_secshared_config ]
-    public_deps = [ sdk_libc_secshared_dep ]
-  } else {
-    include_dirs +=
-        [ "//base/hiviewdfx/hilog/interfaces/native/innerkits/include" ]
-  }
 
   configs += [
-    ":ark_debugger_config",
-    ":ark_platform_config",
+    ":websocket_config",
+    ":websocket_platform_config",
   ]
+
+  subsystem_name = "ark"
+  part_name = "toolchain"
 }

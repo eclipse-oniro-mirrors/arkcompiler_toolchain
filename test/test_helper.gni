@@ -55,6 +55,7 @@ template("host_unittest_action") {
           rebase_path(_root_out_dir_) + "/test/test:" +
           rebase_path(_root_out_dir_) + "/${_icu_path_}:" +
           rebase_path(_root_out_dir_) + "/thirdparty/libuv:" +
+          rebase_path(_root_out_dir_) + "/security/huks:" +
           rebase_path("//prebuilts/clang/ohos/linux-x86_64/llvm/lib/"),
       "--timeout-limit",
       "1200",

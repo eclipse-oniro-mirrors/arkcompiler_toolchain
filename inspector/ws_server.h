@@ -16,30 +16,12 @@
 #ifndef ARKCOMPILER_TOOLCHAIN_INSPECTOR_WS_SERVER_H
 #define ARKCOMPILER_TOOLCHAIN_INSPECTOR_WS_SERVER_H
 
-#include <boost/asio/error.hpp>
-#if !defined(OHOS_PLATFORM)
-#include <boost/asio/ip/tcp.hpp>
-#else
-#include <boost/asio/local/stream_protocol.hpp>
-#endif
-#include <boost/beast/core.hpp>
-#include <boost/beast/websocket.hpp>
 #include <functional>
 #include <iostream>
-#include <mutex>
-#include <queue>
 
-#include <pthread.h>
+#include "websocket.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
-namespace beast = boost::beast;
-namespace websocket = beast::websocket;
-#if !defined(OHOS_PLATFORM)
-using CommProtocol = boost::asio::ip::tcp;
-#else
-using CommProtocol = boost::asio::local::stream_protocol;
-#endif
-
 class WsServer {
 public:
     WsServer(const std::string& component, const std::function<void(std::string&&)>& onMessage, int32_t instanceId)
@@ -51,16 +33,14 @@ public:
     void SendReply(const std::string& message) const;
 
 private:
-    std::atomic<bool> connectState_ {false};
     std::atomic<bool> terminateExecution_ { false };
     [[maybe_unused]] int32_t instanceId_ {0};
+#if defined(OHOS_PLATFORM)
     pthread_t tid_ {0};
+#endif
     std::string componentName_ {};
-    std::mutex mtx_;
-    std::condition_variable cv_;
     std::function<void(std::string&&)> wsOnMessage_ {};
-    std::unique_ptr<websocket::stream<CommProtocol::socket>> webSocket_ { nullptr };
-    std::unique_ptr<boost::asio::io_context> ioContext_ { nullptr };
+    std::unique_ptr<WebSocket> webSocket_ { nullptr };
 };
 } // namespace OHOS::ArkCompiler::Toolchain
 
