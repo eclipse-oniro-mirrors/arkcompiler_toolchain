@@ -105,10 +105,10 @@ ohos_source_set("websocket") {
 
   sources = [ "websocket.cpp" ]
 
-  deps += [
-    "//third_party/openssl:libcrypto_shared",
-    sdk_libc_secshared_dep,
-  ]
+  deps += [ sdk_libc_secshared_dep ]
+  if (!ark_standalone_build) {
+    deps += [ "//third_party/openssl:libcrypto_shared" ]
+  }
 
   configs += [
     ":websocket_config",

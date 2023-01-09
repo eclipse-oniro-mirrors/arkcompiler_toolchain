@@ -29,9 +29,9 @@ ARCHES = ["x64", "arm", "arm64"]
 DEFAULT_ARCHES = "x64"
 MODES = ["release", "debug"]
 DEFAULT_MODES = "release"
-TARGETS = ["ets_runtime", "ets_frontend", "default", "unittest_packages", "mingw_packages", "all"]
+TARGETS = ["ets_runtime", "ets_frontend", "default", "mingw_packages", "all"]
 DEFAULT_TARGETS = "default"
-TARGETS_TEST = ["test262"]
+TARGETS_TEST = ["test262", "unittest"]
 
 
 USER_ARGS_TEMPLATE = """\
@@ -47,11 +47,11 @@ for example , python ark.py x64.release
 [arch] only support "x64" now 
 [mode] can be one of ["release", "debug"]
 [options]
-  target: only support [ets_runtime | ets_frontend | default | all] now
+  target: only support [ets_runtime | ets_frontend | default | mingw_packages | all] now
   clean: clear your data in output dir
 [test] 
   test262: run test262
-  unittest_packages: run unittest
+  unittest: run unittest
 """
 
 def PrintHelp():
@@ -194,13 +194,18 @@ def RunTest(template):
     arch = template[0]
     mode = template[1]
     test = template[5]
+    path = GetPath(arch, mode)
     test_dir = arch + "." + mode 
     test262_code = '''cd arkcompiler/ets_frontend
     python3 test262/run_test262.py --es2021 all --timeout 180000 --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib --ark-tool=../../out/%s/clang_x64/arkcompiler/ets_runtime/ark_js_vm --ark-frontend-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/es2abc --merge-abc-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/merge_abc --ark-frontend=es2panda
     '''%(test_dir, test_dir, test_dir)
+    unittest_code = "./prebuilts/build-tools/linux-x86/bin/ninja -C %s unittest_packages"%(path)
     if ("test262" == test):
-        print("=== come to test ===")
+        print("=== come to test262 ===")
         return _Call(test262_code)
+    elif ("unittest" == test):
+        print("=== come to unittest ===")
+        return _Call(unittest_code)
     else:
         print("=== nothing to test ===")
         return 0 

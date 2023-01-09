@@ -63,10 +63,10 @@ source_set("libark_ecma_debugger_set") {
 
   deps = [ "$ark_root/libpandafile:arkfile_header_deps" ]
 
-  if (is_cross_platform_build) {
-    deps += [ "//third_party/cJSON:cjson_static" ]
+  if (is_cross_platform_build || ark_standalone_build) {
+    deps += [ "$ark_third_party_root/cJSON:cjson_static" ]
   } else {
-    deps += [ "//third_party/cJSON:cjson" ]
+    deps += [ "$ark_third_party_root/cJSON:cjson" ]
   }
 
   if (is_mingw || is_mac) {
@@ -104,8 +104,10 @@ ohos_shared_library("libark_ecma_debugger") {
   deps = [
     ":libark_ecma_debugger_set",
     "//arkcompiler/ets_runtime:libark_jsruntime",
-    "//third_party/libuv:uv",
   ]
+  if (!ark_standalone_build) {
+    deps += [ "//third_party/libuv:uv" ]
+  }
 
   install_enable = true
 
@@ -143,10 +145,10 @@ source_set("libark_ecma_debugger_test_set") {
 
   deps = [ "$ark_root/libpandafile:arkfile_header_deps" ]
 
-  if (is_cross_platform_build) {
-    deps += [ "//third_party/cJSON:cjson_static" ]
+  if (is_cross_platform_build || ark_standalone_build) {
+    deps += [ "$ark_third_party_root/cJSON:cjson_static" ]
   } else {
-    deps += [ "//third_party/cJSON:cjson" ]
+    deps += [ "$ark_third_party_root/cJSON:cjson" ]
   }
 }
 
@@ -154,8 +156,12 @@ ohos_shared_library("libark_ecma_debugger_test") {
   deps = [
     ":libark_ecma_debugger_test_set",
     "//arkcompiler/ets_runtime:libark_jsruntime_test",
-    "//third_party/libuv:uv",
   ]
+  if (!ark_standalone_build) {
+    deps += [ "//third_party/libuv:uv" ]
+  } else {
+    ldflags = [ "-luv" ]
+  }
 
   if (is_ohos && is_standard_system) {
     if (enable_hilog) {
