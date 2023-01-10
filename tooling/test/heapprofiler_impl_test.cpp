@@ -64,8 +64,8 @@ HWTEST_F_L0(HeapProfilerImplTest, CollectGarbage)
     ProtocolChannel *channel = nullptr;
     auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
     DispatchResponse response = heapProfiler->CollectGarbage();
-    ASSERT_TRUE(response.GetMessage() == "CollectGarbage not support now");
-    ASSERT_TRUE(!response.IsOk());
+    ASSERT_TRUE(response.GetMessage() == "");
+    ASSERT_TRUE(response.IsOk());
 }
 
 HWTEST_F_L0(HeapProfilerImplTest, Enable)
@@ -203,7 +203,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplCollectGarbage)
     std::string msg = std::string() + R"({"id":0,"method":"HeapProfiler.collectGarbage","params":{}})";
     DispatchRequest request(msg);
     dispatcherImpl->CollectGarbage(request);
-    ASSERT_TRUE(result.find("CollectGarbage not support now") != std::string::npos);
+    ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
     if (channel) {
         delete channel;
         channel = nullptr;
