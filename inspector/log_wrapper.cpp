@@ -18,7 +18,8 @@
 #include <string>
 #ifdef ANDROID_PLATFORM
 #include <android/log.h>
-#elif defined(IOS_PLATFORM)
+#elif defined(IOS_PLATFORM) || defined(PANDA_TARGET_AMD64)
+#include <thread>
 #include "securec.h"
 #endif
 
@@ -47,7 +48,7 @@ void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
     __android_log_vprint(static_cast<int>(level), tag, formatted.c_str(), args);
     va_end(args);
 }
-#elif defined(IOS_PLATFORM)
+#elif defined(IOS_PLATFORM) || defined(PANDA_TARGET_AMD64)
 constexpr int32_t MAX_BUFFER_SIZE = 100;
 void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
 {
@@ -56,7 +57,7 @@ void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
     va_start(args, fmt);
 
     char buf[MAX_BUFFER_SIZE];
-    if (vsnprintf_s(buf, sizeof(buf), sizeof(buf) - 1, formatted.c_str(), args) != EOK && errno == EINVAL) {
+    if (vsnprintf_s(buf, sizeof(buf), sizeof(buf) - 1, formatted.c_str(), args) < 0 && errno == EINVAL) {
         return;
     }
     va_end(args);
@@ -86,7 +87,7 @@ void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
     }
 
     if (snprintf_s(timeBuf, sizeof(timeBuf), sizeof(timeBuf) - 1, "%s",
-            domainTag, levelTag.c_str(), std::this_thread::get_id()) != EOK) {
+            domainTag, levelTag.c_str(), std::this_thread::get_id()) < 0) {
         return;
     }
 
