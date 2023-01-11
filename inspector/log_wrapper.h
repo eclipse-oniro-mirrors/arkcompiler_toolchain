@@ -16,7 +16,7 @@
 #ifndef ARKCOMPILER_TOOLCHAIN_INSPECTOR_LOG_WRAPPER_H
 #define ARKCOMPILER_TOOLCHAIN_INSPECTOR_LOG_WRAPPER_H
 
-#if !defined(ANDROID_PLATFORM) && !defined(IOS_PLATFORM) && !defined(PANDA_TARGET_AMD64)
+#if defined(OHOS_PLATFORM)
 #include "hilog/log.h"
 #endif
 
@@ -37,7 +37,7 @@ namespace OHOS::ArkCompiler::Toolchain {
 #undef LOGD
 #endif
 
-#if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM) || defined(PANDA_TARGET_AMD64)
+#if !defined(OHOS_PLATFORM)
 enum class LogLevel {
     UNKNOWN,
     DEFAULT,
@@ -63,7 +63,7 @@ static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {
 };
 #endif
 
-#if defined(ANDROID_PLATFORM) || defined(IOS_PLATFORM) || defined(PANDA_TARGET_AMD64)
+#if !defined(OHOS_PLATFORM)
 #define LOGF(fmt, ...) StdLog::PrintLog(LogLevel::FATAL, fmt, ##__VA_ARGS__)
 #define LOGE(fmt, ...) StdLog::PrintLog(LogLevel::ERROR, fmt, ##__VA_ARGS__)
 #define LOGW(fmt, ...) StdLog::PrintLog(LogLevel::WARN, fmt, ##__VA_ARGS__)
