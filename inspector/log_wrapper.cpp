@@ -18,7 +18,7 @@
 #include <string>
 #ifdef ANDROID_PLATFORM
 #include <android/log.h>
-#elif defined(IOS_PLATFORM) || defined(PANDA_TARGET_AMD64)
+#else
 #include <thread>
 #include "securec.h"
 #endif
@@ -48,7 +48,7 @@ void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
     __android_log_vprint(static_cast<int>(level), tag, formatted.c_str(), args);
     va_end(args);
 }
-#elif defined(IOS_PLATFORM) || defined(PANDA_TARGET_AMD64)
+#else
 constexpr int32_t MAX_BUFFER_SIZE = 100;
 void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
 {
