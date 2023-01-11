@@ -83,30 +83,40 @@ template("ohos_static_library") {
     }
   }
 }
+
 template("ohos_shared_library") {
+  if (defined(invoker.subsystem_name) && defined(invoker.part_name)) {
+    subsystem_name = invoker.subsystem_name
+    part_name = invoker.part_name
+  } else if (defined(invoker.subsystem_name)) {
+    subsystem_name = invoker.subsystem_name
+    part_name = subsystem_name
+  } else {
+    subsystem_name = "arkcompiler"
+    part_name = "common"
+  }
+  output_dir = "${root_out_dir}/${subsystem_name}/${part_name}"
   shared_library(target_name) {
     forward_variables_from(invoker,
                            "*",
                            [
                              "relative_install_dir",
+                             "configs",
                              "subsystem_name",
                              "install_enable",
                              "part_name",
+                             "output_dir",
                              "install_images",
                              "use_exceptions",
                              "external_deps",
                            ])
-    if (defined(invoker.subsystem_name) && defined(invoker.part_name)) {
-      subsystem_name = invoker.subsystem_name
-      part_name = invoker.part_name
-    } else if (defined(invoker.subsystem_name)) {
-      subsystem_name = invoker.subsystem_name
-      part_name = subsystem_name
-    } else {
-      subsystem_name = "arkcompiler"
-      part_name = "common"
+    output_dir = output_dir
+    if (defined(invoker.configs)) {
+      configs += invoker.configs
     }
-    output_dir = "${root_out_dir}/${subsystem_name}/${part_name}"
+    if (defined(invoker.remove_configs)) {
+      configs -= invoker.remove_configs
+    }
   }
 }
 

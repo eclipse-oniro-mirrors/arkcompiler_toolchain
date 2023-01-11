@@ -150,7 +150,11 @@ def Get_templete(args_list):
         is_debug = "is_debug = true"
     else:
         is_debug = "is_debug = false"
-    all_part = (is_debug + "\n" + target_os + "\n" + target_cpu) 
+    if global_target == "mingw_packages":
+        mingw = "mingw = true"
+    else:
+        mingw = "mingw = false"
+    all_part = (is_debug + "\n" + target_os + "\n" + target_cpu + "\n" + mingw) 
     return [global_arche, global_mode, global_target, global_clean, USER_ARGS_TEMPLATE % (all_part), global_test]
 
 
@@ -200,12 +204,23 @@ def RunTest(template):
     python3 test262/run_test262.py --es2021 all --timeout 180000 --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib --ark-tool=../../out/%s/clang_x64/arkcompiler/ets_runtime/ark_js_vm --ark-frontend-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/es2abc --merge-abc-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/merge_abc --ark-frontend=es2panda
     '''%(test_dir, test_dir, test_dir)
     unittest_code = "./prebuilts/build-tools/linux-x86/bin/ninja -C %s unittest_packages"%(path)
+    build_log = os.path.join(path, "build.log")
     if ("test262" == test):
         print("=== come to test262 ===")
-        return _Call(test262_code)
+        pass_code =_CallWithOutput(test262_code,build_log)
+        if pass_code == 0:
+            print("=== test262 success! ===")
+        else:
+            print("=== test262 fail! ===")
+        return pass_code
     elif ("unittest" == test):
         print("=== come to unittest ===")
-        return _Call(unittest_code)
+        pass_code =_CallWithOutput(unittest_code,build_log)
+        if pass_code == 0:
+            print("=== unittest success! ===")
+        else:
+            print("=== unittest fail! ===")
+        return pass_code
     else:
         print("=== nothing to test ===")
         return 0 

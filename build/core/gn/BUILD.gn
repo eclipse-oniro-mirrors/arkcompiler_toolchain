@@ -43,9 +43,9 @@ group("linux_packages") {
 }
 
 group("mingw_packages") {
-  if (host_os != "mac") {
+  if (host_os != "mac" && mingw) {
     deps = [
-      ":ets_frontend_win($build_root/toolchain/mingw:mingw_x86_64)",
+      ":ets_frontend($build_root/toolchain/mingw:mingw_x86_64)",
       ":ets_runtime($build_root/toolchain/mingw:mingw_x86_64)",
       ":runtime_core($build_root/toolchain/mingw:mingw_x86_64)",
     ]
@@ -60,23 +60,28 @@ group("unittest_packages") {
 }
 
 group("ets_runtime") {
-  deps = [ "//arkcompiler/ets_runtime:ark_js_packages" ]
+  deps = [
+    "$js_root:libark_jsruntime",
+    "$js_root/ecmascript/compiler:ark_aot_compiler",
+    "$js_root/ecmascript/compiler:ark_stub_compiler",
+    "$js_root/ecmascript/js_vm:ark_js_vm",
+    "$js_root/ecmascript/quick_fix:quick_fix",
+  ]
+  if (mingw) {
+    deps -= [ "$js_root/ecmascript/compiler:ark_stub_compiler" ]
+  }
 }
 
 group("ets_frontend") {
   deps = [
-    "//arkcompiler/ets_frontend/es2panda:es2panda",
-    "//arkcompiler/ets_frontend/merge_abc:merge_abc",
-    "//arkcompiler/ets_frontend/ts2panda:ts2abc_build",
+    "$ets_frontend_root/es2panda:es2panda",
+    "$ets_frontend_root/merge_abc:merge_abc",
+    "$ets_frontend_root/ts2panda:ts2abc_build",
   ]
-}
-
-group("ets_frontend_win") {
-  deps = [
-    "//arkcompiler/ets_frontend/es2panda:es2panda",
-    "//arkcompiler/ets_frontend/merge_abc:merge_abc",
-    "//arkcompiler/ets_frontend/ts2panda:ark_ts2abc_build_win",
-  ]
+  if (mingw) {
+    deps += [ "$ets_frontend_root/ts2panda:ark_ts2abc_build_win" ]
+    deps -= [ "$ets_frontend_root/ts2panda:ts2abc_build" ]
+  }
 }
 
 group("runtime_core") {
