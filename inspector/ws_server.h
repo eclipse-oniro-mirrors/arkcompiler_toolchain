@@ -16,10 +16,10 @@
 #ifndef ARKCOMPILER_TOOLCHAIN_INSPECTOR_WS_SERVER_H
 #define ARKCOMPILER_TOOLCHAIN_INSPECTOR_WS_SERVER_H
 
-#include "websocket.h"
-
 #include <functional>
 #include <iostream>
+
+#include "websocket.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 class WsServer {

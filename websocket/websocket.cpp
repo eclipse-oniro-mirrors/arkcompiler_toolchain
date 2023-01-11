@@ -244,8 +244,10 @@ std::string WebSocket::Decode()
 #if defined(OHOS_PLATFORM)
             shutdown(client_, SHUT_RDWR);
             close(client_);
+            client_ = -1;
 #else
             close(client_);
+            client_ = -1;
 #endif
         }
         return {};
@@ -311,6 +313,7 @@ bool WebSocket::InitTcpWebSocket(uint32_t timeoutLimit)
     if ((setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, &sockOptVal, sizeof(sockOptVal))) != SOCKET_SUCCESS) {
         LOGE("InitTcpWebSocket setsockopt SO_REUSEADDR failed");
         close(fd_);
+        fd_ = -1;
         return false;
     }
 
@@ -318,6 +321,7 @@ bool WebSocket::InitTcpWebSocket(uint32_t timeoutLimit)
     if (!SetWebSocketTimeOut(fd_, timeoutLimit)) {
         LOGE("InitTcpWebSocket SetWebSocketTimeOut failed");
         close(fd_);
+        fd_ = -1;
         return false;
     }
 
@@ -328,11 +332,13 @@ bool WebSocket::InitTcpWebSocket(uint32_t timeoutLimit)
     if (bind(fd_, reinterpret_cast<struct sockaddr*>(&addr_sin), sizeof(addr_sin)) < SOCKET_SUCCESS) {
         LOGE("InitTcpWebSocket bind failed");
         close(fd_);
+        fd_ = -1;
         return false;
     }
     if (listen(fd_, 1) < SOCKET_SUCCESS) {
         LOGE("InitTcpWebSocket listen failed");
         close(fd_);
+        fd_ = -1;
         return false;
     }
     socketState_ = SocketState::INITED;
@@ -354,6 +360,7 @@ bool WebSocket::ConnectTcpWebSocket()
         LOGE("ConnectTcpWebSocket accept failed");
         socketState_ = SocketState::UNINITED;
         close(fd_);
+        fd_ = -1;
         return false;
     }
 
@@ -361,7 +368,9 @@ bool WebSocket::ConnectTcpWebSocket()
         LOGE("ConnectTcpWebSocket HttpHandShake failed");
         socketState_ = SocketState::UNINITED;
         close(client_);
+        client_ = -1;
         close(fd_);
+        fd_ = -1;
         return false;
     }
     socketState_ = SocketState::CONNECTED;
@@ -383,6 +392,7 @@ bool WebSocket::InitUnixWebSocket(const std::string& sockName, uint32_t timeoutL
     if (!SetWebSocketTimeOut(fd_, timeoutLimit)) {
         LOGE("InitUnixWebSocket SetWebSocketTimeOut failed");
         close(fd_);
+        fd_ = -1;
         return false;
     }
 
@@ -390,12 +400,14 @@ bool WebSocket::InitUnixWebSocket(const std::string& sockName, uint32_t timeoutL
     if (memset_s(&un, sizeof(un), 0, sizeof(un)) != EOK) {
         LOGE("InitUnixWebSocket memset_s failed");
         close(fd_);
+        fd_ = -1;
         return false;
     }
     un.sun_family = AF_UNIX;
     if (strcpy_s(un.sun_path + 1, sizeof(un.sun_path) - 1, sockName.c_str()) != EOK) {
         LOGE("InitUnixWebSocket strcpy_s failed");
         close(fd_);
+        fd_ = -1;
         return false;
     }
     un.sun_path[0] = '\0';
@@ -403,11 +415,13 @@ bool WebSocket::InitUnixWebSocket(const std::string& sockName, uint32_t timeoutL
     if (bind(fd_, reinterpret_cast<struct sockaddr*>(&un), static_cast<int32_t>(len)) < SOCKET_SUCCESS) {
         LOGE("InitUnixWebSocket bind failed");
         close(fd_);
+        fd_ = -1;
         return false;
     }
     if (listen(fd_, 1) < SOCKET_SUCCESS) { // 1: connection num
         LOGE("InitUnixWebSocket listen failed");
         close(fd_);
+        fd_ = -1;
         return false;
     }
     socketState_ = SocketState::INITED;
@@ -429,6 +443,7 @@ bool WebSocket::ConnectUnixWebSocket()
         LOGE("ConnectUnixWebSocket accept failed");
         socketState_ = SocketState::UNINITED;
         close(fd_);
+        fd_ = -1;
         return false;
     }
     if (!HttpHandShake()) {
@@ -436,8 +451,10 @@ bool WebSocket::ConnectUnixWebSocket()
         socketState_ = SocketState::UNINITED;
         shutdown(client_, SHUT_RDWR);
         close(client_);
+        client_ = -1;
         shutdown(fd_, SHUT_RDWR);
         close(fd_);
+        fd_ = -1;
         return false;
     }
     socketState_ = SocketState::CONNECTED;
@@ -460,11 +477,13 @@ void WebSocket::Close()
         shutdown(client_, SHUT_RDWR);
 #endif
         close(client_);
+        client_ = -1;
     }
 #if defined(OHOS_PLATFORM)
     shutdown(fd_, SHUT_RDWR);
 #endif
     close(fd_);
+    fd_ = -1;
     socketState_ = SocketState::UNINITED;
 }
 

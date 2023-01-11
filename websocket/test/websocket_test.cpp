@@ -67,6 +67,7 @@ public:
                 std::cerr << "ClientConnectUnixWebSocket::client SetWebSocketTimeOut failed, error = "
                           << errno << ", desc = " << strerror(errno) << std::endl;
                 close(client_);
+                client_ = -1;
                 return false;
             }
 
@@ -75,6 +76,7 @@ public:
                 std::cerr << "ClientConnectUnixWebSocket::client memset_s serverAddr failed, error = "
                           << errno << ", desc = " << strerror(errno) << std::endl;
                 close(client_);
+                client_ = -1;
                 return false;
             }
             serverAddr.sun_family = AF_UNIX;
@@ -82,6 +84,7 @@ public:
                 std::cerr << "ClientConnectUnixWebSocket::client strcpy_s serverAddr.sun_path failed, error = "
                           << errno << ", desc = " << strerror(errno) << std::endl;
                 close(client_);
+                client_ = -1;
                 return false;
             }
             serverAddr.sun_path[0] = '\0';
@@ -92,6 +95,7 @@ public:
                 std::cerr << "ClientConnectUnixWebSocket::client connect failed, error = "
                           << errno << ", desc = " << strerror(errno) << std::endl;
                 close(client_);
+                client_ = -1;
                 return false;
             }
             socketState_ = SocketState::INITED;
@@ -118,6 +122,7 @@ public:
                 std::cerr << "ClientConnectTcpWebSocket::client SetWebSocketTimeOut failed, error = "
                           << errno << ", desc = " << strerror(errno) << std::endl;
                 close(client_);
+                client_ = -1;
                 return false;
             }
 
@@ -126,6 +131,7 @@ public:
                 std::cerr << "ClientConnectTcpWebSocket::client memset_s serverAddr failed, error = "
                           << errno << ", desc = " << strerror(errno) << std::endl;
                 close(client_);
+                client_ = -1;
                 return false;
             }
             serverAddr.sin_family = AF_INET;
@@ -134,6 +140,7 @@ public:
                 std::cerr << "ClientConnectTcpWebSocket::client inet_pton failed, ret = "
                           << ret << ", error = " << errno << ", desc = " << strerror(errno) << std::endl;
                 close(client_);
+                client_ = -1;
                 return false;
             }
 
@@ -142,6 +149,7 @@ public:
                 std::cerr << "ClientConnectTcpWebSocket::client connect failed, error = "
                           << errno << ", desc = " << strerror(errno) << std::endl;
                 close(client_);
+                client_ = -1;
                 return false;
             }
             socketState_ = SocketState::INITED;
@@ -171,6 +179,7 @@ public:
                 shutdown(client_, SHUT_RDWR);
 #endif
                 close(client_);
+                client_ = -1;
                 return false;
             }
             std::cout << "ClientSendWSUpgradeReq::client send wsupgrade req success..." << std::endl;
@@ -198,6 +207,7 @@ public:
                 shutdown(client_, SHUT_RDWR);
 #endif
                 close(client_);
+                client_ = -1;
                 return false;
             }
             socketState_ = SocketState::CONNECTED;
@@ -277,6 +287,7 @@ public:
             shutdown(client_, SHUT_RDWR);
 #endif
             close(client_);
+            client_ = -1;
             socketState_ = SocketState::UNINITED;
         }
 
