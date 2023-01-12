@@ -102,9 +102,11 @@ ohos_source_set("ark_debugger_static") {
     "library_loader.cpp",
     "ws_server.cpp",
   ]
-  if (target_os == "android") {
+  if (is_ohos) {
+    external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  } else if (target_os == "android") {
     sources += [ "log_wrapper.cpp" ]
-  } else if (target_os == "ios") {
+  } else {
     sources += [ "log_wrapper.cpp" ]
     include_dirs += [
       "//arkcompiler/toolchain",
@@ -113,9 +115,6 @@ ohos_source_set("ark_debugger_static") {
     ]
     configs += [ sdk_libc_secshared_config ]
     public_deps = [ sdk_libc_secshared_dep ]
-  } else {
-    include_dirs +=
-        [ "//base/hiviewdfx/hilog/interfaces/native/innerkits/include" ]
   }
 
   configs += [
