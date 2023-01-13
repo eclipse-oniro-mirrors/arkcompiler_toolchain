@@ -20,8 +20,6 @@
 
 #include <string>
 
-#include <pthread.h>
-
 namespace panda::ecmascript {
 class EcmaVM;
 }  // namespace panda::ecmascript
