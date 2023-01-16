@@ -24,21 +24,23 @@ using namespace panda::ecmascript::tooling;
 namespace OHOS {
     void ProtocolHandlerResponseFuzzTest(const uint8_t* data, size_t size)
     {
-        RuntimeOption option;
-        option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
-        auto vm = JSNApi::CreateJSVM(option);
         if (size <= 0) {
             return;
         }
-        using ProtoHandler = const std::function<void(const void *, const std::string &)>;
-        ProtoHandler ph = [data, size](const void *d, [[maybe_unused]] const std::string &s) -> void {
-            d = data + size;
-        };
-        ProtocolHandler handler(ph, vm);
-        std::string str((const char*)data, size);
-        DispatchRequest req(str);
-        PtBaseReturns ret;
-        handler.SendResponse(req, DispatchResponse::Ok(), ret);
+        RuntimeOption option;
+        option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
+        auto vm = JSNApi::CreateJSVM(option);
+        {
+            using ProtoHandler = const std::function<void(const void *, const std::string &)>;
+            ProtoHandler ph = [data, size](const void *d, [[maybe_unused]] const std::string &s) -> void {
+                d = data + size;
+            };
+            ProtocolHandler handler(ph, vm);
+            std::string str((const char*)data, size);
+            DispatchRequest req(str);
+            PtBaseReturns ret;
+            handler.SendResponse(req, DispatchResponse::Ok(), ret);
+        }
         JSNApi::DestroyJSVM(vm);
     }
 }

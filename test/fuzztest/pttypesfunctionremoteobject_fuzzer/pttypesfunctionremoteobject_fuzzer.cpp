@@ -24,12 +24,12 @@ using namespace panda::ecmascript::tooling;
 namespace OHOS {
     void PtTypesFunctionRemoteObjectFuzzTest(const uint8_t* data, size_t size)
     {
-        RuntimeOption option;
-        option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
-        auto vm = JSNApi::CreateJSVM(option);
         if (size <= 0 || data == NULL) {
             return;
         }
+        RuntimeOption option;
+        option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
+        auto vm = JSNApi::CreateJSVM(option);
         Local<JSValueRef> exception = DebuggerApi::GetAndClearException(vm);
         FunctionRemoteObject obj(vm, exception);
         JSNApi::DestroyJSVM(vm);

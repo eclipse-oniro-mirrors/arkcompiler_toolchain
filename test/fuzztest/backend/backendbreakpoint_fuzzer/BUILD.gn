@@ -14,6 +14,7 @@
 #####################################hydra-fuzz###############################
 # import("//arkcompiler/ets_runtime/js_runtime_config.gni")
 import("//arkcompiler/toolchain/test/test_helper.gni")
+import("//arkcompiler/toolchain/toolchain.gni")
 import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
@@ -23,7 +24,9 @@ ohos_fuzztest("BackendBreakpointFuzzTest") {
   module_out_path = "arkcompiler/toolchain"
 
   fuzz_config_file =
-      "//arkcompiler/toolchain/test/fuzztest/backend/backendbreakpoint_fuzzer"
+      "$toolchain_root/test/fuzztest/backend/backendbreakpoint_fuzzer"
+
+  resource_config_file = "$toolchain_root/test/resource/tooling/ohos_test.xml"
 
   sources = [ "backendbreakpoint_fuzzer.cpp" ]
 
