@@ -39,12 +39,10 @@ host_unittest_action("WebSocketTest") {
   ]
 
   deps = [
+    "$ark_third_party_root/openssl:libcrypto_shared",
     "$toolchain_root/websocket:websocket",
     sdk_libc_secshared_dep,
   ]
-  if (!ark_standalone_build) {
-    deps += [ "//third_party/openssl:libcrypto_shared" ]
-  }
 }
 
 group("unittest") {

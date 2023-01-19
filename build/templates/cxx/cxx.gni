@@ -88,6 +88,8 @@ template("ohos_shared_library") {
     forward_variables_from(invoker,
                            "*",
                            [
+                             "configs",
+                             "remove_configs",
                              "relative_install_dir",
                              "subsystem_name",
                              "install_enable",
@@ -96,6 +98,13 @@ template("ohos_shared_library") {
                              "use_exceptions",
                              "external_deps",
                            ])
+    if (defined(invoker.configs)) {
+      configs += invoker.configs
+    }
+    if (defined(invoker.remove_configs)) {
+      configs -= invoker.remove_configs
+    }
+
     if (defined(invoker.subsystem_name) && defined(invoker.part_name)) {
       subsystem_name = invoker.subsystem_name
       part_name = invoker.part_name

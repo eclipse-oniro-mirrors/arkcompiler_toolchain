@@ -113,12 +113,8 @@ declare_args() {
   sanitizer_coverage_flags = ""
 }
 
-is_v8_host_toolchain =
-    current_toolchain == "$build_root/toolchain/linux:clang_x64_v8_arm64" ||
-    current_toolchain == "$build_root/toolchain/linux:clang_x86_v8_arm"
-
 # Disable sanitizers for non-default toolchains.
-if (current_toolchain == host_toolchain || is_v8_host_toolchain) {
+if (current_toolchain == host_toolchain) {
   is_asan = false
   is_cfi = false
   is_lsan = false

@@ -63,7 +63,7 @@ source_set("libark_ecma_debugger_set") {
 
   deps = [ "$ark_root/libpandafile:arkfile_header_deps" ]
 
-  if (is_cross_platform_build || ark_standalone_build) {
+  if (is_cross_platform_build) {
     deps += [ "$ark_third_party_root/cJSON:cjson_static" ]
   } else {
     deps += [ "$ark_third_party_root/cJSON:cjson" ]
@@ -103,11 +103,9 @@ source_set("libark_ecma_debugger_set") {
 ohos_shared_library("libark_ecma_debugger") {
   deps = [
     ":libark_ecma_debugger_set",
+    "$ark_third_party_root/libuv:uv",
     "//arkcompiler/ets_runtime:libark_jsruntime",
   ]
-  if (!ark_standalone_build) {
-    deps += [ "//third_party/libuv:uv" ]
-  }
 
   install_enable = true
 
@@ -145,7 +143,7 @@ source_set("libark_ecma_debugger_test_set") {
 
   deps = [ "$ark_root/libpandafile:arkfile_header_deps" ]
 
-  if (is_cross_platform_build || ark_standalone_build) {
+  if (is_cross_platform_build) {
     deps += [ "$ark_third_party_root/cJSON:cjson_static" ]
   } else {
     deps += [ "$ark_third_party_root/cJSON:cjson" ]
@@ -155,13 +153,9 @@ source_set("libark_ecma_debugger_test_set") {
 ohos_shared_library("libark_ecma_debugger_test") {
   deps = [
     ":libark_ecma_debugger_test_set",
+    "$ark_third_party_root/libuv:uv",
     "//arkcompiler/ets_runtime:libark_jsruntime_test",
   ]
-  if (!ark_standalone_build) {
-    deps += [ "//third_party/libuv:uv" ]
-  } else {
-    ldflags = [ "-luv" ]
-  }
 
   if (is_ohos && is_standard_system) {
     if (enable_hilog) {
