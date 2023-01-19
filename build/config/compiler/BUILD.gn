@@ -11,7 +11,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("$build_root/config/compiler/compiler.gni")
 import("$build_root/toolchain/toolchain.gni")
+
+if (current_cpu == "arm" || current_cpu == "arm64") {
+  import("$build_root/config/arm.gni")
+}
 
 declare_args() {
   treat_warnings_as_errors = true
@@ -235,6 +240,18 @@ config("compiler") {
     # # Change default thread stack size to 2MB for asan.
     if (is_ohos && using_sanitizer) {
       ldflags += [ "-Wl,-z,stack-size=2097152" ]
+    }
+  }
+
+  if ((is_posix && use_lld) || is_ohos) {
+    # Explicitly select LLD, or else some link actions would fail and print
+    # "/usr/bin/ld ... {SharedLibrayName}.so ... not found".
+    ldflags += [ "-fuse-ld=lld" ]
+    if (current_cpu == "arm64") {
+      # Reduce the page size from 65536 in order to reduce binary size slightly
+      # by shrinking the alignment gap between segments. This also causes all
+      # segments to be mapped adjacently, which breakpad relies on.
+      ldflags += [ "-Wl,-z,max-page-size=4096" ]
     }
   }
 
