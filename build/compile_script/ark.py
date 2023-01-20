@@ -150,11 +150,7 @@ def Get_templete(args_list):
         is_debug = "is_debug = true"
     else:
         is_debug = "is_debug = false"
-    if global_target == "mingw_packages":
-        mingw = "mingw = true"
-    else:
-        mingw = "mingw = false"
-    all_part = (is_debug + "\n" + target_os + "\n" + target_cpu + "\n" + mingw) 
+    all_part = (is_debug + "\n" + target_os + "\n" + target_cpu + "\n") 
     return [global_arche, global_mode, global_target, global_clean, USER_ARGS_TEMPLATE % (all_part), global_test]
 
 

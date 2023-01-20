@@ -100,8 +100,9 @@ template("ohos_shared_library") {
     forward_variables_from(invoker,
                            "*",
                            [
-                             "relative_install_dir",
                              "configs",
+                             "remove_configs",
+                             "relative_install_dir",
                              "subsystem_name",
                              "install_enable",
                              "part_name",
