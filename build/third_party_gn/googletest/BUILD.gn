@@ -12,6 +12,7 @@
 # limitations under the License.
 
 googletest_dir = "//third_party/googletest/googletest"
+googlemock_dir = "//third_party/googletest/googlemock"
 
 config("gtest_private_config") {
   visibility = [ ":*" ]
@@ -87,11 +88,11 @@ static_library("gtest_main") {
 
 config("gmock_private_config") {
   visibility = [ ":*" ]
-  include_dirs = [ "googlemock" ]
+  include_dirs = [ "$googlemock_dir" ]
 }
 
 config("gmock_config") {
-  include_dirs = [ "googlemock/include" ]
+  include_dirs = [ "$googlemock_dir/include" ]
 
   cflags_cc = [
     # The MOCK_METHODn() macros do not specify "override", which triggers this
@@ -105,30 +106,30 @@ config("gmock_config") {
 
 static_library("gmock") {
   testonly = true
-  public = [ "googlemock/include/gmock/gmock.h" ]
+  public = [ "$googlemock_dir/include/gmock/gmock.h" ]
   sources = [
-    "googlemock/include/gmock/gmock-actions.h",
-    "googlemock/include/gmock/gmock-cardinalities.h",
-    "googlemock/include/gmock/gmock-function-mocker.h",
-    "googlemock/include/gmock/gmock-matchers.h",
-    "googlemock/include/gmock/gmock-more-actions.h",
-    "googlemock/include/gmock/gmock-more-matchers.h",
-    "googlemock/include/gmock/gmock-nice-strict.h",
-    "googlemock/include/gmock/gmock-spec-builders.h",
-    "googlemock/include/gmock/internal/custom/gmock-generated-actions.h",
-    "googlemock/include/gmock/internal/custom/gmock-matchers.h",
-    "googlemock/include/gmock/internal/custom/gmock-port.h",
-    "googlemock/include/gmock/internal/gmock-internal-utils.h",
-    "googlemock/include/gmock/internal/gmock-port.h",
-    "googlemock/include/gmock/internal/gmock-pp.h",
-    "googlemock/src/gmock-all.cc",
-    "googlemock/src/gmock-cardinalities.cc",
-    "googlemock/src/gmock-internal-utils.cc",
-    "googlemock/src/gmock-matchers.cc",
-    "googlemock/src/gmock-spec-builders.cc",
-    "googlemock/src/gmock.cc",
+    "$googlemock_dir/include/gmock/gmock-actions.h",
+    "$googlemock_dir/include/gmock/gmock-cardinalities.h",
+    "$googlemock_dir/include/gmock/gmock-function-mocker.h",
+    "$googlemock_dir/include/gmock/gmock-matchers.h",
+    "$googlemock_dir/include/gmock/gmock-more-actions.h",
+    "$googlemock_dir/include/gmock/gmock-more-matchers.h",
+    "$googlemock_dir/include/gmock/gmock-nice-strict.h",
+    "$googlemock_dir/include/gmock/gmock-spec-builders.h",
+    "$googlemock_dir/include/gmock/internal/custom/gmock-generated-actions.h",
+    "$googlemock_dir/include/gmock/internal/custom/gmock-matchers.h",
+    "$googlemock_dir/include/gmock/internal/custom/gmock-port.h",
+    "$googlemock_dir/include/gmock/internal/gmock-internal-utils.h",
+    "$googlemock_dir/include/gmock/internal/gmock-port.h",
+    "$googlemock_dir/include/gmock/internal/gmock-pp.h",
+    "$googlemock_dir/src/gmock-all.cc",
+    "$googlemock_dir/src/gmock-cardinalities.cc",
+    "$googlemock_dir/src/gmock-internal-utils.cc",
+    "$googlemock_dir/src/gmock-matchers.cc",
+    "$googlemock_dir/src/gmock-spec-builders.cc",
+    "$googlemock_dir/src/gmock.cc",
   ]
-  sources -= [ "googlemock/src/gmock-all.cc" ]
+  sources -= [ "$googlemock_dir/src/gmock-all.cc" ]
   public_configs = [ ":gmock_config" ]
   configs += [ ":gmock_private_config" ]
   deps = [ ":gtest" ]
@@ -136,7 +137,7 @@ static_library("gmock") {
 
 static_library("gmock_main") {
   testonly = true
-  sources = [ "googlemock/src/gmock_main.cc" ]
+  sources = [ "$googlemock_dir/src/gmock_main.cc" ]
   public_deps = [
     ":gmock",
     ":gtest",

@@ -56,7 +56,7 @@ ohos_shared_library("protobuf_lite") {
     "$protobuf_src_root",
   ]
   if (!is_mingw) {
-    if (current_toolchain != host_toolchain) {
+    if (is_ohos) {
       external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
     }
   } else {
@@ -111,7 +111,7 @@ ohos_static_library("protobuf_lite_static") {
     "$protobuf_src_root",
   ]
   if (!is_mingw) {
-    if (default_toolchain == current_toolchain) {
+    if (is_ohos) {
       # target build, not host build
       defines = [ "HAVE_HILOG" ]
       external_deps = [ "hiviewdfx_hilog_native:libhilog" ]

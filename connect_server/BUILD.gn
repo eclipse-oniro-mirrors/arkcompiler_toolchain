@@ -26,11 +26,11 @@ ohos_shared_library("connectserver_debugger") {
       "OHOS_PLATFORM",
       "UNIX_PLATFORM",
     ]
+
+    external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
   }
 
   deps += [ "$toolchain_root/websocket" ]
-
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
 
   include_dirs = [
     "$toolchain_root/websocket",
