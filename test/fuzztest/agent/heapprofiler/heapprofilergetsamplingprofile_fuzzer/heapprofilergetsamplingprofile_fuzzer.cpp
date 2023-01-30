@@ -27,17 +27,17 @@ using namespace panda::ecmascript::tooling;
 namespace OHOS {
     void HeapprofilerGetSamplingProfileFuzzTest(const uint8_t* data, size_t size)
     {
-        RuntimeOption option;
-        option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
-        auto vm = JSNApi::CreateJSVM(option);
-        int index = 0;
         if (size <= 0) {
             return;
         }
+        RuntimeOption option;
+        option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
+        auto vm = JSNApi::CreateJSVM(option);
+        int32_t input = 0;
         if (size > MAXBYTELEN) {
             size = MAXBYTELEN;
         }
-        if (memcpy_s(&index, MAXBYTELEN, data, size) != 0) {
+        if (memcpy_s(&input, MAXBYTELEN, data, size) != 0) {
             std::cout << "memcpy_s failed!";
             UNREACHABLE();
         }

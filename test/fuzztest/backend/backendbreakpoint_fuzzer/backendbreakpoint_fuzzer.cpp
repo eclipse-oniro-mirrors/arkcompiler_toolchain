@@ -27,31 +27,33 @@ using namespace panda::ecmascript::tooling;
 namespace OHOS {
     void BackendBreakpointFuzzTest(const uint8_t* data, size_t size)
     {
-        RuntimeOption option;
-        option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
-        auto vm = JSNApi::CreateJSVM(option);
-        int32_t input;
-        if (size <= 1) {
+        if (size <= 0) {
             return;
         }
         if (size > MAXBYTELEN) {
             size = MAXBYTELEN;
         }
-        if (memcpy_s(&input, MAXBYTELEN, data, size) != 0) {
-            std::cout << "memcpy_s failed!";
-            UNREACHABLE();
+        int32_t input = 0;
+        RuntimeOption option;
+        option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
+        auto vm = JSNApi::CreateJSVM(option);
+        {
+            if (memcpy_s(&input, MAXBYTELEN, data, size) != 0) {
+                std::cout << "memcpy_s failed!";
+                UNREACHABLE();
+            }
+            const int32_t MaxMemory = 1073741824;
+            if (input > MaxMemory) {
+                input = MaxMemory;
+            }
+            using JSPtLocation = tooling::JSPtLocation;
+            EntityId methodId(input);
+            uint32_t bytecodeOffset = 0;
+            auto debugger = std::make_unique<DebuggerImpl>(vm, nullptr, nullptr);
+            std::unique_ptr<JSPtHooks> jspthooks = std::make_unique<JSPtHooks>(debugger.get());
+            JSPtLocation ptLocation1(nullptr, methodId, bytecodeOffset);
+            jspthooks->Breakpoint(ptLocation1);
         }
-        const int32_t MaxMenory = 1073741824;
-        if (input > MaxMenory) {
-            input = MaxMenory;
-        }
-        using JSPtLocation = tooling::JSPtLocation;
-        EntityId methodId(input);
-        uint32_t bytecodeOffset = 0;
-        auto debugger = std::make_unique<DebuggerImpl>(vm, nullptr, nullptr);
-        std::unique_ptr<JSPtHooks> jspthooks = std::make_unique<JSPtHooks>(debugger.get());
-        JSPtLocation ptLocation1(nullptr, methodId, bytecodeOffset);
-        jspthooks->Breakpoint(ptLocation1);
         JSNApi::DestroyJSVM(vm);
     }
 }

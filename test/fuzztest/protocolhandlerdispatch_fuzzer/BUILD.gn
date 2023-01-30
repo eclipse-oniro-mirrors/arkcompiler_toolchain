@@ -13,6 +13,7 @@
 
 ##################################hydra-fuzz###################################
 import("//arkcompiler/toolchain/test/test_helper.gni")
+import("//arkcompiler/toolchain/toolchain.gni")
 import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
@@ -22,14 +23,16 @@ ohos_fuzztest("ProtocolHandlerDispatchFuzzTest") {
   module_out_path = "arkcompiler/toolchain"
 
   fuzz_config_file =
-      "//arkcompiler/toolchain/test/fuzztest/protocolhandlerdispatch_fuzzer"
+      "$toolchain_root/test/fuzztest/protocolhandlerdispatch_fuzzer"
+
+  resource_config_file = "$toolchain_root/test/resource/tooling/ohos_test.xml"
 
   sources = [ "protocolhandlerdispatch_fuzzer.cpp" ]
 
   configs = [ "//arkcompiler/toolchain:toolchain_test_config" ]
 
   deps = [
-    "//arkcompiler/ets_runtime:libark_jsruntime",
+    "$js_root:libark_jsruntime_test",
     "//arkcompiler/toolchain/tooling:libark_ecma_debugger_set",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//third_party/libuv:uv",

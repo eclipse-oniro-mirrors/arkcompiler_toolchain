@@ -24,12 +24,12 @@ using namespace panda::ecmascript::tooling;
 namespace OHOS {
     void PtTypesExceptionDetailsTextFuzzTest(const uint8_t* data, size_t size)
     {
-        RuntimeOption option;
-        option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
-        auto vm = JSNApi::CreateJSVM(option);
         if (size <= 0 || data == NULL) {
             return;
         }
+        RuntimeOption option;
+        option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
+        auto vm = JSNApi::CreateJSVM(option);
         ExceptionDetails details;
         details.SetText(std::string((const char*)data, size));
         details.GetText();

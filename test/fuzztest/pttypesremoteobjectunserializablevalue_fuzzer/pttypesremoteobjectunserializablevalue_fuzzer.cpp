@@ -24,12 +24,12 @@ using namespace panda::ecmascript::tooling;
 namespace OHOS {
     void PtTypesRemoteObjectUnserializableValueFuzzTest(const uint8_t* data, size_t size)
     {
-        RuntimeOption option;
-        option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
-        auto vm = JSNApi::CreateJSVM(option);
         if (size <= 0 || data == NULL) {
             return;
         }
+        RuntimeOption option;
+        option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
+        auto vm = JSNApi::CreateJSVM(option);
         RemoteObject obj;
         UnserializableValue val((const char*)data, size);
         obj.SetUnserializableValue(val);

@@ -24,18 +24,20 @@ using namespace panda::ecmascript::tooling;
 namespace OHOS {
     void ProtocolHandlerWaitFuzzTest(const uint8_t* data, size_t size)
     {
+        if (size <= 0) {
+            return;
+        }
         RuntimeOption option;
         option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
         auto vm = JSNApi::CreateJSVM(option);
-        if (size <= 0 || data == NULL) {
-            return;
+        {
+            using ProtoHandler = const std::function<void(const void *, const std::string &)>;
+            ProtoHandler ph = [data, size](const void *d, [[maybe_unused]] const std::string &s) -> void {
+                d = data + size;
+            };
+            ProtocolHandler handler(ph, vm);
+            handler.WaitForDebugger();
         }
-        using ProtoHandler = const std::function<void(const void *, const std::string &)>;
-        ProtoHandler ph = [data, size](const void *d, [[maybe_unused]] const std::string &s) -> void {
-            d = data + size;
-        };
-        ProtocolHandler handler(ph, vm);
-        handler.WaitForDebugger();
         JSNApi::DestroyJSVM(vm);
     }
 }
