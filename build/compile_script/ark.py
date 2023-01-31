@@ -41,12 +41,12 @@ OUTDIR = "out"
 Help_message = """
 format: python ark.py [os_arch].[mode] [options] [test] [test target]
 for example , python ark.py x64.release
-[os_arch] only support "x64", "linux_x64" and "mingw_x86_64" now
+[os_arch] support [x64 | linux_x64 | mingw_x86_64 | arm | arm64] now
 [mode] can be one of ["release", "debug"]
 [options]
   target: support [ets_runtime | ets_frontend | runtime_core | default] now
   clean: clear your data in output dir
-[test] only support run on x64 platform now
+[test] support platform [x64 | arm | arm64] now
   test262: run test262
   unittest: run unittest
 [test target]
@@ -189,7 +189,7 @@ def Build(template):
     if not os.path.exists("args.gn"):
         args_gn = os.path.join(path, "args.gn")
         _write(args_gn, template_part, "w")
-        _write(build_log, "\nbuild_time:{}\nbuild_target:{}\n".format(Get_time().replace(microsecond=0), target), "a")
+        _write(build_log, "\nbuild_time:{}\nbuild_target:{}\n".format(Get_time().replace(microsecond=0), os_arch), "a")
     if not os.path.exists("build.ninja"):
         build_ninja = os.path.join(path, "build.ninja")
         code = call_with_output("./prebuilts/build-tools/linux-x86/bin/gn gen %s" % path, build_log)

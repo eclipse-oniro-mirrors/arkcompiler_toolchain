@@ -13,6 +13,10 @@
 
 import("$build_root/ark_var.gni")
 
+import("$build_root/config/sanitizers/sanitizers.gni")
+
+import("$build_root/toolchain/toolchain.gni")
+
 # import cxx base templates
 import("$build_root/templates/cxx/cxx.gni")
 

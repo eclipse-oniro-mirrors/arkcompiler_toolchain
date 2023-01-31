@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//arkcompiler/ets_frontend/es2panda/es2abc_config.gni")
+import("//arkcompiler/ets_frontend/ets_frontend_config.gni")
 import("//arkcompiler/ets_runtime/js_runtime_config.gni")
 import("../../../toolchain.gni")
 
@@ -47,10 +47,13 @@ group("unittest_packages") {
 group("ets_runtime") {
   deps = [
     "$js_root:libark_jsruntime($target_toolchain)",
-    "$js_root/ecmascript/compiler:ark_aot_compiler($target_toolchain)",
     "$js_root/ecmascript/js_vm:ark_js_vm($target_toolchain)",
     "$js_root/ecmascript/quick_fix:quick_fix($target_toolchain)",
   ]
+  if (is_linux || (current_cpu == "arm64" && is_ohos)) {
+    deps +=
+        [ "$js_root/ecmascript/compiler:ark_aot_compiler($target_toolchain)" ]
+  }
   if (is_linux) {
     deps +=
         [ "$js_root/ecmascript/compiler:ark_stub_compiler($target_toolchain)" ]

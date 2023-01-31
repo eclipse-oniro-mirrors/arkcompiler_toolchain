@@ -11,16 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-config("complier_defaults") {
-  if (current_os == "linux") {
-    cflags = [
-      "-fPIC",
-      "-pthread",
-    ]
-  }
-}
-
-config("executable_ldconfig") {
+config("executable_config") {
+  configs = []
   if (!is_mac) {
     if (!is_mingw) {
       cflags = [ "-fPIE" ]
@@ -32,6 +24,10 @@ config("executable_ldconfig") {
       if (current_os == "linux") {
         ldflags += [ "-lpthread" ]
       }
+    }
+    if (is_ohos) {
+      ldflags += [ "-lpthread" ]
+      configs += [ "$build_root/config/ohos:executable_config" ]
     }
   }
 }
@@ -95,4 +91,27 @@ config("default_libs") {
       "rt",
     ]
   }
+}
+
+group("common_deps") {
+  public_deps = []
+  if (use_musl && is_ohos) {
+    public_deps += [ "$build_root/third_party_gn/musl:soft_shared_libs" ]
+  }
+}
+
+group("executable_deps") {
+  public_deps = [ ":common_deps" ]
+}
+
+group("shared_library_deps") {
+  public_deps = [ ":common_deps" ]
+}
+
+group("static_library_deps") {
+  public_deps = [ ":common_deps" ]
+}
+
+group("source_set_deps") {
+  public_deps = [ ":common_deps" ]
 }
