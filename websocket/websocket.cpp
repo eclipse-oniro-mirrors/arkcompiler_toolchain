@@ -27,9 +27,6 @@ namespace OHOS::ArkCompiler::Toolchain {
  *    3. message's length >= 65536
  */
 
-constexpr char WebSocket::EOL[];
-constexpr char WebSocket::WEB_SOCKET_GUID[];
-
 void WebSocket::SendReply(const std::string& message) const
 {
     if (socketState_ != SocketState::CONNECTED) {

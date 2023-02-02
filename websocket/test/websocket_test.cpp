@@ -318,13 +318,6 @@ public:
     static const std::string LONG_LONG_MSG;
 };
 
-constexpr char WebSocketTest::ClientWebSocket::CLIENT_WEBSOCKET_UPGRADE_REQ[];
-constexpr char WebSocketTest::ClientWebSocket::MASK_KEY[];
-constexpr char WebSocketTest::HELLO_SERVER[];
-constexpr char WebSocketTest::HELLO_CLIENT[];
-constexpr char WebSocketTest::SERVER_OK[];
-constexpr char WebSocketTest::CLIENT_OK[];
-constexpr char WebSocketTest::QUIT[];
 const std::string WebSocketTest::LONG_MSG       = std::string(1000, 'f');
 const std::string WebSocketTest::LONG_LONG_MSG  = std::string(0xfffff, 'f');
 
