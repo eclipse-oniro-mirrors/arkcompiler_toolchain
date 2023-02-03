@@ -232,7 +232,7 @@ std::string WebSocket::Decode()
 {
     if (socketState_ != SocketState::CONNECTED) {
         LOGE("Decode failed, websocket not connected");
-        return {};
+        return "";
     }
     char recvbuf[SOCKET_HEADER_LEN + 1];
     int32_t msgLen = recv(client_, recvbuf, SOCKET_HEADER_LEN, 0);
@@ -250,7 +250,7 @@ std::string WebSocket::Decode()
             client_ = -1;
 #endif
         }
-        return {};
+        return "";
     }
     recvbuf[SOCKET_HEADER_LEN] = '\0';
     WebSocketFrame wsFrame;
@@ -261,10 +261,12 @@ std::string WebSocket::Decode()
         index++;
         wsFrame.mask = static_cast<uint8_t>((recvbuf[index] >> 7) & 0x1); // 7: to get the mask
         wsFrame.payloadLen = recvbuf[index] & 0x7f;
-        HandleFrame(wsFrame);
-        return wsFrame.payload.get();
+        if (HandleFrame(wsFrame)) {
+            return wsFrame.payload.get();
+        }
+        return "";
     }
-    return std::string();
+    return "";
 }
 
 bool WebSocket::HttpHandShake()
