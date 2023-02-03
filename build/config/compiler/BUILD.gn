@@ -243,7 +243,7 @@ config("compiler") {
     }
   }
 
-  if ((is_posix && use_lld) || is_ohos) {
+  if (is_posix && use_lld) {
     # Explicitly select LLD, or else some link actions would fail and print
     # "/usr/bin/ld ... {SharedLibrayName}.so ... not found".
     ldflags += [ "-fuse-ld=lld" ]
@@ -284,6 +284,19 @@ config("compiler") {
 
   if (is_clang) {
     cflags += [ "-no-canonical-prefixes" ]
+  }
+
+  # specify language standard version.
+  if (is_linux || is_ohos || current_os == "aix") {
+    if (is_clang) {
+      cflags_cc += [ "-std=c++17" ]
+    } else {
+      # In standards-conforming mode, some features like macro "##__VA_ARGS__"
+      # are not supported by gcc. Add flags to support these features.
+      cflags_cc += [ "-std=gnu++17" ]
+    }
+  } else if (!is_win && !is_mingw) {
+    cflags_cc += [ "-std=c++17" ]
   }
 }
 
