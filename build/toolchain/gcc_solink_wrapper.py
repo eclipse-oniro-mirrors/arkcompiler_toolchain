@@ -33,7 +33,6 @@ def collect_soname(args):
 
 
 def collect_dyn_sym(args):
-    """Replaces: nm --format=posix -g -D $sofile | cut -f1-2 -d' '"""
     toc = ''
     _command = [args.nm]
     if args.sofile.endswith('.dll'):
