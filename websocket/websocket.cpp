@@ -33,9 +33,9 @@ void WebSocket::SendReply(const std::string& message) const
         LOGE("SendReply failed, websocket not connected");
         return;
     }
-    uint32_t msgLen = message.length();
-    std::unique_ptr<char []> msgBuf = std::make_unique<char []>(msgLen + 11); // 11: the maximum expandable length
-    char* sendBuf = msgBuf.get();
+    const size_t msgLen = message.length();
+    const uint32_t headerSize = 11; // 11: the maximum expandable length
+    char sendBuf[msgLen + headerSize];
     uint32_t sendMsgLen;
     sendBuf[0] = 0x81; // 0x81: the text message sent by the server should start with '0x81'.
 
@@ -64,8 +64,11 @@ void WebSocket::SendReply(const std::string& message) const
         LOGE("SendReply: memcpy_s failed");
         return;
     }
-    msgBuf[sendMsgLen + msgLen] = '\0';
-    send(client_, sendBuf, sendMsgLen + msgLen, 0);
+    sendBuf[sendMsgLen + msgLen] = '\0';
+    if (!Send(client_, sendBuf, sendMsgLen + msgLen, 0)) {
+        LOGE("SendReply: send failed");
+        return;
+    }
 }
 
 bool WebSocket::HttpProtocolDecode(const std::string& request, HttpProtocol& req)
@@ -119,12 +122,11 @@ bool WebSocket::HandleFrame(WebSocketFrame& wsFrame)
 {
     if (wsFrame.payloadLen == 126) { // 126: the payloadLen read from frame
         char recvbuf[PAYLOAD_LEN + 1] = {0};
-        int32_t bufLen = recv(client_, recvbuf, PAYLOAD_LEN, 0);
-        if (bufLen < PAYLOAD_LEN) {
-            LOGE("ReadMsg failed readRet=%{public}d", bufLen);
+        if (!Recv(client_, recvbuf, PAYLOAD_LEN, 0)) {
+            LOGE("HandleFrame: Recv payloadLen == 126 failed");
             return false;
         }
-        recvbuf[PAYLOAD_LEN] = '\0';
+
         uint16_t msgLen = 0;
         if (memcpy_s(&msgLen, sizeof(recvbuf), recvbuf, sizeof(recvbuf) - 1) != EOK) {
             LOGE("HandleFrame: memcpy_s failed");
@@ -133,12 +135,10 @@ bool WebSocket::HandleFrame(WebSocketFrame& wsFrame)
         wsFrame.payloadLen = ntohs(msgLen);
     } else if (wsFrame.payloadLen > 126) { // 126: the payloadLen read from frame
         char recvbuf[EXTEND_PATLOAD_LEN + 1] = {0};
-        int32_t bufLen = recv(client_, recvbuf, EXTEND_PATLOAD_LEN, 0);
-        if (bufLen < EXTEND_PATLOAD_LEN) {
-            LOGE("ReadMsg failed readRet=%{public}d", bufLen);
+        if (!Recv(client_, recvbuf, EXTEND_PATLOAD_LEN, 0)) {
+            LOGE("HandleFrame: Recv payloadLen > 127 failed");
             return false;
         }
-        recvbuf[EXTEND_PATLOAD_LEN] = '\0';
         wsFrame.payloadLen = NetToHostLongLong(recvbuf, EXTEND_PATLOAD_LEN);
     }
     return DecodeMessage(wsFrame);
@@ -150,55 +150,37 @@ bool WebSocket::DecodeMessage(WebSocketFrame& wsFrame)
         LOGE("ReadMsg length error, expected greater than zero and less than UINT64_MAX");
         return false;
     }
-    wsFrame.payload = std::make_unique<char []>(wsFrame.payloadLen + 1);
+    uint64_t msgLen = wsFrame.payloadLen;
+    wsFrame.payload = std::make_unique<char []>(msgLen + 1);
     if (wsFrame.mask == 1) {
-        char buf[wsFrame.payloadLen + 1];
-        char mask[SOCKET_MASK_LEN + 1];
-        int32_t bufLen = recv(client_, mask, SOCKET_MASK_LEN, 0);
-        if (bufLen != SOCKET_MASK_LEN) {
-            LOGE("ReadMsg failed readRet=%{public}d", bufLen);
+        char buf[msgLen + 1];
+        if (!Recv(client_, wsFrame.maskingkey, SOCKET_MASK_LEN, 0)) {
+            LOGE("DecodeMessage: Recv maskingkey failed");
             return false;
         }
-        mask[SOCKET_MASK_LEN] = '\0';
-        if (memcpy_s(wsFrame.maskingkey, SOCKET_MASK_LEN, mask, sizeof(mask) - 1) != EOK) {
-            LOGE("DecodeMessage: memcpy_s failed");
+
+        if (!Recv(client_, buf, msgLen, 0)) {
+            LOGE("DecodeMessage: Recv message with mask failed");
             return false;
         }
-        uint64_t msgLen = static_cast<uint64_t>(recv(static_cast<uint32_t>(client_), buf,
-                                                     static_cast<int64_t>(wsFrame.payloadLen), 0));
-        if (msgLen == 0) {
-            LOGE("DecodeMessage recv payload failed, client disconnect");
-            return false;
-        }
-        while (msgLen < wsFrame.payloadLen) {
-            uint64_t len = static_cast<uint64_t>(recv(static_cast<uint32_t>(client_), buf + msgLen,
-                                                      static_cast<int64_t>(wsFrame.payloadLen - msgLen), 0));
-            if (len == 0) {
-                LOGE("DecodeMessage recv payload in while failed, client disconnect");
-                return false;
-            }
-            msgLen += len;
-        }
-        buf[wsFrame.payloadLen] = '\0';
+
         for (uint64_t i = 0; i < msgLen; i++) {
             uint64_t j = i % SOCKET_MASK_LEN;
             wsFrame.payload.get()[i] = buf[i] ^ wsFrame.maskingkey[j];
         }
     } else {
-        char buf[wsFrame.payloadLen + 1];
-        uint64_t msgLen = static_cast<uint64_t>(recv(static_cast<uint32_t>(client_), buf,
-                                                     static_cast<int64_t>(wsFrame.payloadLen), 0));
-        if (msgLen != wsFrame.payloadLen) {
-            LOGE("ReadMsg failed");
+        char buf[msgLen + 1];
+        if (!Recv(client_, buf, msgLen, 0)) {
+            LOGE("DecodeMessage: Recv message without mask failed");
             return false;
         }
-        buf[wsFrame.payloadLen] = '\0';
-        if (memcpy_s(wsFrame.payload.get(), wsFrame.payloadLen, buf, msgLen) != EOK) {
+
+        if (memcpy_s(wsFrame.payload.get(), msgLen, buf, msgLen) != EOK) {
             LOGE("DecodeMessage: memcpy_s failed");
             return false;
         }
     }
-    wsFrame.payload.get()[wsFrame.payloadLen] = '\0';
+    wsFrame.payload.get()[msgLen] = '\0';
     return true;
 }
 
@@ -220,8 +202,7 @@ bool WebSocket::ProtocolUpgrade(const HttpProtocol& req)
     sstream << "Sec-WebSocket-Accept: " << encodedKey << EOL;
     sstream << EOL;
     response = sstream.str();
-    int32_t sendLen = send(client_, response.c_str(), response.length(), 0);
-    if (sendLen <= 0) {
+    if (!Send(client_, response.c_str(), response.length(), 0)) {
         LOGE("ProtocolUpgrade: Send failed");
         return false;
     }
@@ -231,28 +212,23 @@ bool WebSocket::ProtocolUpgrade(const HttpProtocol& req)
 std::string WebSocket::Decode()
 {
     if (socketState_ != SocketState::CONNECTED) {
-        LOGE("Decode failed, websocket not connected");
+        LOGE("Decode failed, websocket not connected!");
         return "";
     }
     char recvbuf[SOCKET_HEADER_LEN + 1];
-    int32_t msgLen = recv(client_, recvbuf, SOCKET_HEADER_LEN, 0);
-    if (msgLen != SOCKET_HEADER_LEN) {
-        // msgLen 0 means client disconnect socket.
-        if (msgLen == 0) {
-            LOGE("Decode failed, client websocket disconnect");
-            socketState_ = SocketState::INITED;
+    if (!Recv(client_, recvbuf, SOCKET_HEADER_LEN, 0)) {
+        LOGE("Decode failed, client websocket disconnect");
+        socketState_ = SocketState::INITED;
 #if defined(OHOS_PLATFORM)
-            shutdown(client_, SHUT_RDWR);
-            close(client_);
-            client_ = -1;
+        shutdown(client_, SHUT_RDWR);
+        close(client_);
+        client_ = -1;
 #else
-            close(client_);
-            client_ = -1;
+        close(client_);
+        client_ = -1;
 #endif
-        }
         return "";
     }
-    recvbuf[SOCKET_HEADER_LEN] = '\0';
     WebSocketFrame wsFrame;
     int32_t index = 0;
     wsFrame.fin = static_cast<uint8_t>(recvbuf[index] >> 7); // 7: shift right by 7 bits to get the fin
@@ -499,6 +475,35 @@ uint64_t WebSocket::NetToHostLongLong(char* buf, uint32_t len)
         }
     }
     return result;
+}
+
+bool WebSocket::Recv(int32_t client, char* buf, size_t totalLen, int32_t flags) const
+{
+    size_t recvLen = 0;
+    while (recvLen < totalLen) {
+        ssize_t len = recv(client, buf + recvLen, totalLen - recvLen, flags);
+        if (len <= 0) {
+            LOGE("Recv payload in while failed, websocket disconnect");
+            return false;
+        }
+        recvLen += len;
+    }
+    buf[totalLen] = '\0';
+    return true;
+}
+
+bool WebSocket::Send(int32_t client, const char* buf, size_t totalLen, int32_t flags) const
+{
+    size_t sendLen = 0;
+    while (sendLen < totalLen) {
+        ssize_t len = send(client, buf + sendLen, totalLen - sendLen, flags);
+        if (len <= 0) {
+            LOGE("Send Message in while failed, websocket disconnect");
+            return false;
+        }
+        sendLen += len;
+    }
+    return true;
 }
 
 bool WebSocket::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
