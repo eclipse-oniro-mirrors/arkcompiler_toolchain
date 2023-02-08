@@ -1132,7 +1132,8 @@ void DebuggerImpl::UpdateScopeObject(const FrameHandler *frameHandler,
 
 void DebuggerImpl::ClearSingleStepper()
 {
-    if (singleStepper_ != nullptr) {
+    // ClearSingleStepper is originally called from Function::Call, if current depth is 0, then it is safe to reset
+    if (singleStepper_ != nullptr && DebuggerApi::GetStackDepth(vm_) == 0) {
         singleStepper_.reset();
     }
 }
