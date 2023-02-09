@@ -60,7 +60,15 @@ group("unittest_packages") {
 }
 
 group("ets_runtime") {
-  deps = [ "//arkcompiler/ets_runtime:ark_js_packages" ]
+  deps = [
+    "$js_root:libark_jsruntime",
+    "$js_root/ecmascript/compiler:ark_aot_compiler",
+    "$js_root/ecmascript/js_vm:ark_js_vm",
+    "$js_root/ecmascript/quick_fix:quick_fix",
+  ]
+  if (!is_mingw && !is_ohos) {
+    deps += [ "$js_root/ecmascript/compiler:ark_stub_compiler" ]
+  }
 }
 
 group("ets_frontend") {

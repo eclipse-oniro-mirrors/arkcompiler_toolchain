@@ -128,11 +128,7 @@ default_compiler_configs = [
   "$build_root/config/compiler:no_exceptions",
 ]
 
-default_static_library_configs = [
-  "$build_root/config/compiler:default_warnings",
-  "$build_root/config:complier_defaults",
-  "$build_root/config/compiler:compiler",
-]
+default_static_library_configs = default_compiler_configs
 
 default_source_set_configs = default_compiler_configs
 
