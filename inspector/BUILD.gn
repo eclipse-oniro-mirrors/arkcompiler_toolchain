@@ -53,7 +53,10 @@ config("ark_platform_config") {
 }
 
 ohos_shared_library("ark_debugger") {
-  deps = [ ":ark_debugger_static" ]
+  deps = [
+    ":ark_debugger_static",
+    sdk_libc_secshared_dep,
+  ]
 
   if (is_mingw || is_mac) {
     if (is_mingw) {
@@ -112,7 +115,6 @@ ohos_source_set("ark_debugger_static") {
       "//arkcompiler/runtime_core",
     ]
     configs += [ sdk_libc_secshared_config ]
-    public_deps = [ sdk_libc_secshared_dep ]
   }
 
   configs += [
