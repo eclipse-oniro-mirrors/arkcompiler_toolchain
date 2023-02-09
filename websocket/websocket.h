@@ -25,12 +25,12 @@ class WebSocketTest;
 }
 namespace OHOS::ArkCompiler::Toolchain {
 struct WebSocketFrame {
-    uint8_t fin;
-    uint8_t opcode;
-    uint8_t mask;
-    uint64_t payloadLen;
-    char maskingkey[5];
-    std::unique_ptr<char []> payload;
+    uint8_t fin = 0;
+    uint8_t opcode = 0;
+    uint8_t mask = 0;
+    uint64_t payloadLen = 0;
+    char maskingkey[5] = {0};
+    std::unique_ptr<char []> payload = nullptr;
 };
 
 struct HttpProtocol {
