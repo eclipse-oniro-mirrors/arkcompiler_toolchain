@@ -307,6 +307,9 @@ DispatchResponse HeapProfilerImpl::StartTrackingHeapObjects(const StartTrackingH
     bool result = panda::DFXJSNApi::StartHeapTracking(vm_, INTERVAL, true, &stream_, traceAllocation, false);
 
     uv_loop_t *loop = reinterpret_cast<uv_loop_t *>(vm_->GetLoop());
+    if (loop == nullptr) {
+        return DispatchResponse::Fail("Loop is nullptr");
+    }
     uv_timer_init(loop, &handle_);
     handle_.data = this;
     uv_timer_start(&handle_, HeapTrackingCallback, 0, INTERVAL * MILLI_TO_MICRO);
