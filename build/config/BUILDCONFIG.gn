@@ -67,6 +67,12 @@ declare_args() {
 
 is_wearable_product = "${target_platform}" == "wearable"
 
+is_emulator = false
+
+if (target_os == "ohos" && target_cpu == "x86_64") {
+  is_emulator = true
+}
+
 if (current_os == "ohos") {
   is_ohos = true
   is_linux = false
