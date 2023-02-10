@@ -33,21 +33,23 @@ namespace OHOS {
         RuntimeOption option;
         option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
         auto vm = JSNApi::CreateJSVM(option);
-        int32_t input = 0;
-        if (size > MAXBYTELEN) {
-            size = MAXBYTELEN;
+        {
+            int32_t input = 0;
+            if (size > MAXBYTELEN) {
+                size = MAXBYTELEN;
+            }
+            if (memcpy_s(&input, MAXBYTELEN, data, size) != 0) {
+                std::cout << "memcpy_s failed!";
+                UNREACHABLE();
+            }
+            std::string str(data, data + size);
+            auto req = std::make_unique<DispatchRequest>(str);
+            auto heapProfiler = std::make_unique<HeapProfilerImpl>(vm, nullptr);
+            auto dispatcherImpl =
+                std::make_unique<HeapProfilerImpl::DispatcherImpl>(nullptr, std::move(heapProfiler));
+            dispatcherImpl->StartTrackingHeapObjects(*req);
+            dispatcherImpl->StopTrackingHeapObjects(*req);
         }
-        if (memcpy_s(&input, MAXBYTELEN, data, size) != 0) {
-            std::cout << "memcpy_s failed!";
-            UNREACHABLE();
-        }
-        std::string str(data, data + size);
-        auto req = std::make_unique<DispatchRequest>(str);
-        auto heapProfiler = std::make_unique<HeapProfilerImpl>(vm, nullptr);
-        auto dispatcherImpl =
-            std::make_unique<HeapProfilerImpl::DispatcherImpl>(nullptr, std::move(heapProfiler));
-        dispatcherImpl->StartTrackingHeapObjects(*req);
-        dispatcherImpl->StopTrackingHeapObjects(*req);
         JSNApi::DestroyJSVM(vm);
     }
 }

@@ -17,7 +17,6 @@ group("fuzztest") {
 
   deps += [
     "heapprofileraddinspectedheapobject_fuzzer:fuzztest",
-    "heapprofilercollectgarbage_fuzzer:fuzztest",
     "heapprofilerdisable_fuzzer:fuzztest",
     "heapprofilerdispatch_fuzzer:fuzztest",
     "heapprofilerenable_fuzzer:fuzztest",
