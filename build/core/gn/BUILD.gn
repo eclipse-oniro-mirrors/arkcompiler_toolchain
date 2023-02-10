@@ -66,7 +66,7 @@ group("ets_runtime") {
     "$js_root/ecmascript/js_vm:ark_js_vm",
     "$js_root/ecmascript/quick_fix:quick_fix",
   ]
-  if (!is_mingw && !is_ohos) {
+  if (is_linux) {
     deps += [ "$js_root/ecmascript/compiler:ark_stub_compiler" ]
   }
 }
