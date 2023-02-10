@@ -28,8 +28,7 @@ if (!ark_standalone_build) {
   import("$build_root/ark.gni")
 }
 
-# For OpenHarmony build, always link with the static lib:
 sdk_libc_secshared_dep =
-    "$ark_third_party_root/bounds_checking_function:libsec_static"
+    "$ark_third_party_root/bounds_checking_function:libsec_shared"
 sdk_libc_secshared_config =
     "$ark_third_party_root/bounds_checking_function:libsec_public_config"
