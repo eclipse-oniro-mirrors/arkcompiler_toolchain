@@ -306,6 +306,7 @@ ohos_source_set("crypto_source") {
     "//third_party/openssl/crypto/bn/bn_srp.c",
     "//third_party/openssl/crypto/bn/bn_word.c",
     "//third_party/openssl/crypto/bn/bn_x931p.c",
+    "//third_party/openssl/crypto/bn/rsa_sup_mul.c",
     "//third_party/openssl/crypto/buffer/buf_err.c",
     "//third_party/openssl/crypto/buffer/buffer.c",
     "//third_party/openssl/crypto/cmac/cm_ameth.c",
