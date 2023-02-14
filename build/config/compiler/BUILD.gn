@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("$build_root/config/compiler/compiler.gni")
+import("$build_root/config/sanitizers/sanitizers.gni")
 import("$build_root/toolchain/toolchain.gni")
 
 if (current_cpu == "arm" || current_cpu == "arm64") {
@@ -228,8 +229,6 @@ config("compiler") {
 
     # Compiler instrumentation can introduce dependencies in DSOs to symbols in
     # the executable they are loaded into, so they are unresolved at link-time.
-    using_sanitizer = false
-    is_safestack = false
     if (is_ohos || (!using_sanitizer && !is_safestack)) {
       ldflags += [
         "-Wl,-z,defs",

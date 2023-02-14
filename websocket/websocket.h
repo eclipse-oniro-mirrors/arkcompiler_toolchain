@@ -71,6 +71,8 @@ private:
     bool ProtocolUpgrade(const HttpProtocol& req);
     uint64_t NetToHostLongLong(char* buf, uint32_t len);
     bool SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit);
+    bool Recv(int32_t client, char* buf, size_t totalLen, int32_t flags) const;
+    bool Send(int32_t client, const char* buf, size_t totalLen, int32_t flags) const;
 
     int32_t client_ {-1};
     int32_t fd_ {-1};

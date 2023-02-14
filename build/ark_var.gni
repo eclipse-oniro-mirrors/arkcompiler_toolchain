@@ -17,28 +17,4 @@ declare_args() {
 
   # system package dir
   system_base_dir = "system"
-
-  # ramdisk package dir
-  ramdisk_base_dir = "ramdisk"
-
-  # vendor package dir
-  vendor_base_dir = "vendor"
-
-  # updater package dir
-  updater_base_dir = "updater"
-
-  # sys_prod package dir
-  sys_prod_base_dir = "sys_prod"
-
-  # chip_prod package dir
-  chip_prod_base_dir = "chip_prod"
-}
-
-declare_args() {
-  enable_notice_collection = true
-}
-
-declare_args() {
-  # Skip module_info generation when the packaging image is not needed
-  skip_gen_module_info = false
 }
