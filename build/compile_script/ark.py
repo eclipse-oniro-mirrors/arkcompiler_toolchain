@@ -26,11 +26,11 @@ if USE_PTY:
     import pty
 
 ARCHES = ["x64", "arm", "arm64"]
-DEFAULT_ARCHES = "x64"
+DEFAULT_ARCH = "x64"
 MODES = ["release", "debug"]
-DEFAULT_MODES = "release"
-TARGETS = ["ets_runtime", "ets_frontend", "default", "mingw_packages", "all"]
-DEFAULT_TARGETS = "default"
+DEFAULT_MODE = "release"
+TARGETS = ["ets_runtime", "ets_frontend", "default", "mingw_packages", "ark_js_host_linux_tools_packages", "all"]
+DEFAULT_TARGET = "default"
 TARGETS_TEST = ["test262", "unittest"]
 
 
@@ -42,12 +42,12 @@ OUTDIR = "out"
 
 
 Help_message = """
-formot like python ark.py [arch].[mode] [options] [test]
+format: python ark.py [arch].[mode] [options] [test]
 for example , python ark.py x64.release
 [arch] only support "x64" now 
 [mode] can be one of ["release", "debug"]
 [options]
-  target: only support [ets_runtime | ets_frontend | default | mingw_packages | all] now
+  target: support [ets_runtime | ets_frontend | default | mingw_packages | ark_js_host_linux_tools_packages | all] now
   clean: clear your data in output dir
 [test] 
   test262: run test262
@@ -112,20 +112,20 @@ def Get_args(argvs):
             PrintHelp()
     else :
         args_out = args_list
-    return Get_templete(args_out)
+    return Get_template(args_out)
 
 
-def Get_templete(args_list):
-    global_arche = DEFAULT_ARCHES
-    global_mode = DEFAULT_MODES
-    global_target = DEFAULT_TARGETS
+def Get_template(args_list):
+    global_arch = DEFAULT_ARCH
+    global_mode = DEFAULT_MODE
+    global_target = DEFAULT_TARGET
     global_test = ''
     global_clean = False
     for args in args_list:
         parameter = args.split(".")
         for part in parameter:
             if part in ARCHES:
-                global_arche = part 
+                global_arch = part
             elif part in MODES:
                 global_mode = part 
             elif part in TARGETS:
@@ -135,13 +135,13 @@ def Get_templete(args_list):
             elif part in TARGETS_TEST:
                 global_test = part
             else:
-                print("\033[34mUnkown word: %s\033[0m" % part)
+                print("\033[34mIllegal command line option: %s\033[0m" % part)
                 PrintHelp()
                 sys.exit(1)
 # Determine the target CPU
-    target_cpu = "target_cpu = \"%s\"" % global_arche
+    target_cpu = "target_cpu = \"%s\"" % global_arch
 # Determine the target CPU
-    if global_arche in ("arm", "arm64"):
+    if global_arch in ("arm", "arm64"):
         ark_os = "ohos"
     else:
         ark_os = "linux"
@@ -151,7 +151,7 @@ def Get_templete(args_list):
     else:
         is_debug = "is_debug = false"
     all_part = (is_debug + "\n" + target_os + "\n" + target_cpu + "\n") 
-    return [global_arche, global_mode, global_target, global_clean, USER_ARGS_TEMPLATE % (all_part), global_test]
+    return [global_arch, global_mode, global_target, global_clean, USER_ARGS_TEMPLATE % (all_part), global_test]
 
 
 def Build(template):
@@ -224,10 +224,10 @@ def RunTest(template):
 
 def Main(argvs):
     pass_code = 0 
-    templete = Get_args(argvs)
-    pass_code += Build(templete)
+    template = Get_args(argvs)
+    pass_code += Build(template)
     if pass_code == 0:
-        pass_code += RunTest(templete)
+        pass_code += RunTest(template)
     if pass_code == 0:
         print('\033[32mDone!\033[0m', '\033[32m{} compilation finished successfully.\033[0m'.format(argvs[0]))
     else:
