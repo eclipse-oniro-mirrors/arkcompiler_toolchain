@@ -1,0 +1,143 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+template("python_library") {
+  group(target_name) {
+    forward_variables_from(invoker,
+                           [
+                             "data_deps",
+                             "deps",
+                             "testonly",
+                             "visibility",
+                           ])
+
+    if (defined(invoker.pydeps_file)) {
+      _py_files = read_file(invoker.pydeps_file, "list lines")
+
+      # Filter out comments.
+      sources = _py_files
+      sources = filter_exclude(sources, [ "#*" ])
+
+      # Even though the .pydep file is not used at runtime, it must be added
+      # so that "gn analyze" will mark the target as changed when .py files
+      # are removed but none are added or modified.
+      data = sources + [ invoker.pydeps_file ]
+    } else {
+      data = []
+    }
+    if (defined(invoker.data)) {
+      data += invoker.data
+    }
+  }
+}
+
+# A template used for actions that execute a Python script, which has an
+# associated .pydeps file. In other words:
+#
+# - This is very similar to just an action(), except that |script| must point
+#   to a Python script (e.g. "//build/.../foo.py") that has a corresponding
+#   .pydeps file in the source tree (e.g. "//build/.../foo.pydeps").
+#
+# - The .pydeps file contains a list of python dependencies (imports really)
+#   and is generated _manually_ by using a command like:
+#
+#     build/print_python_deps.py --inplace build/gyp/foo.py
+#
+template("action_with_pydeps") {
+  # Read the .pydeps file now. Note that this is done every time this
+  # template is called, but benchmarking doesn't show any impact on overall
+  # 'gn gen' speed anyway.
+  _pydeps_file = invoker.script + "deps"
+  _pydeps_raw = read_file(_pydeps_file, "list lines")
+
+  # Filter out comments.
+  # This is a bit convoluted to preserve the value of sources if defined.
+  _old_sources = []
+  if (defined(sources)) {
+    _old_sources = sources
+  }
+  sources = filter_exclude(_pydeps_raw, [ "#*" ])
+  _pydeps = sources
+  sources = _old_sources
+
+  action(target_name) {
+    # Forward all variables. Ensure that testonly and visibility are forwarded
+    # explicitly, since this performs recursive scope lookups, which is
+    # required to ensure their definition from scopes above the caller are
+    # properly handled. All other variables are forwarded with "*", which
+    # doesn't perform recursive lookups at all. See https://crbug.com/862232
+    forward_variables_from(invoker,
+                           [
+                             "testonly",
+                             "visibility",
+                           ])
+    forward_variables_from(invoker,
+                           "*",
+                           [
+                             "testonly",
+                             "visibility",
+                           ])
+
+    if (!defined(inputs)) {
+      inputs = []
+    }
+
+    # Dependencies are listed relative to the script directory, but inputs
+    # expects paths that are relative to the current BUILD.gn
+    _script_dir = get_path_info(script, "dir")
+    inputs += rebase_path(_pydeps, ".", _script_dir)
+  }
+}
+
+template("action_foreach_with_pydeps") {
+  _pydeps_file = invoker.script + "deps"
+  _pydeps_raw = read_file(_pydeps_file, "list lines")
+
+  # Filter out comments.
+  # This is a bit convoluted to preserve the value of sources if defined.
+  _old_sources = []
+  if (defined(sources)) {
+    _old_sources = sources
+  }
+  sources = filter_exclude(_pydeps_raw, [ "#*" ])
+  _pydeps = sources
+  sources = _old_sources
+
+  action_foreach(target_name) {
+    # Forward all variables. Ensure that testonly and visibility are forwarded
+    # explicitly, since this performs recursive scope lookups, which is
+    # required to ensure their definition from scopes above the caller are
+    # properly handled. All other variables are forwarded with "*", which
+    # doesn't perform recursive lookups at all. See https://crbug.com/862232
+    forward_variables_from(invoker,
+                           [
+                             "testonly",
+                             "visibility",
+                           ])
+    forward_variables_from(invoker,
+                           "*",
+                           [
+                             "testonly",
+                             "visibility",
+                           ])
+
+    if (!defined(inputs)) {
+      inputs = []
+    }
+
+    # Dependencies are listed relative to the script directory, but inputs
+    # expects paths that are relative to the current BUILD.gn
+    _script_dir = get_path_info(script, "dir")
+    inputs += rebase_path(_pydeps, ".", _script_dir)
+  }
+}
