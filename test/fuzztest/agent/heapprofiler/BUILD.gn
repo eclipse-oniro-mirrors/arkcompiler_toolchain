@@ -24,7 +24,6 @@ group("fuzztest") {
     "heapprofilergetobjectbyheapobjectid_fuzzer:fuzztest",
     "heapprofilergetsamplingprofile_fuzzer:fuzztest",
     "heapprofilerstartsampling_fuzzer:fuzztest",
-    "heapprofilerstarttrackingheapobjects_fuzzer:fuzztest",
     "heapprofilerstopsampling_fuzzer:fuzztest",
     "heapprofilerstoptrackingheapobjects_fuzzer:fuzztest",
     "heapprofilertakeheapsnapshot_fuzzer:fuzztest",
