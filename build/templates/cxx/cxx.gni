@@ -11,7 +11,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("$build_root/ark_var.gni")
+
 template("ohos_executable") {
+  if (defined(invoker.unit_test) && invoker.unit_test) {
+    output_dir = invoker.test_output_dir
+  } else {
+    if (defined(invoker.subsystem_name) && defined(invoker.part_name)) {
+      subsystem_name = invoker.subsystem_name
+      part_name = invoker.part_name
+    } else if (defined(invoker.subsystem_name)) {
+      subsystem_name = invoker.subsystem_name
+      part_name = subsystem_name
+    } else {
+      subsystem_name = "arkcompiler"
+      part_name = "common"
+    }
+    output_dir = "${root_out_dir}/${subsystem_name}/${part_name}"
+  }
   executable(target_name) {
     forward_variables_from(invoker,
                            "*",
@@ -26,23 +43,7 @@ template("ohos_executable") {
                              "output_dir",
                              "unit_test",
                            ])
-
-    if (defined(invoker.unit_test) && invoker.unit_test) {
-      output_dir = invoker.test_output_dir
-    } else {
-      if (defined(invoker.subsystem_name) && defined(invoker.part_name)) {
-        subsystem_name = invoker.subsystem_name
-        part_name = invoker.part_name
-      } else if (defined(invoker.subsystem_name)) {
-        subsystem_name = invoker.subsystem_name
-        part_name = subsystem_name
-      } else {
-        subsystem_name = "arkcompiler"
-        part_name = "common"
-      }
-      output_dir = "${root_out_dir}/${subsystem_name}/${part_name}"
-    }
-
+    output_dir = output_dir
     if (defined(invoker.configs)) {
       configs += invoker.configs
     }
@@ -55,9 +56,41 @@ template("ohos_executable") {
       configs += [ "//arkcompiler/toolchain/build/config/compiler:exceptions" ]
       ldflags = []
     }
+    if (!defined(libs)) {
+      libs = []
+    }
+    if (!defined(ldflags)) {
+      ldflags = []
+    }
+    if (defined(invoker.static_link) && invoker.static_link) {
+      no_default_deps = true
+      ldflags += [ "-static" ]
+      configs -= [ "$build_root/config:executable_config" ]
+      if (is_ohos) {
+        import("$build_root/config/ohos/musl.gni")
+        deps += [ "$build_root/third_party_gn/musl:soft_static_libs" ]
+      }
+    } else if (is_ohos) {
+      if (current_cpu == "arm" || current_cpu == "arm64") {
+        libs += [ "unwind" ]
+      }
+      libs += [ "c++" ]
+    }
   }
 }
+
 template("ohos_static_library") {
+  if (defined(invoker.subsystem_name) && defined(invoker.part_name)) {
+    part_name = invoker.part_name
+  } else if (defined(invoker.part_name)) {
+    part_name = invoker.part_name
+  } else if (defined(invoker.subsystem_name)) {
+    part_name = invoker.subsystem_name
+  } else {
+    part_name = "common"
+  }
+  assert(part_name != "")
+
   static_library(target_name) {
     forward_variables_from(invoker,
                            "*",
@@ -81,6 +114,12 @@ template("ohos_static_library") {
       configs += [ "//arkcompiler/toolchain/build/config/compiler:exceptions" ]
       ldflags = []
     }
+    if (!defined(libs)) {
+      libs = []
+    }
+    if (!defined(include_dirs)) {
+      include_dirs = []
+    }
   }
 }
 
@@ -100,9 +139,8 @@ template("ohos_shared_library") {
     forward_variables_from(invoker,
                            "*",
                            [
-                             "configs",
-                             "remove_configs",
                              "relative_install_dir",
+                             "configs",
                              "subsystem_name",
                              "install_enable",
                              "part_name",
@@ -118,17 +156,31 @@ template("ohos_shared_library") {
     if (defined(invoker.remove_configs)) {
       configs -= invoker.remove_configs
     }
-  }
-}
+    if (!defined(libs)) {
+      libs = []
+    }
+    if (is_ohos) {
+      if (defined(invoker.stl)) {
+        cflags_cc += [
+          "-nostdinc++",
+          "-I" + rebase_path(
+                  "//prebuilts/clang/ohos/${host_platform_dir}/llvm_ndk/include/c++/v1",
+                  root_build_dir),
+        ]
+        ldflags += [
+          "-nostdlib++",
+          "-L" + rebase_path("${clang_stl_path}/${abi_target}/c++",
+                             root_build_dir),
+        ]
 
-template("ohos_copy") {
-  copy(target_name) {
-    forward_variables_from(invoker,
-                           "*",
-                           [
-                             "module_source_dir",
-                             "module_install_name",
-                           ])
+        libs += [ invoker.stl ]
+      } else {
+        if (current_cpu == "arm" || current_cpu == "arm64") {
+          libs += [ "unwind" ]
+        }
+        libs += [ "c++" ]
+      }
+    }
   }
 }
 

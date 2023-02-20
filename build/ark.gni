@@ -15,3 +15,6 @@ import("$build_root/ark_var.gni")
 
 # import cxx base templates
 import("$build_root/templates/cxx/cxx.gni")
+
+# import prebuilt templates
+import("$build_root/templates/cxx/prebuilt.gni")
