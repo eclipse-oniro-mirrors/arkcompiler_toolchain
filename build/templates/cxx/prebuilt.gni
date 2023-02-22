@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("$build_root/templates/common/copy.gni")
+import("$build_root/templates/cxx/cxx.gni")
 
 template("ohos_prebuilt_etc") {
   assert(defined(invoker.source), "source must be defined for ${target_name}.")
