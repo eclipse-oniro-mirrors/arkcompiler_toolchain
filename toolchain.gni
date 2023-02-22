@@ -27,8 +27,14 @@ if (!ark_standalone_build) {
   ark_third_party_root = "//arkcompiler/toolchain/build/third_party_gn"
   import("$build_root/ark.gni")
 }
-
-sdk_libc_secshared_dep =
-    "$ark_third_party_root/bounds_checking_function:libsec_shared"
+is_cross_platform_build =
+    defined(build_cross_platform_version) && build_cross_platform_version
+if (is_cross_platform_build && target_os == "ios") {
+  sdk_libc_secshared_dep =
+      "$ark_third_party_root/bounds_checking_function:libsec_static"
+} else {
+  sdk_libc_secshared_dep =
+      "$ark_third_party_root/bounds_checking_function:libsec_shared"
+}
 sdk_libc_secshared_config =
     "$ark_third_party_root/bounds_checking_function:libsec_public_config"
