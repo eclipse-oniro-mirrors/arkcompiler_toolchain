@@ -84,7 +84,7 @@ private:
     static constexpr int32_t SOCKET_MASK_LEN = 4;
     static constexpr int32_t SOCKET_SUCCESS = 0;
     static constexpr int32_t PAYLOAD_LEN = 2;
-    static constexpr int32_t EXTEND_PATLOAD_LEN = 8;
+    static constexpr int32_t EXTEND_PAYLOAD_LEN = 8;
     static constexpr char WEB_SOCKET_GUID[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 };
 } // namespace OHOS::ArkCompiler::Toolchain
