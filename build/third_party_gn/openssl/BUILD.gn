@@ -914,7 +914,6 @@ ohos_source_set("crypto_source") {
 
   public_configs = [ ":crypto_config_public" ]
 
-  #   remove_configs = [ "//build/config/coverage:default_coverage" ]
   subsystem_name = "security"
   part_name = "huks"
 }
@@ -924,7 +923,6 @@ ohos_static_library("libcrypto_static") {
   public_configs = [ ":crypto_config_public" ]
   complete_static_lib = true
 
-  #   remove_configs = [ "//build/config/coverage:default_coverage" ]
   subsystem_name = "security"
   part_name = "huks"
 }
@@ -938,7 +936,6 @@ if (is_mingw || is_mac) {
     deps = [ ":crypto_source" ]
     public_configs = [ ":crypto_config_public" ]
 
-    # remove_configs = [ "//build/config/coverage:default_coverage" ]
     install_images = [
       "system",
       "updater",
@@ -953,7 +950,6 @@ ohos_shared_library("libcrypto_shared") {
   output_name = "libcrypto_openssl"
   public_configs = [ ":crypto_config_public" ]
 
-  #   remove_configs = [ "//build/config/coverage:default_coverage" ]
   install_images = [
     "system",
     "updater",
