@@ -8,8 +8,7 @@
   - [相关仓<a name="section0005"></a>](#相关仓)
 
 ## 简介<a name="section0001"></a>
-
-方舟工具链（ArkCompiler Toolchain）为开发者提供了一套OpenHarmony应用程序调试调优工具，其功能包括单步调试、断点调试、Watch变量及表达式、CPU Profiler和Heap Profiler等，并支持多实例和Worker调试。
+方舟工具链（ArkCompiler Toolchain）为开发者提供了调试(Debugger), 性能调优(CPUProfiler), 内存调优(HeapProfiler)等针对ArkTS应用程序的调试调优工具。如需查看调试调优工具具体支持特性，请前往[调试调优工具介绍](docs/debugger-and-profiler-tools-introduction.md)。
 
 ### 方舟工具链架构图
 
@@ -30,7 +29,8 @@
 ```
 /arkcompiler/toolchain
 ├─ tooling             # 调试调优协议实现
-└─ inspector           # 调试协议对接层，包括会话连接，消息转发等
+├─ inspector           # 调试协议对接层，包括会话连接，消息转发等
+└─ websocket           # websocket协议实现
 ```
 
 ## 使用说明<a name="section0003"></a>
