@@ -34,8 +34,8 @@ void WebSocket::SendReply(const std::string& message) const
         return;
     }
     const size_t msgLen = message.length();
-    const uint32_t headerSize = 11; // 11: the maximum expandable length
-    char sendBuf[msgLen + headerSize];
+    std::unique_ptr<char []> msgBuf = std::make_unique<char []>(msgLen + 11); // 11: the maximum expandable length
+    char* sendBuf = msgBuf.get();
     uint32_t sendMsgLen;
     sendBuf[0] = 0x81; // 0x81: the text message sent by the server should start with '0x81'.
 
@@ -134,12 +134,12 @@ bool WebSocket::HandleFrame(WebSocketFrame& wsFrame)
         }
         wsFrame.payloadLen = ntohs(msgLen);
     } else if (wsFrame.payloadLen > 126) { // 126: the payloadLen read from frame
-        char recvbuf[EXTEND_PATLOAD_LEN + 1] = {0};
-        if (!Recv(client_, recvbuf, EXTEND_PATLOAD_LEN, 0)) {
+        char recvbuf[EXTEND_PAYLOAD_LEN + 1] = {0};
+        if (!Recv(client_, recvbuf, EXTEND_PAYLOAD_LEN, 0)) {
             LOGE("HandleFrame: Recv payloadLen > 127 failed");
             return false;
         }
-        wsFrame.payloadLen = NetToHostLongLong(recvbuf, EXTEND_PATLOAD_LEN);
+        wsFrame.payloadLen = NetToHostLongLong(recvbuf, EXTEND_PAYLOAD_LEN);
     }
     return DecodeMessage(wsFrame);
 }
