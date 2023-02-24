@@ -16,7 +16,6 @@
 import("$build_root/config/clang/clang.gni")
 import("$build_root/config/sanitizers/sanitizers.gni")
 import("$build_root/toolchain/cc_wrapper.gni")
-import("$build_root/toolchain/clang_static_analyzer.gni")
 import("$build_root/toolchain/toolchain.gni")
 template("gcc_toolchain") {
   toolchain(target_name) {
@@ -28,7 +27,7 @@ template("gcc_toolchain") {
     # This define changes when the toolchain changes, forcing a rebuild.
     # Nothing should ever use this define.
     if (defined(invoker.rebuild_define)) {
-      rebuild_string = "-D" + invoker.rebuild_define + " "
+      rebuild_string = "-D" + invoker.rebuild_define
     } else {
       rebuild_string = ""
     }
@@ -61,14 +60,7 @@ template("gcc_toolchain") {
       toolchain_cc_wrapper = cc_wrapper
     }
 
-    if (is_clang && use_clang_static_analyzer &&
-        (!defined(invoker.is_clang_analysis_supported) ||
-         invoker.is_clang_analysis_supported)) {
-      compiler_prefix = "${analyzer_wrapper} "
-      asm = invoker.cc
-    } else {
-      compiler_prefix = "${toolchain_cc_wrapper} "
-    }
+    compiler_prefix = "${toolchain_cc_wrapper} "
 
     cc = compiler_prefix + invoker.cc
     cxx = compiler_prefix + invoker.cxx
@@ -76,16 +68,6 @@ template("gcc_toolchain") {
     ld = invoker.ld
     if (!defined(asm)) {
       asm = cc
-    }
-    if (defined(invoker.readelf)) {
-      readelf = invoker.readelf
-    } else {
-      readelf = "readelf"
-    }
-    if (defined(invoker.nm)) {
-      nm = invoker.nm
-    } else {
-      nm = "nm"
     }
 
     if (defined(invoker.shlib_extension)) {
@@ -126,37 +108,34 @@ template("gcc_toolchain") {
     }
 
     if (defined(invoker.extra_cflags) && invoker.extra_cflags != "") {
-      extra_cflags = " " + invoker.extra_cflags
+      extra_cflags = invoker.extra_cflags
     } else {
       extra_cflags = ""
     }
 
     if (defined(invoker.extra_cppflags) && invoker.extra_cppflags != "") {
-      extra_cppflags = " " + invoker.extra_cppflags
+      extra_cppflags = invoker.extra_cppflags
     } else {
       extra_cppflags = ""
     }
 
     if (defined(invoker.extra_cxxflags) && invoker.extra_cxxflags != "") {
-      extra_cxxflags = " " + invoker.extra_cxxflags
+      extra_cxxflags = invoker.extra_cxxflags
     } else {
       extra_cxxflags = ""
     }
 
     if (defined(invoker.extra_asmflags) && invoker.extra_asmflags != "") {
-      extra_asmflags = " " + invoker.extra_asmflags
+      extra_asmflags = invoker.extra_asmflags
     } else {
       extra_asmflags = ""
     }
 
     if (defined(invoker.extra_ldflags) && invoker.extra_ldflags != "") {
-      extra_ldflags = " " + invoker.extra_ldflags
+      extra_ldflags = invoker.extra_ldflags
     } else {
       extra_ldflags = ""
     }
-
-    enable_linker_map = defined(invoker.enable_linker_map) &&
-                        invoker.enable_linker_map && generate_linker_map
 
     # These library switches can apply to all tools below.
     lib_switch = "-l"
@@ -167,7 +146,10 @@ template("gcc_toolchain") {
 
     tool("cc") {
       depfile = "{{output}}.d"
-      command = "$cc -MMD -MF $depfile ${rebuild_string}{{defines}} {{include_dirs}} {{cflags}} {{cflags_c}}${extra_cppflags}${extra_cflags} -c {{source}} -o {{output}}"
+      command = "$cc" + " -MMD" + " -MF" + " $depfile" + " ${rebuild_string}" +
+                " {{defines}}" + " {{include_dirs}}" + " {{cflags}}" +
+                " {{cflags_c}}" + " ${extra_cppflags}" + " ${extra_cflags}" +
+                " -c {{source}}" + " -o {{output}}"
       depsformat = "gcc"
       description = "CC {{output}}"
       outputs = [ "$object_subdir/{{source_name_part}}.o" ]
@@ -175,7 +157,10 @@ template("gcc_toolchain") {
 
     tool("cxx") {
       depfile = "{{output}}.d"
-      command = "$cxx -MMD -MF $depfile ${rebuild_string}{{defines}} {{include_dirs}} {{cflags}} {{cflags_cc}}${extra_cppflags}${extra_cxxflags} -c {{source}} -o {{output}}"
+      command = "$cxx" + " -MMD" + " -MF" + " $depfile" + " ${rebuild_string}" +
+                " {{defines}}" + " {{include_dirs}}" + " {{cflags}}" +
+                " {{cflags_cc}}" + " ${extra_cppflags}" + " ${extra_cxxflags}" +
+                " -c {{source}}" + " -o {{output}}"
       depsformat = "gcc"
       description = "CXX {{output}}"
       outputs = [ "$object_subdir/{{source_name_part}}.o" ]
@@ -184,7 +169,9 @@ template("gcc_toolchain") {
     tool("asm") {
       # For GCC we can just use the C compiler to compile assembly.
       depfile = "{{output}}.d"
-      command = "$asm -MMD -MF $depfile ${rebuild_string}{{defines}} {{include_dirs}} {{asmflags}}${extra_asmflags} -c {{source}} -o {{output}}"
+      command = "$asm" + " -MMD" + " -MF" + " $depfile" + " ${rebuild_string}" +
+                " {{defines}}" + " {{include_dirs}}" + " {{asmflags}}" +
+                " ${extra_asmflags}" + " -c {{source}}" + " -o {{output}}"
       depsformat = "gcc"
       description = "ASM {{output}}"
       outputs = [ "$object_subdir/{{source_name_part}}.o" ]
@@ -194,23 +181,18 @@ template("gcc_toolchain") {
       if (current_os == "aix") {
         # AIX does not support either -D (deterministic output) or response
         # files.
-        command = "$ar -X64 {{arflags}} -r -c -s {{output}} {{inputs}}"
+        command = "$ar" + " -X64" + " {{arflags}}" + " -r" + " -c" + " -s" +
+                  " {{output}}" + " {{inputs}}"
       } else {
         rspfile = "{{output}}.rsp"
         rspfile_content = "{{inputs}}"
-        command = "\"$ar\" {{arflags}} -r -c -s -D {{output}} @\"$rspfile\""
+        command = "\"$ar\"" + " {{arflags}}" + " -r" + " -c" + " -s" + " -D" +
+                  " {{output}}" + " @\"$rspfile\""
       }
 
       # Remove the output file first so that ar doesn't try to modify the
       # existing file.
-      if (host_os == "win") {
-        tool_wrapper_path =
-            rebase_path("$build_root/toolchain/win/tool_wrapper.py",
-                        root_build_dir)
-        command = "cmd /c $python_path $tool_wrapper_path delete-file {{output}} && $command"
-      } else {
-        command = "rm -f {{output}} && $command"
-      }
+      command = "rm -f {{output}}" + " && $command"
 
       # Almost all targets build with //build/config/compiler:thin_archive which
       # adds -T to arflags.
@@ -242,23 +224,16 @@ template("gcc_toolchain") {
         unstripped_sofile = sofile
       }
 
-      link_command = "$ld -shared {{ldflags}}${extra_ldflags} -o \"$unstripped_sofile\" @\"$rspfile\""
+      link_command = "$ld" + " -shared" + " {{ldflags}}" + " ${extra_ldflags}" +
+                     " -o \"$unstripped_sofile\"" + " @\"$rspfile\""
       if (!is_mingw_link) {
-        link_command = "$link_command -Wl,-soname=\"$soname\""
+        link_command = "$link_command" + " -Wl,-soname=\"$soname\""
       } else {
-        link_command = "$link_command -Wl,--out-implib,{{root_out_dir}}/lib.unstripped/$libfile"
+        link_command =
+            "$link_command" +
+            " -Wl,--out-implib,{{root_out_dir}}/lib.unstripped/$libfile"
       }
 
-      # Generate a map file to be used for binary size analysis.
-      # Map file adds ~10% to the link time on a z620.
-      map_switch = ""
-      if (enable_linker_map && is_official_build) {
-        map_file = "$unstripped_sofile.map.gz"
-        map_switch = " --map-file \"$map_file\""
-      }
-
-      assert(defined(readelf), "to solink you must have a readelf")
-      assert(defined(nm), "to solink you must have an nm")
       strip_switch = ""
       if (defined(invoker.strip)) {
         strip_switch = "--strip=${invoker.strip} "
@@ -270,11 +245,12 @@ template("gcc_toolchain") {
       solink_wrapper =
           rebase_path("$build_root/toolchain/gcc_solink_wrapper.py",
                       root_build_dir)
-      command = "$python_path \"$solink_wrapper\" --readelf=\"$readelf\" --nm=\"$nm\" $strip_switch --sofile=\"$unstripped_sofile\" $map_switch --output=\"$sofile\""
+      command = "$python_path" + " \"$solink_wrapper\"" + " $strip_switch" +
+                " --sofile=\"$unstripped_sofile\"" + " --output=\"$sofile\""
       if (is_mingw_link) {
-        command = "$command --libfile=\"$libfile\""
+        command = "$command" + " --libfile=\"$libfile\""
       }
-      command = "$command -- $link_command"
+      command = "$command" + " -- $link_command"
 
       rspfile_content = "-Wl,--whole-archive {{inputs}} {{solibs}} -Wl,--no-whole-archive $solink_libs_section_prefix {{libs}} $solink_libs_section_postfix"
 
@@ -303,9 +279,6 @@ template("gcc_toolchain") {
           runtime_outputs = [ unstripped_sofile ]
         }
       }
-      if (defined(map_file)) {
-        outputs += [ map_file ]
-      }
 
       if (is_mingw_link) {
         outputs += [ libfile ]
@@ -328,10 +301,13 @@ template("gcc_toolchain") {
         unstripped_sofile = sofile
       }
 
-      command = "$ld -shared {{ldflags}}${extra_ldflags} -o \"$unstripped_sofile\" -Wl,-soname=\"$soname\" @\"$rspfile\""
+      command = "$ld" + " -shared" + " {{ldflags}}" + " ${extra_ldflags}" +
+                " -o \"$unstripped_sofile\"" + " -Wl,-soname=\"$soname\"" +
+                " @\"$rspfile\""
 
       if (defined(invoker.strip)) {
-        strip_command = "${invoker.strip} -o \"$sofile\" \"$unstripped_sofile\""
+        strip_command =
+            "${invoker.strip}" + " -o \"$sofile\"" + " \"$unstripped_sofile\""
         command += " && " + strip_command
       }
       rspfile_content = "-Wl,--whole-archive {{inputs}} {{solibs}} -Wl,--no-whole-archive $solink_libs_section_prefix {{libs}} $solink_libs_section_postfix"
@@ -378,14 +354,6 @@ template("gcc_toolchain") {
         unstripped_outfile = "{{root_out_dir}}/exe.unstripped/$outfile"
       }
 
-      # Generate a map file to be used for binary size analysis.
-      # Map file adds ~10% to the link time on a z620.
-      map_switch = ""
-      if (enable_linker_map && is_official_build) {
-        map_file = "$unstripped_outfile.map.gz"
-        map_switch = " --map-file \"$map_file\""
-      }
-
       start_group_flag = ""
       end_group_flag = ""
       if (current_os != "aix") {
@@ -405,12 +373,16 @@ template("gcc_toolchain") {
                   root_build_dir)
         }
       }
-      link_command = "$ld {{ldflags}}${extra_ldflags} -o \"$unstripped_outfile\" $libs_section_prefix $start_group_flag $_clang_rt_dso_full_path @\"$rspfile\" {{solibs}} {{libs}} $end_group_flag $libs_section_postfix"
+      link_command = "$ld" + " {{ldflags}}" + " ${extra_ldflags}" +
+                     " -o \"$unstripped_outfile\"" + " $libs_section_prefix" +
+                     " $start_group_flag" + " $_clang_rt_dso_full_path" +
+                     " @\"$rspfile\"" + " {{solibs}}" + " {{libs}}" +
+                     " $end_group_flag" + " $libs_section_postfix"
 
       strip_switch = ""
 
       if (defined(invoker.strip)) {
-        strip_switch = " --strip=\"${invoker.strip}\" --unstripped-file=\"$unstripped_outfile\""
+        strip_switch = "--strip=\"${invoker.strip}\" --unstripped-file=\"$unstripped_outfile\""
       }
       if (is_asan && invoker_toolchain_args.current_os == "ohos") {
         strip_switch =
@@ -419,7 +391,9 @@ template("gcc_toolchain") {
 
       link_wrapper = rebase_path("$build_root/toolchain/gcc_link_wrapper.py",
                                  root_build_dir)
-      command = "$python_path \"$link_wrapper\" --output=\"$outfile\"$strip_switch$map_switch -- $link_command"
+      command =
+          "$python_path" + " \"$link_wrapper\"" + " --output=\"$outfile\"" +
+          " $strip_switch" + " -- $link_command"
       description = "LINK $outfile"
       rspfile_content = "{{inputs}}"
       outputs = [ outfile ]
@@ -432,9 +406,6 @@ template("gcc_toolchain") {
       }
       if (defined(invoker.link_outputs)) {
         outputs += invoker.link_outputs
-      }
-      if (defined(map_file)) {
-        outputs += [ map_file ]
       }
     }
 
@@ -462,26 +433,16 @@ template("gcc_toolchain") {
 # actually just be doing a native compile. The invoker can optionally override
 # use_gold too.
 template("clang_toolchain") {
-  if (defined(invoker.toolprefix)) {
-    toolprefix = invoker.toolprefix
-  } else {
-    toolprefix = ""
-  }
-
   gcc_toolchain(target_name) {
     prefix = rebase_path("$clang_base_path/bin", root_build_dir)
     cc = "$prefix/clang"
     cxx = "$prefix/clang++"
     ld = cxx
-    readelf = "${toolprefix}readelf"
     ar = "${prefix}/llvm-ar"
-    nm = "${toolprefix}nm"
 
     forward_variables_from(invoker,
                            [
                              "strip",
-                             "is_clang_analysis_supported",
-                             "enable_linker_map",
                              "use_unstripped_as_runtime_outputs",
                            ])
 

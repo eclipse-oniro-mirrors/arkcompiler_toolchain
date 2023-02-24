@@ -15,23 +15,6 @@ import os
 import subprocess
 import sys
 
-import wrapper_utils
-
-# When running on a Windows host and using a toolchain whose tools are
-# actually wrapper scripts (i.e. .bat files on Windows) rather than binary
-# executables, the "command" to run has to be prefixed with this magic.
-# The GN toolchain definitions take care of that for when GN/Ninja is
-# running the tool directly.  When that command is passed in to this
-# script, it appears as a unitary string but needs to be split up so that
-# just 'cmd' is the actual command given to Python's subprocess module.
-BAT_PREFIX = 'cmd /c call '
-
-
-def command_to_run(command):
-    if command[0].startswith(BAT_PREFIX):
-        command = command[0].split(None, 3) + command[1:]
-    return command
-
 
 def is_static_link(command):
     if "-static" in command:
@@ -64,10 +47,6 @@ def main():
     parser.add_argument('--unstripped-file',
                         help='Executable file produced by linking command',
                         metavar='FILE')
-    parser.add_argument('--map-file',
-                        help=('Use --Wl,-Map to generate a map file. Will be '
-                              'gzipped if extension ends with .gz'),
-                        metavar='FILE')
     parser.add_argument('--output',
                         required=True,
                         help='Final output executable file',
@@ -86,16 +65,13 @@ def main():
             return 0
     else:
         command = args.command
-    result = wrapper_utils.run_link_with_optional_map_file(
-        command, env=fast_env, map_file=args.map_file)
+    result = subprocess.call(command, env=fast_env)
     if result != 0:
         return result
 
     # Finally, strip the linked executable (if desired).
     if args.strip:
-        result = subprocess.call(
-            command_to_run(
-                [args.strip, '-o', args.output, args.unstripped_file]))
+        result = subprocess.call([args.strip, '-o', args.output, args.unstripped_file])
 
     return result
 
