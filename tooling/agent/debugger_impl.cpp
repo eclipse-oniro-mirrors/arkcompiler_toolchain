@@ -955,10 +955,14 @@ bool DebuggerImpl::GenerateCallFrame(CallFrame *callFrame,
     std::unique_ptr<RemoteObject> thisObj = std::make_unique<RemoteObject>();
     thisObj->SetType(ObjectType::Undefined);
 
+    JSThread *thread = vm_->GetJSThread();
     std::vector<std::unique_ptr<Scope>> scopeChain;
     scopeChain.emplace_back(GetLocalScopeChain(frameHandler, &thisObj));
     if (jsPandaFile != nullptr && !jsPandaFile->IsBundlePack() && jsPandaFile->IsNewVersion()) {
-        scopeChain.emplace_back(GetModuleScopeChain());
+        JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm_));
+        if (currentModule->IsSourceTextModule()) { // CJS module is string
+            scopeChain.emplace_back(GetModuleScopeChain());
+        }
     }
     scopeChain.emplace_back(GetGlobalScopeChain());
 
@@ -1037,10 +1041,10 @@ std::unique_ptr<Scope> DebuggerImpl::GetModuleScopeChain()
     moduleScope->SetType(Scope::Type::Module()).SetObject(std::move(module));
     runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, moduleObj);
     JSThread *thread = vm_->GetJSThread();
-    JSHandle<JSTaggedValue> currentModule = JSHandle<JSTaggedValue>(thread, DebuggerApi::GetCurrentModule(vm_));
-    DebuggerApi::GetLocalExportVariables(vm_, moduleObj, currentModule.GetTaggedValue());
-    DebuggerApi::GetIndirectExportVariables(vm_, moduleObj, currentModule.GetTaggedValue());
-    DebuggerApi::GetImportVariables(vm_, moduleObj, currentModule.GetTaggedValue());
+    JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm_));
+    DebuggerApi::GetLocalExportVariables(vm_, moduleObj, currentModule, false);
+    DebuggerApi::GetIndirectExportVariables(vm_, moduleObj, currentModule);
+    DebuggerApi::GetImportVariables(vm_, moduleObj, currentModule);
     return moduleScope;
 }
 
