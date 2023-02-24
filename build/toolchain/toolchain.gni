@@ -28,22 +28,9 @@ declare_args() {
   # with the version of clang shipped with Xcode).
   use_xcode_clang = false
 
-  # Used for binary size analysis.
-  # Currently disabled on LLD because of a bug (fixed upstream).
-  # See https://crbug.com/716209.
-  generate_linker_map = is_ohos && is_official_build
-
   # Use absolute file paths in the compiler diagnostics and __FILE__ macro
   # if needed.
   msvc_use_absolute_paths = false
-}
-
-if (generate_linker_map) {
-  assert(
-      is_official_build,
-      "Linker map files should only be generated when is_official_build = true")
-  assert(current_os == "ohos" || target_os == "linux",
-         "Linker map files should only be generated for ohos and Linux")
 }
 
 # The path to the hermetic install of Xcode. Only relevant when
