@@ -294,7 +294,7 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         { "stepOver", &DebuggerImpl::DispatcherImpl::StepOver },
         { "setMixedDebugEnabled", &DebuggerImpl::DispatcherImpl::SetMixedDebugEnabled },
         { "setBlackboxPatterns", &DebuggerImpl::DispatcherImpl::SetBlackboxPatterns },
-	{ "replyNativeCalling", &DebuggerImpl::DispatcherImpl::ReplyNativeCalling }
+        { "replyNativeCalling", &DebuggerImpl::DispatcherImpl::ReplyNativeCalling }
     };
 
     const std::string &method = request.GetMethod();
