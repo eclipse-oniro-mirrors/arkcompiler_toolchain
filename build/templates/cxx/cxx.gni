@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import("$build_root/ark_var.gni")
-import("$build_root/templates/metadata/module_info.gni")
 
 template("ohos_executable") {
   if (defined(invoker.unit_test) && invoker.unit_test) {
@@ -214,7 +213,6 @@ template("ohos_copy") {
          "sources must be defined for ${target_name}.")
   assert(defined(invoker.outputs),
          "outputs must be defined for ${target_name}.")
-  main_target_name = target_name
   if (defined(invoker.subsystem_name) && defined(invoker.part_name)) {
     copy_subsystem_name = invoker.subsystem_name
     copy_part_name = invoker.part_name
@@ -228,33 +226,32 @@ template("ohos_copy") {
   assert(copy_subsystem_name != "")
   assert(copy_part_name != "")
 
-  if (defined(invoker.license_file)) {
-    license_file = invoker.license_file
-  } else {
-    license_file = "license_file"
-  }
-  assert(license_file != "")
-
   copy_deps = []
   if (defined(invoker.deps)) {
     copy_deps += invoker.deps
-  }
-  module_info_target = "${main_target_name}_info"
-  generate_module_info(module_info_target) {
-    forward_variables_from(invoker,
-                           [
-                             "module_install_name",
-                             "relative_install_dir",
-                             "module_source_dir",
-                           ])
-    module_name = main_target_name
   }
   copy(target_name) {
     forward_variables_from(invoker,
                            [
                              "sources",
                              "outputs",
+                             "relative_install_dir",
+                             "module_source_dir",
+                             "module_install_name",
+                             "license_file",
                            ])
+    if (defined(invoker.license_file)) {
+      license_file = invoker.license_file
+    }
+    if (defined(invoker.module_install_name)) {
+      module_install_name = invoker.module_install_name
+    }
+    if (defined(invoker.module_source_dir)) {
+      module_source_dir = invoker.module_source_dir
+    }
+    if (defined(invoker.relative_install_dir)) {
+      relative_install_dir = invoker.relative_install_dir
+    }
     deps = copy_deps
   }
 }
