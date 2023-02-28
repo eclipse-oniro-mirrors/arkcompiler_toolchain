@@ -229,7 +229,7 @@ void HeapProfilerImpl::Frontend::HeapStatsUpdate(HeapStat* updateData, int32_t c
     channel_->SendNotification(heapStatsUpdate);
 }
 
-void HeapProfilerImpl::Frontend::LastSeenObjectId(int32_t lastSeenObjectId)
+void HeapProfilerImpl::Frontend::LastSeenObjectId(int32_t lastSeenObjectId, int64_t timeStampUs)
 {
     if (!AllowNotify()) {
         return;
@@ -237,12 +237,8 @@ void HeapProfilerImpl::Frontend::LastSeenObjectId(int32_t lastSeenObjectId)
 
     tooling::LastSeenObjectId lastSeenObjectIdEvent;
     lastSeenObjectIdEvent.SetLastSeenObjectId(lastSeenObjectId);
-    int64_t timestamp = 0;
-    struct timeval tv = {0, 0};
-    gettimeofday(&tv, nullptr);
     const int THOUSAND = 1000;
-    timestamp = static_cast<int64_t>(tv.tv_usec + tv.tv_sec * THOUSAND * THOUSAND);
-    double timestampMS = static_cast<double>(timestamp) / THOUSAND;
+    double timestampMS = static_cast<double>(timeStampUs) / THOUSAND;
     lastSeenObjectIdEvent.SetTimestamp(timestampMS);
     channel_->SendNotification(lastSeenObjectIdEvent);
 }
