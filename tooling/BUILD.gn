@@ -53,7 +53,7 @@ if (!is_mingw && !is_mac && target_os != "ios") {
   ]
 }
 
-source_set("libark_ecma_debugger_set") {
+ohos_source_set("libark_ecma_debugger_set") {
   sources = debugger_sources
 
   public_configs = [ ":ark_ecma_debugger_config" ]
@@ -82,8 +82,7 @@ source_set("libark_ecma_debugger_set") {
   if (is_ohos && is_standard_system) {
     if (enable_hilog) {
       defines = [ "ENABLE_HILOG" ]
-      include_dirs =
-          [ "//base/hiviewdfx/hilog/interfaces/native/innerkits/include" ]
+      external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
     }
     if (enable_leak_check) {
       sources += [ "$js_root/ecmascript/dfx/native_dfx/backtrace.cpp" ]
@@ -123,44 +122,28 @@ ohos_shared_library("libark_ecma_debugger") {
   subsystem_name = "arkcompiler"
 }
 
-source_set("libark_ecma_debugger_test_set") {
+ohos_shared_library("libark_ecma_debugger_test") {
   sources = debugger_sources
 
   public_configs = [ ":ark_ecma_debugger_config" ]
 
   defines = [ "OHOS_UNIT_TEST" ]
 
-  if (is_ohos && is_standard_system) {
-    if (enable_hilog) {
-      defines += [ "ENABLE_HILOG" ]
-      include_dirs =
-          [ "//base/hiviewdfx/hilog/interfaces/native/innerkits/include" ]
-    }
-  }
-
-  deps = [ "$ark_root/libpandafile:arkfile_header_deps" ]
+  deps = [ "$ark_third_party_root/libuv:uv" ]
 
   if (is_cross_platform_build && target_os == "ios") {
     deps += [ "$ark_third_party_root/cJSON:cjson_static" ]
   } else {
     deps += [ "$ark_third_party_root/cJSON:cjson" ]
   }
-}
 
-ohos_shared_library("libark_ecma_debugger_test") {
-  deps = [
-    ":libark_ecma_debugger_test_set",
-    "$ark_third_party_root/libuv:uv",
-    "//arkcompiler/ets_runtime:libark_jsruntime_test",
-  ]
-
+  external_deps = [ "ets_runtime:libark_jsruntime_test" ]
   if (is_ohos && is_standard_system) {
     if (enable_hilog) {
-      external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+      defines += [ "ENABLE_HILOG" ]
+      external_deps += [ "hiviewdfx_hilog_native:libhilog" ]
     }
   }
-
-  public_configs = [ ":ark_ecma_debugger_config" ]
 
   install_enable = false
 

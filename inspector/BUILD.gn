@@ -73,7 +73,7 @@ ohos_shared_library("ark_debugger") {
     ]
   } else if (target_os == "android") {
     aosp_deps = [ "shared_library:liblog" ]
-  } else {
+  } else if (is_ohos) {
     external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
   }
 

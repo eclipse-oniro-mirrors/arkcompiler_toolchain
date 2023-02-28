@@ -42,6 +42,7 @@ template("ohos_executable") {
                              "static_link",
                              "output_dir",
                              "unit_test",
+                             "external_deps",
                            ])
     output_dir = output_dir
     if (defined(invoker.configs)) {
@@ -56,6 +57,7 @@ template("ohos_executable") {
       configs += [ "//arkcompiler/toolchain/build/config/compiler:exceptions" ]
       ldflags = []
     }
+
     if (!defined(libs)) {
       libs = []
     }
@@ -75,6 +77,17 @@ template("ohos_executable") {
         libs += [ "unwind" ]
       }
       libs += [ "c++" ]
+    }
+
+    if (defined(invoker.external_deps)) {
+      if (!defined(deps)) {
+        deps = []
+      }
+
+      foreach(dep, invoker.external_deps) {
+        # For arkcompiler standalone build
+        deps += [ "//arkcompiler/${dep}" ]
+      }
     }
   }
 }
@@ -114,11 +127,23 @@ template("ohos_static_library") {
       configs += [ "//arkcompiler/toolchain/build/config/compiler:exceptions" ]
       ldflags = []
     }
+
     if (!defined(libs)) {
       libs = []
     }
     if (!defined(include_dirs)) {
       include_dirs = []
+    }
+
+    if (defined(invoker.external_deps)) {
+      if (!defined(deps)) {
+        deps = []
+      }
+
+      foreach(dep, invoker.external_deps) {
+        # For arkcompiler standalone build
+        deps += [ "//arkcompiler/${dep}" ]
+      }
     }
   }
 }
@@ -156,6 +181,7 @@ template("ohos_shared_library") {
     if (defined(invoker.remove_configs)) {
       configs -= invoker.remove_configs
     }
+
     if (!defined(libs)) {
       libs = []
     }
@@ -172,13 +198,23 @@ template("ohos_shared_library") {
           "-L" + rebase_path("${clang_stl_path}/${abi_target}/c++",
                              root_build_dir),
         ]
-
         libs += [ invoker.stl ]
       } else {
         if (current_cpu == "arm" || current_cpu == "arm64") {
           libs += [ "unwind" ]
         }
         libs += [ "c++" ]
+      }
+    }
+
+    if (defined(invoker.external_deps)) {
+      if (!defined(deps)) {
+        deps = []
+      }
+
+      foreach(dep, invoker.external_deps) {
+        # For arkcompiler standalone build
+        deps += [ "//arkcompiler/${dep}" ]
       }
     }
   }

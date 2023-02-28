@@ -67,28 +67,23 @@ foreach(file, test_js_files) {
   }
 }
 
-source_set("debugger_entry_set") {
+ohos_shared_library("debugger_entry") {
   sources = [ "entry/test_debugger_entry.cpp" ]
 
-  public_configs = [ ":debug_api_test" ]
+  configs = [ ":debug_api_test" ]
 
   deps = [ ":jsdebugtest" ]
 
   foreach(file, test_js_files) {
     deps += [ ":gen_${file}_abc" ]
   }
-}
-
-ohos_shared_library("debugger_entry") {
-  deps = [ ":debugger_entry_set" ]
 
   install_enable = false
-
   output_extension = "so"
   subsystem_name = "test"
 }
 
-source_set("jsdebugtest_set") {
+ohos_shared_library("jsdebugtest") {
   sources = [
     "utils/test_entry.cpp",
     "utils/test_extractor.cpp",
@@ -96,7 +91,7 @@ source_set("jsdebugtest_set") {
     "utils/test_util.cpp",
   ]
 
-  public_configs = [
+  configs = [
     ":debug_api_test",
     "//arkcompiler/toolchain/tooling:ark_ecma_debugger_config",
   ]
@@ -114,33 +109,19 @@ source_set("jsdebugtest_set") {
     "DEBUGGER_JS_DIR=\"${test_js_dir}\"",
   ]
 
-  if (is_ohos && is_standard_system) {
-    if (enable_hilog) {
-      defines += [ "ENABLE_HILOG" ]
-      include_dirs =
-          [ "//base/hiviewdfx/hilog/interfaces/native/innerkits/include" ]
-    }
-  }
-
-  deps = [ "$ark_root/libpandafile:arkfile_header_deps" ]
-}
-
-ohos_shared_library("jsdebugtest") {
-  deps = [ ":jsdebugtest_set" ]
-
-  deps += [
+  deps = [
     "//arkcompiler/ets_runtime:libark_jsruntime_test",
     "//arkcompiler/toolchain/tooling:libark_ecma_debugger_test",
   ]
 
   if (is_ohos && is_standard_system) {
     if (enable_hilog) {
+      defines += [ "ENABLE_HILOG" ]
       external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
     }
   }
 
   install_enable = false
-
   output_extension = "so"
   subsystem_name = "test"
 }
@@ -156,8 +137,6 @@ host_unittest_action("DebuggerEntryTest") {
   cflags_cc = [ "-Wno-gnu-zero-variadic-macro-arguments" ]
 
   defines = [ "DEBUGGER_TEST_LIBRARY=\"libdebugger_entry.so\"" ]
-
-  configs = [ ":debug_api_test" ]
 
   deps = [
     ":debugger_entry_resource",

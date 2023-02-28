@@ -29,7 +29,7 @@ ARCHES = ["x64", "arm", "arm64"]
 DEFAULT_ARCH = "x64"
 MODES = ["release", "debug"]
 DEFAULT_MODE = "release"
-TARGETS = ["ets_runtime", "ets_frontend", "default", "mingw_packages", "all"]
+TARGETS = ["ets_runtime", "ets_frontend", "runtime_core", "default", "mingw_packages"]
 DEFAULT_TARGET = "default"
 TARGETS_TEST = ["test262", "unittest"]
 
@@ -47,7 +47,7 @@ for example , python ark.py x64.release
 [arch] only support "x64" now 
 [mode] can be one of ["release", "debug"]
 [options]
-  target: support [ets_runtime | ets_frontend | default | mingw_packages | all] now
+  target: support [ets_runtime | ets_frontend | runtime_core | default | mingw_packages] now
   clean: clear your data in output dir
 [test] 
   test262: run test262
@@ -59,9 +59,8 @@ def PrintHelp():
     sys.exit(0)
 
 
-def _Call(cmd, silent=False):
-    if not silent:
-        print("# %s" % cmd)
+def _Call(cmd):
+    print("# %s" % cmd)
     return subprocess.call(cmd, shell=True)
 
 
@@ -76,6 +75,7 @@ def GetPath(arch, mode):
 
 
 def _CallWithOutput(cmd, file):
+    print("# %s" % cmd)
     host, guest = pty.openpty()
     h = subprocess.Popen(cmd, shell=True, stdin=guest, stdout=guest, stderr=guest)
     os.close(guest)
