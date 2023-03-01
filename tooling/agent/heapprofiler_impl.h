@@ -96,7 +96,7 @@ private:
         void AddHeapSnapshotChunk(char *data, int32_t size);
         void ReportHeapSnapshotProgress(int32_t done, int32_t total);
         void HeapStatsUpdate(HeapStat* updateData, int32_t count);
-        void LastSeenObjectId(int32_t lastSeenObjectId);
+        void LastSeenObjectId(int32_t lastSeenObjectId, int64_t timeStampUs);
         void ResetProfiles();
 
     private:
@@ -137,12 +137,12 @@ private:
             frontend_->HeapStatsUpdate(updateData, count);
         }
 
-        void UpdateLastSeenObjectId(int32_t lastSeenObjectId) override
+        void UpdateLastSeenObjectId(int32_t lastSeenObjectId, int64_t timeStampUs) override
         {
             if (!Good()) {
                 return;
             }
-            frontend_->LastSeenObjectId(lastSeenObjectId);
+            frontend_->LastSeenObjectId(lastSeenObjectId, timeStampUs);
         }
 
     private:
