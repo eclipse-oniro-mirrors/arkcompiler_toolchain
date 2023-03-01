@@ -155,6 +155,7 @@ bool InitializeInspector(void* vm, const std::string& componentName, int32_t ins
         LOGE("Create inspector thread failed");
         return false;
     }
+    newInspector->websocketServer_->tid_ = tid;
 
     return true;
 }

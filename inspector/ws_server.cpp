@@ -28,27 +28,33 @@ std::shared_mutex g_mutex;
 
 void WsServer::RunServer()
 {
-    terminateExecution_ = false;
-    webSocket_ = std::make_unique<WebSocket>();
+    {
+        std::lock_guard<std::mutex> lock(wsMutex_);
+        if (terminateExecution_) {
+            LOGE("WsServer has been terminated unexpectedly");
+            return;
+        }
+        webSocket_ = std::make_unique<WebSocket>();
 #if !defined(OHOS_PLATFORM)
-    if (!webSocket_->InitTcpWebSocket()) {
-        return;
-    }
+        if (!webSocket_->InitTcpWebSocket()) {
+            return;
+        }
 #else
-    tid_ = pthread_self();
-    int appPid = getpid();
-    std::string pidStr = std::to_string(appPid);
-    std::string instanceIdStr("");
+        int appPid = getpid();
+        std::string pidStr = std::to_string(appPid);
+        std::string instanceIdStr("");
 
-    if (instanceId_ != 0) {
-        instanceIdStr = std::to_string(instanceId_);
-    }
-    std::string sockName = pidStr + instanceIdStr + componentName_;
-    LOGI("WsServer RunServer: %{public}d%{public}s%{public}s", appPid, instanceIdStr.c_str(), componentName_.c_str());
-    if (!webSocket_->InitUnixWebSocket(sockName)) {
-        return;
-    }
+        if (instanceId_ != 0) {
+            instanceIdStr = std::to_string(instanceId_);
+        }
+        std::string sockName = pidStr + instanceIdStr + componentName_;
+        LOGI("WsServer RunServer: %{public}d%{public}s%{public}s", appPid, instanceIdStr.c_str(),
+            componentName_.c_str());
+        if (!webSocket_->InitUnixWebSocket(sockName)) {
+            return;
+        }
 #endif
+    }
     while (!terminateExecution_) {
 #if !defined(OHOS_PLATFORM)
         if (!webSocket_->ConnectTcpWebSocket()) {
@@ -72,12 +78,17 @@ void WsServer::RunServer()
 void WsServer::StopServer()
 {
     LOGI("WsServer StopServer");
-    terminateExecution_ = true;
-    if (webSocket_ != nullptr) {
-        webSocket_->Close();
+    {
+        std::lock_guard<std::mutex> lock(wsMutex_);
+        terminateExecution_ = true;
+        if (webSocket_ != nullptr) {
+            webSocket_->Close();
+        }
+    }
 #if defined(OHOS_PLATFORM)
-        pthread_join(tid_, nullptr);
+    pthread_join(tid_, nullptr);
 #endif
+    if (webSocket_ != nullptr) {
         webSocket_.reset();
     }
 }
