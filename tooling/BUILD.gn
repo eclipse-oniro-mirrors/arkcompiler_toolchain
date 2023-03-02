@@ -74,7 +74,7 @@ ohos_source_set("libark_ecma_debugger_set") {
     }
     deps += [
       "$ark_root/libpandafile:libarkfile_static",
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_$platform",
+      "$hilog_root:libhilog_$platform",
     ]
     defines = [ "ENABLE_HILOG" ]
   }

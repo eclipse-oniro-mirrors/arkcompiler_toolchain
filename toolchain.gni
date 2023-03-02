@@ -18,6 +18,7 @@ if (!defined(ark_standalone_build)) {
 toolchain_root = "//arkcompiler//toolchain"
 ark_root = "//arkcompiler/runtime_core"
 js_root = "//arkcompiler/ets_runtime"
+hilog_root = "//base/hiviewdfx/hilog/interfaces/native/innerkits"
 
 if (!ark_standalone_build) {
   ark_third_party_root = "//third_party"

@@ -87,9 +87,7 @@ ohos_source_set("websocket") {
     } else {
       platform = "mac"
     }
-    deps += [
-      "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog_$platform",
-    ]
+    deps += [ "$hilog_root:libhilog_$platform" ]
   } else if (target_os == "android") {
     aosp_deps = [ "shared_library:liblog" ]
   } else if (is_ohos && is_standard_system) {
