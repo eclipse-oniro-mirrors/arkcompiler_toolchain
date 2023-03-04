@@ -458,12 +458,13 @@ void WebSocket::Close()
         close(client_);
         client_ = -1;
     }
+    socketState_ = SocketState::UNINITED;
+    usleep(10000); // 10000: time for websocket to enter the accept
 #if defined(OHOS_PLATFORM)
     shutdown(fd_, SHUT_RDWR);
 #endif
     close(fd_);
     fd_ = -1;
-    socketState_ = SocketState::UNINITED;
 }
 
 uint64_t WebSocket::NetToHostLongLong(char* buf, uint32_t len)
