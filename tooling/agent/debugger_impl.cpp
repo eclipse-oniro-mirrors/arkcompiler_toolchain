@@ -949,8 +949,11 @@ bool DebuggerImpl::GenerateCallFrame(CallFrame *callFrame,
 
     std::vector<std::unique_ptr<Scope>> scopeChain;
     scopeChain.emplace_back(GetLocalScopeChain(frameHandler, &thisObj));
-    if (jsPandaFile != nullptr && !jsPandaFile->IsBundlePack()) {
-        scopeChain.emplace_back(GetModuleScopeChain());
+    if (jsPandaFile != nullptr && !jsPandaFile->IsBundlePack() && jsPandaFile->IsNewVersion()) {
+        JSTaggedValue currentModule = DebuggerApi::GetCurrentModule(vm_);
+        if (currentModule.IsSourceTextModule()) {
+            scopeChain.emplace_back(GetModuleScopeChain());
+        }
     }
     scopeChain.emplace_back(GetGlobalScopeChain());
 
