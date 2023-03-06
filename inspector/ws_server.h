@@ -32,12 +32,12 @@ public:
     void StopServer();
     void SendReply(const std::string& message) const;
 
+    pthread_t tid_ {0};
+
 private:
     std::atomic<bool> terminateExecution_ { false };
     [[maybe_unused]] int32_t instanceId_ {0};
-#if defined(OHOS_PLATFORM)
-    pthread_t tid_ {0};
-#endif
+    std::mutex wsMutex_;
     std::string componentName_ {};
     std::function<void(std::string&&)> wsOnMessage_ {};
     std::unique_ptr<WebSocket> webSocket_ { nullptr };
