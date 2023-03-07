@@ -123,6 +123,7 @@ group("ark_toolchain_packages") {
   deps = []
   if (host_os != "mac") {
     deps += [
+      "$toolchain_root/connect_server:connectserver_debugger",
       "//arkcompiler/toolchain/inspector:ark_debugger",
       "//arkcompiler/toolchain/tooling:libark_ecma_debugger",
       "//third_party/libuv:uv",

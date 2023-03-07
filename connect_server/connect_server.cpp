@@ -1,0 +1,69 @@
+/*
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "connect_server.h"
+#include <shared_mutex>
+#include <unistd.h>
+#include "log_wrapper.h"
+
+namespace OHOS::ArkCompiler::Toolchain {
+std::shared_mutex g_sendMutex;
+
+void ConnectServer::RunServer()
+{
+    terminateExecution_ = false;
+    webSocket_ = std::make_unique<WebSocket>();
+    tid_ = pthread_self();
+    int appPid = getpid();
+    std::string pidStr = std::to_string(appPid);
+    std::string sockName = pidStr + bundleName_;
+    if (!webSocket_->InitUnixWebSocket(sockName)) {
+        return;
+    }
+    while (!terminateExecution_) {
+        if (!webSocket_->ConnectUnixWebSocket()) {
+            return;
+        }
+        while (webSocket_->IsConnected()) {
+            std::string message = webSocket_->Decode();
+            if (!message.empty()) {
+                wsOnMessage_(std::move(message));
+            }
+        }
+    }
+}
+
+void ConnectServer::StopServer()
+{
+    LOGI("ConnectServer StopServer");
+    terminateExecution_ = true;
+    if (webSocket_ != nullptr) {
+        webSocket_->Close();
+        pthread_join(tid_, nullptr);
+        webSocket_.reset();
+    }
+}
+
+void ConnectServer::SendMessage(const std::string& message) const
+{
+    std::unique_lock<std::shared_mutex> lock(g_sendMutex);
+    if (webSocket_ == nullptr) {
+        LOGE("ConnectServer SendReply websocket has been closed unexpectedly");
+        return;
+    }
+    LOGI("ConnectServer SendReply: %{public}s", message.c_str());
+    webSocket_->SendReply(message);
+}
+} // namespace OHOS::ArkCompiler::Toolchain
