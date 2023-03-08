@@ -210,8 +210,8 @@ Local<JSValueRef> DebuggerExecutor::GetModuleValue(const EcmaVM *vm, const Frame
     if (jsPandaFile != nullptr && (jsPandaFile->IsBundlePack() || !jsPandaFile->IsNewVersion())) {
         return result;
     }
-
-    JSTaggedValue currentModule = DebuggerApi::GetCurrentModule(vm);
+    JSThread *thread = vm->GetJSThread();
+    JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm));
     result = DebuggerApi::GetModuleValue(vm, currentModule, varName);
     return result;
 }
@@ -225,8 +225,8 @@ bool DebuggerExecutor::SetModuleValue(const EcmaVM *vm, const FrameHandler *fram
     if (jsPandaFile != nullptr && (jsPandaFile->IsBundlePack() || !jsPandaFile->IsNewVersion())) {
         return false;
     }
-
-    JSTaggedValue currentModule = DebuggerApi::GetCurrentModule(vm);
+    JSThread *thread = vm->GetJSThread();
+    JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm));
     DebuggerApi::SetModuleValue(vm, currentModule, varName, value);
     return true;
 }

@@ -44,6 +44,8 @@ test_js_files = [
   "throw_exception",
   "variable_first",
   "variable_second",
+  "export_variable_first",
+  "export_variable_second",
   "module_variable",
 ]
 
@@ -57,7 +59,8 @@ foreach(file, test_js_files) {
     src_js = rebase_path(test_js)
     dst_file = rebase_path(test_abc)
     extra_args = [ "--debug" ]
-    if (file == "module_variable") {
+    if (file == "module_variable" || file == "export_variable_first" ||
+        file == "export_variable_second") {
       extra_args += [ "--module" ]
       extra_args += [ "--merge-abc" ]
     }
