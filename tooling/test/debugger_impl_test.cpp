@@ -624,6 +624,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetBreakpointByUrl__002)
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
     auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
     auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
 
     // DebuggerImpl::SetBreakpointByUrl -- extractor == nullptr
     std::string msg = std::string() +
