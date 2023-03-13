@@ -42,16 +42,19 @@ OUTDIR = "out"
 
 
 Help_message = """
-format: python ark.py [arch].[mode] [options] [test]
+format: python ark.py [arch].[mode] [options] [test] [test target]
 for example , python ark.py x64.release
 [arch] only support "x64" now 
 [mode] can be one of ["release", "debug"]
 [options]
   target: support [ets_runtime | ets_frontend | runtime_core | default | mingw_packages] now
   clean: clear your data in output dir
-[test] 
+[test] only support run on x64 platform now
   test262: run test262
   unittest: run unittest
+[test target]
+  when [test] is test262: means test file or test dir, like "built-ins/Array/name.js" or "built-ins/Array"
+  when [test] is unittest: means test target action defined in gn, like "DebuggerTestAction" or "addAotAction"
 """
 
 def PrintHelp():
@@ -121,7 +124,11 @@ def Get_template(args_list):
     global_target = DEFAULT_TARGET
     global_test = ''
     global_clean = False
+    test_target = ''
     for args in args_list:
+        if global_test != '':
+            # only test has extra args
+            test_target = args
         parameter = args.split(".")
         for part in parameter:
             if part in ARCHES:
@@ -134,10 +141,9 @@ def Get_template(args_list):
                 global_clean = True
             elif part in TARGETS_TEST:
                 global_test = part
-            else:
+            elif global_test == '':
                 print("\033[34mIllegal command line option: %s\033[0m" % part)
                 PrintHelp()
-                sys.exit(1)
 # Determine the target CPU
     target_cpu = "target_cpu = \"%s\"" % global_arch
 # Determine the target CPU
@@ -151,7 +157,7 @@ def Get_template(args_list):
     else:
         is_debug = "is_debug = false"
     all_part = (is_debug + "\n" + target_os + "\n" + target_cpu + "\n") 
-    return [global_arch, global_mode, global_target, global_clean, USER_ARGS_TEMPLATE % (all_part), global_test]
+    return [global_arch, global_mode, global_target, global_clean, USER_ARGS_TEMPLATE % (all_part), global_test, test_target]
 
 
 def Build(template):
@@ -194,15 +200,27 @@ def RunTest(template):
     arch = template[0]
     mode = template[1]
     test = template[5]
+    test_target = template[6]
     path = GetPath(arch, mode)
     test_dir = arch + "." + mode 
-    test262_code = '''cd arkcompiler/ets_frontend
-    python3 test262/run_test262.py --es2021 all --timeout 180000 --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib --ark-tool=../../out/%s/clang_x64/arkcompiler/ets_runtime/ark_js_vm --ark-frontend-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/es2abc --merge-abc-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/merge_abc --ark-frontend=es2panda
-    '''%(test_dir, test_dir, test_dir)
-    unittest_code = "./prebuilts/build-tools/linux-x86/bin/ninja -C %s unittest_packages"%(path)
     build_log = os.path.join(path, "build.log")
     if ("test262" == test):
         print("=== come to test262 ===")
+        target = "all"
+        if test_target != '':
+            raw_target = "arkcompiler/ets_frontend/test262/data/test/" + test_target
+            target = "test262/data/test_es2021/" + test_target
+            if os.path.isdir(raw_target):
+                target = "--dir " + target
+            elif os.path.isfile(raw_target):
+                target = "--file " + target
+            else:
+                print("Can't find %s in arkcompiler/ets_frontend/test262/data/test/" % (test_target))
+                return -1
+
+        test262_code = '''cd arkcompiler/ets_frontend
+        python3 test262/run_test262.py --es2021 %s --timeout 180000 --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib --ark-tool=../../out/%s/clang_x64/arkcompiler/ets_runtime/ark_js_vm --ark-frontend-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/es2abc --merge-abc-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/merge_abc --ark-frontend=es2panda
+        '''%(target, test_dir, test_dir, test_dir)
         pass_code =_CallWithOutput(test262_code,build_log)
         if pass_code == 0:
             print("=== test262 success! ===")
@@ -211,6 +229,9 @@ def RunTest(template):
         return pass_code
     elif ("unittest" == test):
         print("=== come to unittest ===")
+        if test_target == '':
+            test_target = "unittest_packages"
+        unittest_code = "./prebuilts/build-tools/linux-x86/bin/ninja -C %s %s"%(path, test_target)
         pass_code =_CallWithOutput(unittest_code,build_log)
         if pass_code == 0:
             print("=== unittest success! ===")
