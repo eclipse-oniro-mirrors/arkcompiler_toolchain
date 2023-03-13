@@ -141,6 +141,8 @@ host_unittest_action("DebuggerEntryTest") {
 
   defines = [ "DEBUGGER_TEST_LIBRARY=\"libdebugger_entry.so\"" ]
 
+  configs = [ ":debug_api_test" ]
+
   deps = [
     ":debugger_entry_resource",
     ":jsdebugtest",
