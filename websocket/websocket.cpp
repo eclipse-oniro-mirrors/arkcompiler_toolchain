@@ -488,7 +488,7 @@ bool WebSocket::Recv(int32_t client, char* buf, size_t totalLen, int32_t flags) 
             LOGE("Recv payload in while failed, websocket disconnect");
             return false;
         }
-        recvLen += len;
+        recvLen += static_cast<size_t>(len);
     }
     buf[totalLen] = '\0';
     return true;
@@ -503,7 +503,7 @@ bool WebSocket::Send(int32_t client, const char* buf, size_t totalLen, int32_t f
             LOGE("Send Message in while failed, websocket disconnect");
             return false;
         }
-        sendLen += len;
+        sendLen += static_cast<size_t>(len);
     }
     return true;
 }
