@@ -13,17 +13,27 @@
 
 import("//arkcompiler/toolchain/toolchain.gni")
 
-config("ark_debugger_config") {
-  cflags_cc = [
-    "-fexceptions",
-    "-fno-complete-member-pointers",
-    "-Wno-implicit-fallthrough",
-    "-fvisibility=default",
-    "-frtti",
-  ]
+config("hiviewdfx_config") {
+  defines = []
+  if (enable_dump_in_faultlog) {
+    defines += [ "ENABLE_DUMP_IN_FAULTLOG" ]
+  }
+  if (enable_bytrace) {
+    defines += [ "ENABLE_BYTRACE" ]
+    cflags_cc = [ "-Wno-gnu-zero-variadic-macro-arguments" ]
+  }
+  if (enable_hitrace) {
+    defines += [ "ENABLE_HITRACE" ]
+  }
+  if (enable_hilog) {
+    defines += [ "ENABLE_HILOG" ]
+  }
+
+  include_dirs = [ "$hilog_root/include" ]
 }
 
 config("ark_platform_config") {
+  configs = [ ":hiviewdfx_config" ]
   defines = []
   if (is_ohos) {
     defines += [
@@ -53,39 +63,16 @@ config("ark_platform_config") {
 }
 
 ohos_shared_library("ark_debugger") {
-  deps = [
-    ":ark_debugger_static",
-    sdk_libc_secshared_dep,
-  ]
-
-  if (is_mingw || is_mac) {
-    if (is_mingw) {
-      platform = "windows"
-      ldflags = [
-        "-lwsock32",
-        "-lws2_32",
-      ]
-    } else {
-      platform = "mac"
-    }
-    deps += [ "$hilog_root:libhilog_$platform" ]
-  } else if (target_os == "android") {
-    aosp_deps = [ "shared_library:liblog" ]
-  } else if (is_ohos) {
-    external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
-  }
-
-  part_name = "toolchain"
-  subsystem_name = "arkcompiler"
-}
-
-ohos_source_set("ark_debugger_static") {
-  deps = []
+  deps = [ sdk_libc_secshared_dep ]
+  configs = [ sdk_libc_secshared_config ]
   defines = []
-  configs = []
 
-  defines += [ "ACE_LOG_TAG=\"ArkDebugger\"" ]
-
+  if (is_mingw) {
+    ldflags = [
+      "-lwsock32",
+      "-lws2_32",
+    ]
+  }
   if (is_mingw || is_mac) {
     cflags = [ "-std=c++17" ]
   }
@@ -99,24 +86,52 @@ ohos_source_set("ark_debugger_static") {
   sources = [
     "inspector.cpp",
     "library_loader.cpp",
+    "log_wrapper.cpp",
     "ws_server.cpp",
   ]
-  if (is_ohos) {
-    external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
-  } else if (target_os == "android") {
-    sources += [ "log_wrapper.cpp" ]
-  } else {
-    sources += [ "log_wrapper.cpp" ]
-    include_dirs += [
-      "//arkcompiler/toolchain",
-      "//arkcompiler/ets_runtime",
-      "//arkcompiler/runtime_core",
-    ]
-    configs += [ sdk_libc_secshared_config ]
+
+  # hiviewdfx libraries
+  external_deps = hiviewdfx_ext_deps
+  deps += hiviewdfx_deps
+
+  if (target_os == "android") {
+    aosp_deps = [ "shared_library:liblog" ]
   }
 
-  configs += [
-    ":ark_debugger_config",
-    ":ark_platform_config",
+  configs += [ ":ark_platform_config" ]
+
+  part_name = "toolchain"
+  subsystem_name = "arkcompiler"
+}
+
+ohos_shared_library("connectserver_debugger") {
+  deps = [ sdk_libc_secshared_dep ]
+  configs = [ sdk_libc_secshared_config ]
+  defines = []
+
+  if (is_mingw || is_mac) {
+    cflags = [ "-std=c++17" ]
+  }
+
+  configs += [ ":ark_platform_config" ]
+
+  # hiviewdfx libraries
+  external_deps = hiviewdfx_ext_deps
+  deps += hiviewdfx_deps
+
+  deps += [ "$toolchain_root/websocket" ]
+
+  include_dirs = [
+    "$toolchain_root/websocket",
+    "$toolchain_root/inspector",
   ]
+
+  sources = [
+    "connect_inspector.cpp",
+    "connect_server.cpp",
+    "log_wrapper.cpp",
+  ]
+
+  subsystem_name = "arkcompiler"
+  part_name = "toolchain"
 }

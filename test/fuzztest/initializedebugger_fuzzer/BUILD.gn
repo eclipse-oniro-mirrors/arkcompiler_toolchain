@@ -34,10 +34,13 @@ ohos_fuzztest("InitializeDebuggerFuzzTest") {
   deps = [
     "//arkcompiler/ets_runtime:libark_jsruntime_test",
     "//arkcompiler/toolchain/tooling:libark_ecma_debugger_set",
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//third_party/libuv:uv",
     sdk_libc_secshared_dep,
   ]
+
+  # hiviewdfx libraries
+  external_deps = hiviewdfx_ext_deps
+  deps += hiviewdfx_deps
 }
 
 group("fuzztest") {

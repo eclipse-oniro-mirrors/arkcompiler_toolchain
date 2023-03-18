@@ -23,12 +23,9 @@ host_unittest_action("WebSocketTest") {
 
   sources = [
     # test file
+    "../../inspector/log_wrapper.cpp",
     "websocket_test.cpp",
   ]
-
-  if (!is_ohos) {
-    sources += [ "../../inspector/log_wrapper.cpp" ]
-  }
 
   configs = [
     "//arkcompiler/toolchain:toolchain_test_config",
@@ -46,9 +43,9 @@ host_unittest_action("WebSocketTest") {
     deps += [ "$ark_third_party_root/openssl:libcrypto_shared" ]
   }
 
-  if (is_ohos && is_standard_system) {
-    external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
-  }
+  # hiviewdfx libraries
+  external_deps = hiviewdfx_ext_deps
+  deps += hiviewdfx_deps
 }
 
 group("unittest") {

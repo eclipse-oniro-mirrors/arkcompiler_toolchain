@@ -11,31 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if (!defined(ark_standalone_build)) {
-  ark_standalone_build = false
-}
+import("../ets_runtime/js_runtime_config.gni")
 
 toolchain_root = "//arkcompiler//toolchain"
-ark_root = "//arkcompiler/runtime_core"
-js_root = "//arkcompiler/ets_runtime"
-hilog_root = "//base/hiviewdfx/hilog/interfaces/native/innerkits"
-
-if (!ark_standalone_build) {
-  ark_third_party_root = "//third_party"
-  build_root = "//build"
-  import("$build_root/ohos.gni")
-} else {
-  ark_third_party_root = "//arkcompiler/toolchain/build/third_party_gn"
-  import("$build_root/ark.gni")
-}
-is_cross_platform_build =
-    defined(build_cross_platform_version) && build_cross_platform_version
-if (is_cross_platform_build && target_os == "ios") {
-  sdk_libc_secshared_dep =
-      "$ark_third_party_root/bounds_checking_function:libsec_static"
-} else {
-  sdk_libc_secshared_dep =
-      "$ark_third_party_root/bounds_checking_function:libsec_shared"
-}
-sdk_libc_secshared_config =
-    "$ark_third_party_root/bounds_checking_function:libsec_public_config"
