@@ -62,12 +62,12 @@ def PrintHelp():
     sys.exit(0)
 
 
-def _Call(cmd):
+def _call(cmd):
     print("# %s" % cmd)
     return subprocess.call(cmd, shell=True)
 
 
-def _Write(filename, content, mode):
+def _write(filename, content, mode):
     with open(filename, mode) as f:
         f.write(content)
 
@@ -77,7 +77,7 @@ def GetPath(arch, mode):
     return os.path.join(OUTDIR, subdir)
 
 
-def _CallWithOutput(cmd, file):
+def _callWithOutput(cmd, file):
     print("# %s" % cmd)
     host, guest = pty.openpty()
     h = subprocess.Popen(cmd, shell=True, stdin=guest, stdout=guest, stderr=guest)
@@ -97,7 +97,7 @@ def _CallWithOutput(cmd, file):
                 break
             print(build_data)
             sys.stdout.flush()
-            _Write(file, build_data, "a")
+            _write(file, build_data, "a")
     os.close(host)
     h.wait()
     return h.returncode
@@ -157,7 +157,8 @@ def Get_template(args_list):
     else:
         is_debug = "is_debug = false"
     all_part = (is_debug + "\n" + target_os + "\n" + target_cpu + "\n") 
-    return [global_arch, global_mode, global_target, global_clean, USER_ARGS_TEMPLATE % (all_part), global_test, test_target]
+    return [global_arch, global_mode, global_target, global_clean,
+            USER_ARGS_TEMPLATE % (all_part), global_test, test_target]
 
 
 def Build(template):
@@ -172,8 +173,8 @@ def Build(template):
         os.makedirs(path)
     if clean:
         print("=== start clean ===")
-        code = _Call("./prebuilts/build-tools/linux-x86/bin/gn clean %s" % path)
-        code += _Call("./prebuilts/build-tools/linux-x86/bin/ninja -C %s -t clean" % path)
+        code = _call("./prebuilts/build-tools/linux-x86/bin/gn clean %s" % path)
+        code += _call("./prebuilts/build-tools/linux-x86/bin/ninja -C %s -t clean" % path)
         if code != 0:
             return code
         print("=== clean success! ===")
@@ -181,15 +182,15 @@ def Build(template):
     build_log = os.path.join(path, "build.log")
     if not os.path.exists("args.gn"):
         args_gn = os.path.join(path, "args.gn")
-        _Write(args_gn, template_part, "w")
+        _write(args_gn, template_part, "w")
     if not os.path.exists("build.ninja"):
         build_ninja = os.path.join(path, "build.ninja")
-        code = _Call("./prebuilts/build-tools/linux-x86/bin/gn gen %s" % path)
+        code = _call("./prebuilts/build-tools/linux-x86/bin/gn gen %s" % path)
         if code != 0:
             return code  
         else:
             print("=== gn success! ===")
-    pass_code = _CallWithOutput("./prebuilts/build-tools/linux-x86/bin/ninja -C %s %s" %
+    pass_code = _callWithOutput("./prebuilts/build-tools/linux-x86/bin/ninja -C %s %s" %
                                           (path, target), build_log)
     if pass_code == 0:
         print("=== ninja success! ===")
@@ -220,8 +221,8 @@ def RunTest(template):
 
         test262_code = '''cd arkcompiler/ets_frontend
         python3 test262/run_test262.py --es2021 %s --timeout 180000 --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib --ark-tool=../../out/%s/clang_x64/arkcompiler/ets_runtime/ark_js_vm --ark-frontend-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/es2abc --merge-abc-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/merge_abc --ark-frontend=es2panda
-        '''%(target, test_dir, test_dir, test_dir)
-        pass_code =_CallWithOutput(test262_code,build_log)
+        ''' % (target, test_dir, test_dir, test_dir)
+        pass_code =_callWithOutput(test262_code,build_log)
         if pass_code == 0:
             print("=== test262 success! ===")
         else:
@@ -231,8 +232,8 @@ def RunTest(template):
         print("=== come to unittest ===")
         if test_target == '':
             test_target = "unittest_packages"
-        unittest_code = "./prebuilts/build-tools/linux-x86/bin/ninja -C %s %s"%(path, test_target)
-        pass_code =_CallWithOutput(unittest_code,build_log)
+        unittest_code = "./prebuilts/build-tools/linux-x86/bin/ninja -C %s %s" % (path, test_target)
+        pass_code =_callWithOutput(unittest_code,build_log)
         if pass_code == 0:
             print("=== unittest success! ===")
         else:
