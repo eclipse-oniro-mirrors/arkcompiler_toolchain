@@ -563,6 +563,15 @@ void DebuggerImpl::Frontend::WaitForDebugger(const EcmaVM *vm)
     channel_->WaitForDebugger();
 }
 
+void DebuggerImpl::Frontend::RunIfWaitingForDebugger(const EcmaVM *vm)
+{
+    if (!AllowNotify(vm)) {
+        return;
+    }
+
+    channel_->RunIfWaitingForDebugger();
+}
+
 DispatchResponse DebuggerImpl::Enable([[maybe_unused]] const EnableParams &params, UniqueDebuggerId *id)
 {
     ASSERT(id != nullptr);
@@ -576,6 +585,8 @@ DispatchResponse DebuggerImpl::Enable([[maybe_unused]] const EnableParams &param
 
 DispatchResponse DebuggerImpl::Disable()
 {
+    DebuggerApi::RemoveAllBreakpoints(jsDebugger_);
+    frontend_.RunIfWaitingForDebugger(vm_);
     vm_->GetJsDebuggerManager()->SetDebugMode(false);
     return DispatchResponse::Ok();
 }
@@ -716,6 +727,9 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
                                                   std::string *outId,
                                                   std::vector<std::unique_ptr<Location>> *outLocations)
 {
+    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+        return DispatchResponse::Fail("SetBreakpointByUrl: debugger agent is not enabled");
+    }
     const std::string &url = params.GetUrl();
     int32_t lineNumber = params.GetLine();
     int32_t columnNumber = params.GetColumn();
@@ -780,6 +794,9 @@ DispatchResponse DebuggerImpl::SetPauseOnExceptions(const SetPauseOnExceptionsPa
 
 DispatchResponse DebuggerImpl::StepInto([[maybe_unused]] const StepIntoParams &params)
 {
+    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+        return DispatchResponse::Fail("Can only perform operation while paused");
+    }
     singleStepper_ = SingleStepper::GetStepIntoStepper(vm_);
     if (singleStepper_ == nullptr) {
         LOG_DEBUGGER(ERROR) << "StepInto: singleStepper is null";
@@ -791,6 +808,9 @@ DispatchResponse DebuggerImpl::StepInto([[maybe_unused]] const StepIntoParams &p
 
 DispatchResponse DebuggerImpl::StepOut()
 {
+    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+        return DispatchResponse::Fail("Can only perform operation while paused");
+    }
     singleStepper_ = SingleStepper::GetStepOutStepper(vm_);
     if (singleStepper_ == nullptr) {
         LOG_DEBUGGER(ERROR) << "StepOut: singleStepper is null";
@@ -802,6 +822,9 @@ DispatchResponse DebuggerImpl::StepOut()
 
 DispatchResponse DebuggerImpl::StepOver([[maybe_unused]] const StepOverParams &params)
 {
+    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+        return DispatchResponse::Fail("Can only perform operation while paused");
+    }
     singleStepper_ = SingleStepper::GetStepOverStepper(vm_);
     if (singleStepper_ == nullptr) {
         LOG_DEBUGGER(ERROR) << "StepOver: singleStepper is null";
@@ -906,6 +929,9 @@ void DebuggerImpl::SaveCallFrameHandler(const FrameHandler *frameHandler)
 bool DebuggerImpl::GenerateCallFrame(CallFrame *callFrame,
     const FrameHandler *frameHandler, CallFrameId callFrameId)
 {
+    if (!frameHandler->HasFrame()) {
+        return false;
+    }
     Method *method = DebuggerApi::GetMethod(frameHandler);
     auto methodId = method->GetMethodId();
     const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
