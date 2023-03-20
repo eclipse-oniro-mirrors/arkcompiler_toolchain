@@ -170,6 +170,7 @@ private:
         void ScriptFailedToParse(const EcmaVM *vm);
         void ScriptParsed(const EcmaVM *vm, const PtScript &script);
         void WaitForDebugger(const EcmaVM *vm);
+        void RunIfWaitingForDebugger(const EcmaVM *vm);
 
     private:
         bool AllowNotify(const EcmaVM *vm) const;
