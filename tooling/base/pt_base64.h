@@ -24,8 +24,23 @@ public:
     PtBase64() = default;
     ~PtBase64() = default;
 
-    static uint32_t Decode(const std::string &input, std::string &output);
-    static uint32_t Encode(const std::string &input, std::string &output);
+    static std::size_t constexpr DecodedSize(std::size_t n)
+    {
+        return n / ENCODED_GROUP_BYTES * UNENCODED_GROUP_BYTES;
+    }
+
+    static std::size_t constexpr EncodedSize(std::size_t n)
+    {
+        return ENCODED_GROUP_BYTES * ((n + 2) / UNENCODED_GROUP_BYTES);
+    }
+
+    static std::pair<std::size_t, bool> Decode(void *output, const char *input, std::size_t len);
+    static size_t Encode(char *output, const void *input, std::size_t len);
+
+private:
+   static constexpr uint8_t UNENCODED_GROUP_BYTES = 3;
+   static constexpr uint8_t ENCODED_GROUP_BYTES = 4;
+   static constexpr uint8_t INVAILD_VALUE = 255;
 };
 }  // namespace panda::ecmascript::tooling
 #endif

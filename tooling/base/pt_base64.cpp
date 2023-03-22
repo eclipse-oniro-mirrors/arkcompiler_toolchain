@@ -16,10 +16,7 @@
 #include "base/pt_base64.h"
 
 namespace panda::ecmascript::tooling {
-static const uint8_t DECODE_STR_LEN = 3;
-static const uint8_t ENCODE_STR_LEN = 4;
-static const uint8_t INVAILD_STR = 255;
-static uint8_t decodeMap[] = {
+static const unsigned char DECODE_TABLE[] = {
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
     255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 62, 255, 255, 255, 63,
@@ -27,99 +24,104 @@ static uint8_t decodeMap[] = {
     255, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
     15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 255, 255, 255, 255, 255,
     255, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-    41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 255, 255, 255, 255, 255
+    41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+    255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255
 };
-static char encodeMap[] = {"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"};
-uint32_t PtBase64::Decode(const std::string &input, std::string &output)
+
+static const char ENCODE_TABLE[] = {
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "abcdefghijklmnopqrstuvwxyz"
+    "0123456789+/"
+};
+
+std::pair<std::size_t, bool> PtBase64::Decode(void *output, const char *input, std::size_t len)
 {
-    size_t srcLen = input.size();
-    if (srcLen < ENCODE_STR_LEN || srcLen % ENCODE_STR_LEN != 0) {
-        return 0;
+    if (len < ENCODED_GROUP_BYTES || len % ENCODED_GROUP_BYTES != 0) {
+        return {0, false};
     }
 
-    std::string strDecode;
-    uint32_t decodeLen = srcLen / ENCODE_STR_LEN * DECODE_STR_LEN;
-    strDecode.resize(decodeLen);
-
-    uint32_t i = 0;
-    uint32_t j = 0;
-    uint32_t equalsCnt = 0;
-    const char* src = input.data();
-    char base64Char[ENCODE_STR_LEN];
-    while (srcLen--) {
-        if (*src != '=') {
-            auto const v = decodeMap[static_cast<uint8_t>(*src)];
-            if (v == INVAILD_STR) {
-                return 0;
-            }
-            base64Char[j++] = v;
-        } else {
-            base64Char[j++] = '\0';
-            equalsCnt++;
+    auto *src = reinterpret_cast<unsigned char const *>(input);
+    char *dest = static_cast<char *>(output);
+    char base64Chars[ENCODED_GROUP_BYTES];
+    int8_t i = 0;
+    while (len-- && *src != '=') {
+        auto v = DECODE_TABLE[*src];
+        if (v == INVAILD_VALUE) {
+            break;
         }
-        if (j == ENCODE_STR_LEN) {
-            // 2: shift 2bits, 4: shift 4bits
-            strDecode[i] = (base64Char[0] << 2) | ((base64Char[1] & 0x30) >> 4);
-            // 2: shift 2bits, 4: shift 4bits
-            strDecode[i + 1] = (base64Char[1] << 4) | ((base64Char[2] & 0x3c) >> 2);
-            // 2: shift 2bits, 3: the last encode str, 6: shift 6bits
-            strDecode[i + 2] = (base64Char[2] << 6) | base64Char[3];
-            j = 0;
-            i += DECODE_STR_LEN;
+        base64Chars[i++] = v;
+
+        if (i == ENCODED_GROUP_BYTES) {
+            *dest++ = (base64Chars[0] << 2) | ((base64Chars[1] & 0x30) >> 4);
+            *dest++ = (base64Chars[1] << 4) | ((base64Chars[2] & 0x3c) >> 2);
+            *dest++ = (base64Chars[2] << 6) | base64Chars[3];
+            i = 0;
         }
         src++;
     }
-    decodeLen -= equalsCnt;
-    strDecode.resize(decodeLen);
-    output = std::move(strDecode);
-    return decodeLen;
+
+    if (i != 0) {
+        char tmp[UNENCODED_GROUP_BYTES];
+        tmp[0] = (base64Chars[0] << 2) | ((base64Chars[1] & 0x30) >> 4);
+        tmp[1] = (base64Chars[1] << 4) | ((base64Chars[2] & 0x3c) >> 2);
+        tmp[2] = (base64Chars[2] << 6) | base64Chars[3];
+        for (int8_t j = 0; j < i - 1; j++) {
+            *dest++ = tmp[j];
+        }
+    }
+
+    len++; // get the remaining length and also avoid underflow
+    size_t decodedLen = dest - static_cast<char *>(output);
+    bool decodedDone = false;
+    if (len == 0 || (len == 1 && *src == '=') || (len == 2 && *src == '=' && *(src + 1) == '=')) {
+        decodedDone = true;
+    }
+
+    return {decodedLen, decodedDone};
 }
 
-uint32_t PtBase64::Encode(const std::string &input, std::string &output)
+size_t PtBase64::Encode(char *output, const void *input, std::size_t len)
 {
-    uint32_t srcLen = input.size();
-    if (srcLen == 0) {
+    if (len == 0) {
         return 0;
     }
 
-    uint32_t lastLen = srcLen % DECODE_STR_LEN;
-    uint32_t encodeLen;
-    uint32_t equalsCnt;
-    if (lastLen == 0) {
-        encodeLen = srcLen / DECODE_STR_LEN * ENCODE_STR_LEN;
-        equalsCnt = 0;
-    } else {
-        encodeLen = (srcLen / DECODE_STR_LEN + 1) * ENCODE_STR_LEN;
-        equalsCnt = DECODE_STR_LEN - lastLen;
+    auto *src = static_cast<const unsigned char *>(input);
+    char *dest = output;
+    for (auto n = len / UNENCODED_GROUP_BYTES; n--;) {
+        *dest++ = ENCODE_TABLE[src[0] >> 2];
+        *dest++ = ENCODE_TABLE[((src[0] & 0x03) << 4) | (src[1] >> 4)];
+        *dest++ = ENCODE_TABLE[((src[1] & 0x0f) << 2) | (src[2] >> 6)];
+        *dest++ = ENCODE_TABLE[src[2] & 0x3f];
+
+        src += UNENCODED_GROUP_BYTES;
     }
 
-    uint32_t i = 0;
-    uint32_t j = 0;
-    uint32_t index = 0;
-    std::string strEncode;
-    strEncode.resize(encodeLen);
-    const char* src = input.data();
-    while (i + 3 < encodeLen) { // 3: the last encode str
-        index = src[j] >> 2; // 2: shift 2bits
-        strEncode[i] = encodeMap[index];
-        index = ((src[j] & 0x03) << 4) | (src[j + 1] >> 4); // 4: shift 4bits
-        strEncode[i + 1] = encodeMap[index];
-        index = ((src[j + 1] & 0x0F) << 2) | (src[j + 2] >> 6); // 2: shift 2bits, 6: shift 6bits
-        strEncode[i + 2] = encodeMap[index]; // 2: the second char
-        index = src[j + 2] & 0x3F; // 2: the second char
-        strEncode[i + 3] = encodeMap[index]; // 3: the third char
-
-        i += ENCODE_STR_LEN;
-        j += DECODE_STR_LEN;
+    int8_t remainder = len % UNENCODED_GROUP_BYTES;
+    int8_t paddingCnt = (UNENCODED_GROUP_BYTES - remainder) % UNENCODED_GROUP_BYTES;
+    switch (paddingCnt) {
+        case 1:
+            *dest++ = ENCODE_TABLE[src[0] >> 2];
+            *dest++ = ENCODE_TABLE[((src[0] & 0x03) << 4) | (src[1] >> 4)];
+            *dest++ = ENCODE_TABLE[((src[1] & 0x0f) << 2)];
+            *dest++ = '=';
+            break;
+        case 2:
+            *dest++ = ENCODE_TABLE[src[0] >> 2];
+            *dest++ = ENCODE_TABLE[((src[0] & 0x03) << 4)];
+            *dest++ = '=';
+            *dest++ = '=';
+            break;
+        default:
+            break;
     }
-
-    if (equalsCnt == 1) {
-        strEncode[encodeLen - 1] = '=';
-    } else if (equalsCnt == 2) { // 2: Equal's count
-        strEncode[encodeLen - 1] = '=';
-        strEncode[encodeLen - 2] = '='; // 2: the last two chars
-    }
-    output = std::move(strEncode);
-    return encodeLen;
+    return dest - output;
 }
 }  // namespace panda::ecmascript::tooling

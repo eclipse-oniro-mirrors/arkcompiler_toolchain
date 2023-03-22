@@ -156,7 +156,7 @@ private:
     void UpdateScopeObject(const FrameHandler *frameHandler, std::string_view varName, Local<JSValueRef> newVal);
     void ClearSingleStepper();
     Local<JSValueRef> ConvertToLocal(const std::string &varValue);
-    bool DecodeAndCheckBase64(const std::string &src, std::string &dest);
+    bool DecodeAndCheckBase64(const std::string &src, std::vector<uint8_t> &dest);
     bool IsSkipLine(const JSPtLocation &location);
     bool CheckPauseOnException();
 
