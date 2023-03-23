@@ -41,7 +41,7 @@ OUTDIR = "out"
 Help_message = """
 format: python ark.py [arch].[mode] [options] [test] [test target]
 for example , python ark.py x64.release
-[arch] only support "x64" now 
+[arch] only support "x64" now
 [mode] can be one of ["release", "debug"]
 [options]
   target: support [ets_runtime | ets_frontend | runtime_core | default | mingw_packages] now
@@ -88,9 +88,9 @@ def _callWithOutput(cmd, file):
                 print("no such file")
             elif error == errno.EPERM:
                 print("permission denied")
-            break 
+            break
         if not build_data:
-            break 
+            break
     host.wait()
     return host.returncode
 
@@ -128,9 +128,9 @@ def Get_template(args_list):
             if part in ARCHES:
                 global_arch = part
             elif part in MODES:
-                global_mode = part 
+                global_mode = part
             elif part in TARGETS:
-                global_target = part 
+                global_target = part
             elif part == "clean":
                 global_clean = True
             elif part in TARGETS_TEST:
@@ -150,7 +150,7 @@ def Get_template(args_list):
         is_debug = "is_debug = true"
     else:
         is_debug = "is_debug = false"
-    all_part = (is_debug + "\n" + target_os + "\n" + target_cpu + "\n") 
+    all_part = (is_debug + "\n" + target_os + "\n" + target_cpu + "\n")
     return [global_arch, global_mode, global_target, global_clean,
             USER_ARGS_TEMPLATE % (all_part), global_test, test_target]
 
@@ -177,12 +177,12 @@ def Build(template):
     if not os.path.exists("args.gn"):
         args_gn = os.path.join(path, "args.gn")
         _write(args_gn, template_part, "w")
-        _write(build_log, "\nbuild_time:{}\nbuild_target:{}\n".format(Get_time().replace(microsecond=0), target), "a")   
+        _write(build_log, "\nbuild_time:{}\nbuild_target:{}\n".format(Get_time().replace(microsecond=0), target), "a")
     if not os.path.exists("build.ninja"):
         build_ninja = os.path.join(path, "build.ninja")
         code = _callWithOutput("./prebuilts/build-tools/linux-x86/bin/gn gen %s" % path, build_log)
         if code != 0:
-            return code  
+            return code
         else:
             print("=== gn success! ===")
     pass_code = _callWithOutput("./prebuilts/build-tools/linux-x86/bin/ninja -C %s %s" %
@@ -198,7 +198,7 @@ def RunTest(template):
     test = template[5]
     test_target = template[6]
     path = GetPath(arch, mode)
-    test_dir = arch + "." + mode 
+    test_dir = arch + "." + mode
     test_log = os.path.join(path, "test.log")
     if ("test262" == test):
         print("=== come to test262 ===")
@@ -238,11 +238,11 @@ def RunTest(template):
         return pass_code
     else:
         print("=== nothing to test ===")
-        return 0 
+        return 0
 
 
 def Main(argvs):
-    pass_code = 0 
+    pass_code = 0
     template = Get_args(argvs)
     pass_code += Build(template)
     if pass_code == 0:
@@ -251,7 +251,7 @@ def Main(argvs):
         print('\033[32mDone!\033[0m', '\033[32m{} compilation finished successfully.\033[0m'.format(argvs[0]))
     else:
         print('\033[31mError!\033[0m', '\033[31m{} compilation finished with errors.\033[0m'.format(argvs[0]))
-    return pass_code  
+    return pass_code
 
 
 if __name__ == "__main__":
