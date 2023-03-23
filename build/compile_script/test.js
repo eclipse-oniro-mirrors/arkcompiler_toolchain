@@ -13,6 +13,6 @@
  * limitations under the License.
  */
 
-"use strict";
-print("Hello World !");
+'use strict';
+print('Hello World !');
 
