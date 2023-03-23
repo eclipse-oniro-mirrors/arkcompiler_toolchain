@@ -16,14 +16,11 @@
 #
 
 from __future__ import print_function
+from datetime import datetime
 import errno
 import os
 import subprocess
 import sys
-
-USE_PTY = "linux" in sys.platform
-if USE_PTY:
-    import pty
 
 ARCHES = ["x64", "arm", "arm64"]
 DEFAULT_ARCH = "x64"
@@ -79,28 +76,23 @@ def GetPath(arch, mode):
 
 def _callWithOutput(cmd, file):
     print("# %s" % cmd)
-    host, guest = pty.openpty()
-    h = subprocess.Popen(cmd, shell=True, stdin=guest, stdout=guest, stderr=guest)
-    os.close(guest)
-    output_data = []
+    host = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE)
     while True:
         try:
-            build_data = os.read(host, 512).decode('utf-8')  
+            build_data = host.stdout.readline().decode('utf-8')
+            sys.stdout.flush()
+            print(build_data)
+            _write(file,build_data, "a")
         except OSError as error:
             if error == errno.ENOENT:
                 print("no such file")
             elif error == errno.EPERM:
                 print("permission denied")
             break 
-        else:
-            if not build_data: 
-                break
-            print(build_data)
-            sys.stdout.flush()
-            _write(file, build_data, "a")
-    os.close(host)
-    h.wait()
-    return h.returncode
+        if not build_data:
+            break 
+    host.wait()
+    return host.returncode
 
 
 def Get_args(argvs):
@@ -117,6 +109,8 @@ def Get_args(argvs):
         args_out = args_list
     return Get_template(args_out)
 
+def Get_time():
+    return datetime.now()
 
 def Get_template(args_list):
     global_arch = DEFAULT_ARCH
@@ -183,9 +177,10 @@ def Build(template):
     if not os.path.exists("args.gn"):
         args_gn = os.path.join(path, "args.gn")
         _write(args_gn, template_part, "w")
+        _write(build_log, "\nbuild_time:{}\nbuild_target:{}\n".format(Get_time().replace(microsecond=0), target), "a")   
     if not os.path.exists("build.ninja"):
         build_ninja = os.path.join(path, "build.ninja")
-        code = _call("./prebuilts/build-tools/linux-x86/bin/gn gen %s" % path)
+        code = _callWithOutput("./prebuilts/build-tools/linux-x86/bin/gn gen %s" % path, build_log)
         if code != 0:
             return code  
         else:
@@ -204,7 +199,7 @@ def RunTest(template):
     test_target = template[6]
     path = GetPath(arch, mode)
     test_dir = arch + "." + mode 
-    build_log = os.path.join(path, "build.log")
+    test_log = os.path.join(path, "test.log")
     if ("test262" == test):
         print("=== come to test262 ===")
         target = "all"
@@ -222,7 +217,8 @@ def RunTest(template):
         test262_code = '''cd arkcompiler/ets_frontend
         python3 test262/run_test262.py --es2021 %s --timeout 180000 --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib --ark-tool=../../out/%s/clang_x64/arkcompiler/ets_runtime/ark_js_vm --ark-frontend-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/es2abc --merge-abc-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/merge_abc --ark-frontend=es2panda
         ''' % (target, test_dir, test_dir, test_dir)
-        pass_code =_callWithOutput(test262_code,build_log)
+        _write(test_log, "\ntest_time:{}\ntest_target:{}\n".format(Get_time().replace(microsecond=0), target), "a")
+        pass_code =_callWithOutput(test262_code, test_log)
         if pass_code == 0:
             print("=== test262 success! ===")
         else:
@@ -233,7 +229,8 @@ def RunTest(template):
         if test_target == '':
             test_target = "unittest_packages"
         unittest_code = "./prebuilts/build-tools/linux-x86/bin/ninja -C %s %s" % (path, test_target)
-        pass_code =_callWithOutput(unittest_code,build_log)
+        _write(test_log, "\ntest_time:{}\ntest_target:{}\n".format(Get_time().replace(microsecond=0), test_target), "a")
+        pass_code =_callWithOutput(unittest_code, test_log)
         if pass_code == 0:
             print("=== unittest success! ===")
         else:
