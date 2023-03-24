@@ -13,7 +13,7 @@
 
 declare_args() {
   ark_standalone_build = true
-  use_musl = false
+  use_musl = true
   build_root = "//arkcompiler/toolchain/build"
 }
 
