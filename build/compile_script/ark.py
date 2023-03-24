@@ -74,7 +74,7 @@ def GetPath(arch, mode):
     return os.path.join(OUTDIR, subdir)
 
 
-def _callWithOutput(cmd, file):
+def call_with_output(cmd, file):
     print("# %s" % cmd)
     host = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE)
     while True:
@@ -180,12 +180,12 @@ def Build(template):
         _write(build_log, "\nbuild_time:{}\nbuild_target:{}\n".format(Get_time().replace(microsecond=0), target), "a")
     if not os.path.exists("build.ninja"):
         build_ninja = os.path.join(path, "build.ninja")
-        code = _callWithOutput("./prebuilts/build-tools/linux-x86/bin/gn gen %s" % path, build_log)
+        code = call_with_output("./prebuilts/build-tools/linux-x86/bin/gn gen %s" % path, build_log)
         if code != 0:
             return code
         else:
             print("=== gn success! ===")
-    pass_code = _callWithOutput("./prebuilts/build-tools/linux-x86/bin/ninja -C %s %s" %
+    pass_code = call_with_output("./prebuilts/build-tools/linux-x86/bin/ninja -C %s %s" %
                                           (path, target), build_log)
     if pass_code == 0:
         print("=== ninja success! ===")
@@ -218,7 +218,7 @@ def RunTest(template):
         python3 test262/run_test262.py --es2021 %s --timeout 180000 --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib --ark-tool=../../out/%s/clang_x64/arkcompiler/ets_runtime/ark_js_vm --ark-frontend-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/es2abc --merge-abc-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/merge_abc --ark-frontend=es2panda
         ''' % (target, test_dir, test_dir, test_dir)
         _write(test_log, "\ntest_time:{}\ntest_target:{}\n".format(Get_time().replace(microsecond=0), target), "a")
-        pass_code =_callWithOutput(test262_code, test_log)
+        pass_code = call_with_output(test262_code, test_log)
         if pass_code == 0:
             print("=== test262 success! ===")
         else:
@@ -230,7 +230,7 @@ def RunTest(template):
             test_target = "unittest_packages"
         unittest_code = "./prebuilts/build-tools/linux-x86/bin/ninja -C %s %s" % (path, test_target)
         _write(test_log, "\ntest_time:{}\ntest_target:{}\n".format(Get_time().replace(microsecond=0), test_target), "a")
-        pass_code =_callWithOutput(unittest_code, test_log)
+        pass_code = call_with_output(unittest_code, test_log)
         if pass_code == 0:
             print("=== unittest success! ===")
         else:

@@ -59,9 +59,9 @@ std::pair<std::size_t, bool> PtBase64::Decode(void *output, const char *input, s
         base64Chars[i++] = v;
 
         if (i == ENCODED_GROUP_BYTES) {
-            *dest++ = (base64Chars[0] << 2) | ((base64Chars[1] & 0x30) >> 4);
-            *dest++ = (base64Chars[1] << 4) | ((base64Chars[2] & 0x3c) >> 2);
-            *dest++ = (base64Chars[2] << 6) | base64Chars[3];
+            *dest++ = (base64Chars[0] << 2) | ((base64Chars[1] & 0x30) >> 4); // 2: shift 2bits, 4: shift 4bits
+            *dest++ = (base64Chars[1] << 4) | ((base64Chars[2] & 0x3c) >> 2); // 2: shift 2bits, 4: shift 4bits
+            *dest++ = (base64Chars[2] << 6) | base64Chars[3]; // 6: shift 6bits
             i = 0;
         }
         src++;
@@ -69,9 +69,9 @@ std::pair<std::size_t, bool> PtBase64::Decode(void *output, const char *input, s
 
     if (i != 0) {
         char tmp[UNENCODED_GROUP_BYTES];
-        tmp[0] = (base64Chars[0] << 2) | ((base64Chars[1] & 0x30) >> 4);
-        tmp[1] = (base64Chars[1] << 4) | ((base64Chars[2] & 0x3c) >> 2);
-        tmp[2] = (base64Chars[2] << 6) | base64Chars[3];
+        tmp[0] = (base64Chars[0] << 2) | ((base64Chars[1] & 0x30) >> 4); // 2: shift 2bits, 4: shift 4bits
+        tmp[1] = (base64Chars[1] << 4) | ((base64Chars[2] & 0x3c) >> 2); // 2: shift 2bits, 4: shift 4bits
+        tmp[2] = (base64Chars[2] << 6) | base64Chars[3]; // 6: shift 6bits
         for (int8_t j = 0; j < i - 1; j++) {
             *dest++ = tmp[j];
         }
@@ -80,6 +80,7 @@ std::pair<std::size_t, bool> PtBase64::Decode(void *output, const char *input, s
     len++; // get the remaining length and also avoid underflow
     size_t decodedLen = dest - static_cast<char *>(output);
     bool decodedDone = false;
+    // 0: decodedDone, 1: =, 2: ==
     if (len == 0 || (len == 1 && *src == '=') || (len == 2 && *src == '=' && *(src + 1) == '=')) {
         decodedDone = true;
     }
@@ -96,9 +97,9 @@ size_t PtBase64::Encode(char *output, const void *input, std::size_t len)
     auto *src = static_cast<const unsigned char *>(input);
     char *dest = output;
     for (auto n = len / UNENCODED_GROUP_BYTES; n--;) {
-        *dest++ = ENCODE_TABLE[src[0] >> 2];
-        *dest++ = ENCODE_TABLE[((src[0] & 0x03) << 4) | (src[1] >> 4)];
-        *dest++ = ENCODE_TABLE[((src[1] & 0x0f) << 2) | (src[2] >> 6)];
+        *dest++ = ENCODE_TABLE[src[0] >> 2]; // 2: shift 2bits
+        *dest++ = ENCODE_TABLE[((src[0] & 0x03) << 4) | (src[1] >> 4)]; // 4: shift 4bits
+        *dest++ = ENCODE_TABLE[((src[1] & 0x0f) << 2) | (src[2] >> 6)]; // 2: shift 2bits, 6: shift 6bits
         *dest++ = ENCODE_TABLE[src[2] & 0x3f];
 
         src += UNENCODED_GROUP_BYTES;
@@ -109,13 +110,13 @@ size_t PtBase64::Encode(char *output, const void *input, std::size_t len)
     switch (paddingCnt) {
         case 1:
             *dest++ = ENCODE_TABLE[src[0] >> 2];
-            *dest++ = ENCODE_TABLE[((src[0] & 0x03) << 4) | (src[1] >> 4)];
-            *dest++ = ENCODE_TABLE[((src[1] & 0x0f) << 2)];
+            *dest++ = ENCODE_TABLE[((src[0] & 0x03) << 4) | (src[1] >> 4)]; // 4: shift 4bits
+            *dest++ = ENCODE_TABLE[((src[1] & 0x0f) << 2)]; // 2: shift 2bits
             *dest++ = '=';
             break;
         case 2:
-            *dest++ = ENCODE_TABLE[src[0] >> 2];
-            *dest++ = ENCODE_TABLE[((src[0] & 0x03) << 4)];
+            *dest++ = ENCODE_TABLE[src[0] >> 2]; // 2: shift 2bits
+            *dest++ = ENCODE_TABLE[((src[0] & 0x03) << 4)]; // 4: shift 4bits
             *dest++ = '=';
             *dest++ = '=';
             break;
