@@ -31,7 +31,7 @@ public:
 
     static std::size_t constexpr EncodedSize(std::size_t n)
     {
-        return ENCODED_GROUP_BYTES * ((n + 2) / UNENCODED_GROUP_BYTES);
+        return ENCODED_GROUP_BYTES * ((n + 2) / UNENCODED_GROUP_BYTES); // 2: byte filling
     }
 
     static std::pair<std::size_t, bool> Decode(void *output, const char *input, std::size_t len);
