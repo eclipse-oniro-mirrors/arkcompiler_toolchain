@@ -22,11 +22,11 @@ import os
 import subprocess
 import sys
 
-ARCHES = ["x64", "arm", "arm64"]
-DEFAULT_ARCH = "x64"
+OS_ARCHS = ["x64", "arm", "arm64", "linux_x64", "ohos_arm", "ohos_arm64", "mingw_x86_64"]
+DEFAULT_OS_CPU = "x64"
 MODES = ["release", "debug"]
 DEFAULT_MODE = "release"
-TARGETS = ["ets_runtime", "ets_frontend", "runtime_core", "default", "mingw_packages"]
+TARGETS = ["ets_runtime", "ets_frontend", "runtime_core", "default"]
 DEFAULT_TARGET = "default"
 TARGETS_TEST = ["test262", "unittest"]
 
@@ -39,12 +39,12 @@ OUTDIR = "out"
 
 
 Help_message = """
-format: python ark.py [arch].[mode] [options] [test] [test target]
+format: python ark.py [os_arch].[mode] [options] [test] [test target]
 for example , python ark.py x64.release
-[arch] only support "x64" now
+[os_arch] only support "x64", "linux_x64" and "mingw_x86_64" now
 [mode] can be one of ["release", "debug"]
 [options]
-  target: support [ets_runtime | ets_frontend | runtime_core | default | mingw_packages] now
+  target: support [ets_runtime | ets_frontend | runtime_core | default] now
   clean: clear your data in output dir
 [test] only support run on x64 platform now
   test262: run test262
@@ -69,8 +69,8 @@ def _write(filename, content, mode):
         f.write(content)
 
 
-def GetPath(arch, mode):
-    subdir = "%s.%s" % (arch, mode)
+def GetPath(os_arch, mode):
+    subdir = "%s.%s" % (os_arch, mode)
     return os.path.join(OUTDIR, subdir)
 
 
@@ -113,7 +113,7 @@ def Get_time():
     return datetime.now()
 
 def Get_template(args_list):
-    global_arch = DEFAULT_ARCH
+    global_os_arch = DEFAULT_OS_CPU
     global_mode = DEFAULT_MODE
     global_target = DEFAULT_TARGET
     global_test = ''
@@ -125,8 +125,8 @@ def Get_template(args_list):
             test_target = args
         parameter = args.split(".")
         for part in parameter:
-            if part in ARCHES:
-                global_arch = part
+            if part in OS_ARCHS:
+                global_os_arch = part
             elif part in MODES:
                 global_mode = part
             elif part in TARGETS:
@@ -138,30 +138,42 @@ def Get_template(args_list):
             elif global_test == '':
                 print("\033[34mIllegal command line option: %s\033[0m" % part)
                 PrintHelp()
-# Determine the target CPU
-    target_cpu = "target_cpu = \"%s\"" % global_arch
-# Determine the target CPU
-    if global_arch in ("arm", "arm64"):
-        ark_os = "ohos"
-    else:
+# Determine the target OS and target CPU
+    ark_os = ""
+    ark_cpu = ""
+    if global_os_arch in ("x64", "linux_x64"):
         ark_os = "linux"
+        ark_cpu = "x64"
+    elif global_os_arch in ("arm", "ohos_arm"):
+        ark_os = "ohos"
+        ark_cpu = "arm"
+    elif global_os_arch in ("arm64", "ohos_arm64"):
+        ark_os = "ohos"
+        ark_cpu = "arm64"
+    elif global_os_arch in ("mingw_x86_64"):
+        ark_os = "mingw"
+        ark_cpu = "x64"
+    else:
+        print("\033[34mUnsupported os_arch: %s\033[0m" % global_os_arch)
+        PrintHelp()
     target_os = "target_os = \"%s\"" % ark_os
+    target_cpu = "target_cpu = \"%s\"" % ark_cpu
     if global_mode == "debug":
         is_debug = "is_debug = true"
     else:
         is_debug = "is_debug = false"
     all_part = (is_debug + "\n" + target_os + "\n" + target_cpu + "\n")
-    return [global_arch, global_mode, global_target, global_clean,
+    return [global_os_arch, global_mode, global_target, global_clean,
             USER_ARGS_TEMPLATE % (all_part), global_test, test_target]
 
 
 def Build(template):
-    arch = template[0]
+    os_arch = template[0]
     mode = template[1]
     target = template[2]
     clean = template[3]
     template_part = template[4]
-    path = GetPath(arch, mode)
+    path = GetPath(os_arch, mode)
     if not os.path.exists(path):
         print("# mkdir -p %s" % path)
         os.makedirs(path)
@@ -193,12 +205,12 @@ def Build(template):
 
 
 def RunTest(template):
-    arch = template[0]
+    os_arch = template[0]
     mode = template[1]
     test = template[5]
     test_target = template[6]
-    path = GetPath(arch, mode)
-    test_dir = arch + "." + mode
+    path = GetPath(os_arch, mode)
+    test_dir = os_arch + "." + mode
     test_log = os.path.join(path, "test.log")
     if ("test262" == test):
         print("=== come to test262 ===")
