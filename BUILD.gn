@@ -123,9 +123,9 @@ group("ark_toolchain_packages") {
   if (host_os != "mac") {
     deps += [
       "$ark_third_party_root/libuv:uv",
-      "$toolchain_root/connect_server:connectserver_debugger",
-      "//arkcompiler/toolchain/inspector:ark_debugger",
-      "//arkcompiler/toolchain/tooling:libark_ecma_debugger",
+      "$toolchain_root/inspector:ark_debugger",
+      "$toolchain_root/inspector:connectserver_debugger",
+      "$toolchain_root/tooling:libark_ecma_debugger",
     ]
   }
 }

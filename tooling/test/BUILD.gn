@@ -12,8 +12,8 @@
 # limitations under the License.
 
 import("//arkcompiler/ets_frontend/es2panda/es2abc_config.gni")
-import("//arkcompiler/ets_runtime/js_runtime_config.gni")
 import("//arkcompiler/toolchain/test/test_helper.gni")
+import("../../toolchain.gni")
 
 module_output_path = "arkcompiler/toolchain"
 
@@ -117,12 +117,9 @@ ohos_shared_library("jsdebugtest") {
     "//arkcompiler/toolchain/tooling:libark_ecma_debugger_test",
   ]
 
-  if (is_ohos && is_standard_system) {
-    if (enable_hilog) {
-      defines += [ "ENABLE_HILOG" ]
-      external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
-    }
-  }
+  # hiviewdfx libraries
+  external_deps = hiviewdfx_ext_deps
+  deps += hiviewdfx_deps
 
   install_enable = false
   output_extension = "so"
@@ -151,6 +148,10 @@ host_unittest_action("DebuggerEntryTest") {
     "//arkcompiler/ets_runtime:libark_jsruntime_test",
     "//arkcompiler/toolchain/tooling:libark_ecma_debugger_test",
   ]
+
+  # hiviewdfx libraries
+  external_deps = hiviewdfx_ext_deps
+  deps += hiviewdfx_deps
 }
 
 host_unittest_action("DebuggerTest") {
@@ -190,6 +191,10 @@ host_unittest_action("DebuggerTest") {
     "//arkcompiler/toolchain/tooling:libark_ecma_debugger_test",
     sdk_libc_secshared_dep,
   ]
+
+  # hiviewdfx libraries
+  external_deps = hiviewdfx_ext_deps
+  deps += hiviewdfx_deps
 }
 
 group("debugger_entry_resource") {

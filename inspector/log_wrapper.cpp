@@ -50,6 +50,7 @@ void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
     va_end(args);
 }
 #else
+#ifndef ENABLE_HILOG
 constexpr int32_t MAX_BUFFER_SIZE = 100;
 void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
 {
@@ -94,5 +95,6 @@ void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
 
     printf("%s %s\r\n", timeBuf, buf);
 }
+#endif
 #endif
 } // namespace OHOS::ArkCompiler::Toolchain
