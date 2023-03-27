@@ -121,6 +121,10 @@ std::unique_ptr<RemoteObject> RemoteObject::FromTagged(const EcmaVM *ecmaVm, Loc
     if (tagged->IsSymbol()) {
         return std::make_unique<SymbolRemoteObject>(ecmaVm, Local<SymbolRef>(tagged));
     }
+    // proxy must be placed in front of all object types
+    if (tagged->IsProxy()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Proxy, ObjectSubType::Proxy);
+    }
     if (tagged->IsGeneratorFunction()) {
         return std::make_unique<GeneratorFunctionRemoteObject>(ecmaVm, Local<SymbolRef>(tagged));
     }
@@ -150,9 +154,6 @@ std::unique_ptr<RemoteObject> RemoteObject::FromTagged(const EcmaVM *ecmaVm, Loc
     }
     if (tagged->IsError()) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Error, ObjectSubType::Error);
-    }
-    if (tagged->IsProxy()) {
-        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Proxy, ObjectSubType::Proxy);
     }
     if (tagged->IsPromise()) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Promise, ObjectSubType::Promise);
@@ -273,6 +274,10 @@ ObjectRemoteObject::ObjectRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> t
 
 std::string ObjectRemoteObject::DescriptionForObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged)
 {
+    // proxy must be placed in front of all object types
+    if (tagged->IsProxy()) {
+        return RemoteObject::ProxyDescription;
+    }
     if (tagged->IsArray(ecmaVm)) {
         return DescriptionForArray(ecmaVm, Local<ArrayRef>(tagged));
     }
@@ -296,9 +301,6 @@ std::string ObjectRemoteObject::DescriptionForObject(const EcmaVM *ecmaVm, Local
     }
     if (tagged->IsError()) {
         return DescriptionForError(ecmaVm, tagged);
-    }
-    if (tagged->IsProxy()) {
-        return RemoteObject::ProxyDescription;
     }
     if (tagged->IsPromise()) {
         return RemoteObject::PromiseDescription;
