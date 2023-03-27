@@ -29,26 +29,10 @@ print()
 
 group("default") {
   if (host_os != "mac") {
-    deps = [ ":linux_packages" ]
-  }
-}
-
-group("linux_packages") {
-  if (host_os != "mac") {
     deps = [
-      ":ets_frontend($host_toolchain)",
-      ":ets_runtime($host_toolchain)",
-      ":runtime_core($host_toolchain)",
-    ]
-  }
-}
-
-group("mingw_packages") {
-  if (host_os != "mac") {
-    deps = [
-      ":ets_frontend_win($build_root/toolchain/mingw:mingw_x86_64)",
-      ":ets_runtime($build_root/toolchain/mingw:mingw_x86_64)",
-      ":runtime_core($build_root/toolchain/mingw:mingw_x86_64)",
+      ":ets_frontend",
+      ":ets_runtime",
+      ":runtime_core",
     ]
   }
 }
@@ -62,35 +46,37 @@ group("unittest_packages") {
 
 group("ets_runtime") {
   deps = [
-    "$js_root:libark_jsruntime",
-    "$js_root/ecmascript/compiler:ark_aot_compiler",
-    "$js_root/ecmascript/js_vm:ark_js_vm",
-    "$js_root/ecmascript/quick_fix:quick_fix",
+    "$js_root:libark_jsruntime($target_toolchain)",
+    "$js_root/ecmascript/compiler:ark_aot_compiler($target_toolchain)",
+    "$js_root/ecmascript/js_vm:ark_js_vm($target_toolchain)",
+    "$js_root/ecmascript/quick_fix:quick_fix($target_toolchain)",
   ]
   if (is_linux) {
-    deps += [ "$js_root/ecmascript/compiler:ark_stub_compiler" ]
+    deps +=
+        [ "$js_root/ecmascript/compiler:ark_stub_compiler($target_toolchain)" ]
   }
 }
 
 group("ets_frontend") {
-  deps = [
-    "//arkcompiler/ets_frontend/es2panda:es2panda",
-    "//arkcompiler/ets_frontend/merge_abc:merge_abc",
-    "//arkcompiler/ets_frontend/ts2panda:ts2abc_build",
-  ]
-}
-
-group("ets_frontend_win") {
-  deps = [
-    "//arkcompiler/ets_frontend/es2panda:es2panda",
-    "//arkcompiler/ets_frontend/merge_abc:merge_abc",
-    "//arkcompiler/ets_frontend/ts2panda:ark_ts2abc_build_win",
-  ]
+  deps = []
+  if (target_os == "linux" && target_cpu == "x64") {
+    deps += [
+      "$ets_frontend_root/es2panda:es2panda($target_toolchain)",
+      "$ets_frontend_root/merge_abc:merge_abc($target_toolchain)",
+      "$ets_frontend_root/ts2panda:ark_ts2abc_build($target_toolchain)",
+    ]
+  } else if (target_os == "mingw" && target_cpu == "x64") {
+    deps += [
+      "$ets_frontend_root/es2panda:es2panda($target_toolchain)",
+      "$ets_frontend_root/merge_abc:merge_abc($target_toolchain)",
+      "$ets_frontend_root/ts2panda:ark_ts2abc_build_win($target_toolchain)",
+    ]
+  }
 }
 
 group("runtime_core") {
   deps = [
-    "//arkcompiler/runtime_core/assembler:ark_asm",
-    "//arkcompiler/runtime_core/disassembler:ark_disasm",
+    "$ark_root/assembler:ark_asm($target_toolchain)",
+    "$ark_root/disassembler:ark_disasm($target_toolchain)",
   ]
 }
