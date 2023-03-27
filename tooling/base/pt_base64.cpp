@@ -105,7 +105,7 @@ size_t PtBase64::Encode(char *output, const void *input, std::size_t len)
         src += UNENCODED_GROUP_BYTES;
     }
 
-    int8_t remainder = len % UNENCODED_GROUP_BYTES;
+    int8_t remainder = static_cast<int8_t>(len % UNENCODED_GROUP_BYTES);
     int8_t paddingCnt = (UNENCODED_GROUP_BYTES - remainder) % UNENCODED_GROUP_BYTES;
     switch (paddingCnt) {
         case 1:
