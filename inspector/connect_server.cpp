@@ -29,13 +29,17 @@ void ConnectServer::RunServer()
     int appPid = getpid();
     std::string pidStr = std::to_string(appPid);
     std::string sockName = pidStr + bundleName_;
+#if defined(OHOS_PLATFORM)
     if (!webSocket_->InitUnixWebSocket(sockName)) {
         return;
     }
+#endif
     while (!terminateExecution_) {
+#if defined(OHOS_PLATFORM)
         if (!webSocket_->ConnectUnixWebSocket()) {
             return;
         }
+#endif
         while (webSocket_->IsConnected()) {
             std::string message = webSocket_->Decode();
             if (!message.empty()) {
