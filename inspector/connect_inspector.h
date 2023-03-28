@@ -68,7 +68,7 @@ public:
     LayoutInspectorInfo layoutInspectorInfo_;
     std::unique_ptr<ConnectServer> connectServer_;
     std::atomic<bool> waitingForDebugger_ = true;
-    std::queue<const std::string> ideMsgQueue_;
+    std::queue<std::string> ideMsgQueue_;
     std::function<void(bool)> setSwitchStatus_;
     std::function<void(int32_t)> createLayoutInfo_;
     int32_t instanceId_ = -1;

@@ -62,17 +62,11 @@ config("ark_platform_config") {
   }
 }
 
-ohos_shared_library("ark_debugger") {
+ohos_source_set("ark_debugger_static") {
   deps = [ sdk_libc_secshared_dep ]
   configs = [ sdk_libc_secshared_config ]
   defines = []
 
-  if (is_mingw) {
-    ldflags = [
-      "-lwsock32",
-      "-lws2_32",
-    ]
-  }
   if (is_mingw || is_mac) {
     cflags = [ "-std=c++17" ]
   }
@@ -81,6 +75,10 @@ ohos_shared_library("ark_debugger") {
     "$toolchain_root",
     "$toolchain_root/websocket",
   ]
+
+  if (target_os == "android") {
+    aosp_deps = [ "shared_library:liblog" ]
+  }
 
   deps += [ "$toolchain_root/websocket:websocket" ]
   sources = [
@@ -94,11 +92,18 @@ ohos_shared_library("ark_debugger") {
   external_deps = hiviewdfx_ext_deps
   deps += hiviewdfx_deps
 
-  if (target_os == "android") {
-    aosp_deps = [ "shared_library:liblog" ]
-  }
-
   configs += [ ":ark_platform_config" ]
+}
+
+ohos_shared_library("ark_debugger") {
+  deps = [ ":ark_debugger_static" ]
+
+  if (is_mingw) {
+    ldflags = [
+      "-lwsock32",
+      "-lws2_32",
+    ]
+  }
 
   part_name = "toolchain"
   subsystem_name = "arkcompiler"
