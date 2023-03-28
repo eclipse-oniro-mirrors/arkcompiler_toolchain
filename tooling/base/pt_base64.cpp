@@ -61,7 +61,7 @@ std::pair<std::size_t, bool> PtBase64::Decode(void *output, const char *input, s
         if (i == ENCODED_GROUP_BYTES) {
             *dest++ = (base64Chars[0] << 2) | ((base64Chars[1] & 0x30) >> 4); // 2: shift 2bits, 4: shift 4bits
             *dest++ = (base64Chars[1] << 4) | ((base64Chars[2] & 0x3c) >> 2); // 2: shift 2bits, 4: shift 4bits
-            *dest++ = (base64Chars[2] << 6) | base64Chars[3]; // 6: shift 6bits
+            *dest++ = (base64Chars[2] << 6) | base64Chars[3]; // 6: shift 6bits, 2: the second char, 3: the third char
             i = 0;
         }
         src++;
@@ -71,7 +71,7 @@ std::pair<std::size_t, bool> PtBase64::Decode(void *output, const char *input, s
         char tmp[UNENCODED_GROUP_BYTES];
         tmp[0] = (base64Chars[0] << 2) | ((base64Chars[1] & 0x30) >> 4); // 2: shift 2bits, 4: shift 4bits
         tmp[1] = (base64Chars[1] << 4) | ((base64Chars[2] & 0x3c) >> 2); // 2: shift 2bits, 4: shift 4bits
-        tmp[2] = (base64Chars[2] << 6) | base64Chars[3]; // 6: shift 6bits
+        tmp[2] = (base64Chars[2] << 6) | base64Chars[3]; // 6: shift 6bits, 2: the second char, 3: the third char
         for (int8_t j = 0; j < i - 1; j++) {
             *dest++ = tmp[j];
         }
@@ -100,7 +100,7 @@ size_t PtBase64::Encode(char *output, const void *input, std::size_t len)
         *dest++ = ENCODE_TABLE[src[0] >> 2]; // 2: shift 2bits
         *dest++ = ENCODE_TABLE[((src[0] & 0x03) << 4) | (src[1] >> 4)]; // 4: shift 4bits
         *dest++ = ENCODE_TABLE[((src[1] & 0x0f) << 2) | (src[2] >> 6)]; // 2: shift 2bits, 6: shift 6bits
-        *dest++ = ENCODE_TABLE[src[2] & 0x3f];
+        *dest++ = ENCODE_TABLE[src[2] & 0x3f]; // 2: the second char
 
         src += UNENCODED_GROUP_BYTES;
     }
@@ -114,7 +114,7 @@ size_t PtBase64::Encode(char *output, const void *input, std::size_t len)
             *dest++ = ENCODE_TABLE[((src[1] & 0x0f) << 2)]; // 2: shift 2bits
             *dest++ = '=';
             break;
-        case 2:
+        case 2: // 2: "=="
             *dest++ = ENCODE_TABLE[src[0] >> 2]; // 2: shift 2bits
             *dest++ = ENCODE_TABLE[((src[0] & 0x03) << 4)]; // 4: shift 4bits
             *dest++ = '=';
