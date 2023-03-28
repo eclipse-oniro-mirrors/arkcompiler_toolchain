@@ -45,12 +45,12 @@ OUTDIR = "out"
 Help_message = """
 formot like python ark.py [arch].[mode] [options] [test]
 for example , python ark.py x64.release
-[arch] can be one of ["x64", "arm", "arm64"]  
+[arch] can be one of ["x64", "arm", "arm64"]
 [mode] can be one of ["release", "debug"]
 [options]
   target: only support [ets_runtime | ets_frontend | default | all] now
   clean: clear your data in output dir
-[test] 
+[test]
   test262: run test262
 """
 
@@ -75,22 +75,22 @@ def GetPath(arch, mode):
     return os.path.join(OUTDIR, subdir)
 
 
-def _CallWithOutput(cmd, file):
+def call_with_output(cmd, file):
     host, guest = pty.openpty()
     h = subprocess.Popen(cmd, shell=True, stdin=guest, stdout=guest, stderr=guest)
     os.close(guest)
     output_data = []
     while True:
         try:
-            build_data = os.read(host, 512).decode('utf-8')  
+            build_data = os.read(host, 512).decode('utf-8')
         except OSError as error:
             if error == errno.ENOENT:
                 print("no such file")
             elif error == errno.EPERM:
                 print("permission denied")
-            break 
+            break
         else:
-            if not build_data: 
+            if not build_data:
                 break
             print(build_data)
             sys.stdout.flush()
@@ -125,11 +125,11 @@ def Get_templete(args_list):
         parameter = args.split(".")
         for part in parameter:
             if part in ARCHES:
-                global_arche = part 
+                global_arche = part
             elif part in MODES:
-                global_mode = part 
+                global_mode = part
             elif part in TARGETS:
-                global_target = part 
+                global_target = part
             elif part == "clean":
                 global_clean = True
             elif part in TARGETS_TEST:
@@ -151,7 +151,7 @@ def Get_templete(args_list):
         is_debug = "is_debug = true"
     else:
         is_debug = "is_debug = false"
-    all_part = (is_debug + "\n" + target_os + "\n" + target_cpu) 
+    all_part = (is_debug + "\n" + target_os + "\n" + target_cpu)
     return [global_arche, global_mode, global_target, global_clean, USER_ARGS_TEMPLATE % (all_part), global_test]
 
 
@@ -182,8 +182,8 @@ def Build(template):
         code = _Call("./prebuilts/build-tools/linux-x86/bin/gn gen %s" % path)
         print("=== gn success! ===")
         if code != 0:
-            return code  
-    pass_code = _CallWithOutput("./prebuilts/build-tools/linux-x86/bin/ninja -C %s %s" %
+            return code
+    pass_code = call_with_output("./prebuilts/build-tools/linux-x86/bin/ninja -C %s %s" %
                                           (path, target), build_log)
     if pass_code == 0:
         print("=== ninja success! ===")
@@ -194,7 +194,7 @@ def RunTest(template):
     arch = template[0]
     mode = template[1]
     test = template[5]
-    test_dir = arch + "." + mode 
+    test_dir = arch + "." + mode
     test262_code = '''cd ets_frontend
     python3 test262/run_test262.py --es2021 all --timeout 180000 --libs-dir ../out/%s:../prebuilts/clang/ohos/linux-x86_64/llvm/lib --ark-tool=../out/%s/arkcompiler/ets_runtime/ark_js_vm --ark-frontend-binary=../out/%s/clang_x64/arkcompiler/ets_frontend/es2abc --merge-abc-binary=../out/%s/clang_x64/arkcompiler/ets_frontend/merge_abc --ark-frontend=es2panda
     ''' % (test_dir, test_dir, test_dir, test_dir)
@@ -203,11 +203,11 @@ def RunTest(template):
         return _Call(test262_code)
     else:
         print("=== nothing to test ===")
-        return 0 
+        return 0
 
 
 def Main(argvs):
-    pass_code = 0 
+    pass_code = 0
     templete = Get_args(argvs)
     pass_code += Build(templete)
     if pass_code == 0:
@@ -216,7 +216,7 @@ def Main(argvs):
         print('\033[32mDone!\033[0m', '\033[32mARK_{} compilation finished successfully.\033[0m'.format(argvs[0].split('.')[0]))
     else:
         print('\033[31mError!\033[0m', '\033[31mARK_{} compilation finished with errors.\033[0m'.format(argvs[0].split('.')[0]))
-    return pass_code  
+    return pass_code
 
 
 if __name__ == "__main__":
