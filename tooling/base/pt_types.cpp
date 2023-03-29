@@ -1993,6 +1993,44 @@ std::unique_ptr<PtJson> SamplingHeapProfile::ToJson() const
     return result;
 }
 
+std::unique_ptr<SamplingHeapProfile> SamplingHeapProfile::FromSamplingInfo(
+    std::unique_ptr<SamplingInfo> samplingInfo)
+{
+    std::unique_ptr<SamplingHeapProfile> profile = std::make_unique<SamplingHeapProfile>();
+    auto node = TransferHead(&(samplingInfo->head_));
+    profile->head_ = std::move(node);
+    CVector<struct Sample> &samples = samplingInfo->samples_;
+    for (const auto &sample : samples) {
+        std::unique_ptr<SamplingHeapProfileSample> sampleTemp = std::make_unique<SamplingHeapProfileSample>();
+        sampleTemp->SetSize(sample.size_);
+        sampleTemp->SetNodeId(sample.nodeId_);
+        sampleTemp->SetOrdinal(sample.ordinal_);
+        profile->samples_.push_back(std::move(sampleTemp));
+    }
+    return profile;
+}
+
+std::unique_ptr<SamplingHeapProfileNode> SamplingHeapProfile::TransferHead(AllocationNode *allocationNode)
+{
+    std::unique_ptr<SamplingHeapProfileNode> node = std::make_unique<SamplingHeapProfileNode>();
+    node->SetSelfSize(allocationNode->selfSize_);
+    node->SetId(allocationNode->id_);
+    std::unique_ptr<RuntimeCallFrame> callFrame = std::make_unique<RuntimeCallFrame>();
+    callFrame->SetFunctionName(allocationNode->callFrameInfo_.functionName_);
+    callFrame->SetScriptId(std::to_string(allocationNode->callFrameInfo_.scriptId_));
+    callFrame->SetUrl(allocationNode->callFrameInfo_.url_);
+    callFrame->SetLineNumber(allocationNode->callFrameInfo_.lineNumber_);
+    callFrame->SetColumnNumber(allocationNode->callFrameInfo_.columnNumber_);
+    node->SetCallFrame(std::move(callFrame));
+    std::vector<std::unique_ptr<SamplingHeapProfileNode>> profileNode;
+    for (auto &it : allocationNode->children_) {
+        auto proNode = TransferHead(&it);
+        profileNode.push_back(std::move(proNode));
+    }
+    node->SetChildren(std::move(profileNode));
+    return node;
+}
+
 std::unique_ptr<PositionTickInfo> PositionTickInfo::Create(const PtJson &params)
 {
     std::string error;

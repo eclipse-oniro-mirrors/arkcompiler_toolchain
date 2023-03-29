@@ -23,6 +23,7 @@
 
 #include "ecmascript/debugger/debugger_api.h"
 #include "ecmascript/dfx/cpu_profiler/samples_record.h"
+#include "ecmascript/dfx/hprof/heap_sampling.h"
 #include "libpandabase/macros.h"
 
 namespace panda::ecmascript::tooling {
@@ -1719,6 +1720,8 @@ public:
     SamplingHeapProfile() = default;
     ~SamplingHeapProfile() override = default;
     static std::unique_ptr<SamplingHeapProfile> Create(const PtJson &params);
+    static std::unique_ptr<SamplingHeapProfile> FromSamplingInfo(std::unique_ptr<SamplingInfo> samplingInfo);
+    static std::unique_ptr<SamplingHeapProfileNode> TransferHead(AllocationNode *allocationNode);
     std::unique_ptr<PtJson> ToJson() const override;
 
     SamplingHeapProfile &SetHead(std::unique_ptr<SamplingHeapProfileNode> head)

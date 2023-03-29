@@ -289,12 +289,32 @@ DispatchResponse HeapProfilerImpl::GetObjectByHeapObjectId([[maybe_unused]] cons
 
 DispatchResponse HeapProfilerImpl::GetSamplingProfile([[maybe_unused]] std::unique_ptr<SamplingHeapProfile> *profile)
 {
-    return DispatchResponse::Fail("GetSamplingProfile not support now");
+    auto samplingInfo = panda::DFXJSNApi::GetAllocationProfile(vm_);
+    if (samplingInfo == nullptr) {
+        return DispatchResponse::Fail("GetSamplingProfile fail");
+    }
+    *profile = SamplingHeapProfile::FromSamplingInfo(std::move(samplingInfo));
+    return DispatchResponse::Ok();
 }
 
 DispatchResponse HeapProfilerImpl::StartSampling([[maybe_unused]] const StartSamplingParams &params)
 {
-    return DispatchResponse::Fail("StartSampling not support now");
+    uint64_t samplingInterval = static_cast<uint64_t>(params.GetSamplingInterval());
+    bool result = panda::DFXJSNApi::StartSampling(vm_, samplingInterval);
+    if (result) {
+        return DispatchResponse::Ok();
+    }
+    return DispatchResponse::Fail("StartSampling fail");
+}
+
+DispatchResponse HeapProfilerImpl::StopSampling([[maybe_unused]] std::unique_ptr<SamplingHeapProfile> *profile)
+{
+    DispatchResponse samplingProfile = GetSamplingProfile(profile);
+    if (samplingProfile.IsOk()) {
+        panda::DFXJSNApi::StopSampling(vm_);
+        return DispatchResponse::Ok();
+    }
+    return DispatchResponse::Fail("StopSampling fail");
 }
 
 DispatchResponse HeapProfilerImpl::StartTrackingHeapObjects(const StartTrackingHeapObjectsParams &params)
@@ -327,11 +347,6 @@ void HeapProfilerImpl::HeapTrackingCallback(uv_timer_t* handle)
         return;
     }
     panda::DFXJSNApi::UpdateHeapTracking(heapProfilerImpl->vm_, &(heapProfilerImpl->stream_));
-}
-
-DispatchResponse HeapProfilerImpl::StopSampling([[maybe_unused]] std::unique_ptr<SamplingHeapProfile> *profile)
-{
-    return DispatchResponse::Fail("StopSampling not support now.");
 }
 
 DispatchResponse HeapProfilerImpl::StopTrackingHeapObjects(const StopTrackingHeapObjectsParams &params)

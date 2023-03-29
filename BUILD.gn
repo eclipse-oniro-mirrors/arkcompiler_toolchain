@@ -88,6 +88,7 @@ config("ark_toolchain_public_config") {
     defines += [
       "ECMASCRIPT_SUPPORT_CPUPROFILER",
       "ECMASCRIPT_SUPPORT_HEAPPROFILER",
+      "ECMASCRIPT_SUPPORT_HEAPSAMPLING",
       "ECMASCRIPT_SUPPORT_SNAPSHOT",
       "ECMASCRIPT_SUPPORT_DEBUGGER",
     ]
