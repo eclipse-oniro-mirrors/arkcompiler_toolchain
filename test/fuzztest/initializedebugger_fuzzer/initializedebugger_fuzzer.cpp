@@ -29,9 +29,8 @@ namespace OHOS {
         option.SetEnableAsmInterpreter(false);
         auto vm = JSNApi::CreateJSVM(option);
         using OnResponseType = const std::function<void(const void *, const std::string &)>;
-        OnResponseType onResponse = [data, size](const void *d, [[maybe_unused]] const std::string &s) -> void {
-            d = data + size;
-        };
+        OnResponseType onResponse = [data, size]([[maybe_unused]] const void *d,
+            [[maybe_unused]] const std::string &s) -> void { d = data + size; };
         InitializeDebugger(vm, onResponse);
         UninitializeDebugger(vm);
         JSNApi::DestroyJSVM(vm);
