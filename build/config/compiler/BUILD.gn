@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,7 +14,6 @@
 import("$build_root/config/compiler/compiler.gni")
 import("$build_root/config/sanitizers/sanitizers.gni")
 import("$build_root/toolchain/toolchain.gni")
-
 if (current_cpu == "arm" || current_cpu == "arm64") {
   import("$build_root/config/arm.gni")
 }
@@ -24,39 +23,11 @@ declare_args() {
 }
 
 config("rtti") {
-  if (is_win) {
-    cflags_cc = [ "/GR" ]
-  } else {
-    cflags_cc = [ "-frtti" ]
-  }
+  cflags_cc = [ "-frtti" ]
 }
 
 config("exceptions") {
-  if (is_win) {
-    # Enables exceptions in the STL.
-    if (!use_custom_libcxx) {
-      defines = [ "_HAS_EXCEPTIONS=1" ]
-    }
-    cflags_cc = [ "/EHsc" ]
-  } else {
-    cflags_cc = [ "-fexceptions" ]
-  }
-}
-
-config("no_exceptions") {
-  if (is_win) {
-    # Disables exceptions in the STL.
-    # libc++ uses the __has_feature macro to control whether to use exceptions,
-    # so defining this macro is unnecessary. Defining _HAS_EXCEPTIONS to 0 also
-    # breaks libc++ because it depends on MSVC headers that only provide certain
-    # declarations if _HAS_EXCEPTIONS is 1. Those MSVC headers do not use
-    # exceptions, despite being conditional on _HAS_EXCEPTIONS.
-    if (!use_custom_libcxx) {
-      defines = [ "_HAS_EXCEPTIONS=0" ]
-    }
-  } else {
-    cflags_cc = [ "-fno-exceptions" ]
-  }
+  cflags_cc = [ "-fexceptions" ]
 }
 
 # default_warnings ------------------------------------------------------------
@@ -67,35 +38,6 @@ config("default_warnings") {
   cflags = []
   cflags_cc = []
   ldflags = []
-
-  if (is_win) {
-    cflags += [
-      "/W3",  # Warning level 3.
-      "/wd4800",  # Disable warning when forcing value to bool.
-      "/wd4267",  # size_t to int.
-      "/wd4996",  # Deprecated function warning.
-    ]
-    defines += [
-      "_CRT_NONSTDC_NO_WARNINGS",
-      "_CRT_NONSTDC_NO_DEPRECATE",
-    ]
-  } else {
-    if (treat_warnings_as_errors && is_clang) {
-      cflags += [ "-Werror" ]
-      ldflags = [ "-Werror" ]
-    }
-    if (is_clang) {
-      cflags += [ "-Wall" ]
-    }
-  }
-
-  if (is_clang) {
-    cflags += [
-      # Lots of third-party libraries have unused variables. Instead of
-      # suppressing them individually, we just blanket suppress them here.
-      "-Wno-unused-variable",
-    ]
-  }
 
   # Suppress warnings about ABI changes on ARM (Clang doesn't give this
   # warning).
@@ -117,14 +59,6 @@ config("default_warnings") {
     # in -Wall but gcc does, and it gives false positives.
     cflags += [ "-Wno-maybe-uninitialized" ]
     cflags += [ "-Wno-deprecated-declarations" ]
-
-    # GCC assumes 'this' is never nullptr and optimizes away code
-    # like "if (this == nullptr) ...": [1].  However, some
-    # code relies on these types of null pointer checks [2], so
-    # disable this optimization.
-    # [1] https://gcc.gnu.org/gcc-6/porting_to.html#this-cannot-be-null
-    # [2] https://crbug.com/784492#c13
-    cflags += [ "-fno-delete-null-pointer-checks" ]
 
     # -Wcomment gives too many false positives in the case a
     # backslash ended comment line is followed by a new line of
@@ -163,10 +97,7 @@ config("default_warnings") {
     cflags += [
       # This warns on using ints as initializers for floats in
       # initializer lists (e.g. |int a = f(); CGSize s = { a, a };|),
-      # which happens in several places in code. Not sure if
-      # this is worth fixing.
       "-Wno-c++11-narrowing",
-      "-Wno-c++17-extensions",
       "-Wno-unneeded-internal-declaration",
     ]
     if (use_musl) {
@@ -210,11 +141,12 @@ config("compiler") {
   if (is_mingw) {
     configs += [ "$build_root/config/mingw:compiler" ]
     cflags += [ "-fno-stack-protector" ]
+  } else if (is_ohos) {
+    configs += [ "$build_root/config/ohos:compiler" ]
   }
   if (is_linux || is_ohos) {
     cflags += [ "-fPIC" ]
     ldflags += [ "-fPIC" ]
-
     if (!is_clang) {
       # Use pipes for communicating between sub-processes. Faster.
       # (This flag doesn't do anything with Clang.)
@@ -259,6 +191,10 @@ config("compiler") {
     ":compiler_cpu_abi",
     ":compiler_codegen",
   ]
+
+  if (is_ohos && is_clang && (target_cpu == "arm" || target_cpu == "arm64")) {
+    ldflags += [ "-Wl,--pack-dyn-relocs=android+relr" ]
+  }
 
   if (is_linux) {
     cflags += [ "-pthread" ]
@@ -319,31 +255,27 @@ config("compiler_cpu_abi") {
       ]
       ldflags += [ "-m64" ]
     } else if (current_cpu == "x86") {
-      cflags += [ "-m32" ]
+      cflags += [
+        "-m32",
+        "-msse2",
+        "-mfpmath=sse",
+        "-mmmx",
+      ]
       ldflags += [ "-m32" ]
-      if (!is_nacl) {
-        cflags += [
-          "-msse2",
-          "-mfpmath=sse",
-          "-mmmx",
-        ]
-      }
     } else if (current_cpu == "arm") {
-      if (is_clang && !is_ohos && !is_nacl) {
+      if (is_clang && !is_ohos) {
         cflags += [ "--target=arm-linux-gnueabihf" ]
         ldflags += [ "--target=arm-linux-gnueabihf" ]
       }
-      if (!is_nacl) {
-        cflags += [
-          "-march=$arm_arch",
-          "-mfloat-abi=$arm_float_abi",
-        ]
-      }
+      cflags += [
+        "-march=$arm_arch",
+        "-mfloat-abi=$arm_float_abi",
+      ]
       if (arm_tune != "") {
         cflags += [ "-mtune=$arm_tune" ]
       }
     } else if (current_cpu == "arm64") {
-      if (is_clang && !is_ohos && !is_nacl) {
+      if (is_clang && !is_ohos) {
         cflags += [ "--target=aarch64-linux-gnu" ]
         ldflags += [ "--target=aarch64-linux-gnu" ]
       }
@@ -386,4 +318,46 @@ config("compiler_codegen") {
   }
 
   asmflags = cflags
+}
+
+config("default_include_dirs") {
+  include_dirs = [
+    "//",
+    root_gen_dir,
+  ]
+}
+
+config("runtime_config") {
+  configs = []
+  if (is_posix) {
+    configs += [ "$build_root/config/posix:runtime_config" ]
+  }
+
+  # System-specific flags. If your compiler flags apply to one of the
+  # categories here, add it to the associated file to keep this shared config
+  # smaller.
+  if (is_ohos) {
+    configs += [ "$build_root/config/ohos:runtime_config" ]
+  }
+}
+
+config("ark_code") {
+  cflags = [ "-Wall" ]
+  if (treat_warnings_as_errors) {
+    cflags += [ "-Werror" ]
+    ldflags = [ "-Werror" ]
+  }
+  if (is_clang) {
+    # Enable extra warnings for ark_code when we control the compiler.
+    cflags += [ "-Wextra" ]
+  }
+
+  if (is_clang) {
+    cflags += [
+      "-Wimplicit-fallthrough",
+      "-Wthread-safety",
+    ]
+  }
+
+  configs = [ ":default_warnings" ]
 }
