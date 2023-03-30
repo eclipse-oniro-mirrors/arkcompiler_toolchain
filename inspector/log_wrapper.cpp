@@ -86,7 +86,7 @@ void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
             break;
     }
 
-    if (snprintf_s(timeBuf, sizeof(timeBuf), sizeof(timeBuf) - 1, "%s",
+    if (snprintf_s(timeBuf, sizeof(timeBuf), sizeof(timeBuf) - 1, "%s %s %d",
             domainTag, levelTag.c_str(), std::this_thread::get_id()) < 0) {
         return;
     }

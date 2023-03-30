@@ -70,7 +70,7 @@ def _Write(filename, content, mode):
         f.write(content)
 
 
-def GetPath(arch, mode):
+def get_path(arch, mode):
     subdir = "%s.%s" % (arch, mode)
     return os.path.join(OUTDIR, subdir)
 
@@ -100,7 +100,7 @@ def call_with_output(cmd, file):
     return h.returncode
 
 
-def Get_args(argvs):
+def get_args(argvs):
     args_list = argvs
     args_len = len(args_list)
     if args_len < 1:
@@ -112,10 +112,10 @@ def Get_args(argvs):
             PrintHelp()
     else :
         args_out = args_list
-    return Get_templete(args_out)
+    return get_templete(args_out)
 
 
-def Get_templete(args_list):
+def get_templete(args_list):
     global_arche = DEFAULT_ARCHES
     global_mode = DEFAULT_MODES
     global_target = DEFAULT_TARGETS
@@ -161,7 +161,7 @@ def Build(template):
     target = template[2]
     clean = template[3]
     template_part = template[4]
-    path = GetPath(arch, mode)
+    path = get_path(arch, mode)
     if not os.path.exists(path):
         print("# mkdir -p %s" % path)
         os.makedirs(path)
@@ -190,7 +190,7 @@ def Build(template):
     return pass_code
 
 
-def RunTest(template):
+def run_test(template):
     arch = template[0]
     mode = template[1]
     test = template[5]
@@ -208,10 +208,10 @@ def RunTest(template):
 
 def Main(argvs):
     pass_code = 0
-    templete = Get_args(argvs)
+    templete = get_args(argvs)
     pass_code += Build(templete)
     if pass_code == 0:
-        pass_code += RunTest(templete)
+        pass_code += run_test(templete)
     if pass_code == 0:
         print('\033[32mDone!\033[0m', '\033[32mARK_{} compilation finished successfully.\033[0m'.format(argvs[0].split('.')[0]))
     else:
