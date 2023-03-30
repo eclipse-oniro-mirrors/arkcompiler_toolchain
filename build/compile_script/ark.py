@@ -69,20 +69,20 @@ def _write(filename, content, mode):
         f.write(content)
 
 
-def GetPath(os_arch, mode):
+def get_path(os_arch, mode):
     subdir = "%s.%s" % (os_arch, mode)
     return os.path.join(OUTDIR, subdir)
 
 
 def call_with_output(cmd, file):
     print("# %s" % cmd)
-    host = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE)
+    host = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     while True:
         try:
             build_data = host.stdout.readline().decode('utf-8')
             sys.stdout.flush()
             print(build_data)
-            _write(file,build_data, "a")
+            _write(file, build_data, "a")
         except OSError as error:
             if error == errno.ENOENT:
                 print("no such file")
@@ -95,7 +95,7 @@ def call_with_output(cmd, file):
     return host.returncode
 
 
-def Get_args(argvs):
+def get_args(argvs):
     args_list = argvs
     args_len = len(args_list)
     if args_len < 1:
@@ -107,12 +107,14 @@ def Get_args(argvs):
             PrintHelp()
     else :
         args_out = args_list
-    return Get_template(args_out)
+    return get_template(args_out)
 
-def Get_time():
+
+def get_time():
     return datetime.now()
 
-def Get_template(args_list):
+
+def get_template(args_list):
     global_os_arch = DEFAULT_OS_CPU
     global_mode = DEFAULT_MODE
     global_target = DEFAULT_TARGET
@@ -173,7 +175,7 @@ def Build(template):
     target = template[2]
     clean = template[3]
     template_part = template[4]
-    path = GetPath(os_arch, mode)
+    path = get_path(os_arch, mode)
     if not os.path.exists(path):
         print("# mkdir -p %s" % path)
         os.makedirs(path)
@@ -189,7 +191,7 @@ def Build(template):
     if not os.path.exists("args.gn"):
         args_gn = os.path.join(path, "args.gn")
         _write(args_gn, template_part, "w")
-        _write(build_log, "\nbuild_time:{}\nbuild_target:{}\n".format(Get_time().replace(microsecond=0), os_arch), "a")
+        _write(build_log, "\nbuild_time:{}\nbuild_target:{}\n".format(get_time().replace(microsecond=0), os_arch), "a")
     if not os.path.exists("build.ninja"):
         build_ninja = os.path.join(path, "build.ninja")
         code = call_with_output("./prebuilts/build-tools/linux-x86/bin/gn gen %s" % path, build_log)
@@ -204,12 +206,12 @@ def Build(template):
     return pass_code
 
 
-def RunTest(template):
+def run_test(template):
     os_arch = template[0]
     mode = template[1]
     test = template[5]
     test_target = template[6]
-    path = GetPath(os_arch, mode)
+    path = get_path(os_arch, mode)
     test_dir = os_arch + "." + mode
     test_log = os.path.join(path, "test.log")
     if ("test262" == test):
@@ -229,7 +231,7 @@ def RunTest(template):
         test262_code = '''cd arkcompiler/ets_frontend
         python3 test262/run_test262.py --es2021 %s --timeout 180000 --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib --ark-tool=../../out/%s/clang_x64/arkcompiler/ets_runtime/ark_js_vm --ark-frontend-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/es2abc --merge-abc-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/merge_abc --ark-frontend=es2panda
         ''' % (target, test_dir, test_dir, test_dir)
-        _write(test_log, "\ntest_time:{}\ntest_target:{}\n".format(Get_time().replace(microsecond=0), target), "a")
+        _write(test_log, "\ntest_time:{}\ntest_target:{}\n".format(get_time().replace(microsecond=0), target), "a")
         pass_code = call_with_output(test262_code, test_log)
         if pass_code == 0:
             print("=== test262 success! ===")
@@ -241,7 +243,7 @@ def RunTest(template):
         if test_target == '':
             test_target = "unittest_packages"
         unittest_code = "./prebuilts/build-tools/linux-x86/bin/ninja -C %s %s" % (path, test_target)
-        _write(test_log, "\ntest_time:{}\ntest_target:{}\n".format(Get_time().replace(microsecond=0), test_target), "a")
+        _write(test_log, "\ntest_time:{}\ntest_target:{}\n".format(get_time().replace(microsecond=0), test_target), "a")
         pass_code = call_with_output(unittest_code, test_log)
         if pass_code == 0:
             print("=== unittest success! ===")
@@ -255,10 +257,10 @@ def RunTest(template):
 
 def Main(argvs):
     pass_code = 0
-    template = Get_args(argvs)
+    template = get_args(argvs)
     pass_code += Build(template)
     if pass_code == 0:
-        pass_code += RunTest(template)
+        pass_code += run_test(template)
     if pass_code == 0:
         print('\033[32mDone!\033[0m', '\033[32m{} compilation finished successfully.\033[0m'.format(argvs[0]))
     else:
