@@ -19,7 +19,11 @@
 #include <functional>
 #include <string>
 
-#include "ecmascript/common.h"
+#ifndef WINDOWS_PLATFORM
+#define TOOLCHAIN_EXPORT __attribute__((visibility ("default")))
+#else
+#define TOOLCHAIN_EXPORT __declspec(dllexport)
+#endif
 
 namespace panda::ecmascript {
 class EcmaVM;
@@ -32,18 +36,18 @@ extern "C" {
 #endif
 #endif /* End of #ifdef __cplusplus */
 
-PUBLIC_API void InitializeDebugger(::panda::ecmascript::EcmaVM *vm,
-                                   const std::function<void(const void *, const std::string &)> &onResponse);
+TOOLCHAIN_EXPORT void InitializeDebugger(::panda::ecmascript::EcmaVM *vm,
+    const std::function<void(const void *, const std::string &)> &onResponse);
 
-PUBLIC_API void UninitializeDebugger(::panda::ecmascript::EcmaVM *vm);
+TOOLCHAIN_EXPORT void UninitializeDebugger(::panda::ecmascript::EcmaVM *vm);
 
-PUBLIC_API void OnMessage(const ::panda::ecmascript::EcmaVM *vm, std::string &&message);
+TOOLCHAIN_EXPORT void OnMessage(const ::panda::ecmascript::EcmaVM *vm, std::string &&message);
 
-PUBLIC_API void WaitForDebugger(const ::panda::ecmascript::EcmaVM *vm);
+TOOLCHAIN_EXPORT void WaitForDebugger(const ::panda::ecmascript::EcmaVM *vm);
 
-PUBLIC_API void ProcessMessage(const ::panda::ecmascript::EcmaVM *vm);
+TOOLCHAIN_EXPORT void ProcessMessage(const ::panda::ecmascript::EcmaVM *vm);
 
-PUBLIC_API int32_t GetDispatchStatus(const ::panda::ecmascript::EcmaVM *vm);
+TOOLCHAIN_EXPORT int32_t GetDispatchStatus(const ::panda::ecmascript::EcmaVM *vm);
 
 #ifdef __cplusplus
 #if __cplusplus

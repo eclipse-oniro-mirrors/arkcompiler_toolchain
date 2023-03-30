@@ -63,6 +63,8 @@ static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {
 };
 #endif
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #if !defined(ENABLE_HILOG)
 #define LOGF(fmt, ...) StdLog::PrintLog(LogLevel::FATAL, fmt, ##__VA_ARGS__)
 #define LOGE(fmt, ...) StdLog::PrintLog(LogLevel::ERROR, fmt, ##__VA_ARGS__)
@@ -76,5 +78,6 @@ static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {
 #define LOGI(fmt, ...) OHOS::HiviewDFX::HiLog::Info(LABEL, fmt, ##__VA_ARGS__)
 #define LOGD(fmt, ...) OHOS::HiviewDFX::HiLog::Debug(LABEL, fmt, ##__VA_ARGS__)
 #endif
+#pragma clang diagnostic pop
 } // namespace OHOS::ArkCompiler::Toolchain
 #endif // ARKCOMPILER_TOOLCHAIN_INSPECTOR_LOG_WRAPPER_H
