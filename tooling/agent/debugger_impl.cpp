@@ -72,7 +72,7 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
 
     const JSPandaFile *jsPandaFile = nullptr;
     JSPandaFileManager::GetInstance()->EnumerateJSPandaFiles([&jsPandaFile, &fileName](
-        const panda::ecmascript::JSPandaFile *pandaFile) {
+        const JSPandaFile *pandaFile) {
         if (fileName == pandaFile->GetJSPandaFileDesc().c_str()) {
             jsPandaFile = pandaFile;
             return false;

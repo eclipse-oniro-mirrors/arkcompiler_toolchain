@@ -136,9 +136,9 @@ public:
             LOG_DEBUGGER(FATAL) << "cannot find: " << pandaFile;
             UNREACHABLE();
         }
-        TestExtractor extractor(jsPandaFile);
-        auto [id, offset] = extractor.GetBreakpointAddress({jsPandaFile, line, column});
-        return JSPtLocation(jsPandaFile, id, offset, sourceFile);
+        TestExtractor extractor(jsPandaFile.get());
+        auto [id, offset] = extractor.GetBreakpointAddress({jsPandaFile.get(), line, column});
+        return JSPtLocation(jsPandaFile.get(), id, offset, sourceFile);
     }
 
     static SourceLocation GetSourceLocation(const JSPtLocation &location, const char *pandaFile)
@@ -148,8 +148,8 @@ public:
             LOG_DEBUGGER(FATAL) << "cannot find: " << pandaFile;
             UNREACHABLE();
         }
-        TestExtractor extractor(jsPandaFile);
-        return extractor.GetSourceLocation(jsPandaFile, location.GetMethodId(), location.GetBytecodeOffset());
+        TestExtractor extractor(jsPandaFile.get());
+        return extractor.GetSourceLocation(jsPandaFile.get(), location.GetMethodId(), location.GetBytecodeOffset());
     }
 
     static bool SuspendUntilContinue(DebugEvent reason, JSPtLocation location = JSPtLocation(nullptr, EntityId(0), 0))
