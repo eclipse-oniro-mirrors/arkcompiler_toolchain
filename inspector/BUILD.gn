@@ -77,7 +77,7 @@ ohos_source_set("ark_debugger_static") {
   ]
 
   if (target_os == "android") {
-    aosp_deps = [ "shared_library:liblog" ]
+    libs = [ "log" ]
   }
 
   deps += [ "$toolchain_root/websocket:websocket" ]
