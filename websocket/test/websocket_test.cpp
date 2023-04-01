@@ -404,7 +404,7 @@ HWTEST_F(WebSocketTest, ConnectWebSocketTest, testing::ext::TestSize.Level0)
         EXPECT_EQ(strcmp(recv.c_str(), QUIT), 0);
         serverSocket.Close();
         // sleep ensure that linux os core can really release resource
-        sleep(5);
+        sleep(3);
     } else {
         std::cerr << "ConnectWebSocketTest::fork failed, error = "
                   << errno << ", desc = " << strerror(errno) << std::endl;
