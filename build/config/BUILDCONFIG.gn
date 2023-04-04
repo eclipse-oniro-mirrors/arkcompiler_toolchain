@@ -153,6 +153,7 @@ default_compiler_configs = [
   "$build_root/config/compiler:runtime_config",
   "$build_root/config:default_libs",
   "$build_root/config/compiler:ark_code",
+  "$build_root/config/compiler:no_rtti",
 ]
 
 default_static_library_configs = default_compiler_configs

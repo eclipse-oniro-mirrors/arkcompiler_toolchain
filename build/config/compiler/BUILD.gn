@@ -26,6 +26,12 @@ config("rtti") {
   cflags_cc = [ "-frtti" ]
 }
 
+config("no_rtti") {
+  # Some sanitizer configs may require RTTI to be left enabled globally
+  cflags_cc = [ "-fno-rtti" ]
+  cflags_objcc = cflags_cc
+}
+
 config("exceptions") {
   cflags_cc = [ "-fexceptions" ]
 }
