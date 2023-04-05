@@ -140,13 +140,13 @@ def get_templete(args_list):
                 sys.exit(1)
 # Determine the target CPU
     if global_arche in ("arm", "arm64"):
-        ARK_cpu = global_arche
+        ark_cpu = global_arche
     else:
-        ARK_cpu = "x64"
-    target_cpu = "target_cpu = \"%s\"" % ARK_cpu
+        ark_cpu = "x64"
+    target_cpu = "target_cpu = \"%s\"" % ark_cpu
 # Determine the target OS,Only ohos for now
-    ARK_os = "ohos"
-    target_os = "target_os = \"%s\"" % ARK_os
+    ark_os = "ohos"
+    target_os = "target_os = \"%s\"" % ark_os
     if global_mode == "debug":
         is_debug = "is_debug = true"
     else:
