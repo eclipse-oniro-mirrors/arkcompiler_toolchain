@@ -160,6 +160,16 @@ private:
     bool IsSkipLine(const JSPtLocation &location);
     bool CheckPauseOnException();
 
+    const std::string &GetRecordName(const std::string &url)
+    {
+        static const char *recordName = "";
+        auto iter = recordNames_.find(url);
+        if (iter != recordNames_.end()) {
+            return iter->second;
+        }
+        return recordName;
+    }
+
     class Frontend {
     public:
         explicit Frontend(ProtocolChannel *channel) : channel_(channel) {}
@@ -188,6 +198,7 @@ private:
     JSDebugger *jsDebugger_ {nullptr};
 
     std::unordered_map<std::string, DebugInfoExtractor *> extractors_ {};
+    std::unordered_map<std::string, std::string> recordNames_ {};
     std::unordered_map<ScriptId, std::unique_ptr<PtScript>> scripts_ {};
     PauseOnExceptionsState pauseOnException_ {PauseOnExceptionsState::NONE};
     bool pauseOnNextByteCode_ {false};

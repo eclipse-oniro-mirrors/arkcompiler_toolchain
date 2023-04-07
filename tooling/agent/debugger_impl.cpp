@@ -90,7 +90,8 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
         return false;
     }
 
-    auto mainMethodIndex = panda_file::File::EntityId(jsPandaFile->GetMainMethodIndex(entryPoint.data()));
+    const char *recordName = entryPoint.data();
+    auto mainMethodIndex = panda_file::File::EntityId(jsPandaFile->GetMainMethodIndex(recordName));
     const std::string &source = extractor->GetSourceCode(mainMethodIndex);
     const std::string &url = extractor->GetSourceFile(mainMethodIndex);
     if (source.empty()) {
@@ -99,6 +100,7 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
     }
     // store here for performance of get extractor from url
     extractors_[url] = extractor;
+    recordNames_[url] = recordName;
 
     auto scriptFunc = [this](PtScript *script) -> bool {
         frontend_.ScriptParsed(vm_, *script);
@@ -656,7 +658,7 @@ DispatchResponse DebuggerImpl::GetPossibleBreakpoints(const GetPossibleBreakpoin
     auto callbackFunc = [](const JSPtLocation &) -> bool {
         return true;
     };
-    if (extractor->MatchWithLocation(callbackFunc, line, column, url)) {
+    if (extractor->MatchWithLocation(callbackFunc, line, column, url, GetRecordName(url))) {
         std::unique_ptr<BreakLocation> location = std::make_unique<BreakLocation>();
         location->SetScriptId(start->GetScriptId()).SetLine(line).SetColumn(column);
         locations->emplace_back(std::move(location));
@@ -709,7 +711,8 @@ DispatchResponse DebuggerImpl::RemoveBreakpoint(const RemoveBreakpointParams &pa
         LOG_DEBUGGER(INFO) << "remove breakpoint location: " << location.ToString();
         return DebuggerApi::RemoveBreakpoint(jsDebugger_, location);
     };
-    if (!extractor->MatchWithLocation(callbackFunc, metaData.line_, metaData.column_, metaData.url_)) {
+    if (!extractor->MatchWithLocation(callbackFunc, metaData.line_, metaData.column_,
+        metaData.url_, GetRecordName(metaData.url_))) {
         LOG_DEBUGGER(ERROR) << "failed to remove breakpoint location number: "
             << metaData.line_ << ":" << metaData.column_;
         return DispatchResponse::Fail("Breakpoint not found.");
@@ -779,7 +782,7 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
         }
         return DebuggerApi::SetBreakpoint(jsDebugger_, location, condFuncRef);
     };
-    if (!extractor->MatchWithLocation(callbackFunc, lineNumber, columnNumber, url)) {
+    if (!extractor->MatchWithLocation(callbackFunc, lineNumber, columnNumber, url, GetRecordName(url))) {
         LOG_DEBUGGER(ERROR) << "failed to set breakpoint location number: " << lineNumber << ":" << columnNumber;
         return DispatchResponse::Fail("Breakpoint not found.");
     }
