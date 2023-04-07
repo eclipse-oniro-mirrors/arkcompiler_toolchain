@@ -14,6 +14,7 @@
  */
 
 #include "connect_server.h"
+#include <mutex>
 #include <shared_mutex>
 #include <unistd.h>
 #include "log_wrapper.h"
