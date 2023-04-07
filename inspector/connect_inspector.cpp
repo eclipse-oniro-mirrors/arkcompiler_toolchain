@@ -14,6 +14,7 @@
  */
 
 #include "connect_inspector.h"
+#include <mutex>
 #include <shared_mutex>
 #include "log_wrapper.h"
 
