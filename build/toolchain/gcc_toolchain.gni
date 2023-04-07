@@ -444,6 +444,7 @@ template("clang_toolchain") {
                            [
                              "strip",
                              "use_unstripped_as_runtime_outputs",
+                             "executable_extension",
                            ])
 
     toolchain_args = {

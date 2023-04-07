@@ -138,8 +138,7 @@ def get_template(args_list):
             elif part in TARGETS_TEST:
                 global_test = part
             elif global_test == '':
-                print("\033[34mIllegal command line option: %s\033[0m" % part)
-                PrintHelp()
+                global_target = part
 # Determine the target OS and target CPU
     ark_os = ""
     ark_cpu = ""
@@ -154,7 +153,7 @@ def get_template(args_list):
         ark_cpu = "arm64"
     elif global_os_arch in ("mingw_x86_64"):
         ark_os = "mingw"
-        ark_cpu = "x64"
+        ark_cpu = "x86_64"
     else:
         print("\033[34mUnsupported os_arch: %s\033[0m" % global_os_arch)
         PrintHelp()
@@ -229,7 +228,7 @@ def run_test(template):
                 return -1
 
         test262_code = '''cd arkcompiler/ets_frontend
-        python3 test262/run_test262.py --es2021 %s --timeout 180000 --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib --ark-tool=../../out/%s/clang_x64/arkcompiler/ets_runtime/ark_js_vm --ark-frontend-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/es2abc --merge-abc-binary=../../out/%s/clang_x64/arkcompiler/ets_frontend/merge_abc --ark-frontend=es2panda
+        python3 test262/run_test262.py --es2021 %s --timeout 180000 --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib --ark-tool=../../out/%s/arkcompiler/ets_runtime/ark_js_vm --ark-frontend-binary=../../out/%s/arkcompiler/ets_frontend/es2abc --merge-abc-binary=../../out/%s/arkcompiler/ets_frontend/merge_abc --ark-frontend=es2panda
         ''' % (target, test_dir, test_dir, test_dir)
         _write(test_log, "\ntest_time:{}\ntest_target:{}\n".format(get_time().replace(microsecond=0), target), "a")
         pass_code = call_with_output(test262_code, test_log)
