@@ -121,6 +121,7 @@ template("musl_libs") {
       "-pipe",
       "-g",
       "-D_XOPEN_SOURCE=700",
+      "-Wno-int-conversion",
     ]
 
     if (!is_asan) {
@@ -594,10 +595,9 @@ template("musl_libs") {
     cflags = [
       "-mllvm",
       "-instcombine-max-iterations=0",
-      "-fstack-protector-strong",
-      "-fPIC",
       "-O3",
       "-ffp-contract=fast",
+      "-Wno-int-conversion",
     ]
 
     deps = porting_deps

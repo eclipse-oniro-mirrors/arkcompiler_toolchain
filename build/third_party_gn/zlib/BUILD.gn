@@ -19,6 +19,7 @@ config("zlib_config") {
     "-Werror",
     "-Wno-strict-prototypes",
     "-Wimplicit-function-declaration",
+    "-Wno-unused-but-set-variable",
   ]
 }
 
