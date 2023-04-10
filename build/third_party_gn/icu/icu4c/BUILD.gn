@@ -517,6 +517,7 @@ ohos_shared_library("shared_icuuc") {
     "-Wno-error=unneeded-internal-declaration",
     "-std=c++11",
     "-Wno-ignored-attributes",
+    "-Wno-unused-but-set-variable",
   ]
   ldflags = [
     "-shared",
@@ -566,6 +567,7 @@ ohos_shared_library("shared_icui18n") {
     "-Wwrite-strings",
     "-std=c++11",
     "-Wno-ignored-attributes",
+    "-Wno-unused-but-set-variable",
   ]
   ldflags = [
     "-shared",
@@ -618,6 +620,7 @@ ohos_static_library("static_icuuc") {
     "-fvisibility-inlines-hidden",
     "-Wno-unused-function",
     "-Wno-ignored-attributes",
+    "-Wno-unused-but-set-variable",
   ]
 
   cflags = [
@@ -669,6 +672,7 @@ ohos_static_library("static_icui18n") {
     "-fvisibility-inlines-hidden",
     "-fno-exceptions",
     "-Wno-ignored-attributes",
+    "-Wno-unused-but-set-variable",
   ]
 
   if (is_mingw) {
