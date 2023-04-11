@@ -47,17 +47,15 @@ group("unittest_packages") {
 
 group("ets_runtime") {
   deps = [
-    "$js_root:libark_jsruntime($target_toolchain)",
-    "$js_root/ecmascript/js_vm:ark_js_vm($target_toolchain)",
-    "$js_root/ecmascript/quick_fix:quick_fix($target_toolchain)",
+    "$js_root:libark_jsruntime",
+    "$js_root/ecmascript/js_vm:ark_js_vm",
+    "$js_root/ecmascript/quick_fix:quick_fix",
   ]
-  if (is_linux || (current_cpu == "arm64" && is_ohos)) {
-    deps +=
-        [ "$js_root/ecmascript/compiler:ark_aot_compiler($target_toolchain)" ]
-  }
-  if (is_linux) {
-    deps +=
-        [ "$js_root/ecmascript/compiler:ark_stub_compiler($target_toolchain)" ]
+  if (target_os == "linux" || (target_cpu == "arm64" && target_os == "ohos")) {
+    deps += [
+      "$js_root/ecmascript/compiler:ark_aot_compiler",
+      "$js_root/ecmascript/compiler:ark_stub_compiler",
+    ]
   }
 }
 
@@ -65,23 +63,23 @@ group("ets_frontend") {
   deps = []
   if (target_os == "linux" && target_cpu == "x64") {
     deps += [
-      "$ets_frontend_root/es2panda:es2panda($target_toolchain)",
-      "$ets_frontend_root/merge_abc:merge_abc($target_toolchain)",
-      "$ets_frontend_root/ts2panda:ark_ts2abc_build($target_toolchain)",
+      "$ets_frontend_root/es2panda:es2panda",
+      "$ets_frontend_root/merge_abc:merge_abc",
+      "$ets_frontend_root/ts2panda:ark_ts2abc_build",
     ]
-  } else if (target_os == "mingw" && target_cpu == "x64") {
+  } else if (target_os == "mingw" && target_cpu == "x86_64") {
     deps += [
-      "$ets_frontend_root/es2panda:es2panda($target_toolchain)",
-      "$ets_frontend_root/merge_abc:merge_abc($target_toolchain)",
-      "$ets_frontend_root/ts2panda:ark_ts2abc_build_win($target_toolchain)",
+      "$ets_frontend_root/es2panda:es2panda",
+      "$ets_frontend_root/merge_abc:merge_abc",
+      "$ets_frontend_root/ts2panda:ark_ts2abc_build_win",
     ]
   }
 }
 
 group("runtime_core") {
   deps = [
-    "$ark_root/assembler:ark_asm($target_toolchain)",
-    "$ark_root/disassembler:ark_disasm($target_toolchain)",
+    "$ark_root/assembler:ark_asm",
+    "$ark_root/disassembler:ark_disasm",
   ]
 }
 
@@ -89,9 +87,9 @@ group("toolchain") {
   deps = []
   if (target_os != "mingw") {
     deps += [
-      "$toolchain_root/inspector:ark_debugger($target_toolchain)",
-      "$toolchain_root/inspector:connectserver_debugger($target_toolchain)",
-      "$toolchain_root/tooling:libark_ecma_debugger($target_toolchain)",
+      "$toolchain_root/inspector:ark_debugger",
+      "$toolchain_root/inspector:connectserver_debugger",
+      "$toolchain_root/tooling:libark_ecma_debugger",
     ]
   }
 }

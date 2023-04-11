@@ -52,7 +52,6 @@ assert(!use_xcode_clang || target_os == "ios",
        "Using Xcode's clang is only supported in iOS builds")
 
 # Extension for shared library files (including leading dot).
-executable_extension = ""
 if (is_mac) {
   shlib_extension = ".dylib"
 } else if (is_ohos && is_component_build) {
@@ -60,7 +59,6 @@ if (is_mac) {
   shlib_extension = ".z.so"
 } else if (is_mingw) {
   shlib_extension = ".dll"
-  executable_extension = ".exe"
 } else if (is_posix) {
   shlib_extension = ".so"
 } else if (is_win) {
