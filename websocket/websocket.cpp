@@ -241,6 +241,15 @@ std::string WebSocket::Decode()
             return wsFrame.payload.get();
         }
         return "";
+    } else if (wsFrame.opcode == 0x9) { // 0x9: 0x9 means a ping frame
+        // send pong frame
+        char pongFrame[SOCKET_HEADER_LEN] = {0};
+        pongFrame[0] = 0x8a; // 0x8a: 0x8a means a pong frame
+        pongFrame[1] = 0x0;
+        if (!Send(client_, pongFrame, SOCKET_HEADER_LEN, 0)) {
+            LOGE("Decode: Send pong frame failed");
+            return "";
+        }
     }
     return "";
 }
