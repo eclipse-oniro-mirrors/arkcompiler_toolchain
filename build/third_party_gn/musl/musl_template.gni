@@ -33,7 +33,7 @@ template("musl_libs") {
 
   group(target_name) {
     deps = [
-      # ":soft_create_linker",
+      ":soft_create_linker",
       ":soft_libc_musl_shared",
       ":soft_libc_musl_static",
       ":soft_musl_crt_libs",
@@ -125,7 +125,10 @@ template("musl_libs") {
     ]
 
     if (!is_asan) {
-      cflags_auto += [ "-DHOOK_ENABLE" ]
+      cflags_auto += [
+        "-DHOOK_ENABLE",
+        "-DOHOS_SOCKET_HOOK_ENABLE",
+      ]
     }
 
     cflags_auto += [ "-DRESERVE_SIGNAL_STACK" ]
@@ -182,6 +185,11 @@ template("musl_libs") {
 
     cflags_cc = []
 
+    defines = [
+      "__GNU_SOURCE=1",  # Necessary for clone().
+      "CHROMIUM_CXX_TWEAK_INLINES",  # Saves binary size.
+    ]
+
     defines += [
       "__MUSL__",
       "_LIBCPP_HAS_MUSL_LIBC",
@@ -189,7 +197,10 @@ template("musl_libs") {
     ]
 
     if (!is_asan) {
-      defines += [ "HOOK_ENABLE" ]
+      defines += [
+        "HOOK_ENABLE",
+        "OHOS_SOCKET_HOOK_ENABLE",
+      ]
     }
     ldflags = [ "-nostdlib" ]
 
@@ -227,6 +238,7 @@ template("musl_libs") {
       "-fvisibility=hidden",
       "-O3",
       "-funroll-loops",
+      "-funwind-tables",
 
       # The following flags are for avoiding errors when compiling.
       "-Wno-unused-parameter",
@@ -597,7 +609,8 @@ template("musl_libs") {
       "-instcombine-max-iterations=0",
       "-O3",
       "-ffp-contract=fast",
-      "-Wno-int-conversion",
+      "-fPIC",
+      "-fstack-protector-strong",
     ]
 
     deps = porting_deps
@@ -702,6 +715,13 @@ template("musl_libs") {
     configs += [
       "$build_root/config/compiler:compiler",
       ":soft_hook",
+    ]
+    cflags = [
+      "-mllvm",
+      "--instcombine-max-iterations=0",
+      "-ffp-contract=fast",
+      "-O3",
+      "-Wno-int-conversion",
     ]
   }
 
