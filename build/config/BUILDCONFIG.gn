@@ -80,6 +80,8 @@ if (target_os == "ohos" && target_cpu == "arm") {
   _default_toolchain = "$build_root/toolchain/linux:clang_x64"
 } else if (target_os == "mingw" && target_cpu == "x86_64") {
   _default_toolchain = "$build_root/toolchain/mingw:mingw_x86_64"
+} else if (target_os == "android" && target_cpu == "arm64") {
+  _default_toolchain = "$build_root/toolchain/aosp:aosp_clang_arm64"
 }
 if (custom_toolchain != "") {
   set_default_toolchain(custom_toolchain)
@@ -106,6 +108,7 @@ if (current_os == "ohos") {
   is_posix = true
   is_win = false
   is_mingw = false
+  is_android = false
   is_ios = false
 } else if (current_os == "linux") {
   is_ohos = false
@@ -114,6 +117,7 @@ if (current_os == "ohos") {
   is_posix = true
   is_win = false
   is_mingw = false
+  is_android = false
   is_ios = false
 } else if (current_os == "mingw") {
   is_ohos = false
@@ -122,6 +126,16 @@ if (current_os == "ohos") {
   is_posix = true
   is_win = false
   is_mingw = true
+  is_android = false
+  is_ios = false
+} else if (current_os == "android") {
+  is_ohos = false
+  is_linux = false
+  is_mac = false
+  is_posix = true
+  is_win = false
+  is_mingw = false
+  is_android = true
   is_ios = false
 }
 

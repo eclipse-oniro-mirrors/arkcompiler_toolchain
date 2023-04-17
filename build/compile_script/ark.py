@@ -22,7 +22,7 @@ import os
 import subprocess
 import sys
 
-OS_ARCHS = ["x64", "arm", "arm64", "linux_x64", "ohos_arm", "ohos_arm64", "mingw_x86_64"]
+OS_ARCHS = ["x64", "arm", "arm64", "linux_x64", "ohos_arm", "ohos_arm64", "mingw_x86_64", "android_arm64"]
 DEFAULT_OS_CPU = "x64"
 MODES = ["release", "debug"]
 DEFAULT_MODE = "release"
@@ -41,7 +41,7 @@ OUTDIR = "out"
 Help_message = """
 format: python ark.py [os_arch].[mode] [options] [test] [test target]
 for example , python ark.py x64.release
-[os_arch] support [x64 | linux_x64 | mingw_x86_64 | arm | arm64] now
+[os_arch] support [x64 | linux_x64 | mingw_x86_64 | arm | arm64 | android_arm64] now
 [mode] can be one of ["release", "debug"]
 [options]
   target: support [ets_runtime | ets_frontend | runtime_core | toolchain | default] now
@@ -150,6 +150,9 @@ def get_template(args_list):
         ark_cpu = "arm"
     elif global_os_arch in ("arm64", "ohos_arm64"):
         ark_os = "ohos"
+        ark_cpu = "arm64"
+    elif global_os_arch in ("android_arm64"):
+        ark_os = "android"
         ark_cpu = "arm64"
     elif global_os_arch in ("mingw_x86_64"):
         ark_os = "mingw"

@@ -96,6 +96,8 @@ config("libuv_config") {
       "userenv",
       "ws2_32",
     ]
+  } else if (is_android) {
+    defines = [ "_GNU_SOURCE" ]
   }
 }
 
