@@ -244,7 +244,7 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
         paused.SetData(std::move(tmpException));
     }
     frontend_.Paused(vm_, paused);
-
+    debuggerState_ = DebuggerState::PAUSED;
     frontend_.WaitForDebugger(vm_);
     DebuggerApi::SetException(vm_, exception);
 }
@@ -259,6 +259,12 @@ void DebuggerImpl::NotifyNativeCalling(const void *nativeAddress)
         frontend_.NativeCalling(vm_, nativeCalling);
         frontend_.WaitForDebugger(vm_);
     }
+}
+
+// only use for test case
+void DebuggerImpl::SetDebuggerState(DebuggerState debuggerState)
+{
+    debuggerState_ = debuggerState;
 }
 
 void DebuggerImpl::NotifyPendingJobEntry()
@@ -588,6 +594,7 @@ DispatchResponse DebuggerImpl::Enable([[maybe_unused]] const EnableParams &param
     for (auto &script : scripts_) {
         frontend_.ScriptParsed(vm_, *script.second);
     }
+    debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
 
@@ -596,6 +603,7 @@ DispatchResponse DebuggerImpl::Disable()
     DebuggerApi::RemoveAllBreakpoints(jsDebugger_);
     frontend_.RunIfWaitingForDebugger(vm_);
     vm_->GetJsDebuggerManager()->SetDebugMode(false);
+    debuggerState_ = DebuggerState::DISABLED;
     return DispatchResponse::Ok();
 }
 
@@ -722,6 +730,7 @@ DispatchResponse DebuggerImpl::RemoveBreakpoint(const RemoveBreakpointParams &pa
 DispatchResponse DebuggerImpl::Resume([[maybe_unused]] const ResumeParams &params)
 {
     frontend_.Resumed(vm_);
+    debuggerState_ = DebuggerState::ENABLED;
     singleStepper_.reset();
     return DispatchResponse::Ok();
 }
@@ -802,7 +811,7 @@ DispatchResponse DebuggerImpl::SetPauseOnExceptions(const SetPauseOnExceptionsPa
 
 DispatchResponse DebuggerImpl::StepInto([[maybe_unused]] const StepIntoParams &params)
 {
-    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+    if (debuggerState_ != DebuggerState::PAUSED) {
         return DispatchResponse::Fail("Can only perform operation while paused");
     }
     singleStepper_ = SingleStepper::GetStepIntoStepper(vm_);
@@ -811,12 +820,13 @@ DispatchResponse DebuggerImpl::StepInto([[maybe_unused]] const StepIntoParams &p
         return DispatchResponse::Fail("Failed to StepInto");
     }
     frontend_.Resumed(vm_);
+    debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
 
 DispatchResponse DebuggerImpl::StepOut()
 {
-    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+    if (debuggerState_ != DebuggerState::PAUSED) {
         return DispatchResponse::Fail("Can only perform operation while paused");
     }
     singleStepper_ = SingleStepper::GetStepOutStepper(vm_);
@@ -825,12 +835,13 @@ DispatchResponse DebuggerImpl::StepOut()
         return DispatchResponse::Fail("Failed to StepOut");
     }
     frontend_.Resumed(vm_);
+    debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
 
 DispatchResponse DebuggerImpl::StepOver([[maybe_unused]] const StepOverParams &params)
 {
-    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+    if (debuggerState_ != DebuggerState::PAUSED) {
         return DispatchResponse::Fail("Can only perform operation while paused");
     }
     singleStepper_ = SingleStepper::GetStepOverStepper(vm_);
@@ -839,6 +850,7 @@ DispatchResponse DebuggerImpl::StepOver([[maybe_unused]] const StepOverParams &p
         return DispatchResponse::Fail("Failed to StepOver");
     }
     frontend_.Resumed(vm_);
+    debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
 
