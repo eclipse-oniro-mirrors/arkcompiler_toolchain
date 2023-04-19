@@ -11,20 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sysroot = ""
-if (is_ohos) {
-  import("$build_root/config/ohos/config.gni")
-  sysroot = "${musl_sysroot}"
-} else if (is_android) {
-  import("$build_root/config/aosp/config.gni")
-  sysroot = "$aosp_ndk_root/sysroot"
-}
+assert(is_android)
 
-link_sysroot = sysroot
-if (is_android) {
-  if (current_cpu == "arm64") {
-    link_sysroot = "$aosp_ndk_root/$arm64_aosp_sysroot_subdir"
-  } else {
-    assert(false, "No aosp link sysroot for cpu: $current_cpu")
-  }
+if (current_cpu == "arm64") {
+  aosp_app_abi = "arm64-v8a"
+} else {
+  assert(false, "Unknown Aosp ABI, current_cpu: $current_cpu")
 }

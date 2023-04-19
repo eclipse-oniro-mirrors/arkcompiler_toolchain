@@ -57,6 +57,9 @@ config("ark_toolchain_common_config") {
       "PANDA_TARGET_UNIX",
       "PANDA_USE_FUTEX",
     ]
+    if (!ark_standalone_build) {
+      defines += [ "ENABLE_ANLOG" ]
+    }
   } else if (target_os == "ios") {
     defines += [
       "PANDA_TARGET_UNIX",

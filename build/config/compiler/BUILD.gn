@@ -106,6 +106,11 @@ config("default_warnings") {
       "-Wno-c++11-narrowing",
       "-Wno-unneeded-internal-declaration",
     ]
+    if (current_os == "android") {
+      # Disable calls to out-of-line helpers, don't implement atomic operations for these calls.
+      # (Keep consistent with the default of clang15 in directory prebuilts.)
+      cflags += [ "-mno-outline-atomics" ]
+    }
     if (use_musl) {
       cflags += [
         "-Wno-error=c99-designator",
@@ -149,6 +154,9 @@ config("compiler") {
   # System-specific flags. If your compiler flags apply to one of the
   # categories here, add it to the associated file to keep this shared config
   # smaller.
+  if (is_android) {
+    configs += [ "$build_root/config/aosp:compiler" ]
+  }
   if (is_mingw) {
     configs += [ "$build_root/config/mingw:compiler" ]
     cflags += [ "-fno-stack-protector" ]
@@ -286,18 +294,22 @@ config("compiler_cpu_abi") {
         cflags += [ "-mtune=$arm_tune" ]
       }
     } else if (current_cpu == "arm64") {
-      if (is_clang && !is_ohos) {
+      if (is_clang && !is_ohos && !is_android) {
         cflags += [ "--target=aarch64-linux-gnu" ]
         ldflags += [ "--target=aarch64-linux-gnu" ]
       }
-      if (is_clang && is_ohos) {
+      if (is_clang && (is_ohos || is_android)) {
         ldflags += [ "-Wl,--hash-style=gnu" ]
       }
-      cflags += [
-        "-march=$arm_arch",
-        "-mfloat-abi=$arm_float_abi",
-        "-mfpu=$arm_fpu",
-      ]
+      if (!is_android) {
+        cflags += [
+          "-march=$arm_arch",
+          "-mfloat-abi=$arm_float_abi",
+          "-mfpu=$arm_fpu",
+        ]
+      } else {
+        cflags += [ "-march=$arm_arch" ]
+      }
       ldflags += [ "-march=$arm_arch" ]
     }
   }
@@ -349,6 +361,10 @@ config("runtime_config") {
   # smaller.
   if (is_ohos) {
     configs += [ "$build_root/config/ohos:runtime_config" ]
+  }
+
+  if (is_android) {
+    configs += [ "$build_root/config/aosp:runtime_config" ]
   }
 }
 
