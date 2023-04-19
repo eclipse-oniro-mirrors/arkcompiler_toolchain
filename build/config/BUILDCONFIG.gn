@@ -106,6 +106,7 @@ if (current_os == "ohos") {
   is_posix = true
   is_win = false
   is_mingw = false
+  is_ios = false
 } else if (current_os == "linux") {
   is_ohos = false
   is_linux = true
@@ -113,6 +114,7 @@ if (current_os == "ohos") {
   is_posix = true
   is_win = false
   is_mingw = false
+  is_ios = false
 } else if (current_os == "mingw") {
   is_ohos = false
   is_linux = false
@@ -120,6 +122,7 @@ if (current_os == "ohos") {
   is_posix = true
   is_win = false
   is_mingw = true
+  is_ios = false
 }
 
 default_compiler_configs = [
