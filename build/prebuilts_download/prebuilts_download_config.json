@@ -20,8 +20,8 @@
     "node_config": [
       {
         "unzip_dir": "prebuilts/build-tools/common/nodejs",
-        "file_path": "/nodejs/v12.18.4/node-v12.18.4-linux-x64.tar.gz",
-        "unzip_filename": "node-v12.18.4-linux-x64"
+        "file_path": "/nodejs/v14.21.1/node-v14.21.1-linux-x64.tar.gz",
+        "unzip_filename": "node-v14.21.1-linux-x64"
       }
     ],
     "x86_64": {
