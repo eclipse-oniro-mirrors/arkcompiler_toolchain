@@ -93,9 +93,9 @@ config("default_warnings") {
       "-Wno-error=deprecated-copy",
       "-Wno-error=implicit-int-float-conversion",
       "-Wno-error=inconsistent-dllimport",
-      "-Wno-error=unknown-warning-option",
       "-Wno-error=abstract-final-class",
       "-Wno-error=sign-compare",
+      "-Wno-unknown-warning-option",
     ]
   }
 
