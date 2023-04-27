@@ -132,6 +132,8 @@ def _hwcloud_download(args, config, bin_dir, code_dir):
                 if _check_sha256_by_mark(args, huaweicloud_url, code_dir, unzip_dir, unzip_filename):
                     progress.console.log('{}, Sha256 markword check OK.'.format(huaweicloud_url), style='green')
                     if os.path.basename(abs_unzip_dir) == 'nodejs':
+                        for node_dir in args.npm_install_config:
+                            _run_cmd('rm -rf {}/{}/node_modules/'.format(code_dir, node_dir))
                         _npm_install(args, code_dir, unzip_dir, unzip_filename)
                 else:
                     _run_cmd(''.join(['rm -rf ', code_dir, '/', unzip_dir, '/*.', unzip_filename, '.mark']))
