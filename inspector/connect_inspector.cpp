@@ -19,7 +19,7 @@
 #include "log_wrapper.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
-std::shared_mutex g_mutex;
+std::shared_mutex g_connectMutex;
 std::unique_ptr<ConnectInspector> g_inspector = nullptr;
 
 void* HandleDebugManager(void* const server)
@@ -34,7 +34,7 @@ void* HandleDebugManager(void* const server)
 
 void OnMessage(const std::string& message)
 {
-    std::shared_lock<std::shared_mutex> lock(g_mutex);
+    std::shared_lock<std::shared_mutex> lock(g_connectMutex);
     if (message.empty()) {
         LOGE("message is empty");
         return;
@@ -114,7 +114,7 @@ void StopServer([[maybe_unused]] const std::string& componentName)
 
 void StoreMessage(int32_t instanceId, const std::string& message)
 {
-    std::unique_lock<std::shared_mutex> lock(g_mutex);
+    std::unique_lock<std::shared_mutex> lock(g_connectMutex);
     if (g_inspector->infoBuffer_.count(instanceId) == 1) {
         LOGE("The message with the current instance id has existed.");
         return;
@@ -124,14 +124,14 @@ void StoreMessage(int32_t instanceId, const std::string& message)
 
 void StoreInspectorInfo(const std::string& jsonTreeStr, const std::string& jsonSnapshotStr)
 {
-    std::unique_lock<std::shared_mutex> lock(g_mutex);
+    std::unique_lock<std::shared_mutex> lock(g_connectMutex);
     g_inspector->layoutInspectorInfo_.tree = jsonTreeStr;
     g_inspector->layoutInspectorInfo_.snapShot = jsonSnapshotStr;
 }
 
 void RemoveMessage(int32_t instanceId)
 {
-    std::unique_lock<std::shared_mutex> lock(g_mutex);
+    std::unique_lock<std::shared_mutex> lock(g_connectMutex);
     if (g_inspector->infoBuffer_.count(instanceId) != 1) {
         LOGE("The message with the current instance id does not exist.");
         return;
@@ -154,7 +154,7 @@ void SendMessage(const std::string& message)
     }
 }
 
-bool WaitForDebugger()
+bool WaitForConnection()
 {
     if (g_inspector == nullptr) {
         return true;

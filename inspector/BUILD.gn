@@ -109,7 +109,7 @@ ohos_shared_library("ark_debugger") {
   subsystem_name = "arkcompiler"
 }
 
-ohos_shared_library("connectserver_debugger") {
+ohos_source_set("connectserver_debugger_static") {
   deps = [ sdk_libc_secshared_dep ]
   configs = [ sdk_libc_secshared_config ]
   defines = []
@@ -118,24 +118,28 @@ ohos_shared_library("connectserver_debugger") {
     cflags = [ "-std=c++17" ]
   }
 
-  configs += [ ":ark_platform_config" ]
+  include_dirs = [ "$toolchain_root" ]
 
-  # hiviewdfx libraries
-  external_deps = hiviewdfx_ext_deps
-  deps += hiviewdfx_deps
-
-  deps += [ "$toolchain_root/websocket" ]
-
-  include_dirs = [
-    "$toolchain_root/websocket",
-    "$toolchain_root/inspector",
-  ]
-
+  deps += [ "$toolchain_root/websocket:websocket" ]
   sources = [
     "connect_inspector.cpp",
     "connect_server.cpp",
     "log_wrapper.cpp",
   ]
+
+  if (target_os == "ios") {
+    sources -= [ "log_wrapper.cpp" ]
+  }
+
+  # hiviewdfx libraries
+  external_deps = hiviewdfx_ext_deps
+  deps += hiviewdfx_deps
+
+  configs += [ ":ark_platform_config" ]
+}
+
+ohos_shared_library("connectserver_debugger") {
+  deps = [ ":connectserver_debugger_static" ]
 
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
