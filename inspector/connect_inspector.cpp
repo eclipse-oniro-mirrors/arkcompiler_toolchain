@@ -28,6 +28,8 @@ void* HandleDebugManager(void* const server)
         LOGE("HandleDebugManager server nullptr");
         return nullptr;
     }
+
+    pthread_setname_np(pthread_self(), "DebugConnectThread");
     static_cast<ConnectServer*>(server)->RunServer();
     return nullptr;
 }

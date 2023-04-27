@@ -75,6 +75,8 @@ void* HandleClient(void* const server)
         LOGE("HandleClient server nullptr");
         return nullptr;
     }
+
+    pthread_setname_np(pthread_self(), "DebugThread");
     static_cast<WsServer*>(server)->RunServer();
     return nullptr;
 }
