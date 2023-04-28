@@ -165,7 +165,7 @@ private:
 
     const std::string &GetRecordName(const std::string &url)
     {
-        static const char *recordName = "";
+        static const std::string recordName = "";
         auto iter = recordNames_.find(url);
         if (iter != recordNames_.end()) {
             return iter->second;
