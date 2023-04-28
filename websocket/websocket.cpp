@@ -345,7 +345,7 @@ bool WebSocket::ConnectTcpWebSocket()
     }
 
     if ((client_ = accept(fd_, nullptr, nullptr)) < SOCKET_SUCCESS) {
-        LOGE("ConnectTcpWebSocket accept failed");
+        LOGI("ConnectTcpWebSocket accept has exited");
         socketState_ = SocketState::UNINITED;
         close(fd_);
         fd_ = -1;
@@ -428,7 +428,7 @@ bool WebSocket::ConnectUnixWebSocket()
     }
 
     if ((client_ = accept(fd_, nullptr, nullptr)) < SOCKET_SUCCESS) {
-        LOGE("ConnectUnixWebSocket accept failed");
+        LOGI("ConnectUnixWebSocket accept has exited");
         socketState_ = SocketState::UNINITED;
         close(fd_);
         fd_ = -1;
