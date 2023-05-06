@@ -42,11 +42,6 @@ config("ark_platform_config") {
     ]
   } else if (is_mingw) {
     defines += [ "WINDOWS_PLATFORM" ]
-  } else if (is_mac) {
-    defines += [
-      "MAC_PLATFORM",
-      "UNIX_PLATFORM",
-    ]
   } else if (target_os == "android") {
     if (!ark_standalone_build) {
       defines += [
@@ -60,6 +55,11 @@ config("ark_platform_config") {
     defines += [
       "UNIX_PLATFORM",
       "IOS_PLATFORM",
+    ]
+  } else if (is_mac) {
+    defines += [
+      "MAC_PLATFORM",
+      "UNIX_PLATFORM",
     ]
   } else {
     defines += [ "UNIX_PLATFORM" ]

@@ -76,7 +76,12 @@ void* HandleClient(void* const server)
         return nullptr;
     }
 
+#if defined(IOS_PLATFORM) || defined(MAC_PLATFORM)
+    pthread_setname_np("DebugThread");
+#else
     pthread_setname_np(pthread_self(), "DebugThread");
+#endif
+
     static_cast<WsServer*>(server)->RunServer();
     return nullptr;
 }
