@@ -28,8 +28,12 @@ void* HandleDebugManager(void* const server)
         LOGE("HandleDebugManager server nullptr");
         return nullptr;
     }
-
+#if defined(IOS_PLATFORM) || defined(MAC_PLATFORM)
+    pthread_setname_np("DebugConnectThread");
+#else
     pthread_setname_np(pthread_self(), "DebugConnectThread");
+#endif
+
     static_cast<ConnectServer*>(server)->RunServer();
     return nullptr;
 }
