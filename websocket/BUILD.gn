@@ -91,6 +91,7 @@ config("websocket_platform_config") {
 }
 
 ohos_source_set("websocket") {
+  stack_protector_ret = false
   defines = []
   deps = []
 

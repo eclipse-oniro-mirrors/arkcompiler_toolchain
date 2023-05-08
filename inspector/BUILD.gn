@@ -67,6 +67,7 @@ config("ark_platform_config") {
 }
 
 ohos_source_set("ark_debugger_static") {
+  stack_protector_ret = false
   deps = [ sdk_libc_secshared_dep ]
   configs = [ sdk_libc_secshared_config ]
   defines = []
@@ -100,6 +101,7 @@ ohos_source_set("ark_debugger_static") {
 }
 
 ohos_shared_library("ark_debugger") {
+  stack_protector_ret = false
   deps = [ ":ark_debugger_static" ]
 
   if (is_mingw) {
@@ -114,6 +116,7 @@ ohos_shared_library("ark_debugger") {
 }
 
 ohos_shared_library("connectserver_debugger") {
+  stack_protector_ret = false
   deps = [ sdk_libc_secshared_dep ]
   configs = [ sdk_libc_secshared_config ]
   defines = []

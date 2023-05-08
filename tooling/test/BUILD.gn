@@ -71,6 +71,7 @@ foreach(file, test_js_files) {
 }
 
 ohos_shared_library("debugger_entry") {
+  stack_protector_ret = false
   sources = [ "entry/test_debugger_entry.cpp" ]
 
   configs = [ ":debug_api_test" ]
@@ -87,6 +88,7 @@ ohos_shared_library("debugger_entry") {
 }
 
 ohos_shared_library("jsdebugtest") {
+  stack_protector_ret = false
   sources = [
     "utils/test_entry.cpp",
     "utils/test_extractor.cpp",
