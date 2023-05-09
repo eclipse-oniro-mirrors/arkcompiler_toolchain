@@ -54,6 +54,7 @@ public:
             ASSERT_LOCATION_EQ(location, pointerLocations_.at(breakpointCounter_));
             ++breakpointCounter_;
             TestUtil::SuspendUntilContinue(DebugEvent::BREAKPOINT, location);
+            debugger_->SetDebuggerState(DebuggerState::PAUSED);
             debugger_->StepInto(StepIntoParams());
             return true;
         };
@@ -76,7 +77,6 @@ public:
             while (index < POINTER_SIZE) {
                 TestUtil::WaitForBreakpoint(pointerLocations_.at(index));
                 TestUtil::Continue();
-                debugger_->SetDebuggerState(DebuggerState::PAUSED);
                 if (index < STEP_SIZE) {
                     TestUtil::WaitForStepComplete(stepLocations_.at(index));
                     TestUtil::Continue();
