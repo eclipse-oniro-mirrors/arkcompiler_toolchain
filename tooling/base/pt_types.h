@@ -1560,13 +1560,13 @@ public:
         return nodeId_;
     }
 
-    SamplingHeapProfileSample &SetOrdinal(int32_t ordinal)
+    SamplingHeapProfileSample &SetOrdinal(int64_t ordinal)
     {
         ordinal_ = ordinal;
         return *this;
     }
 
-    int32_t GetOrdinal() const
+    int64_t GetOrdinal() const
     {
         return ordinal_;
     }
@@ -1577,7 +1577,7 @@ private:
 
     int32_t size_ {0};
     int32_t nodeId_ {0};
-    int32_t ordinal_ {0};
+    int64_t ordinal_ {0};
 };
 
 class RuntimeCallFrame  final :  public PtBaseTypes {
@@ -1720,8 +1720,8 @@ public:
     SamplingHeapProfile() = default;
     ~SamplingHeapProfile() override = default;
     static std::unique_ptr<SamplingHeapProfile> Create(const PtJson &params);
-    static std::unique_ptr<SamplingHeapProfile> FromSamplingInfo(std::unique_ptr<SamplingInfo> samplingInfo);
-    static std::unique_ptr<SamplingHeapProfileNode> TransferHead(AllocationNode *allocationNode);
+    static std::unique_ptr<SamplingHeapProfile> FromSamplingInfo(const SamplingInfo *samplingInfo);
+    static std::unique_ptr<SamplingHeapProfileNode> TransferHead(const SamplingNode *allocationNode);
     std::unique_ptr<PtJson> ToJson() const override;
 
     SamplingHeapProfile &SetHead(std::unique_ptr<SamplingHeapProfileNode> head)

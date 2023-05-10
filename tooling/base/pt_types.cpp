@@ -1994,12 +1994,12 @@ std::unique_ptr<PtJson> SamplingHeapProfile::ToJson() const
 }
 
 std::unique_ptr<SamplingHeapProfile> SamplingHeapProfile::FromSamplingInfo(
-    std::unique_ptr<SamplingInfo> samplingInfo)
+    const SamplingInfo *samplingInfo)
 {
     std::unique_ptr<SamplingHeapProfile> profile = std::make_unique<SamplingHeapProfile>();
     auto node = TransferHead(&(samplingInfo->head_));
     profile->head_ = std::move(node);
-    CVector<struct Sample> &samples = samplingInfo->samples_;
+    const CVector<struct Sample> &samples = samplingInfo->samples_;
     for (const auto &sample : samples) {
         std::unique_ptr<SamplingHeapProfileSample> sampleTemp = std::make_unique<SamplingHeapProfileSample>();
         sampleTemp->SetSize(sample.size_);
@@ -2010,21 +2010,21 @@ std::unique_ptr<SamplingHeapProfile> SamplingHeapProfile::FromSamplingInfo(
     return profile;
 }
 
-std::unique_ptr<SamplingHeapProfileNode> SamplingHeapProfile::TransferHead(AllocationNode *allocationNode)
+std::unique_ptr<SamplingHeapProfileNode> SamplingHeapProfile::TransferHead(const SamplingNode *samplingNode)
 {
     std::unique_ptr<SamplingHeapProfileNode> node = std::make_unique<SamplingHeapProfileNode>();
-    node->SetSelfSize(allocationNode->selfSize_);
-    node->SetId(allocationNode->id_);
+    node->SetSelfSize(samplingNode->selfSize_);
+    node->SetId(samplingNode->id_);
     std::unique_ptr<RuntimeCallFrame> callFrame = std::make_unique<RuntimeCallFrame>();
-    callFrame->SetFunctionName(allocationNode->callFrameInfo_.functionName_);
-    callFrame->SetScriptId(std::to_string(allocationNode->callFrameInfo_.scriptId_));
-    callFrame->SetUrl(allocationNode->callFrameInfo_.url_);
-    callFrame->SetLineNumber(allocationNode->callFrameInfo_.lineNumber_);
-    callFrame->SetColumnNumber(allocationNode->callFrameInfo_.columnNumber_);
+    callFrame->SetFunctionName(samplingNode->callFrameInfo_.functionName_);
+    callFrame->SetScriptId(std::to_string(samplingNode->callFrameInfo_.scriptId_));
+    callFrame->SetUrl(samplingNode->callFrameInfo_.url_);
+    callFrame->SetLineNumber(samplingNode->callFrameInfo_.lineNumber_);
+    callFrame->SetColumnNumber(samplingNode->callFrameInfo_.columnNumber_);
     node->SetCallFrame(std::move(callFrame));
     std::vector<std::unique_ptr<SamplingHeapProfileNode>> profileNode;
-    for (auto &it : allocationNode->children_) {
-        auto proNode = TransferHead(&it);
+    for (const auto &it : samplingNode->children_) {
+        auto proNode = TransferHead(it.second.get());
         profileNode.push_back(std::move(proNode));
     }
     node->SetChildren(std::move(profileNode));
