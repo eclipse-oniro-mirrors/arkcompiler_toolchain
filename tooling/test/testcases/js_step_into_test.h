@@ -54,6 +54,7 @@ public:
             ASSERT_LOCATION_EQ(location, pointerLocations_.at(breakpointCounter_));
             ++breakpointCounter_;
             TestUtil::SuspendUntilContinue(DebugEvent::BREAKPOINT, location);
+            debugger_->SetDebuggerState(DebuggerState::PAUSED);
             debugger_->StepInto(StepIntoParams());
             return true;
         };

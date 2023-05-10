@@ -90,7 +90,8 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
         return false;
     }
 
-    auto mainMethodIndex = panda_file::File::EntityId(jsPandaFile->GetMainMethodIndex(entryPoint.data()));
+    const char *recordName = entryPoint.data();
+    auto mainMethodIndex = panda_file::File::EntityId(jsPandaFile->GetMainMethodIndex(recordName));
     const std::string &source = extractor->GetSourceCode(mainMethodIndex);
     const std::string &url = extractor->GetSourceFile(mainMethodIndex);
     if (source.empty()) {
@@ -99,6 +100,7 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
     }
     // store here for performance of get extractor from url
     extractors_[url] = extractor;
+    recordNames_[url] = recordName;
 
     auto scriptFunc = [this](PtScript *script) -> bool {
         frontend_.ScriptParsed(vm_, *script);
@@ -244,7 +246,7 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
         paused.SetData(std::move(tmpException));
     }
     frontend_.Paused(vm_, paused);
-
+    debuggerState_ = DebuggerState::PAUSED;
     frontend_.WaitForDebugger(vm_);
     DebuggerApi::SetException(vm_, exception);
 }
@@ -259,6 +261,12 @@ void DebuggerImpl::NotifyNativeCalling(const void *nativeAddress)
         frontend_.NativeCalling(vm_, nativeCalling);
         frontend_.WaitForDebugger(vm_);
     }
+}
+
+// only use for test case
+void DebuggerImpl::SetDebuggerState(DebuggerState debuggerState)
+{
+    debuggerState_ = debuggerState;
 }
 
 void DebuggerImpl::NotifyPendingJobEntry()
@@ -588,6 +596,7 @@ DispatchResponse DebuggerImpl::Enable([[maybe_unused]] const EnableParams &param
     for (auto &script : scripts_) {
         frontend_.ScriptParsed(vm_, *script.second);
     }
+    debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
 
@@ -596,6 +605,7 @@ DispatchResponse DebuggerImpl::Disable()
     DebuggerApi::RemoveAllBreakpoints(jsDebugger_);
     frontend_.RunIfWaitingForDebugger(vm_);
     vm_->GetJsDebuggerManager()->SetDebugMode(false);
+    debuggerState_ = DebuggerState::DISABLED;
     return DispatchResponse::Ok();
 }
 
@@ -656,7 +666,7 @@ DispatchResponse DebuggerImpl::GetPossibleBreakpoints(const GetPossibleBreakpoin
     auto callbackFunc = [](const JSPtLocation &) -> bool {
         return true;
     };
-    if (extractor->MatchWithLocation(callbackFunc, line, column, url)) {
+    if (extractor->MatchWithLocation(callbackFunc, line, column, url, GetRecordName(url))) {
         std::unique_ptr<BreakLocation> location = std::make_unique<BreakLocation>();
         location->SetScriptId(start->GetScriptId()).SetLine(line).SetColumn(column);
         locations->emplace_back(std::move(location));
@@ -709,7 +719,8 @@ DispatchResponse DebuggerImpl::RemoveBreakpoint(const RemoveBreakpointParams &pa
         LOG_DEBUGGER(INFO) << "remove breakpoint location: " << location.ToString();
         return DebuggerApi::RemoveBreakpoint(jsDebugger_, location);
     };
-    if (!extractor->MatchWithLocation(callbackFunc, metaData.line_, metaData.column_, metaData.url_)) {
+    if (!extractor->MatchWithLocation(callbackFunc, metaData.line_, metaData.column_,
+        metaData.url_, GetRecordName(metaData.url_))) {
         LOG_DEBUGGER(ERROR) << "failed to remove breakpoint location number: "
             << metaData.line_ << ":" << metaData.column_;
         return DispatchResponse::Fail("Breakpoint not found.");
@@ -722,6 +733,7 @@ DispatchResponse DebuggerImpl::RemoveBreakpoint(const RemoveBreakpointParams &pa
 DispatchResponse DebuggerImpl::Resume([[maybe_unused]] const ResumeParams &params)
 {
     frontend_.Resumed(vm_);
+    debuggerState_ = DebuggerState::ENABLED;
     singleStepper_.reset();
     return DispatchResponse::Ok();
 }
@@ -779,7 +791,7 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
         }
         return DebuggerApi::SetBreakpoint(jsDebugger_, location, condFuncRef);
     };
-    if (!extractor->MatchWithLocation(callbackFunc, lineNumber, columnNumber, url)) {
+    if (!extractor->MatchWithLocation(callbackFunc, lineNumber, columnNumber, url, GetRecordName(url))) {
         LOG_DEBUGGER(ERROR) << "failed to set breakpoint location number: " << lineNumber << ":" << columnNumber;
         return DispatchResponse::Fail("Breakpoint not found.");
     }
@@ -802,7 +814,7 @@ DispatchResponse DebuggerImpl::SetPauseOnExceptions(const SetPauseOnExceptionsPa
 
 DispatchResponse DebuggerImpl::StepInto([[maybe_unused]] const StepIntoParams &params)
 {
-    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+    if (debuggerState_ != DebuggerState::PAUSED) {
         return DispatchResponse::Fail("Can only perform operation while paused");
     }
     singleStepper_ = SingleStepper::GetStepIntoStepper(vm_);
@@ -811,12 +823,13 @@ DispatchResponse DebuggerImpl::StepInto([[maybe_unused]] const StepIntoParams &p
         return DispatchResponse::Fail("Failed to StepInto");
     }
     frontend_.Resumed(vm_);
+    debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
 
 DispatchResponse DebuggerImpl::StepOut()
 {
-    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+    if (debuggerState_ != DebuggerState::PAUSED) {
         return DispatchResponse::Fail("Can only perform operation while paused");
     }
     singleStepper_ = SingleStepper::GetStepOutStepper(vm_);
@@ -825,12 +838,13 @@ DispatchResponse DebuggerImpl::StepOut()
         return DispatchResponse::Fail("Failed to StepOut");
     }
     frontend_.Resumed(vm_);
+    debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
 
 DispatchResponse DebuggerImpl::StepOver([[maybe_unused]] const StepOverParams &params)
 {
-    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+    if (debuggerState_ != DebuggerState::PAUSED) {
         return DispatchResponse::Fail("Can only perform operation while paused");
     }
     singleStepper_ = SingleStepper::GetStepOverStepper(vm_);
@@ -839,6 +853,7 @@ DispatchResponse DebuggerImpl::StepOver([[maybe_unused]] const StepOverParams &p
         return DispatchResponse::Fail("Failed to StepOver");
     }
     frontend_.Resumed(vm_);
+    debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
 

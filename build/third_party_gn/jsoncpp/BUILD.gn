@@ -40,6 +40,7 @@ config("jsoncpp_public_config") {
 }
 
 ohos_shared_library("jsoncpp") {
+  stack_protector_ret = false
   visibility = [ "*" ]
   sources = [
     "//third_party/jsoncpp/src/lib_json/json_reader.cpp",
@@ -58,6 +59,7 @@ ohos_shared_library("jsoncpp") {
 }
 
 ohos_static_library("jsoncpp_static") {
+  stack_protector_ret = false
   sources = [
     "//third_party/jsoncpp/src/lib_json/json_reader.cpp",
     "//third_party/jsoncpp/src/lib_json/json_value.cpp",

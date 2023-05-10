@@ -42,20 +42,24 @@ config("ark_platform_config") {
     ]
   } else if (is_mingw) {
     defines += [ "WINDOWS_PLATFORM" ]
-  } else if (is_mac) {
-    defines += [
-      "MAC_PLATFORM",
-      "UNIX_PLATFORM",
-    ]
   } else if (target_os == "android") {
-    defines += [
-      "ANDROID_PLATFORM",
-      "UNIX_PLATFORM",
-    ]
+    if (!ark_standalone_build) {
+      defines += [
+        "ANDROID_PLATFORM",
+        "UNIX_PLATFORM",
+      ]
+    } else {
+      defines += [ "UNIX_PLATFORM" ]
+    }
   } else if (target_os == "ios") {
     defines += [
       "UNIX_PLATFORM",
       "IOS_PLATFORM",
+    ]
+  } else if (is_mac) {
+    defines += [
+      "MAC_PLATFORM",
+      "UNIX_PLATFORM",
     ]
   } else {
     defines += [ "UNIX_PLATFORM" ]
@@ -63,6 +67,7 @@ config("ark_platform_config") {
 }
 
 ohos_source_set("ark_debugger_static") {
+  stack_protector_ret = false
   deps = [ sdk_libc_secshared_dep ]
   configs = [ sdk_libc_secshared_config ]
   defines = []
@@ -76,7 +81,7 @@ ohos_source_set("ark_debugger_static") {
     "$toolchain_root/websocket",
   ]
 
-  if (target_os == "android") {
+  if (target_os == "android" && !ark_standalone_build) {
     libs = [ "log" ]
   }
 
@@ -96,6 +101,7 @@ ohos_source_set("ark_debugger_static") {
 }
 
 ohos_shared_library("ark_debugger") {
+  stack_protector_ret = false
   deps = [ ":ark_debugger_static" ]
 
   if (is_mingw) {
@@ -110,6 +116,7 @@ ohos_shared_library("ark_debugger") {
 }
 
 ohos_source_set("connectserver_debugger_static") {
+  stack_protector_ret = false
   deps = [ sdk_libc_secshared_dep ]
   configs = [ sdk_libc_secshared_config ]
   defines = []

@@ -48,10 +48,14 @@ config("websocket_platform_config") {
       "UNIX_PLATFORM",
     ]
   } else if (target_os == "android") {
-    defines += [
-      "ANDROID_PLATFORM",
-      "UNIX_PLATFORM",
-    ]
+    if (!ark_standalone_build) {
+      defines += [
+        "ANDROID_PLATFORM",
+        "UNIX_PLATFORM",
+      ]
+    } else {
+      defines += [ "UNIX_PLATFORM" ]
+    }
   } else if (target_os == "ios") {
     defines += [
       "UNIX_PLATFORM",
@@ -87,6 +91,7 @@ config("websocket_platform_config") {
 }
 
 ohos_source_set("websocket") {
+  stack_protector_ret = false
   defines = []
   deps = []
 
@@ -99,7 +104,7 @@ ohos_source_set("websocket") {
   external_deps = hiviewdfx_ext_deps
   deps += hiviewdfx_deps
 
-  if (target_os == "android") {
+  if (target_os == "android" && !ark_standalone_build) {
     libs = [ "log" ]
   }
 

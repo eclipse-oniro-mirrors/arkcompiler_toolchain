@@ -28,6 +28,7 @@ config("zlib_public_config") {
 }
 
 ohos_static_library("libz") {
+  stack_protector_ret = false
   sources = [
     "//third_party/zlib/adler32.c",
     "//third_party/zlib/compress.c",

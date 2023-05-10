@@ -170,6 +170,7 @@ config("crypto_config_public") {
 }
 
 ohos_source_set("crypto_source") {
+  stack_protector_ret = false
   sources = [
     "//third_party/openssl/crypto/aes/aes_cbc.c",
     "//third_party/openssl/crypto/aes/aes_cfb.c",
@@ -920,6 +921,7 @@ ohos_source_set("crypto_source") {
 }
 
 ohos_static_library("libcrypto_static") {
+  stack_protector_ret = false
   deps = [ ":crypto_source" ]
   public_configs = [ ":crypto_config_public" ]
   complete_static_lib = true
@@ -930,6 +932,7 @@ ohos_static_library("libcrypto_static") {
 
 if (is_mingw || is_mac) {
   ohos_shared_library("libcrypto_restool") {
+    stack_protector_ret = false
     if (is_mingw) {
       lib_dirs = [ "//prebuilts/mingw-w64/ohos/linux-x86_64/clang-mingw/x86_64-w64-mingw32/lib" ]
       libs = [ "ws2_32" ]
@@ -947,6 +950,7 @@ if (is_mingw || is_mac) {
 }
 
 ohos_shared_library("libcrypto_shared") {
+  stack_protector_ret = false
   deps = [ ":crypto_source" ]
   output_name = "libcrypto_openssl"
   public_configs = [ ":crypto_config_public" ]

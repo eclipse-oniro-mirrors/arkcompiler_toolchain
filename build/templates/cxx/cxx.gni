@@ -43,6 +43,7 @@ template("ohos_executable") {
                              "output_dir",
                              "unit_test",
                              "external_deps",
+                             "stack_protector_ret",
                            ])
     output_dir = output_dir
     if (defined(invoker.configs)) {
@@ -114,6 +115,7 @@ template("ohos_static_library") {
                              "part_name",
                              "use_exceptions",
                              "external_deps",
+                             "stack_protector_ret",
                            ])
     if (defined(invoker.configs)) {
       configs += invoker.configs
@@ -173,6 +175,7 @@ template("ohos_shared_library") {
                              "install_images",
                              "use_exceptions",
                              "external_deps",
+                             "stack_protector_ret",
                            ])
     output_dir = output_dir
     if (defined(invoker.configs)) {
@@ -234,6 +237,7 @@ template("ohos_source_set") {
                              "use_exceptions",
                              "subsystem_name",
                              "part_name",
+                             "stack_protector_ret",
                            ])
     if (defined(invoker.configs)) {
       configs += invoker.configs

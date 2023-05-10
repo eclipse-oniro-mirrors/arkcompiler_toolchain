@@ -96,6 +96,8 @@ config("libuv_config") {
       "userenv",
       "ws2_32",
     ]
+  } else if (is_android) {
+    defines = [ "_GNU_SOURCE" ]
   }
 }
 
@@ -116,6 +118,7 @@ config("libuv_private_config") {
 }
 
 ohos_source_set("libuv_source") {
+  stack_protector_ret = false
   configs = [ ":libuv_config" ]
   sources = common_source
 
@@ -196,6 +199,7 @@ ohos_source_set("libuv_source") {
 }
 
 ohos_static_library("uv_static") {
+  stack_protector_ret = false
   deps = [ ":libuv_source" ]
   public_configs = [ ":libuv_config" ]
   subsystem_name = "thirdparty"
@@ -203,6 +207,7 @@ ohos_static_library("uv_static") {
 }
 
 ohos_shared_library("uv") {
+  stack_protector_ret = false
   deps = [ ":libuv_source" ]
   public_configs = [ ":libuv_config" ]
   subsystem_name = "thirdparty"
