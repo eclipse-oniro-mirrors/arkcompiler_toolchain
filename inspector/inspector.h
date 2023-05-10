@@ -16,7 +16,7 @@
 #ifndef ARKCOMPILER_TOOLCHAIN_INSPECTOR_INSPECTOR_H
 #define ARKCOMPILER_TOOLCHAIN_INSPECTOR_INSPECTOR_H
 
-#include "ws_server.h"
+#include "inspector/ws_server.h"
 
 #include <string>
 

@@ -20,7 +20,7 @@
 #include <iostream>
 #include <mutex>
 
-#include "websocket.h"
+#include "websocket/websocket.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 class WsServer {
