@@ -60,18 +60,10 @@ group("ets_runtime") {
 }
 
 group("ets_frontend") {
-  deps = []
-  if (target_os == "linux" && target_cpu == "x64") {
-    deps += [
+  if (target_os == "linux" || target_os == "mingw") {
+    deps = [
       "$ets_frontend_root/es2panda:es2panda",
       "$ets_frontend_root/merge_abc:merge_abc",
-      "$ets_frontend_root/ts2panda:ark_ts2abc_build",
-    ]
-  } else if (target_os == "mingw" && target_cpu == "x86_64") {
-    deps += [
-      "$ets_frontend_root/es2panda:es2panda",
-      "$ets_frontend_root/merge_abc:merge_abc",
-      "$ets_frontend_root/ts2panda:ark_ts2abc_build_win",
     ]
   }
 }
