@@ -90,10 +90,6 @@ def _uncompress(args, src_file, code_dir, unzip_dir, unzip_filename, mark_file_p
         cmd = 'tar -xvf {} -C {};echo 0 > {}'.format(src_file, dest_dir, mark_file_path)
     _run_cmd(cmd)
 
-    # npm install
-    if os.path.basename(unzip_dir) == 'nodejs':
-        _npm_install(args, code_dir, unzip_dir, unzip_filename)
-
 def _copy_url(args, task_id, url, local_file, code_dir, unzip_dir, unzip_filename, mark_file_path):
     # download files
     download_buffer_size = 32768
@@ -131,10 +127,6 @@ def _hwcloud_download(args, config, bin_dir, code_dir):
                     os.makedirs(abs_unzip_dir)
                 if _check_sha256_by_mark(args, huaweicloud_url, code_dir, unzip_dir, unzip_filename):
                     progress.console.log('{}, Sha256 markword check OK.'.format(huaweicloud_url), style='green')
-                    if os.path.basename(abs_unzip_dir) == 'nodejs':
-                        for node_dir in args.npm_install_config:
-                            _run_cmd('rm -rf {}/{}/node_modules/'.format(code_dir, node_dir))
-                        _npm_install(args, code_dir, unzip_dir, unzip_filename)
                 else:
                     _run_cmd(''.join(['rm -rf ', code_dir, '/', unzip_dir, '/*.', unzip_filename, '.mark']))
                     _run_cmd(''.join(['rm -rf ', code_dir, '/', unzip_dir, '/', unzip_filename]))
@@ -155,44 +147,6 @@ def _hwcloud_download(args, config, bin_dir, code_dir):
                         tasks[task] = os.path.basename(huaweicloud_url)
             for task in as_completed(tasks):
                 progress.console.log('{}, download and decompress completed'.format(tasks.get(task)), style='green')
-
-def _npm_install(args, code_dir, unzip_dir, unzip_filename):
-    procs = []
-    skip_ssl_cmd = ''
-    unsafe_perm_cmd = ''
-    os.environ['PATH'] = '{}/{}/{}/bin:{}'.format(code_dir, unzip_dir, unzip_filename, os.environ.get('PATH'))
-    for install_info in args.npm_install_config:
-        full_code_path = os.path.join(code_dir, install_info)
-        full_code_path = os.path.join(install_info)
-        if os.path.exists(full_code_path):
-            npm = '{}/{}/{}/bin/npm'.format(code_dir, unzip_dir, unzip_filename)
-            if args.skip_ssl:
-                skip_ssl_cmd = '{} config set strict-ssl false;'.format(npm)
-            if args.unsafe_perm:
-                unsafe_perm_cmd = '--unsafe-perm;'
-            cmd = 'cd {};{} config set registry {};{}{} cache clean -f;{} install {}'.format(
-                      full_code_path, npm, args.npm_registry, skip_ssl_cmd, npm, npm, unsafe_perm_cmd)
-            proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            procs.append(proc)
-        else:
-            raise Exception("{} not exist, it shouldn't happen, pls check...".format(full_code_path))
-    for proc in procs:
-        out, err = proc.communicate()
-        if proc.returncode:
-            raise Exception(err.decode())
-
-def _node_modules_copy(config, code_dir):
-    for config_info in config:
-        src_dir = os.path.join(code_dir, config_info.get('src'))
-        dest_dir = os.path.join(code_dir, config_info.get('dest'))
-        use_symlink = config_info.get('use_symlink')
-        if os.path.exists(os.path.dirname(dest_dir)):
-            shutil.rmtree(os.path.dirname(dest_dir))
-        if use_symlink == 'True':
-            os.makedirs(os.path.dirname(dest_dir))
-            os.symlink(src_dir, dest_dir)
-        else:
-            shutil.copytree(src_dir, dest_dir, symlinks=True)
 
 def _file_handle(config, code_dir):
     for config_info in config:
@@ -221,10 +175,7 @@ def _file_handle(config, code_dir):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--skip-ssl', action='store_true', help='skip ssl authentication')
-    parser.add_argument('--unsafe-perm', action='store_true', help='add "--unsafe-perm" for npm install')
     parser.add_argument('--tool-repo', default='https://repo.huaweicloud.com', help='prebuilt file download source')
-    parser.add_argument('--npm-registry', default='https://repo.huaweicloud.com/repository/npm/',
-                        help='npm download source')
     parser.add_argument('--host-cpu', help='host cpu', required=True)
     parser.add_argument('--host-platform', help='host platform', required=True)
     args = parser.parse_args()
@@ -238,16 +189,11 @@ def main():
     config_file = os.path.join(args.code_dir,
         'arkcompiler/toolchain/build/prebuilts_download/prebuilts_download_config.json')
     config_info = read_json_file(config_file)
-    args.npm_install_config = config_info.get('npm_install_path')
-    node_modules_copy_config = config_info.get('node_modules_copy')
     file_handle_config = config_info.get('file_handle_config')
-
     args.bin_dir = os.path.join(args.code_dir, config_info.get('prebuilts_download_dir'))
     if not os.path.exists(args.bin_dir):
         os.makedirs(args.bin_dir)
     copy_config = config_info.get(host_platform).get(host_cpu).get('copy_config')
-    node_config = config_info.get(host_platform).get('node_config')
-    copy_config.extend(node_config)
     if host_platform == 'linux':
         linux_copy_config = config_info.get(host_platform).get(host_cpu).get('linux_copy_config')
         copy_config.extend(linux_copy_config)
@@ -256,7 +202,6 @@ def main():
         copy_config.extend(darwin_copy_config)
     _hwcloud_download(args, copy_config, args.bin_dir, args.code_dir)
     _file_handle(file_handle_config, args.code_dir)
-    _node_modules_copy(node_modules_copy_config, args.code_dir)
 
 if __name__ == '__main__':
     sys.exit(main())
