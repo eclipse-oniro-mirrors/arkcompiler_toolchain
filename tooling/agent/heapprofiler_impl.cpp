@@ -319,6 +319,9 @@ DispatchResponse HeapProfilerImpl::StopSampling([[maybe_unused]] std::unique_ptr
 
 DispatchResponse HeapProfilerImpl::StartTrackingHeapObjects(const StartTrackingHeapObjectsParams &params)
 {
+    if (uv_is_active(reinterpret_cast<uv_handle_t*>(&handle_))) {
+        return DispatchResponse::Ok();
+    }
     bool traceAllocation = params.GetTrackAllocations();
     bool result = panda::DFXJSNApi::StartHeapTracking(vm_, INTERVAL, true, &stream_, traceAllocation, false);
 
