@@ -298,7 +298,8 @@ bool WebSocket::InitTcpWebSocket(uint32_t timeoutLimit)
     }
     // allow specified port can be used at once and not wait TIME_WAIT status ending
     int sockOptVal = 1;
-    if ((setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, &sockOptVal, sizeof(sockOptVal))) != SOCKET_SUCCESS) {
+    if ((setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR,
+        reinterpret_cast<char *>(&sockOptVal), sizeof(sockOptVal))) != SOCKET_SUCCESS) {
         LOGE("InitTcpWebSocket setsockopt SO_REUSEADDR failed");
         close(fd_);
         fd_ = -1;
@@ -517,6 +518,25 @@ bool WebSocket::Send(int32_t client, const char* buf, size_t totalLen, int32_t f
     return true;
 }
 
+#if !defined(OHOS_PLATFORM)
+bool WebSocket::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
+{
+    if (timeoutLimit > 0) {
+        struct timeval timeout = {timeoutLimit, 0};
+        if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO,
+            reinterpret_cast<char *>(&timeout), sizeof(timeout)) != SOCKET_SUCCESS) {
+            LOGE("SetWebSocketTimeOut setsockopt SO_SNDTIMEO failed");
+            return false;
+        }
+        if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO,
+            reinterpret_cast<char *>(&timeout), sizeof(timeout)) != SOCKET_SUCCESS) {
+            LOGE("SetWebSocketTimeOut setsockopt SO_RCVTIMEO failed");
+            return false;
+        }
+    }
+    return true;
+}
+#else
 bool WebSocket::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
 {
     if (timeoutLimit > 0) {
@@ -532,4 +552,5 @@ bool WebSocket::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
     }
     return true;
 }
+#endif
 } // namespace OHOS::ArkCompiler::Toolchain

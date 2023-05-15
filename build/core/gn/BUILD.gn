@@ -76,12 +76,9 @@ group("runtime_core") {
 }
 
 group("toolchain") {
-  deps = []
-  if (target_os != "mingw") {
-    deps += [
-      "$toolchain_root/inspector:ark_debugger",
-      "$toolchain_root/inspector:connectserver_debugger",
-      "$toolchain_root/tooling:libark_ecma_debugger",
-    ]
-  }
+  deps = [
+    "$toolchain_root/inspector:ark_debugger",
+    "$toolchain_root/inspector:connectserver_debugger",
+    "$toolchain_root/tooling:libark_ecma_debugger",
+  ]
 }
