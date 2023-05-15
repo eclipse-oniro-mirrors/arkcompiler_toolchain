@@ -1,5 +1,13 @@
 {
   "prebuilts_download_dir": "../openharmony_prebuilts",
+  "npm_install_path": ["arkcompiler/ets_frontend/ts2panda"],
+  "node_modules_copy": [
+    {
+      "src": "arkcompiler/ets_frontend/ts2panda/node_modules",
+      "dest": "prebuilts/build-tools/common/ts2abc/node_modules",
+      "use_symlink": "True"
+    }
+  ],
   "file_handle_config": [
     {
       "src": "/prebuilts/clang/ohos/linux-x86_64/clang_linux-x86_64-025192-20230330",
@@ -9,6 +17,13 @@
     }
   ],
   "linux": {
+    "node_config": [
+      {
+        "unzip_dir": "prebuilts/build-tools/common/nodejs",
+        "file_path": "/nodejs/v12.18.4/node-v12.18.4-linux-x64.tar.gz",
+        "unzip_filename": "node-v12.18.4-linux-x64"
+      }
+    ],
     "x86_64": {
       "copy_config": [
         {

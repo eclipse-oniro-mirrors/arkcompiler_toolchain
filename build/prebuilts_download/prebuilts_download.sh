@@ -28,6 +28,13 @@ while [ $# -gt 0 ]; do
     --tool-repo=*)
     TOOL_REPO="${1#--tool-repo=}"
     ;;
+    --npm-registry)
+    NPM_REGISTRY="$2"
+    shift
+    ;;
+    --npm-registry=*)
+    NPM_REGISTRY="${1#--npm-registry=}"
+    ;;
     --trusted-host)
     TRUSTED_HOST="$2"
     shift
@@ -89,6 +96,12 @@ else
     tool_repo=''
 fi
 
+if [ ! -z "$NPM_REGISTRY" ];then
+    npm_registry="--npm-registry $NPM_REGISTRY"
+else
+    npm_registry=''
+fi
+
 if [ ! -z "$TRUSTED_HOST" ];then
     trusted_host=$TRUSTED_HOST
 elif [ ! -z "$PYPI_URL" ];then
@@ -104,6 +117,12 @@ else
     pypi_url='http://repo.huaweicloud.com/repository/pypi/simple'
 fi
 
+if [ $UID -ne 0 ]; then
+    npm_para=''
+else
+    npm_para='--unsafe-perm'
+fi
+
 cpu="--host-cpu $host_cpu"
 platform="--host-platform $host_platform"
 
@@ -111,7 +130,7 @@ script_path=$(cd $(dirname $0);pwd)
 code_dir=$(dirname ${script_path})
 pip3 install --trusted-host $trusted_host -i $pypi_url rich
 echo "prebuilts_download start"
-python3 "arkcompiler/toolchain/build/prebuilts_download/prebuilts_download.py" $wget_ssl_check $tool_repo $help $cpu $platform
+python3 "arkcompiler/toolchain/build/prebuilts_download/prebuilts_download.py" $wget_ssl_check $tool_repo $npm_registry $help $cpu $platform $npm_para
 echo "prebuilts_download end"
 
 echo -e "\n"
