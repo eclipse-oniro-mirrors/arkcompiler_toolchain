@@ -96,6 +96,10 @@ Local<JSValueRef> DebuggerExecutor::GetValue(const EcmaVM *vm, const FrameHandle
     if (!value.IsEmpty()) {
         return value;
     }
+    value = GetModuleValue(vm, frameHandler, name);
+    if (!value.IsEmpty()) {
+        return value;
+    }
     value = GetGlobalValue(vm, name);
     if (!value.IsEmpty()) {
         return value;
@@ -111,6 +115,9 @@ bool DebuggerExecutor::SetValue(const EcmaVM *vm, FrameHandler *frameHandler,
         return true;
     }
     if (SetLexicalValue(vm, frameHandler, name, value)) {
+        return true;
+    }
+    if (SetModuleValue(vm, frameHandler, name, value)) {
         return true;
     }
     if (SetGlobalValue(vm, name, value)) {
@@ -191,5 +198,40 @@ Local<JSValueRef> DebuggerExecutor::GetGlobalValue(const EcmaVM *vm, Local<Strin
 bool DebuggerExecutor::SetGlobalValue(const EcmaVM *vm, Local<StringRef> name, Local<JSValueRef> value)
 {
     return DebuggerApi::SetGlobalValue(vm, name, value);
+}
+
+Local<JSValueRef> DebuggerExecutor::GetModuleValue(const EcmaVM *vm, const FrameHandler *frameHandler,
+                                                   Local<StringRef> name)
+{
+    Local<JSValueRef> result;
+    std::string varName = name->ToString();
+    Method *method = DebuggerApi::GetMethod(frameHandler);
+    const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
+    if (jsPandaFile != nullptr && (jsPandaFile->IsBundlePack() || !jsPandaFile->IsNewVersion())) {
+        return result;
+    }
+    JSThread *thread = vm->GetJSThread();
+    JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm));
+    if (currentModule->IsSourceTextModule()) {
+        result = DebuggerApi::GetModuleValue(vm, currentModule, varName);
+    }
+    return result;
+}
+
+bool DebuggerExecutor::SetModuleValue(const EcmaVM *vm, const FrameHandler *frameHandler,
+                                      Local<StringRef> name, Local<JSValueRef> value)
+{
+    std::string varName = name->ToString();
+    Method *method = DebuggerApi::GetMethod(frameHandler);
+    const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
+    if (jsPandaFile != nullptr && (jsPandaFile->IsBundlePack() || !jsPandaFile->IsNewVersion())) {
+        return false;
+    }
+    JSThread *thread = vm->GetJSThread();
+    JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm));
+    if (currentModule->IsSourceTextModule()) {
+        DebuggerApi::SetModuleValue(vm, currentModule, varName, value);
+    }
+    return true;
 }
 }  // namespace panda::ecmascript::tooling

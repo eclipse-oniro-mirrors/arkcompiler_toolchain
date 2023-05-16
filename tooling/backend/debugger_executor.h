@@ -44,12 +44,15 @@ private:
     static Local<JSValueRef> GetLocalValue(const EcmaVM *vm, const FrameHandler *frameHandler, Local<StringRef> name);
     static Local<JSValueRef> GetLexicalValue(const EcmaVM *vm, const FrameHandler *frameHandler,
                                              Local<StringRef> name);
+    static Local<JSValueRef> GetModuleValue(const EcmaVM *vm, const FrameHandler *frameHandler, Local<StringRef> name);
     static Local<JSValueRef> GetGlobalValue(const EcmaVM *vm, Local<StringRef> name);
 
     static bool SetLocalValue(const EcmaVM *vm, FrameHandler *frameHandler,
                               Local<StringRef> name, Local<JSValueRef> value);
     static bool SetLexicalValue(const EcmaVM *vm, const FrameHandler *frameHandler,
                                 Local<StringRef> name, Local<JSValueRef> value);
+    static bool SetModuleValue(const EcmaVM *vm, const FrameHandler *frameHandler,
+                               Local<StringRef> name, Local<JSValueRef> value);
     static bool SetGlobalValue(const EcmaVM *vm, Local<StringRef> name, Local<JSValueRef> value);
 
     constexpr static uint32_t NUM_ARGS = 2;
