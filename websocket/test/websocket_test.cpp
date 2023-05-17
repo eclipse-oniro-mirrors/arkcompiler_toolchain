@@ -329,7 +329,7 @@ HWTEST_F(WebSocketTest, ConnectWebSocketTest, testing::ext::TestSize.Level0)
     int appPid = getpid();
     ret = serverSocket.InitUnixWebSocket(UNIX_DOMAIN_PATH + std::to_string(appPid), 5);
 #else
-    ret = serverSocket.InitTcpWebSocket(5);
+    ret = serverSocket.InitTcpWebSocket(9230, 5);
 #endif
     ASSERT_TRUE(ret);
     pid_t pid = fork();
@@ -419,7 +419,7 @@ HWTEST_F(WebSocketTest, ReConnectWebSocketTest, testing::ext::TestSize.Level0)
     int appPid = getpid();
     ret = serverSocket.InitUnixWebSocket(UNIX_DOMAIN_PATH + std::to_string(appPid), 5);
 #else
-    ret = serverSocket.InitTcpWebSocket(5);
+    ret = serverSocket.InitTcpWebSocket(9230, 5);
 #endif
     ASSERT_TRUE(ret);
     for (int i = 0; i < 5; i++) {

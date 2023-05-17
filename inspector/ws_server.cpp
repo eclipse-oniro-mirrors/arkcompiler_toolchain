@@ -36,7 +36,7 @@ void WsServer::RunServer()
         }
         webSocket_ = std::make_unique<WebSocket>();
 #if !defined(OHOS_PLATFORM)
-        if (!webSocket_->InitTcpWebSocket()) {
+        if (!webSocket_->InitTcpWebSocket(GetPort())) {
             return;
         }
 #else
