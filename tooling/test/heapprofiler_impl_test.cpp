@@ -377,4 +377,36 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplTakeHeapSnapshot)
         channel = nullptr;
     }
 }
+
+HWTEST_F_L0(HeapProfilerImplTest, GetSamplingProfileSuccessful)
+{
+    StartSamplingParams params;
+    ProtocolChannel *channel = nullptr;
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    DispatchResponse response = heapProfiler->StartSampling(params);
+    std::unique_ptr<SamplingHeapProfile> samplingHeapProfile = std::make_unique<SamplingHeapProfile>();
+    DispatchResponse result = heapProfiler->GetSamplingProfile(&samplingHeapProfile);
+    ASSERT_TRUE(result.IsOk());
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, StartSamplingFail)
+{
+    StartSamplingParams params;
+    ProtocolChannel *channel = nullptr;
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    DispatchResponse response = heapProfiler->StartSampling(params);
+    DispatchResponse result = heapProfiler->StartSampling(params);
+    ASSERT_TRUE(!result.IsOk());
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, StopSamplingSuccessful)
+{
+    StartSamplingParams params;
+    ProtocolChannel *channel = nullptr;
+    std::unique_ptr<SamplingHeapProfile> samplingHeapProfile = std::make_unique<SamplingHeapProfile>();
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    DispatchResponse response = heapProfiler->StartSampling(params);
+    DispatchResponse result = heapProfiler->StopSampling(&samplingHeapProfile);
+    ASSERT_TRUE(result.IsOk());
+}
 }  // namespace panda::test
