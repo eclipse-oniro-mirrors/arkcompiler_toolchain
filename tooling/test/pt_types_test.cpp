@@ -833,4 +833,70 @@ HWTEST_F_L0(PtTypesTest, PropertyDescriptorCreate)
     std::unique_ptr<tooling::PropertyDescriptor> result = tooling::PropertyDescriptor::Create(*ptJson);
     ASSERT_TRUE(!result);
 }
+
+HWTEST_F_L0(PtTypesTest, SamplingHeapProfileFromSamplingInfo)
+{
+    SamplingInfo samplingInfo;
+    samplingInfo.head_.selfSize_ = 0;
+    samplingInfo.head_.id_ = 0;
+    samplingInfo.head_.callFrameInfo_.codeType_ = "codetype";
+    samplingInfo.head_.callFrameInfo_.columnNumber_ = 21;
+    samplingInfo.head_.callFrameInfo_.functionName_ = "TestSampling";
+    samplingInfo.head_.callFrameInfo_.lineNumber_ = 221;
+    samplingInfo.head_.callFrameInfo_.scriptId_ = 1;
+    samplingInfo.head_.callFrameInfo_.url_ = "url";
+    Sample sampleInfo(12024, 19, 1);
+    samplingInfo.samples_.push_back(sampleInfo);
+    std::unique_ptr<SamplingHeapProfile> profile = SamplingHeapProfile::FromSamplingInfo(&samplingInfo);
+    ASSERT_TRUE(profile != nullptr);
+    SamplingHeapProfileNode *nodeInfo = profile->GetHead();
+    int32_t selfSize = nodeInfo->GetSelfSize();
+    ASSERT_TRUE(selfSize == samplingInfo.head_.selfSize_);
+    int32_t id = nodeInfo->GetId();
+    ASSERT_TRUE(id == samplingInfo.head_.id_);
+    RuntimeCallFrame *callFrame = nodeInfo->GetCallFrame();
+    const std::string functionName = callFrame->GetFunctionName();
+    ASSERT_TRUE(functionName == samplingInfo.head_.callFrameInfo_.functionName_);
+    const std::string url = callFrame->GetUrl();
+    ASSERT_TRUE(url == samplingInfo.head_.callFrameInfo_.url_);
+    int32_t lineNumber = callFrame->GetLineNumber();
+    ASSERT_TRUE(lineNumber == samplingInfo.head_.callFrameInfo_.lineNumber_);
+    int32_t columnNumber = callFrame->GetColumnNumber();
+    ASSERT_TRUE(columnNumber == samplingInfo.head_.callFrameInfo_.columnNumber_);
+    const std::vector<std::unique_ptr<SamplingHeapProfileSample>> *sampData = profile->GetSamples();
+    int32_t nodeId = sampData->data()->get()->GetNodeId();
+    ASSERT_TRUE(nodeId == sampleInfo.nodeId_);
+    int32_t size = sampData->data()->get()->GetSize();
+    ASSERT_TRUE(size == sampleInfo.size_);
+    int64_t ordinal = sampData->data()->get()->GetOrdinal();
+    ASSERT_TRUE(ordinal == sampleInfo.ordinal_);
+}
+
+HWTEST_F_L0(PtTypesTest, SamplingHeapProfileTransferHead)
+{
+    SamplingNode allocationNode;
+    allocationNode.selfSize_ = 0;
+    allocationNode.id_ = 0;
+    allocationNode.callFrameInfo_.codeType_ = "codetype";
+    allocationNode.callFrameInfo_.columnNumber_ = 21;
+    allocationNode.callFrameInfo_.functionName_ = "TestSampling";
+    allocationNode.callFrameInfo_.lineNumber_ = 221;
+    allocationNode.callFrameInfo_.scriptId_ = 1;
+    allocationNode.callFrameInfo_.url_ = "url";
+    std::unique_ptr<SamplingHeapProfileNode> headInfo = SamplingHeapProfile::TransferHead(&allocationNode);
+    ASSERT_TRUE(headInfo != nullptr);
+    int32_t selfSize = headInfo->GetSelfSize();
+    ASSERT_TRUE(selfSize == allocationNode.selfSize_);
+    int32_t id = headInfo->GetId();
+    ASSERT_TRUE(id == allocationNode.id_);
+    RuntimeCallFrame *callFrame = headInfo->GetCallFrame();
+    const std::string functionName = callFrame->GetFunctionName();
+    ASSERT_TRUE(functionName == allocationNode.callFrameInfo_.functionName_);
+    const std::string url = callFrame->GetUrl();
+    ASSERT_TRUE(url == allocationNode.callFrameInfo_.url_);
+    int32_t lineNumber = callFrame->GetLineNumber();
+    ASSERT_TRUE(lineNumber == allocationNode.callFrameInfo_.lineNumber_);
+    int32_t columnNumber = callFrame->GetColumnNumber();
+    ASSERT_TRUE(columnNumber == allocationNode.callFrameInfo_.columnNumber_);
+}
 }  // namespace panda::test
