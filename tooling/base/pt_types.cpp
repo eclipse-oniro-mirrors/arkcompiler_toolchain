@@ -2002,10 +2002,10 @@ std::unique_ptr<SamplingHeapProfile> SamplingHeapProfile::FromSamplingInfo(
     const CVector<struct Sample> &samples = samplingInfo->samples_;
     for (const auto &sample : samples) {
         std::unique_ptr<SamplingHeapProfileSample> sampleTemp = std::make_unique<SamplingHeapProfileSample>();
-        sampleTemp->SetSize(sample.size_);
+        sampleTemp->SetSize(sample.size_ * sample.count_);
         sampleTemp->SetNodeId(sample.nodeId_);
         sampleTemp->SetOrdinal(sample.ordinal_);
-        profile->samples_.push_back(std::move(sampleTemp));
+        profile->samples_.emplace_back(std::move(sampleTemp));
     }
     return profile;
 }

@@ -845,7 +845,7 @@ HWTEST_F_L0(PtTypesTest, SamplingHeapProfileFromSamplingInfo)
     samplingInfo.head_.callFrameInfo_.lineNumber_ = 221;
     samplingInfo.head_.callFrameInfo_.scriptId_ = 1;
     samplingInfo.head_.callFrameInfo_.url_ = "url";
-    Sample sampleInfo(12024, 19, 1);
+    Sample sampleInfo(12024, 19, 1, 2);
     samplingInfo.samples_.push_back(sampleInfo);
     std::unique_ptr<SamplingHeapProfile> profile = SamplingHeapProfile::FromSamplingInfo(&samplingInfo);
     ASSERT_TRUE(profile != nullptr);
@@ -867,7 +867,7 @@ HWTEST_F_L0(PtTypesTest, SamplingHeapProfileFromSamplingInfo)
     int32_t nodeId = sampData->data()->get()->GetNodeId();
     ASSERT_TRUE(nodeId == sampleInfo.nodeId_);
     int32_t size = sampData->data()->get()->GetSize();
-    ASSERT_TRUE(size == sampleInfo.size_);
+    ASSERT_TRUE(size == (sampleInfo.size_ * sampleInfo.count_));
     int64_t ordinal = sampData->data()->get()->GetOrdinal();
     ASSERT_TRUE(ordinal == sampleInfo.ordinal_);
 }
