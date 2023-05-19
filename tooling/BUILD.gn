@@ -110,6 +110,10 @@ ohos_shared_library("libark_ecma_debugger") {
     "//arkcompiler/ets_runtime:libark_jsruntime",
   ]
 
+  if (is_mac) {
+    deps += [ "$ark_third_party_root/cJSON:cjson_static" ]
+  }
+
   install_enable = true
 
   # hiviewdfx libraries

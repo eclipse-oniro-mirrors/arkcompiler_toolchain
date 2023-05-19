@@ -122,6 +122,11 @@ ohos_source_set("connectserver_debugger_static") {
   defines = []
 
   if (is_mingw || is_mac) {
+    if (is_mingw) {
+      lib_dirs = [ "//prebuilts/mingw-w64/ohos/linux-x86_64/clang-mingw/x86_64-w64-mingw32/lib" ]
+      libs = [ "wsock32" ]
+    }
+
     cflags = [ "-std=c++17" ]
   }
 

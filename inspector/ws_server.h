@@ -19,6 +19,9 @@
 #include <functional>
 #include <iostream>
 #include <mutex>
+#ifdef WINDOWS_PLATFORM
+#include <pthread.h>
+#endif
 
 #include "websocket/websocket.h"
 
