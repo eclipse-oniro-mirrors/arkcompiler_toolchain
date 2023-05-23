@@ -1,0 +1,46 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//arkcompiler/toolchain/test/test_helper.gni")
+import("//build/config/features.gni")
+import("//build/ohos.gni")
+import("//build/test.gni")
+
+####################################fuzztest##################################
+ohos_fuzztest("ConnectServerFuzzTest") {
+  module_out_path = "arkcompiler/toolchain"
+
+  fuzz_config_file = "$toolchain_root/test/fuzztest/connectserver_fuzzer"
+
+  sources = [ "connectserver_fuzzer.cpp" ]
+
+  configs = [ "$toolchain_root:toolchain_test_config" ]
+
+  deps = [
+    "$ark_third_party_root/libuv:uv",
+    "$js_root:libark_jsruntime",
+    "$toolchain_root/inspector:connectserver_debugger",
+    "$toolchain_root/tooling:libark_ecma_debugger_set",
+    sdk_libc_secshared_dep,
+  ]
+
+  # hiviewdfx libraries
+  external_deps = hiviewdfx_ext_deps
+  deps += hiviewdfx_deps
+}
+
+group("fuzztest") {
+  testonly = true
+  deps = []
+  deps += [ ":ConnectServerFuzzTest" ]
+}

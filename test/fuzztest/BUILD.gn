@@ -19,6 +19,7 @@ group("fuzztest") {
     "agent:fuzztest",
     "backend:fuzztest",
     "base:fuzztest",
+    "connectserver_fuzzer:fuzztest",
     "dispatchprotocolmessage_fuzzer:fuzztest",
     "initializedebugger_fuzzer:fuzztest",
     "protocolhandler_fuzzer:fuzztest",
