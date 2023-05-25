@@ -35,7 +35,8 @@ namespace OHOS {
         option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
         std::function<void(std::string&&)> fun = TestFun;
         int32_t instanceId = 10001; // 10001:test instanceId
-        WsServer wsServer("toolchain", fun, instanceId);
+        int port = 9230; // 9230:connection port for test
+        WsServer wsServer("toolchain", fun, instanceId, port);
         wsServer.RunServer();
         std::string message(data, data + size);
         wsServer.SendReply(message);

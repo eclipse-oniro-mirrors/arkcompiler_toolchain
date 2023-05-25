@@ -28,13 +28,17 @@
 namespace OHOS::ArkCompiler::Toolchain {
 class WsServer {
 public:
-    WsServer(const std::string& component, const std::function<void(std::string&&)>& onMessage, int32_t instanceId)
-        : instanceId_(instanceId), componentName_(component), wsOnMessage_(onMessage)
+    WsServer(const std::string& component, const std::function<void(std::string&&)>& onMessage, int32_t instanceId,
+        int port) : instanceId_(instanceId), componentName_(component), wsOnMessage_(onMessage), port_(port)
     {}
     ~WsServer() = default;
     void RunServer();
     void StopServer();
     void SendReply(const std::string& message) const;
+    int GetPort() const
+    {
+        return port_;
+    }
 
     pthread_t tid_ {0};
 
@@ -45,6 +49,7 @@ private:
     std::string componentName_ {};
     std::function<void(std::string&&)> wsOnMessage_ {};
     std::unique_ptr<WebSocket> webSocket_ { nullptr };
+    int port_ = -1;
 };
 } // namespace OHOS::ArkCompiler::Toolchain
 
