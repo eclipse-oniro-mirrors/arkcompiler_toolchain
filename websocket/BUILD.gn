@@ -113,6 +113,7 @@ ohos_source_set("websocket") {
   include_dirs += [
     "$toolchain_root/inspector",
     "//utils/native/base/include",
+    "//third_party/openssl/include",
   ]
 
   sources = [ "websocket.cpp" ]
