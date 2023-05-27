@@ -51,7 +51,8 @@ group("ets_runtime") {
     "$js_root/ecmascript/js_vm:ark_js_vm",
     "$js_root/ecmascript/quick_fix:quick_fix",
   ]
-  if (target_os == "linux" || (target_cpu == "arm64" && target_os == "ohos")) {
+  if ((target_os == "linux" && target_cpu == "x64") ||
+      (target_cpu == "arm64" && target_os == "ohos")) {
     deps += [
       "$js_root/ecmascript/compiler:ark_aot_compiler",
       "$js_root/ecmascript/compiler:ark_stub_compiler",
@@ -60,7 +61,7 @@ group("ets_runtime") {
 }
 
 group("ets_frontend") {
-  if (target_os == "linux" || target_os == "mingw") {
+  if ((target_os == "linux" && target_cpu == "x64") || target_os == "mingw") {
     deps = [
       "$ets_frontend_root/es2panda:es2panda",
       "$ets_frontend_root/merge_abc:merge_abc",

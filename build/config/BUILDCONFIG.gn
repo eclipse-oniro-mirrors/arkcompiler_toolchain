@@ -78,6 +78,8 @@ if (target_os == "ohos" && target_cpu == "arm") {
   _default_toolchain = "$build_root/toolchain/ark:ark_clang_arm64"
 } else if (target_os == "linux" && target_cpu == "x64") {
   _default_toolchain = "$build_root/toolchain/linux:clang_x64"
+} else if (target_os == "linux" && target_cpu == "x86") {
+  _default_toolchain = "$build_root/toolchain/linux:clang_x86"
 } else if (target_os == "mingw" && target_cpu == "x86_64") {
   _default_toolchain = "$build_root/toolchain/mingw:mingw_x86_64"
 } else if (target_os == "android" && target_cpu == "arm64") {
