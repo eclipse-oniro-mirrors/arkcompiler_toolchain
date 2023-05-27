@@ -132,19 +132,6 @@ void HeapProfilerImpl::DispatcherImpl::StartSampling(const DispatchRequest &requ
     SendResponse(request, response);
 }
 
-void HeapProfilerImpl::DispatcherImpl::StartTrackingHeapObjects(const DispatchRequest &request)
-{
-    std::unique_ptr<StartTrackingHeapObjectsParams> params =
-        StartTrackingHeapObjectsParams::Create(request.GetParams());
-    if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
-    }
-    DispatchResponse response = heapprofiler_->StartTrackingHeapObjects(*params);
-    SendResponse(request, response);
-}
-
-
 void HeapProfilerImpl::DispatcherImpl::StopSampling(const DispatchRequest &request)
 {
     std::unique_ptr<SamplingHeapProfile> profile;
@@ -156,6 +143,18 @@ void HeapProfilerImpl::DispatcherImpl::StopSampling(const DispatchRequest &reque
 
     StopSamplingReturns result(std::move(profile));
     SendResponse(request, response, result);
+}
+
+void HeapProfilerImpl::DispatcherImpl::StartTrackingHeapObjects(const DispatchRequest &request)
+{
+    std::unique_ptr<StartTrackingHeapObjectsParams> params =
+        StartTrackingHeapObjectsParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+    DispatchResponse response = heapprofiler_->StartTrackingHeapObjects(*params);
+    SendResponse(request, response);
 }
 
 void HeapProfilerImpl::DispatcherImpl::StopTrackingHeapObjects(const DispatchRequest &request)
