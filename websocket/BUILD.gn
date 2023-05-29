@@ -129,6 +129,6 @@ ohos_source_set("websocket") {
 
   configs += [ ":websocket_platform_config" ]
 
-  subsystem_name = "ark"
+  subsystem_name = "arkcompiler"
   part_name = "toolchain"
 }

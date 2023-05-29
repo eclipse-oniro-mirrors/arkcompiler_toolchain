@@ -14,21 +14,25 @@
 import("$build_root/ark_var.gni")
 
 template("ohos_executable") {
+  if (defined(invoker.subsystem_name) && defined(invoker.part_name)) {
+    subsystem_name = invoker.subsystem_name
+    part_name = invoker.part_name
+  } else if (defined(invoker.subsystem_name)) {
+    subsystem_name = invoker.subsystem_name
+    part_name = subsystem_name
+  } else {
+    subsystem_name = "arkcompiler"
+    part_name = "common"
+  }
+  assert(part_name != "")
+  assert(subsystem_name != "")
+
   if (defined(invoker.unit_test) && invoker.unit_test) {
     output_dir = invoker.test_output_dir
   } else {
-    if (defined(invoker.subsystem_name) && defined(invoker.part_name)) {
-      subsystem_name = invoker.subsystem_name
-      part_name = invoker.part_name
-    } else if (defined(invoker.subsystem_name)) {
-      subsystem_name = invoker.subsystem_name
-      part_name = subsystem_name
-    } else {
-      subsystem_name = "arkcompiler"
-      part_name = "common"
-    }
     output_dir = "${root_out_dir}/${subsystem_name}/${part_name}"
   }
+
   executable(target_name) {
     forward_variables_from(invoker,
                            "*",
@@ -85,9 +89,16 @@ template("ohos_executable") {
         deps = []
       }
 
-      foreach(dep, invoker.external_deps) {
-        # For arkcompiler standalone build
-        deps += [ "//arkcompiler/${dep}" ]
+      external_deps_temp_file =
+          "$target_gen_dir/${part_name}__${target_name}_external_deps_temp.json"
+      arguments = [ rebase_path(external_deps_temp_file, root_build_dir) ]
+      arguments += invoker.external_deps
+      exec_script("$build_root/templates/cxx/external_deps_handler.py",
+                  arguments,
+                  "string")
+      external_deps_info = read_file(external_deps_temp_file, "json")
+      if (defined(external_deps_info.deps)) {
+        deps += external_deps_info.deps
       }
     }
   }
@@ -142,9 +153,16 @@ template("ohos_static_library") {
         deps = []
       }
 
-      foreach(dep, invoker.external_deps) {
-        # For arkcompiler standalone build
-        deps += [ "//arkcompiler/${dep}" ]
+      external_deps_temp_file =
+          "$target_gen_dir/${part_name}__${target_name}_external_deps_temp.json"
+      arguments = [ rebase_path(external_deps_temp_file, root_build_dir) ]
+      arguments += invoker.external_deps
+      exec_script("$build_root/templates/cxx/external_deps_handler.py",
+                  arguments,
+                  "string")
+      external_deps_info = read_file(external_deps_temp_file, "json")
+      if (defined(external_deps_info.deps)) {
+        deps += external_deps_info.deps
       }
     }
   }
@@ -215,15 +233,35 @@ template("ohos_shared_library") {
         deps = []
       }
 
-      foreach(dep, invoker.external_deps) {
-        # For arkcompiler standalone build
-        deps += [ "//arkcompiler/${dep}" ]
+      external_deps_temp_file =
+          "$target_gen_dir/${part_name}__${target_name}_external_deps_temp.json"
+      arguments = [ rebase_path(external_deps_temp_file, root_build_dir) ]
+      arguments += invoker.external_deps
+      exec_script("$build_root/templates/cxx/external_deps_handler.py",
+                  arguments,
+                  "string")
+      external_deps_info = read_file(external_deps_temp_file, "json")
+      if (defined(external_deps_info.deps)) {
+        deps += external_deps_info.deps
       }
     }
   }
 }
 
 template("ohos_source_set") {
+  if (defined(invoker.subsystem_name) && defined(invoker.part_name)) {
+    subsystem_name = invoker.subsystem_name
+    part_name = invoker.part_name
+  } else if (defined(invoker.subsystem_name)) {
+    subsystem_name = invoker.subsystem_name
+    part_name = subsystem_name
+  } else {
+    subsystem_name = "arkcompiler"
+    part_name = "common"
+  }
+  assert(subsystem_name != "")
+  assert(part_name != "")
+
   source_set(target_name) {
     forward_variables_from(invoker,
                            "*",
@@ -244,6 +282,19 @@ template("ohos_source_set") {
     }
     if (defined(invoker.remove_configs)) {
       configs -= invoker.remove_configs
+    }
+    if (defined(invoker.external_deps)) {
+      external_deps_temp_file =
+          "$target_gen_dir/${part_name}__${target_name}_external_deps_temp.json"
+      arguments = [ rebase_path(external_deps_temp_file, root_build_dir) ]
+      arguments += invoker.external_deps
+      exec_script("$build_root/templates/cxx/external_deps_handler.py",
+                  arguments,
+                  "string")
+      external_deps_info = read_file(external_deps_temp_file, "json")
+      if (defined(external_deps_info.deps)) {
+        deps += external_deps_info.deps
+      }
     }
   }
 }
