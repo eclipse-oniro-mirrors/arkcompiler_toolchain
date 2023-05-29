@@ -21,8 +21,19 @@
         "rom": "",
         "ram": "",
         "deps": {
-            "components": [],
-            "third_party": []
+            "components": [
+                "ets_runtime",
+                "runtime_core",
+                "faultloggerd",
+                "hitrace_native",
+                "hiviewdfx_hilog_native",
+                "libuv"
+            ],
+            "third_party": [
+                "bounds_checking_function",
+                "cjson",
+                "openssl"
+            ]
         },
         "build": {
             "sub_component": [

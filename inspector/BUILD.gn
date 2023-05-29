@@ -85,7 +85,7 @@ ohos_source_set("ark_debugger_static") {
     libs = [ "log" ]
   }
 
-  deps += [ "$toolchain_root/websocket:websocket" ]
+  deps += [ "../websocket:websocket" ]
   sources = [
     "inspector.cpp",
     "library_loader.cpp",
@@ -98,6 +98,8 @@ ohos_source_set("ark_debugger_static") {
   deps += hiviewdfx_deps
 
   configs += [ ":ark_platform_config" ]
+  subsystem_name = "arkcompiler"
+  part_name = "toolchain"
 }
 
 ohos_shared_library("ark_debugger") {
@@ -111,8 +113,8 @@ ohos_shared_library("ark_debugger") {
     ]
   }
 
-  part_name = "toolchain"
   subsystem_name = "arkcompiler"
+  part_name = "toolchain"
 }
 
 ohos_source_set("connectserver_debugger_static") {
@@ -132,7 +134,7 @@ ohos_source_set("connectserver_debugger_static") {
 
   include_dirs = [ "$toolchain_root" ]
 
-  deps += [ "$toolchain_root/websocket:websocket" ]
+  deps += [ "../websocket:websocket" ]
   sources = [
     "connect_inspector.cpp",
     "connect_server.cpp",
@@ -148,6 +150,8 @@ ohos_source_set("connectserver_debugger_static") {
   deps += hiviewdfx_deps
 
   configs += [ ":ark_platform_config" ]
+  subsystem_name = "arkcompiler"
+  part_name = "toolchain"
 }
 
 ohos_shared_library("connectserver_debugger") {
