@@ -41,11 +41,9 @@ namespace OHOS {
             std::cout << "memcpy_s failed!";
             UNREACHABLE();
         }
-        using EcmaVMS = panda::ecmascript::EcmaVM;
-        EcmaVMS *ecmaVm {nullptr};
         std::string str(data, data + size);
         auto req = std::make_unique<DispatchRequest>(str);
-        auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, nullptr);
+        auto heapProfiler = std::make_unique<HeapProfilerImpl>(vm, nullptr);
         auto dispatcherImpl =
             std::make_unique<HeapProfilerImpl::DispatcherImpl>(nullptr, std::move(heapProfiler));
         dispatcherImpl->StartSampling(*req);
