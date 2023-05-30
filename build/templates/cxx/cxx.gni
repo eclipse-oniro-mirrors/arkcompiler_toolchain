@@ -330,6 +330,8 @@ template("ohos_copy") {
                              "module_source_dir",
                              "module_install_name",
                              "license_file",
+                             "install_enable",
+                             "module_type",
                            ])
     if (defined(invoker.license_file)) {
       license_file = invoker.license_file
@@ -342,6 +344,12 @@ template("ohos_copy") {
     }
     if (defined(invoker.relative_install_dir)) {
       relative_install_dir = invoker.relative_install_dir
+    }
+    if (defined(invoker.install_enable)) {
+      install_enable = invoker.install_enable
+    }
+    if (defined(invoker.module_type)) {
+      module_type = invoker.module_type
     }
     deps = copy_deps
   }
