@@ -15,12 +15,11 @@
 # limitations under the License.
 #
 
-# from __future__ import print_function
-# import errno
+import argparse
+import hashlib
+import json
 import os
 import sys
-import json
-import hashlib
 
 
 def __check_changes(output_file, content):
@@ -75,60 +74,59 @@ def get_full_path_from_target_name(config_info, target_name) -> str:
         inner_kit_parts = inner_kit["name"].split(":")
         if inner_kit_parts[1].startswith(target_name):
             return inner_kit["name"]
-    print("Attemp to get a target(external_dep) which is not in the component's inner_kits!")
+    print("Attemp to get a target({}) which is not in the component's inner_kits!".format(target_name))
     sys.exit(1)
     return ""
 
 
-def main(arg_list):
-    external_deps_temp_file = arg_list[0]
-    external_deps = arg_list[1:]
-
-    result = {}
-    if len(external_deps) == 0:
-        result['deps'] = []
-        write_json_file(external_deps_temp_file, result)
-        return 0
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--root-src-dir", required=True)
+    parser.add_argument("--external-deps-temp-file", required=True)
+    parser.add_argument("--external-deps", nargs='+', required=True)
+    args = parser.parse_args()
 
     deps = []
-    for dep in external_deps:
+    for dep in args.external_deps:
         if dep.startswith("ets_runtime"):
-            config_info = read_json_file("../../arkcompiler/ets_runtime/bundle.json")
+            config_info = read_json_file("{}arkcompiler/ets_runtime/bundle.json".format(args.root_src_dir))
             target_name = dep.split(":")[1]
             deps.append(get_full_path_from_target_name(config_info, target_name))
         elif dep.startswith("runtime_core"):
-            config_info = read_json_file("../../arkcompiler/runtime_core/bundle.json")
+            config_info = read_json_file("{}arkcompiler/runtime_core/bundle.json".format(args.root_src_dir))
             target_name = dep.split(":")[1]
             deps.append(get_full_path_from_target_name(config_info, target_name))
         elif dep.startswith("ets_frontend"):
-            config_info = read_json_file("../../arkcompiler/ets_frontend/bundle.json")
+            config_info = read_json_file("{}arkcompiler/ets_frontend/bundle.json".format(args.root_src_dir))
             target_name = dep.split(":")[1]
             deps.append(get_full_path_from_target_name(config_info, target_name))
         elif dep.startswith("toolchain"):
-            config_info = read_json_file("../../arkcompiler/toolchain/bundle.json")
+            config_info = read_json_file("{}arkcompiler/toolchain/bundle.json".format(args.root_src_dir))
             target_name = dep.split(":")[1]
             deps.append(get_full_path_from_target_name(config_info, target_name))
         elif dep.startswith("libuv"):
-            config_info = read_json_file("../../third_party/libuv/bundle.json")
+            config_info = read_json_file("{}third_party/libuv/bundle.json".format(args.root_src_dir))
             target_name = dep.split(":")[1]
-            origin_full_path = get_full_path_from_target_name(config_info, target_name)
-            new_full_path = origin_full_path.replace("//third_party/libuv", "//arkcompiler/toolchain/build/third_party_gn/libuv")
-            deps.append(new_full_path)
+            src_full_path = get_full_path_from_target_name(config_info, target_name)
+            gn_full_path = src_full_path.replace("//third_party/libuv", "//arkcompiler/toolchain/build/third_party_gn/libuv")
+            deps.append(gn_full_path)
         elif dep.startswith("openssl"):
-            config_info = read_json_file("../../third_party/openssl/bundle.json")
+            config_info = read_json_file("{}third_party/openssl/bundle.json".format(args.root_src_dir))
             target_name = dep.split(":")[1]
-            origin_full_path = get_full_path_from_target_name(config_info, target_name)
-            new_full_path = origin_full_path.replace("//third_party/openssl", "//arkcompiler/toolchain/build/third_party_gn/openssl")
-            deps.append(new_full_path)
+            src_full_path = get_full_path_from_target_name(config_info, target_name)
+            gn_full_path = src_full_path.replace("//third_party/openssl", "//arkcompiler/toolchain/build/third_party_gn/openssl")
+            deps.append(gn_full_path)
         else:
-            print("Component in which the external_dep defined is ommited in the logic of {}".format(__file__))
+            print("Component in which the external_dep defined is ommited in the logic of {}!".format(__file__))
             sys.exit(1)
             return
 
-    result['deps'] = deps
-    write_json_file(external_deps_temp_file, result)
+    result = {}
+    if deps:
+        result['deps'] = deps
+    write_json_file(args.external_deps_temp_file, result)
     return 0
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
