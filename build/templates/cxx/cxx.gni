@@ -84,14 +84,20 @@ template("ohos_executable") {
       libs += [ "c++" ]
     }
 
-    if (defined(invoker.external_deps)) {
+    if (defined(invoker.external_deps) && invoker.external_deps != []) {
       if (!defined(deps)) {
         deps = []
       }
 
       external_deps_temp_file =
           "$target_gen_dir/${part_name}__${target_name}_external_deps_temp.json"
-      arguments = [ rebase_path(external_deps_temp_file, root_build_dir) ]
+      arguments = [
+        "--root-src-dir",
+        rebase_path("//", root_build_dir),
+        "--external-deps-temp-file",
+        rebase_path(external_deps_temp_file, root_build_dir),
+        "--external-deps",
+      ]
       arguments += invoker.external_deps
       exec_script("$build_root/templates/cxx/external_deps_handler.py",
                   arguments,
@@ -148,14 +154,20 @@ template("ohos_static_library") {
       include_dirs = []
     }
 
-    if (defined(invoker.external_deps)) {
+    if (defined(invoker.external_deps) && invoker.external_deps != []) {
       if (!defined(deps)) {
         deps = []
       }
 
       external_deps_temp_file =
           "$target_gen_dir/${part_name}__${target_name}_external_deps_temp.json"
-      arguments = [ rebase_path(external_deps_temp_file, root_build_dir) ]
+      arguments = [
+        "--root-src-dir",
+        rebase_path("//", root_build_dir),
+        "--external-deps-temp-file",
+        rebase_path(external_deps_temp_file, root_build_dir),
+        "--external-deps",
+      ]
       arguments += invoker.external_deps
       exec_script("$build_root/templates/cxx/external_deps_handler.py",
                   arguments,
@@ -228,14 +240,20 @@ template("ohos_shared_library") {
       }
     }
 
-    if (defined(invoker.external_deps)) {
+    if (defined(invoker.external_deps) && invoker.external_deps != []) {
       if (!defined(deps)) {
         deps = []
       }
 
       external_deps_temp_file =
           "$target_gen_dir/${part_name}__${target_name}_external_deps_temp.json"
-      arguments = [ rebase_path(external_deps_temp_file, root_build_dir) ]
+      arguments = [
+        "--root-src-dir",
+        rebase_path("//", root_build_dir),
+        "--external-deps-temp-file",
+        rebase_path(external_deps_temp_file, root_build_dir),
+        "--external-deps",
+      ]
       arguments += invoker.external_deps
       exec_script("$build_root/templates/cxx/external_deps_handler.py",
                   arguments,
@@ -283,10 +301,16 @@ template("ohos_source_set") {
     if (defined(invoker.remove_configs)) {
       configs -= invoker.remove_configs
     }
-    if (defined(invoker.external_deps)) {
+    if (defined(invoker.external_deps) && invoker.external_deps != []) {
       external_deps_temp_file =
           "$target_gen_dir/${part_name}__${target_name}_external_deps_temp.json"
-      arguments = [ rebase_path(external_deps_temp_file, root_build_dir) ]
+      arguments = [
+        "--root-src-dir",
+        rebase_path("//", root_build_dir),
+        "--external-deps-temp-file",
+        rebase_path(external_deps_temp_file, root_build_dir),
+        "--external-deps",
+      ]
       arguments += invoker.external_deps
       exec_script("$build_root/templates/cxx/external_deps_handler.py",
                   arguments,
@@ -317,15 +341,10 @@ template("ohos_copy") {
   assert(copy_subsystem_name != "")
   assert(copy_part_name != "")
 
-  copy_deps = []
-  if (defined(invoker.deps)) {
-    copy_deps += invoker.deps
-  }
   copy(target_name) {
     forward_variables_from(invoker,
+                           "*",
                            [
-                             "sources",
-                             "outputs",
                              "relative_install_dir",
                              "module_source_dir",
                              "module_install_name",
@@ -333,24 +352,5 @@ template("ohos_copy") {
                              "install_enable",
                              "module_type",
                            ])
-    if (defined(invoker.license_file)) {
-      license_file = invoker.license_file
-    }
-    if (defined(invoker.module_install_name)) {
-      module_install_name = invoker.module_install_name
-    }
-    if (defined(invoker.module_source_dir)) {
-      module_source_dir = invoker.module_source_dir
-    }
-    if (defined(invoker.relative_install_dir)) {
-      relative_install_dir = invoker.relative_install_dir
-    }
-    if (defined(invoker.install_enable)) {
-      install_enable = invoker.install_enable
-    }
-    if (defined(invoker.module_type)) {
-      module_type = invoker.module_type
-    }
-    deps = copy_deps
   }
 }
