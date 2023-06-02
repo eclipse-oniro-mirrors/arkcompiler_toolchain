@@ -243,14 +243,23 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
 
 void DebuggerImpl::NotifyNativeCalling(const void *nativeAddress)
 {
-    // native calling only after step into should be reported
+    bool isStepInto = false;
     if (singleStepper_ != nullptr &&
         singleStepper_->GetStepperType() == StepperType::STEP_INTO) {
-        tooling::NativeCalling nativeCalling;
-        nativeCalling.SetNativeAddress(nativeAddress);
-        frontend_.NativeCalling(vm_, nativeCalling);
-        frontend_.WaitForDebugger(vm_);
+        isStepInto = true;
     }
+
+    tooling::NativeCalling nativeCalling;
+    nativeCalling.SetNativeAddress(nativeAddress);
+    nativeCalling.SetIntoStatus(isStepInto);
+    nativePointer_ = DebuggerApi::GetNativePointer(vm_);
+    nativeCalling.SetNativePointer(nativePointer_);
+    std::vector<std::unique_ptr<CallFrame>> callFrames;
+    if (GenerateCallFrames(&callFrames)) {
+        nativeCalling.SetCallFrames(std::move(callFrames));
+    }
+    frontend_.NativeCalling(vm_, nativeCalling);
+    frontend_.WaitForDebugger(vm_);
 }
 
 // only use for test case

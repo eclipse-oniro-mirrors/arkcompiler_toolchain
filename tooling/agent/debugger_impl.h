@@ -206,6 +206,7 @@ private:
     DebuggerState debuggerState_ {DebuggerState::ENABLED};
     bool pauseOnNextByteCode_ {false};
     std::unique_ptr<SingleStepper> singleStepper_ {nullptr};
+    std::vector<void *>  nativePointer_;
 
     std::unordered_map<JSTaggedType *, RemoteObjectId> scopeObjects_ {};
     std::vector<std::shared_ptr<FrameHandler>> callFrameHandlers_;
