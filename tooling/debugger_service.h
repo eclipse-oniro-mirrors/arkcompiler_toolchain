@@ -19,7 +19,7 @@
 #include <functional>
 #include <string>
 
-#ifndef WINDOWS_PLATFORM
+#ifndef PANDA_TARGET_WINDOWS
 #define TOOLCHAIN_EXPORT __attribute__((visibility ("default")))
 #else
 #define TOOLCHAIN_EXPORT __declspec(dllexport)
