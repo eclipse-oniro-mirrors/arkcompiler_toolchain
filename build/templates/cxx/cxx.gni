@@ -206,6 +206,7 @@ template("ohos_shared_library") {
                              "use_exceptions",
                              "external_deps",
                              "stack_protector_ret",
+                             "innerapi_tags",
                            ])
     output_dir = output_dir
     if (defined(invoker.configs)) {
