@@ -108,13 +108,15 @@ def main():
             config_info = read_json_file("{}third_party/libuv/bundle.json".format(args.root_src_dir))
             target_name = dep.split(":")[1]
             src_full_path = get_full_path_from_target_name(config_info, target_name)
-            gn_full_path = src_full_path.replace("//third_party/libuv", "//arkcompiler/toolchain/build/third_party_gn/libuv")
+            gn_full_path = src_full_path.replace("//third_party/libuv",
+                                                 "//arkcompiler/toolchain/build/third_party_gn/libuv")
             deps.append(gn_full_path)
         elif dep.startswith("openssl"):
             config_info = read_json_file("{}third_party/openssl/bundle.json".format(args.root_src_dir))
             target_name = dep.split(":")[1]
             src_full_path = get_full_path_from_target_name(config_info, target_name)
-            gn_full_path = src_full_path.replace("//third_party/openssl", "//arkcompiler/toolchain/build/third_party_gn/openssl")
+            gn_full_path = src_full_path.replace("//third_party/openssl",
+                                                 "//arkcompiler/toolchain/build/third_party_gn/openssl")
             deps.append(gn_full_path)
         else:
             print("Component in which the external_dep defined is ommited in the logic of {}!".format(__file__))
