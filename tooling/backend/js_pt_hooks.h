@@ -30,6 +30,7 @@ public:
     explicit JSPtHooks(DebuggerImpl *debugger) : debugger_(debugger) {}
     ~JSPtHooks() override = default;
 
+    void DebuggerStmt(const JSPtLocation &location) override;
     void Breakpoint(const JSPtLocation &location) override;
     void LoadModule(std::string_view pandaFileName, std::string_view entryPoint) override;
     void Exception(const JSPtLocation &location) override;
