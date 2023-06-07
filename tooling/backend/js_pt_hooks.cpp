@@ -23,7 +23,7 @@ void JSPtHooks::DebuggerStmt(const JSPtLocation &location)
     LOG_DEBUGGER(INFO) << "JSPHooks: Debugger => " << location.GetMethodId() << ": "
                         << location.GetBytecodeOffset();
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
-    debugger_->NotifyPaused(location, DEBUGGERSTMT);
+    debugger_->NotifyPaused(location, OTHER);
 }
 
 void JSPtHooks::Breakpoint(const JSPtLocation &location)
