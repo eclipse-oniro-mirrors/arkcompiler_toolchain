@@ -39,3 +39,12 @@ ark_clang_toolchain("ark_clang_arm64") {
     current_os = "ohos"
   }
 }
+
+ark_clang_toolchain("ark_clang_mipsel") {
+  sysroot = "${musl_sysroot}"
+  lib_dir = "usr/lib/mipsel-linux-ohos"
+  toolchain_args = {
+    current_cpu = "mipsel"
+    current_os = "ohos"
+  }
+}

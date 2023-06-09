@@ -126,6 +126,14 @@ class ArkPy:
                 "expression_to_args_gn": "target_os = \"mingw\"\ntarget_cpu = \"x86_64\"\n",
                 "prefix_of_name_of_out_dir_of_second_level": "mingw_x86_64",
             },
+            "mipsel": {
+                "flags": ["mipsel"],
+                "description":
+                    "Build for arkcompiler target of target-operating-system ohos and "
+                    "target-central-processing-unit mipsel(32-bit mips).",
+                "expression_to_args_gn": "target_os = \"ohos\"\ntarget_cpu = \"mipsel\"\n",
+                "prefix_of_name_of_out_dir_of_second_level": "mipsel",
+            },
         },
         "mode": {
             "release": {

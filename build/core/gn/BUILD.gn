@@ -77,9 +77,11 @@ group("runtime_core") {
 }
 
 group("toolchain") {
-  deps = [
-    "$toolchain_root/inspector:ark_debugger",
-    "$toolchain_root/inspector:connectserver_debugger",
-    "$toolchain_root/tooling:libark_ecma_debugger",
-  ]
+  if (target_cpu != "mipsel") {
+    deps = [
+      "$toolchain_root/inspector:ark_debugger",
+      "$toolchain_root/inspector:connectserver_debugger",
+      "$toolchain_root/tooling:libark_ecma_debugger",
+    ]
+  }
 }
