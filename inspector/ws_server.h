@@ -35,10 +35,6 @@ public:
     void RunServer();
     void StopServer();
     void SendReply(const std::string& message) const;
-    int GetPort() const
-    {
-        return port_;
-    }
 
     pthread_t tid_ {0};
 
@@ -49,7 +45,7 @@ private:
     std::string componentName_ {};
     std::function<void(std::string&&)> wsOnMessage_ {};
     std::unique_ptr<WebSocket> webSocket_ { nullptr };
-    int port_ = -1;
+    [[maybe_unused]] int port_ = -1;
 };
 } // namespace OHOS::ArkCompiler::Toolchain
 
