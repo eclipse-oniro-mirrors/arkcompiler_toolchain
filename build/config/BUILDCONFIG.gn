@@ -15,6 +15,7 @@ declare_args() {
   ark_standalone_build = true
   use_musl = true
   build_root = "//arkcompiler/toolchain/build"
+  run_with_qemu = false
 }
 
 if (host_os == "linux") {

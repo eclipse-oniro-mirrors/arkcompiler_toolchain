@@ -41,7 +41,7 @@ group("default") {
 group("unittest_packages") {
   testonly = true
   if (host_os != "mac") {
-    deps = [ "//arkcompiler/toolchain:ark_js_host_unittest" ]
+    deps = [ "$toolchain_root:ark_js_host_unittest" ]
   }
 }
 

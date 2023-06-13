@@ -340,7 +340,7 @@ template("gcc_toolchain") {
     tool("link") {
       exename = "{{target_output_name}}{{output_extension}}"
       outfile = "{{output_dir}}/$exename"
-      rspfile = "$outfile.rsp"
+      rspfile = "${outfile}.rsp"
       unstripped_outfile = outfile
 
       # Use this for {{output_extension}} expansions unless a target manually

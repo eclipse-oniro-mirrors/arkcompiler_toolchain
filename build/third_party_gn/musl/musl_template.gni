@@ -16,12 +16,25 @@ import("$build_root/ark.gni")
 import("$build_root/config/clang/clang.gni")
 import("$build_root/third_party_gn/musl/musl_src.gni")
 
+_libs_path_prefix = "."
+if (is_asan) {
+  asan = "-asan"
+} else {
+  asan = ""
+}
+musl_linker_so_out_dir =
+    "${root_out_dir}/common/common/libc/${_libs_path_prefix}"
+musl_linker_so_out_path =
+    "${musl_linker_so_out_dir}/ld-musl-${musl_arch}${asan}.so.1"
+musl_linker_so_out_dir_for_qemu = "${musl_linker_so_out_dir}/lib"
+musl_linker_so_out_path_for_qemu =
+    "${musl_linker_so_out_dir_for_qemu}/ld-musl-${musl_arch}${asan}.so.1"
+
 template("musl_libs") {
   no_default_deps = true
 
   forward_variables_from(invoker, [ "*" ])
   musl_ported_root = "${target_out_dir}/${musl_ported_dir}"
-  _libs_path_prefix = "."
   _libs_out_dir = "usr/lib/${musl_target_triple}"
 
   porting_deps = [
@@ -906,12 +919,13 @@ template("musl_libs") {
     # _libc_shared_outputs = get_target_outputs(":soft_libc_musl_shared")
     _libc_shared_so = "${target_out_dir}/${_libs_out_dir}/libc.so"
     sources = [ _libc_shared_so ]
-    if (is_asan) {
-      asan = "-asan"
-    } else {
-      asan = ""
-    }
-    _muls_linker_so = "${root_out_dir}/common/common/libc/${_libs_path_prefix}/ld-musl-${musl_arch}${asan}.so.1"
-    outputs = [ _muls_linker_so ]
+    outputs = [ musl_linker_so_out_path ]
+  }
+
+  copy("soft_create_linker_for_qemu") {
+    deps = [ ":soft_create_linker" ]
+
+    sources = [ musl_linker_so_out_path ]
+    outputs = [ musl_linker_so_out_path_for_qemu ]
   }
 }
