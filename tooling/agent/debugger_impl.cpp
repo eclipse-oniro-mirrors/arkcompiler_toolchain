@@ -1149,6 +1149,9 @@ void DebuggerImpl::GetClosureVariables(const FrameHandler *frameHandler, Local<J
                 continue;
             }
             Local<JSValueRef> name = StringRef::NewFromUtf8(vm_, varName.c_str());
+            if (value->IsHole()) {
+                value = JSValueRef::Undefined(vm_);
+            }
             PropertyAttribute descriptor(value, true, true, true);
             localObj->DefineProperty(vm_, name, descriptor);
         }
