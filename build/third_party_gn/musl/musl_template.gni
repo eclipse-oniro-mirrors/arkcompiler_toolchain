@@ -181,7 +181,7 @@ template("musl_libs") {
       "-Wl,--dynamic-list=${dynamic_list}",
       "-Wl,--exclude-libs=ALL",
       "-Wl,--no-undefined",
-      "-Wl,--hash-style=both",
+      "-Wl,--hash-style=sysv",
       "-Wl,--gc-sections",
       "-Wl,--sort-common",
       "-Wl,--sort-section,alignment",
@@ -332,6 +332,9 @@ template("musl_libs") {
       "src/string/memset.c",
       "src/string/mempcpy.c",
     ]
+    if (musl_arch == "mips") {
+      sources_orig += [ "src/string/memset.c" ]
+    }
     sources_orig -= musl_src_filterout
     if (musl_arch == "arm") {
       sources_orig -= [
@@ -838,6 +841,7 @@ template("musl_libs") {
   }
 
   shared_library("soft_libc_musl_shared") {
+    deps = []
     output_dir = "${target_out_dir}/${_libs_out_dir}"
 
     musl_lib_path = rebase_path("$output_dir")
@@ -847,6 +851,10 @@ template("musl_libs") {
 
     libc_map_path = rebase_path("$musl_ported_root/libc.map.txt")
 
+    if (current_cpu == "mipsel") {
+      libs = [ "atomic" ]
+      deps += [ ":mipsel_atomic_linker" ]
+    }
     ldflags = [
       "-Wl,--version-script=${libc_map_path}",
       "-lpthread",
@@ -863,7 +871,7 @@ template("musl_libs") {
     configs -= musl_inherited_configs
     configs += [ ":soft_musl_config" ]
 
-    deps = [
+    deps += [
       ":soft_libdl",
       ":soft_libpthread",
       ":soft_musl_crt_install_action",
@@ -927,5 +935,14 @@ template("musl_libs") {
 
     sources = [ musl_linker_so_out_path ]
     outputs = [ musl_linker_so_out_path_for_qemu ]
+  }
+
+  copy("mipsel_atomic_linker") {
+    # need install libatomic1-mipsel-cross first
+    atomic_shared_so = "/usr/mipsel-linux-gnu/lib/libatomic.so.1.2.0"
+    sources = [ atomic_shared_so ]
+
+    atomic_linker_so = "${target_out_dir}/${_libs_out_dir}/libatomic.so"
+    outputs = [ atomic_linker_so ]
   }
 }

@@ -18,12 +18,20 @@ declare_args() {
     musl_arch = "arm"
   } else if (current_cpu == "arm64") {
     musl_arch = "aarch64"
+  } else if (current_cpu == "mipsel") {
+    musl_arch = "mips"
   }
 }
 
+# Musl_arch is named mips in order to obtain the path name of the source file
+# in the musl repository,but the actual compilation is mipsel
 declare_args() {
   musl_target_os = "linux"
-  musl_target_triple = "${musl_arch}-linux-ohos"
+  if (current_cpu == "mipsel") {
+    musl_target_triple = "mipsel-linux-ohos"
+  } else {
+    musl_target_triple = "${musl_arch}-linux-ohos"
+  }
 }
 
 declare_args() {

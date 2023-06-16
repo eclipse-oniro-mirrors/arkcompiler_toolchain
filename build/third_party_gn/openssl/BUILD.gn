@@ -33,6 +33,8 @@ if (current_cpu == "arm" && !(current_os == "linux" || host_os == "mac")) {
   openssl_selected_platform = "linux-x86"
 } else if (is_mingw) {
   openssl_selected_platform = "mingw64"
+} else if (current_cpu == "mipsel") {
+  openssl_selected_platform = "linux-mips32"
 }
 
 openssl_selected_platform_full_path =
@@ -267,6 +269,9 @@ action("openssl_build_all_generated") {
   } else if (is_mingw) {
     print("openssl current_platform mingw64")
     openssl_current_platform = "mingw64"
+  } else if (current_cpu == "mipsel") {
+    print("openssl current_platform linux-mip32")
+    openssl_current_platform = "linux-mips32"
   }
 
   script = rebase_path("//third_party/openssl/run_command.py")

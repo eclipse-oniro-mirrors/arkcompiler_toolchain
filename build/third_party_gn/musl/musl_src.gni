@@ -203,6 +203,24 @@ if (musl_arch == "arm") {
     "src/thread/x86_64/clone.s",
     "src/thread/x86_64/syscall_cp.s",
   ]
+} else if (musl_arch == "mips") {
+  musl_src_arch_file = [
+    "src/fenv/mips/fenv.S",
+    "src/fenv/mips/fenv-sf.c",
+    "src/ldso/mips/dlsym.s",
+    "src/ldso/mips/dlsym_time64.S",
+    "src/math/mips/fabs.c",
+    "src/math/mips/fabsf.c",
+    "src/math/mips/sqrt.c",
+    "src/math/mips/sqrtf.c",
+    "src/setjmp/mips/longjmp.S",
+    "src/setjmp/mips/setjmp.S",
+    "src/signal/mips/restore.s",
+    "src/signal/mips/sigsetjmp.s",
+    "src/thread/mips/__unmapself.s",
+    "src/thread/mips/clone.s",
+    "src/thread/mips/syscall_cp.s",
+  ]
 }
 
 musl_src_file = [
@@ -1689,6 +1707,21 @@ if (musl_arch == "arm") {
     "src/thread/clone.c",
     "src/thread/syscall_cp.c",
   ]
+} else if (musl_arch == "mips") {
+  musl_src_filterout = [
+    "src/fenv/fenv.c",
+    "src/ldso/dlsym.c",
+    "src/math/fabs.c",
+    "src/math/fabsf.c",
+    "src/math/fmaf.c",
+    "src/math/sqrt.c",
+    "src/math/sqrtf.c",
+    "src/setjmp/setjmp.c",
+    "src/signal/restore.c",
+    "src/thread/__unmapself.c",
+    "src/thread/clone.c",
+    "src/thread/syscall_cp.c",
+  ]
 }
 
 musl_src_ldso = [
@@ -1811,6 +1844,42 @@ if (musl_arch == "arm") {
     "arch/generic/bits/soundcard.h",
     "arch/generic/bits/statfs.h",
     "arch/generic/bits/termios.h",
+    "arch/generic/bits/vt.h",
+  ]
+} else if (musl_arch == "mips") {
+  musl_inc_bits_files = [
+    "arch/mips/bits/errno.h",
+    "arch/mips/bits/fcntl.h",
+    "arch/mips/bits/fenv.h",
+    "arch/mips/bits/float.h",
+    "arch/mips/bits/hwcap.h",
+    "arch/mips/bits/ioctl.h",
+    "arch/mips/bits/ipcstat.h",
+    "arch/mips/bits/mman.h",
+    "arch/mips/bits/msg.h",
+    "arch/mips/bits/poll.h",
+    "arch/mips/bits/posix.h",
+    "arch/mips/bits/ptrace.h",
+    "arch/mips/bits/reg.h",
+    "arch/mips/bits/resource.h",
+    "arch/mips/bits/sem.h",
+    "arch/mips/bits/setjmp.h",
+    "arch/mips/bits/shm.h",
+    "arch/mips/bits/signal.h",
+    "arch/mips/bits/socket.h",
+    "arch/mips/bits/stat.h",
+    "arch/mips/bits/statfs.h",
+    "arch/mips/bits/stdint.h",
+    "arch/mips/bits/termios.h",
+    "arch/mips/bits/user.h",
+    "arch/generic/bits/dirent.h",
+    "arch/generic/bits/ioctl_fix.h",
+    "arch/generic/bits/io.h",
+    "arch/generic/bits/ipc.h",
+    "arch/generic/bits/kd.h",
+    "arch/generic/bits/limits.h",
+    "arch/generic/bits/link.h",
+    "arch/generic/bits/soundcard.h",
     "arch/generic/bits/vt.h",
   ]
 }

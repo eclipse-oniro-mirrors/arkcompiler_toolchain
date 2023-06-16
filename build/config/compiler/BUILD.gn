@@ -99,6 +99,15 @@ config("default_warnings") {
     ]
   }
 
+  if (target_cpu == "mipsel") {
+    cflags += [
+      "-Wno-extra-semi",
+      "-Wno-error=tautological-constant-out-of-range-compare",
+      "-Wno-shift-count-overflow",
+      "-Wno-constant-conversion",
+    ]
+  }
+
   if (is_clang) {
     cflags += [
       # This warns on using ints as initializers for floats in
