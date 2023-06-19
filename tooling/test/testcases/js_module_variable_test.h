@@ -41,6 +41,7 @@ public:
                 return false;
             }
             static_cast<JsModuleVariableTestChannel *>(channel_)->Initial(vm_, runtime_);
+            runtime_->Enable();
             // 246: breakpointer line
             location_ = TestUtil::GetLocation(gg_sourceFile.c_str(), 246, 0, gg_pandaFile.c_str());
             ASSERT_TRUE(location_.GetMethodId().IsValid());
