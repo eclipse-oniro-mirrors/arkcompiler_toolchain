@@ -14,14 +14,15 @@
 import("//developtools/profiler/build/config.gni")
 import("$build_root/ark.gni")
 
-protobuf_src_root = "//third_party/protobuf/src/"
+THIRDPARTY_PROTOBUF_SUBSYS_NAME = "thirdparty"
+THIRDPARTY_PROTOBUF_PART_NAME = "protobuf"
+protobuf_src_root = "//third_party/protobuf/src"
 
 config("protobuf_config") {
   include_dirs = [ "protobuf_src_root" ]
 }
 
 ohos_shared_library("protobuf_lite") {
-  stack_protector_ret = false
   sources = [
     "$protobuf_src_root/google/protobuf/any_lite.cc",
     "$protobuf_src_root/google/protobuf/arena.cc",
@@ -51,13 +52,16 @@ ohos_shared_library("protobuf_lite") {
     "$protobuf_src_root/google/protobuf/stubs/time.cc",
     "$protobuf_src_root/google/protobuf/wire_format_lite.cc",
   ]
+  if (!is_asan && !is_debug) {
+    version_script = "libprotobuf_lite.map"
+  }
   include_dirs = [
     "$protobuf_src_root/google/protobuf/**/*.h",
     "$protobuf_src_root/google/protobuf/**/*.inc",
     "$protobuf_src_root",
   ]
   if (!is_mingw) {
-    if (is_ohos) {
+    if (current_toolchain != host_toolchain) {
       external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
     }
   } else {
@@ -72,12 +76,12 @@ ohos_shared_library("protobuf_lite") {
 
   public_configs = [ ":protobuf_config" ]
   install_enable = true
-  subsystem_name = "${OHOS_PROFILER_SUBSYS_NAME}"
-  part_name = "${OHOS_PROFILER_PART_NAME}"
+  innerapi_tags = [ "platformsdk_indirect" ]
+  subsystem_name = "${THIRDPARTY_PROTOBUF_SUBSYS_NAME}"
+  part_name = "${THIRDPARTY_PROTOBUF_PART_NAME}"
 }
 
 ohos_static_library("protobuf_lite_static") {
-  stack_protector_ret = false
   sources = [
     "$protobuf_src_root/google/protobuf/any_lite.cc",
     "$protobuf_src_root/google/protobuf/arena.cc",
@@ -113,7 +117,7 @@ ohos_static_library("protobuf_lite_static") {
     "$protobuf_src_root",
   ]
   if (!is_mingw) {
-    if (is_ohos) {
+    if (current_toolchain != host_toolchain) {
       # target build, not host build
       defines = [ "HAVE_HILOG" ]
       external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
@@ -122,20 +126,25 @@ ohos_static_library("protobuf_lite_static") {
     defines = [ "_FILE_OFFSET_BITS_SET_LSEEK" ]
   }
 
-  cflags_cc = [ "-Wno-sign-compare" ]
+  cflags_cc = [
+    "-Wno-sign-compare",
+    "-Wno-deprecated-declarations",
+  ]
   cflags = [
+    "-Wno-deprecated-declarations",
     "-Wno-sign-compare",
     "-D HAVE_PTHREAD",
   ]
   if (is_mingw) {
-    # ../../third_party/protobuf/$protobuf_src_root/google/protobuf/io/zero_copy_stream_impl.cc:60:9: error: 'lseek' macro redefined [-Werror,-Wmacro-redefined]
+    # ../../third_party/protobuf/src/google/protobuf/io/zero_copy_stream_impl.cc:60:9: error: 'lseek' macro redefined [-Werror,-Wmacro-redefined]
     cflags += [ "-Wno-macro-redefined" ]
   }
   public_configs = [ ":protobuf_config" ]
+  subsystem_name = "${THIRDPARTY_PROTOBUF_SUBSYS_NAME}"
+  part_name = "${THIRDPARTY_PROTOBUF_PART_NAME}"
 }
 
 ohos_shared_library("protobuf") {
-  stack_protector_ret = false
   sources = [
     "$protobuf_src_root/google/protobuf/any.cc",
     "$protobuf_src_root/google/protobuf/any.pb.cc",
@@ -195,22 +204,28 @@ ohos_shared_library("protobuf") {
     "$protobuf_src_root/google/protobuf/**/*.inc",
     "$protobuf_src_root",
   ]
-  cflags_cc = [ "-Wno-sign-compare" ]
+  cflags_cc = [
+    "-Wno-sign-compare",
+    "-Wno-deprecated-declarations",
+  ]
   cflags = [
     "-Wno-sign-compare",
     "-D HAVE_PTHREAD",
+    "-Wno-deprecated-declarations",
   ]
 
   deps = [ ":protobuf_lite" ]
+  if (!is_asan && !is_debug) {
+    version_script = "libprotobuf.map"
+  }
 
   public_configs = [ ":protobuf_config" ]
   install_enable = true
-  subsystem_name = "${OHOS_PROFILER_SUBSYS_NAME}"
-  part_name = "${OHOS_PROFILER_PART_NAME}"
+  subsystem_name = "${THIRDPARTY_PROTOBUF_SUBSYS_NAME}"
+  part_name = "${THIRDPARTY_PROTOBUF_PART_NAME}"
 }
 
 ohos_static_library("protobuf_static") {
-  stack_protector_ret = false
   sources = [
     "$protobuf_src_root/google/protobuf/any.cc",
     "$protobuf_src_root/google/protobuf/any.pb.cc",
@@ -270,20 +285,25 @@ ohos_static_library("protobuf_static") {
     "$protobuf_src_root/google/protobuf/**/*.inc",
     "$protobuf_src_root",
   ]
-  cflags_cc = [ "-Wno-sign-compare" ]
+  cflags_cc = [
+    "-Wno-sign-compare",
+    "-Wno-deprecated-declarations",
+  ]
   cflags = [
     "-Wno-sign-compare",
     "-D HAVE_PTHREAD",
+    "-Wno-deprecated-declarations",
   ]
 
   deps = [ ":protobuf_lite_static" ]
 
   public_configs = [ ":protobuf_config" ]
+  subsystem_name = "${THIRDPARTY_PROTOBUF_SUBSYS_NAME}"
+  part_name = "${THIRDPARTY_PROTOBUF_PART_NAME}"
 }
 
 if (current_toolchain == host_toolchain) {
   ohos_shared_library("protoc_lib") {
-    stack_protector_ret = false
     sources = [
       "$protobuf_src_root/google/protobuf/compiler/code_generator.cc",
       "$protobuf_src_root/google/protobuf/compiler/command_line_interface.cc",
@@ -376,11 +396,13 @@ if (current_toolchain == host_toolchain) {
       "-Wno-sign-compare",
       "-Wno-unused-function",
       "-Wno-unused-private-field",
+      "-Wno-deprecated-declarations",
     ]
     cflags = [
       "-Wno-sign-compare",
       "-D HAVE_PTHREAD",
       "-Wno-unused-function",
+      "-Wno-deprecated-declarations",
     ]
 
     deps = [
@@ -389,12 +411,11 @@ if (current_toolchain == host_toolchain) {
     ]
 
     public_configs = [ ":protobuf_config" ]
-    subsystem_name = "${OHOS_PROFILER_SUBSYS_NAME}"
-    part_name = "${OHOS_PROFILER_PART_NAME}"
+    subsystem_name = "${THIRDPARTY_PROTOBUF_SUBSYS_NAME}"
+    part_name = "${THIRDPARTY_PROTOBUF_PART_NAME}"
   }
 
   ohos_static_library("protoc_static_lib") {
-    stack_protector_ret = false
     sources = [
       "$protobuf_src_root/google/protobuf/compiler/code_generator.cc",
       "$protobuf_src_root/google/protobuf/compiler/command_line_interface.cc",
@@ -487,11 +508,13 @@ if (current_toolchain == host_toolchain) {
       "-Wno-sign-compare",
       "-Wno-unused-function",
       "-Wno-unused-private-field",
+      "-Wno-deprecated-declarations",
     ]
     cflags = [
       "-Wno-sign-compare",
       "-D HAVE_PTHREAD",
       "-Wno-unused-function",
+      "-Wno-deprecated-declarations",
     ]
 
     deps = [
@@ -500,8 +523,8 @@ if (current_toolchain == host_toolchain) {
     ]
 
     public_configs = [ ":protobuf_config" ]
-    subsystem_name = "${OHOS_PROFILER_SUBSYS_NAME}"
-    part_name = "${OHOS_PROFILER_PART_NAME}"
+    subsystem_name = "${THIRDPARTY_PROTOBUF_SUBSYS_NAME}"
+    part_name = "${THIRDPARTY_PROTOBUF_PART_NAME}"
   }
 }
 
@@ -515,13 +538,16 @@ if (current_toolchain == host_toolchain) {
       "$protobuf_src_root",
     ]
     deps = [ ":protoc_static_lib" ]
-    cflags_cc = [ "-Wno-sign-compare" ]
+    cflags_cc = [
+      "-Wno-sign-compare",
+      "-Wno-deprecated-declarations",
+    ]
     cflags = [
       "-Wno-sign-compare",
       "-D HAVE_PTHREAD",
+      "-Wno-deprecated-declarations",
     ]
-
-    subsystem_name = "${OHOS_PROFILER_SUBSYS_NAME}"
-    part_name = "${OHOS_PROFILER_PART_NAME}"
+    subsystem_name = "${THIRDPARTY_PROTOBUF_SUBSYS_NAME}"
+    part_name = "${THIRDPARTY_PROTOBUF_PART_NAME}"
   }
 }
