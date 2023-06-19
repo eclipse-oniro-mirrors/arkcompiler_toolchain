@@ -211,7 +211,7 @@ def _file_handle(config, code_dir):
                     shutil.rmtree(dest_dir)
                 shutil.move(tmp_dir, dest_dir)
             elif symlink_src and symlink_dest:
-                if os.path.exists(dest_dir):
+                if os.path.exists(dest_dir) and dest_dir != src_dir:
                     shutil.rmtree(dest_dir)
                 shutil.move(src_dir, dest_dir)
                 os.symlink(''.join([dest_dir, symlink_src]), ''.join([dest_dir, symlink_dest]))
