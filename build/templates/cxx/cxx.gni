@@ -69,6 +69,16 @@ template("ohos_executable") {
     if (!defined(ldflags)) {
       ldflags = []
     }
+    if (!defined(inputs)) {
+      inputs = []
+    }
+
+    if (defined(version_script)) {
+      _version_script = rebase_path(version_script, root_build_dir)
+      inputs += [ version_script ]
+      ldflags += [ "-Wl,--version-script=${_version_script}" ]
+    }
+
     if (defined(invoker.static_link) && invoker.static_link) {
       no_default_deps = true
       ldflags += [ "-static" ]
@@ -219,6 +229,19 @@ template("ohos_shared_library") {
     if (!defined(libs)) {
       libs = []
     }
+    if (!defined(ldflags)) {
+      ldflags = []
+    }
+    if (!defined(inputs)) {
+      inputs = []
+    }
+
+    if (defined(version_script)) {
+      _version_script = rebase_path(version_script, root_build_dir)
+      inputs += [ version_script ]
+      ldflags += [ "-Wl,--version-script=${_version_script}" ]
+    }
+
     if (is_ohos) {
       if (defined(invoker.stl)) {
         cflags_cc += [
