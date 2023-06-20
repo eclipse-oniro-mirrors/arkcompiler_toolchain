@@ -17,6 +17,7 @@
 
 from __future__ import print_function
 from datetime import datetime
+from fnmatch import fnmatch
 import errno
 import json
 import os
@@ -82,7 +83,7 @@ class ArkPy:
                 "description":
                     "Build for arkcompiler target of target-operating-system linux and "
                     "target-central-processing-unit x64.",
-                "gn_args": ["target_os=\\\"linux\\\"", "target_cpu=\\\"x64\\\""],
+                "gn_args": ["target_os=\"linux\"", "target_cpu=\"x64\""],
                 "prefix_of_name_of_out_dir_of_second_level": "x64",
             },
             "linux_x86": {
@@ -90,7 +91,7 @@ class ArkPy:
                 "description":
                     "Build for arkcompiler target of target-operating-system linux and "
                     "target-central-processing-unit x86.",
-                "gn_args": ["target_os=\\\"linux\\\"", "target_cpu=\\\"x86\\\""],
+                "gn_args": ["target_os=\"linux\"", "target_cpu=\"x86\""],
                 "prefix_of_name_of_out_dir_of_second_level": "x86",
             },
             "ohos_arm": {
@@ -98,7 +99,7 @@ class ArkPy:
                 "description":
                     "Build for arkcompiler target of target-operating-system ohos and "
                     "target-central-processing-unit arm.",
-                "gn_args": ["target_os=\\\"ohos\\\"", "target_cpu=\\\"arm\\\""],
+                "gn_args": ["target_os=\"ohos\"", "target_cpu=\"arm\""],
                 "prefix_of_name_of_out_dir_of_second_level": "arm",
             },
             "ohos_arm64": {
@@ -106,7 +107,7 @@ class ArkPy:
                 "description":
                     "Build for arkcompiler target of target-operating-system ohos and "
                     "target-central-processing-unit arm64.",
-                "gn_args": ["target_os=\\\"ohos\\\"", "target_cpu=\\\"arm64\\\""],
+                "gn_args": ["target_os=\"ohos\"", "target_cpu=\"arm64\""],
                 "prefix_of_name_of_out_dir_of_second_level": "arm64",
             },
             "android_arm64": {
@@ -114,7 +115,7 @@ class ArkPy:
                 "description":
                     "Build for arkcompiler target of target-operating-system android and "
                     "target-central-processing-unit arm64.",
-                "gn_args": ["target_os=\\\"android\\\"", "target_cpu=\\\"arm64\\\""],
+                "gn_args": ["target_os=\"android\"", "target_cpu=\"arm64\""],
                 "prefix_of_name_of_out_dir_of_second_level": "android_arm64",
             },
             "mingw_x86_64": {
@@ -122,7 +123,7 @@ class ArkPy:
                 "description":
                     "Build for arkcompiler target of target-operating-system MinGW(Minimalist GNU on Windows) and "
                     "target-central-processing-unit x86_64.",
-                "gn_args": ["target_os=\\\"mingw\\\"", "target_cpu=\\\"x86_64\\\""],
+                "gn_args": ["target_os=\"mingw\"", "target_cpu=\"x86_64\""],
                 "prefix_of_name_of_out_dir_of_second_level": "mingw_x86_64",
             },
             "ohos_mipsel": {
@@ -130,7 +131,7 @@ class ArkPy:
                 "description":
                     "Build for arkcompiler target of target-operating-system ohos and "
                     "target-central-processing-unit mipsel(32-bit little-endian mips).",
-                "gn_args": ["target_os=\\\"ohos\\\"", "target_cpu=\\\"mipsel\\\""],
+                "gn_args": ["target_os=\"ohos\"", "target_cpu=\"mipsel\""],
                 "prefix_of_name_of_out_dir_of_second_level": "mipsel",
             },
         },
@@ -156,7 +157,9 @@ class ArkPy:
             },
             "unittest": {
                 "flags": ["unittest", "ut"],
-                "description": "Compile and run unittest of arkcompiler target.",
+                "description":
+                    "Compile and run unittest of arkcompiler target. "
+                    "Add --gn-args=\"run_with_qemu=true\" to command when running unittest of non-host type with qemu.",
                 "gn_targets_depend_on": ["unittest_packages"],
             },
             "gn_target": {
@@ -183,15 +186,18 @@ class ArkPy:
                     "Clean the root-out-dir(x64.release-->out/x64.release) execept for file args.gn. "
                     "Then continue to build.",
             },
+            "gn-args": {
+                "flags": ["--gn-args=*", "-gn-args=*"],
+                "description":
+                    "Pass args(*) to gn command. Example: python3 ark.py x64.release "
+                    "--gn-args=\"bool_declared_in_src_gn=true string_declared_in_src_gn=\\\"abcd\\\" "
+                    "list_declared_in_src_gn=[ \\\"element0\\\", \\\"element1\\\" ] print(list_declared_in_src_gn) "
+                    "exec_script(\\\"script_in_src\\\", [ \\\"arg_to_script\\\" ])\"  .",
+            },
             "keepdepfile": {
                 "flags": ["--keepdepfile", "-keepdepfile"],
                 "description":
                     "Keep depfile(\"*.o.d\") generated by commands(CXX, CC ...) called by ninja during compilation.",
-            },
-            "run-with-qemu": {
-                "flags": ["--run-with-qemu", "-run-with-qemu"],
-                "description":
-                    "Run executables with qemu.",
             },
             "verbose": {
                 "flags": ["--verbose", "-verbose"],
@@ -212,7 +218,6 @@ class ArkPy:
     has_cleaned = False
     enable_verbose = False
     enable_keepdepfile = False
-    run_with_qemu = False
 
     def get_binaries(self):
         host_os = sys.platform
@@ -247,7 +252,10 @@ class ArkPy:
 
     @staticmethod
     def is_dict_flags_match_arg(dict_to_match: dict, arg_to_match: str) -> bool:
-        return arg_to_match in dict_to_match["flags"]
+        for flag in dict_to_match["flags"]:
+            if fnmatch(arg_to_match, flag):
+                return True
+        return False
 
     def which_dict_flags_match_arg(self, dict_including_dicts_to_match: dict, arg_to_match: str) -> str:
         for key in dict_including_dicts_to_match.keys():
@@ -335,7 +343,9 @@ class ArkPy:
         # gn command
         print("=== gn gen start ===")
         code = call_with_output(
-            "{0} gen {1} --args=\"{2}\"".format(self.gn_binary_path, out_path, " ".join(gn_args)), build_log_path)
+            "{0} gen {1} --args=\"{2}\"".format(
+                self.gn_binary_path, out_path, " ".join(gn_args).replace("\"", "\\\"")),
+            build_log_path)
         if code != 0:
             print("=== gn gen failed! ===\n")
             sys.exit(code)
@@ -428,15 +438,13 @@ class ArkPy:
                 if not self.has_cleaned:
                     self.clean(out_path)
                     self.has_cleaned = True
+            # match [option][gn-args] flag
+            elif self.is_dict_flags_match_arg(self.ARG_DICT["option"]["gn-args"], arg):
+                gn_args_ret.append(arg[(arg.find("=") + 1):])
             # match [option][keepdepfile] flag
             elif self.is_dict_flags_match_arg(self.ARG_DICT["option"]["keepdepfile"], arg):
                 if not self.enable_keepdepfile:
                     self.enable_keepdepfile = True
-            # match [option][run-with-qemu] flag
-            elif self.is_dict_flags_match_arg(self.ARG_DICT["option"]["run-with-qemu"], arg):
-                if not self.run_with_qemu:
-                    gn_args_ret.append("run_with_qemu=true")
-                    self.run_with_qemu = True
             # match [option][verbose] flag
             elif self.is_dict_flags_match_arg(self.ARG_DICT["option"]["verbose"], arg):
                 if not self.enable_verbose:
