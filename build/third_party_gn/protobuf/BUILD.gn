@@ -62,7 +62,7 @@ ohos_shared_library("protobuf_lite") {
   ]
   if (!is_mingw) {
     if (current_toolchain != host_toolchain) {
-      external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+      external_deps = [ "hilog:libhilog" ]
     }
   } else {
     defines = [ "_FILE_OFFSET_BITS_SET_LSEEK" ]
@@ -120,7 +120,7 @@ ohos_static_library("protobuf_lite_static") {
     if (current_toolchain != host_toolchain) {
       # target build, not host build
       defines = [ "HAVE_HILOG" ]
-      external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+      external_deps = [ "hilog:libhilog" ]
     }
   } else {
     defines = [ "_FILE_OFFSET_BITS_SET_LSEEK" ]
