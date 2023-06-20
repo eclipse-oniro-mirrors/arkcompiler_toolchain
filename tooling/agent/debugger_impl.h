@@ -200,7 +200,6 @@ private:
     std::unique_ptr<JSPtHooks> hooks_ {nullptr};
     JSDebugger *jsDebugger_ {nullptr};
 
-    std::unordered_map<std::string, DebugInfoExtractor *> extractors_ {};
     std::unordered_map<std::string, std::string> recordNames_ {};
     std::unordered_map<ScriptId, std::unique_ptr<PtScript>> scripts_ {};
     PauseOnExceptionsState pauseOnException_ {PauseOnExceptionsState::NONE};

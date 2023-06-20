@@ -70,15 +70,7 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
     }
 #endif
 
-    const JSPandaFile *jsPandaFile = nullptr;
-    JSPandaFileManager::GetInstance()->EnumerateJSPandaFiles([&jsPandaFile, &fileName](
-        const JSPandaFile *pandaFile) {
-        if (fileName == pandaFile->GetJSPandaFileDesc().c_str()) {
-            jsPandaFile = pandaFile;
-            return false;
-        }
-        return true;
-    });
+    const JSPandaFile *jsPandaFile = JSPandaFileManager::GetInstance()->FindJSPandaFile(fileName.c_str()).get();
     if (jsPandaFile == nullptr) {
         LOG_DEBUGGER(ERROR) << "NotifyScriptParsed: unknown file: " << fileName;
         return false;
@@ -98,8 +90,6 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
         LOG_DEBUGGER(ERROR) << "NotifyScriptParsed: invalid file: " << fileName;
         return false;
     }
-    // store here for performance of get extractor from url
-    extractors_[url] = extractor;
     recordNames_[url] = recordName;
 
     auto scriptFunc = [this](PtScript *script) -> bool {
@@ -911,12 +901,20 @@ DebugInfoExtractor *DebuggerImpl::GetExtractor(const std::string &url)
         return extractor;
     }
 
-    auto iter = extractors_.find(url);
-    if (iter == extractors_.end()) {
+    std::string fileName;
+    auto scriptFunc = [&fileName](const PtScript *script) -> bool {
+        fileName = script->GetFileName();
+        return true;
+    };
+    if (!MatchScripts(scriptFunc, url, ScriptMatchType::URL)) {
         return nullptr;
     }
 
-    return iter->second;
+    const JSPandaFile *jsPandaFile = JSPandaFileManager::GetInstance()->FindJSPandaFile(fileName.c_str()).get();
+    if (jsPandaFile == nullptr) {
+        return nullptr;
+    }
+    return JSPandaFileManager::GetInstance()->GetJSPtExtractor(jsPandaFile);
 }
 
 bool DebuggerImpl::GenerateCallFrames(std::vector<std::unique_ptr<CallFrame>> *callFrames)
