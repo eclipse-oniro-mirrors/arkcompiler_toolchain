@@ -25,8 +25,8 @@
                 "ets_runtime",
                 "runtime_core",
                 "faultloggerd",
-                "hitrace_native",
-                "hiviewdfx_hilog_native",
+                "hitrace",
+                "hilog",
                 "libuv"
             ],
             "third_party": [
