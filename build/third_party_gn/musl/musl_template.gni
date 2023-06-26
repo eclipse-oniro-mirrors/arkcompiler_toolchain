@@ -181,13 +181,17 @@ template("musl_libs") {
       "-Wl,--dynamic-list=${dynamic_list}",
       "-Wl,--exclude-libs=ALL",
       "-Wl,--no-undefined",
-      "-Wl,--hash-style=sysv",
       "-Wl,--gc-sections",
       "-Wl,--sort-common",
       "-Wl,--sort-section,alignment",
       "-fuse-ld=lld",
       "--target=${musl_target_triple}",
     ]
+    if (current_cpu == "arm" || current_cpu == "arm64") {
+      ldflags += [ "-Wl,--hash-style=both" ]
+    } else {
+      ldflags += [ "-Wl,--hash-style=sysv" ]
+    }
     asmflags = cflags
   }
 
