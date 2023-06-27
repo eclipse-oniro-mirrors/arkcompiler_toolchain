@@ -1093,12 +1093,21 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
     auto *extractor = GetExtractor(jsPandaFile);
     Local<JSValueRef> value = JSValueRef::Undefined(vm_);
     // in case of arrow function, which doesn't have this in local variable table
-    for (const auto &[varName, regIndex] : extractor->GetLocalVariableTable(methodId)) {
-        value = DebuggerApi::GetVRegValue(vm_, frameHandler, regIndex);
-        if (varName == "4newTarget" || varName == "0this" || varName == "0newTarget" || varName == "0funcObj") {
+    for (const auto &localVariableInfo : extractor->GetLocalVariableTable(methodId)) {
+        std::string varName = localVariableInfo.name;
+        int32_t regIndex = localVariableInfo.reg_number;
+        uint32_t bcOffset = DebuggerApi::GetBytecodeOffset(frameHandler);
+        // if the bytecodeOffset is not in the range of the variable's scope,
+        // which is indicated as [start_offset, end_offset], ignore it.
+        if (!IsWithinVariableScope(localVariableInfo, bcOffset)) {
             continue;
         }
 
+        if (varName == "4newTarget" || varName == "0this" || varName == "0newTarget" || varName == "0funcObj") {
+            continue;
+        }
+        
+        value = DebuggerApi::GetVRegValue(vm_, frameHandler, regIndex);
         if (varName == "this") {
             LOG_DEBUGGER(INFO) << "find 'this' in local variable table";
             thisVal = value;
@@ -1118,6 +1127,11 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
         PropertyAttribute descriptor(value, true, true, true);
         localObj->DefineProperty(vm_, name, descriptor);
     }
+}
+
+bool DebuggerImpl::IsWithinVariableScope(LocalVariableInfo localVariableInfo, uint32_t bcOffset)
+{
+    return bcOffset >= localVariableInfo.start_offset && bcOffset <= localVariableInfo.end_offset;
 }
 
 void DebuggerImpl::GetClosureVariables(const FrameHandler *frameHandler, Local<JSValueRef> &thisVal,

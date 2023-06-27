@@ -162,6 +162,7 @@ private:
     bool DecodeAndCheckBase64(const std::string &src, std::vector<uint8_t> &dest);
     bool IsSkipLine(const JSPtLocation &location);
     bool CheckPauseOnException();
+    bool IsWithinVariableScope(LocalVariableInfo localVarInfo, uint32_t bcOffset);
 
     const std::string &GetRecordName(const std::string &url)
     {
