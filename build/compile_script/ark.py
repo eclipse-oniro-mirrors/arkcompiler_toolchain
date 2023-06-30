@@ -127,7 +127,7 @@ class ArkPy:
                 "prefix_of_name_of_out_dir_of_second_level": "mingw_x86_64",
             },
             "ohos_mipsel": {
-                "flags": ["ohos_mipsel","mipsel"],
+                "flags": ["ohos_mipsel", "mipsel"],
                 "description":
                     "Build for arkcompiler target of target-operating-system ohos and "
                     "target-central-processing-unit mipsel(32-bit little-endian mips).",
