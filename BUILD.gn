@@ -129,6 +129,7 @@ group("ark_toolchain_packages") {
       "$toolchain_root/inspector:ark_debugger",
       "$toolchain_root/inspector:connectserver_debugger",
       "$toolchain_root/tooling:libark_ecma_debugger",
+      "$toolchain_root/tooling/client/toolchain_cli:toolchain_cli"
     ]
   }
 }
