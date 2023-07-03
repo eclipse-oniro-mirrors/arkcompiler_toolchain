@@ -14,6 +14,10 @@
 import("$build_root/config/ohos/config.gni")
 import("$build_root/toolchain/gcc_toolchain.gni")
 
+declare_args() {
+  unstripped_runtime_outputs = true
+}
+
 template("ark_clang_toolchain") {
   gcc_toolchain(target_name) {
     ohos_libc_dir =
@@ -27,12 +31,11 @@ template("ark_clang_toolchain") {
     cxx = "${prefix}/clang++"
     ar = "${prefix}/llvm-ar"
     ld = cxx
+    if (!is_debug) {
+      strip = "${prefix}/llvm-strip"
+      use_unstripped_as_runtime_outputs = unstripped_runtime_outputs
+    }
 
-    forward_variables_from(invoker,
-                           [
-                             "strip",
-                             "use_unstripped_as_runtime_outputs",
-                           ])
     toolchain_args = {
       if (defined(invoker.toolchain_args)) {
         forward_variables_from(invoker.toolchain_args, "*")

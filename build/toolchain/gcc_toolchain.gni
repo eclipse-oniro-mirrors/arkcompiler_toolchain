@@ -17,6 +17,11 @@ import("$build_root/config/clang/clang.gni")
 import("$build_root/config/sanitizers/sanitizers.gni")
 import("$build_root/toolchain/cc_wrapper.gni")
 import("$build_root/toolchain/toolchain.gni")
+
+declare_args() {
+  linux_unstripped_runtime_outputs = true
+}
+
 template("gcc_toolchain") {
   toolchain(target_name) {
     assert(defined(invoker.ar), "gcc_toolchain() must specify a \"ar\" value")
@@ -439,13 +444,12 @@ template("clang_toolchain") {
     cxx = "$prefix/clang++"
     ld = cxx
     ar = "${prefix}/llvm-ar"
+    if (!is_debug) {
+      strip = "${prefix}/llvm-strip"
+      use_unstripped_as_runtime_outputs = linux_unstripped_runtime_outputs
+    }
 
-    forward_variables_from(invoker,
-                           [
-                             "strip",
-                             "use_unstripped_as_runtime_outputs",
-                             "executable_extension",
-                           ])
+    forward_variables_from(invoker, [ "executable_extension" ])
 
     toolchain_args = {
       if (defined(invoker.toolchain_args)) {
