@@ -130,7 +130,6 @@ group("ark_toolchain_packages") {
   deps = []
   if (host_os != "mac") {
     deps += [
-      "$ark_third_party_root/libuv:uv",
       "$toolchain_root/inspector:ark_debugger",
       "$toolchain_root/inspector:connectserver_debugger",
       "$toolchain_root/tooling:libark_ecma_debugger",
@@ -143,7 +142,6 @@ group("ark_toolchain_unittest") {
   deps = []
   if (host_os != "mac") {
     deps += [
-      "$ark_third_party_root/libuv:uv",
       "//arkcompiler/toolchain/tooling/test:unittest",
       "//arkcompiler/toolchain/websocket/test:unittest",
     ]
@@ -168,7 +166,6 @@ group("ark_toolchain_host_unittest") {
 group("ark_js_host_unittest") {
   testonly = true
   deps = [
-    "$ark_third_party_root/libuv:uv",
     "//arkcompiler/ets_runtime:ark_runtime_host_unittest",
     "//arkcompiler/toolchain:ark_toolchain_host_unittest",
   ]
