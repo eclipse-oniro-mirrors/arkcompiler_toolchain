@@ -86,7 +86,6 @@ gcc_toolchain("x86") {
 }
 
 clang_toolchain("clang_x64") {
-  strip = rebase_path("${clang_base_path}/bin/llvm-strip", root_build_dir)
   toolchain_args = {
     current_cpu = "x64"
     current_os = "linux"

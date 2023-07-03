@@ -11,9 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("$build_root/toolchain/toolchain.gni")
+
 default_clang_base_path = "//prebuilts/clang/ohos/${host_platform_dir}/llvm"
-clang_lib_path =
-    "//prebuilts/clang/ohos/${host_platform_dir}/llvm/lib/clang/12.0.1/lib"
+clang_lib_path = "//prebuilts/clang/ohos/${host_platform_dir}/llvm/lib/clang/${clang_version}/lib"
 
 declare_args() {
   clang_base_path = default_clang_base_path
