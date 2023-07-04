@@ -23,7 +23,6 @@
 #include "libpandabase/macros.h"
 
 namespace panda::ecmascript::tooling {
-enum class ArkInternalValueType {None, Entry, Scope, ScopeList};
 class RuntimeImpl final {
 public:
     RuntimeImpl(const EcmaVM *vm, ProtocolChannel *channel)
@@ -107,13 +106,41 @@ private:
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
     void GetDateTimeFormatValue(Local<JSValueRef> value,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
-    void AddInternalProperties(Local<ObjectRef> object, ArkInternalValueType type);
     void GetMapValue(Local<JSValueRef> value,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
     void GetSetValue(Local<JSValueRef> value,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
     void GetRegExpValue(Local<JSValueRef> value,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+    void GetArrayListValue(Local<JSValueRef> value,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+    void GetDequeValue(Local<JSValueRef> value,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+    void GetHashMapValue(Local<JSValueRef> value,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+    void GetHashSetValue(Local<JSValueRef> value,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+    void GetLightWeightMapValue(Local<JSValueRef> value,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+    void GetLightWeightSetValue(Local<JSValueRef> value,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+    void GetLinkedListValue(Local<JSValueRef> value,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+    void GetListValue(Local<JSValueRef> value,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+    void GetStackValue(Local<JSValueRef> value,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+    void GetPlainArrayValue(Local<JSValueRef> value,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+    void GetQueueValue(Local<JSValueRef> value,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+    void GetTreeMapValue(Local<JSValueRef> value,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+    void GetTreeSetValue(Local<JSValueRef> value,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+    void GetVectorValue(Local<JSValueRef> value,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+
     class Frontend {
     public:
         explicit Frontend(ProtocolChannel *channel) : channel_(channel) {}

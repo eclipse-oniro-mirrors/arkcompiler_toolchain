@@ -36,6 +36,7 @@ public:
             std::string pandaFile = DEBUGGER_ABC_DIR "variable_first.abc";
             std::string sourceFile = DEBUGGER_JS_DIR "variable_first.js";
             static_cast<JsVariableFirstTestChannel *>(channel_)->Initial(vm_, runtime_);
+            runtime_->Enable();
             // 269: breakpointer line
             location_ = TestUtil::GetLocation(sourceFile.c_str(), 269, 0, pandaFile.c_str());
             ASSERT_TRUE(location_.GetMethodId().IsValid());

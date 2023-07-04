@@ -36,6 +36,7 @@ public:
             std::string panfaFile = DEBUGGER_ABC_DIR "variable_second.abc";
             std::string sourceFile = DEBUGGER_JS_DIR "variable_second.js";
             static_cast<JsVariableSecondTestChannel *>(channel_)->Initial(vm_, runtime_);
+            runtime_->Enable();
             // 107: breakpointer line
             location_ = TestUtil::GetLocation(sourceFile.c_str(), 107, 0, panfaFile.c_str());
             ASSERT_TRUE(location_.GetMethodId().IsValid());
