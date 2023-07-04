@@ -420,6 +420,21 @@ private:
     static std::string DescriptionForJSLocale();
     static std::string DescriptionForJSRelativeTimeFormat();
     static std::string DescriptionForJSListFormat();
+    // container
+    static std::string DescriptionForArrayList();
+    static std::string DescriptionForDeque();
+    static std::string DescriptionForHashMap();
+    static std::string DescriptionForHashSet();
+    static std::string DescriptionForLightWeightMap();
+    static std::string DescriptionForLightWeightSet();
+    static std::string DescriptionForLinkedList();
+    static std::string DescriptionForList();
+    static std::string DescriptionForPlainArray();
+    static std::string DescriptionForQueue();
+    static std::string DescriptionForStack();
+    static std::string DescriptionForTreeMap();
+    static std::string DescriptionForTreeSet();
+    static std::string DescriptionForVector();
 };
 
 // Runtime.ExceptionDetails

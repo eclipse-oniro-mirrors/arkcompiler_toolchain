@@ -176,6 +176,48 @@ std::unique_ptr<RemoteObject> RemoteObject::FromTagged(const EcmaVM *ecmaVm, Loc
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::MapIterator,
             ObjectSubType::Iterator);
     }
+    if (tagged->IsArrayList()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsDeque()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsHashMap()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsHashSet()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsLightWeightMap()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsLightWeightSet()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsLinkedList()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsList()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsPlainArray()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsQueue()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsStack()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsTreeMap()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsTreeSet()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsVector()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
     if (tagged->IsObject()) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
@@ -373,6 +415,48 @@ std::string ObjectRemoteObject::DescriptionForObject(const EcmaVM *ecmaVm, Local
     }
     if (tagged->IsJSListFormat()) {
         return DescriptionForJSListFormat();
+    }
+    if (tagged->IsArrayList()) {
+        return DescriptionForArrayList();
+    }
+    if (tagged->IsDeque()) {
+        return DescriptionForDeque();
+    }
+    if (tagged->IsHashMap()) {
+        return DescriptionForHashMap();
+    }
+    if (tagged->IsHashSet()) {
+        return DescriptionForHashSet();
+    }
+    if (tagged->IsLightWeightMap()) {
+        return DescriptionForLightWeightMap();
+    }
+    if (tagged->IsLightWeightSet()) {
+        return DescriptionForLightWeightSet();
+    }
+    if (tagged->IsLinkedList()) {
+        return DescriptionForLinkedList();
+    }
+    if (tagged->IsList()) {
+        return DescriptionForList();
+    }
+    if (tagged->IsPlainArray()) {
+        return DescriptionForPlainArray();
+    }
+    if (tagged->IsQueue()) {
+        return DescriptionForQueue();
+    }
+    if (tagged->IsStack()) {
+        return DescriptionForStack();
+    }
+    if (tagged->IsTreeMap()) {
+        return DescriptionForTreeMap();
+    }
+    if (tagged->IsTreeSet()) {
+        return DescriptionForTreeSet();
+    }
+    if (tagged->IsVector()) {
+        return DescriptionForVector();
     }
     return RemoteObject::ObjectDescription;
 }
@@ -633,6 +717,90 @@ std::string ObjectRemoteObject::DescriptionForJSRelativeTimeFormat()
 std::string ObjectRemoteObject::DescriptionForJSListFormat()
 {
     std::string description = RemoteObject::JSListFormatDescription + " {}";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForArrayList()
+{
+    std::string description = "ArrayList";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForDeque()
+{
+    std::string description = "Deque";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForHashMap()
+{
+    std::string description = "HashMap";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForHashSet()
+{
+    std::string description = "HashSet";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForLightWeightMap()
+{
+    std::string description = "LightWeightMap";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForLightWeightSet()
+{
+    std::string description = "LightWeightSet";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForLinkedList()
+{
+    std::string description = "LinkedList";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForList()
+{
+    std::string description = "List";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForPlainArray()
+{
+    std::string description = "PlainArray";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForQueue()
+{
+    std::string description = "Queue";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForStack()
+{
+    std::string description = "Stack";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForTreeMap()
+{
+    std::string description = "TreeMap";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForTreeSet()
+{
+    std::string description = "TreeSet";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForVector()
+{
+    std::string description = "Vector";
     return description;
 }
 
