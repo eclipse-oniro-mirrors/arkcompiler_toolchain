@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+# Copyright (c) 2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -10,3 +10,58 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import("//arkcompiler/toolchain/toolchain.gni")
+
+config("hiviewdfx_config") {
+  defines = []
+  if (enable_dump_in_faultlog) {
+    defines += [ "ENABLE_DUMP_IN_FAULTLOG" ]
+  }
+  if (enable_bytrace) {
+    defines += [ "ENABLE_BYTRACE" ]
+    cflags_cc = [ "-Wno-gnu-zero-variadic-macro-arguments" ]
+  }
+  if (enable_hitrace) {
+    defines += [ "ENABLE_HITRACE" ]
+  }
+  if (enable_hilog) {
+    defines += [ "ENABLE_HILOG" ]
+  }
+
+  include_dirs = [ "$hilog_root/include" ]
+}
+
+ohos_source_set("websocket_client") {
+  stack_protector_ret = false
+  defines = []
+  deps = []
+  configs = []
+
+  # hiviewdfx libraries
+  external_deps = hiviewdfx_ext_deps
+  deps += hiviewdfx_deps
+
+  include_dirs = [
+    "$toolchain_root",
+    "$toolchain_root/inspector",
+    "$toolchain_root/websocket",
+    "$toolchain_root/tooling/client",
+  ]
+
+  sources = [ "websocket/websocket_client.cpp" ]
+
+  deps += [
+    "$toolchain_root/websocket:websocket",
+    "$ark_third_party_root/openssl:libcrypto_shared",
+    sdk_libc_secshared_dep,
+  ]
+
+  configs += [ 
+    ":hiviewdfx_config", 
+  ]
+
+  subsystem_name = "arkcompiler"
+  part_name = "toolchain"
+}
+
