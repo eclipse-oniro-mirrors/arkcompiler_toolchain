@@ -286,6 +286,7 @@ public:
         static const std::string Set;             // NOLINT (readability-identifier-naming)
         static const std::string Weakmap;         // NOLINT (readability-identifier-naming)
         static const std::string Weakset;         // NOLINT (readability-identifier-naming)
+        static const std::string Dataview;         // NOLINT (readability-identifier-naming)
         static const std::string ArrayIterator;   // NOLINT (readability-identifier-naming)
         static const std::string StringIterator;  // NOLINT (readability-identifier-naming)
         static const std::string SetIterator;     // NOLINT (readability-identifier-naming)
@@ -317,6 +318,7 @@ public:
     static const std::string WeakRefDescription;         // NOLINT (readability-identifier-naming)
     static const std::string WeakMapDescription;         // NOLINT (readability-identifier-naming)
     static const std::string WeakSetDescription;         // NOLINT (readability-identifier-naming)
+    static const std::string DataViewDescription;         // NOLINT (readability-identifier-naming)
     static const std::string JSPrimitiveRefDescription;     // NOLINT (readability-identifier-naming)
     static const std::string JSPrimitiveNumberDescription;  // NOLINT (readability-identifier-naming)
     static const std::string JSPrimitiveBooleanDescription; // NOLINT (readability-identifier-naming)
@@ -397,7 +399,10 @@ private:
     static std::string DescriptionForRegexp(const EcmaVM *ecmaVm, Local<RegExpRef> tagged);
     static std::string DescriptionForDate(const EcmaVM *ecmaVm, Local<DateRef> tagged);
     static std::string DescriptionForMap(const EcmaVM *ecmaVm, Local<MapRef> tagged);
+    static std::string DescriptionForWeakMap(const EcmaVM *ecmaVm, Local<WeakMapRef> tagged);
     static std::string DescriptionForSet(const EcmaVM *ecmaVm, Local<SetRef> tagged);
+    static std::string DescriptionForWeakSet(const EcmaVM *ecmaVm, Local<WeakSetRef> tagged);
+    static std::string DescriptionForDataView(Local<DataViewRef> tagged);
     static std::string DescriptionForError(const EcmaVM *ecmaVm, Local<JSValueRef> tagged);
     static std::string DescriptionForArrayIterator();
     static std::string DescriptionForMapIterator();
