@@ -1095,7 +1095,7 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
     // in case of arrow function, which doesn't have this in local variable table
     for (const auto &localVariableInfo : extractor->GetLocalVariableTable(methodId)) {
         std::string varName = localVariableInfo.name;
-        int32_t regIndex = localVariableInfo.reg_number;
+        int32_t regIndex = localVariableInfo.regNumber;
         uint32_t bcOffset = DebuggerApi::GetBytecodeOffset(frameHandler);
         // if the bytecodeOffset is not in the range of the variable's scope,
         // which is indicated as [start_offset, end_offset], ignore it.
@@ -1131,7 +1131,7 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
 
 bool DebuggerImpl::IsWithinVariableScope(LocalVariableInfo localVariableInfo, uint32_t bcOffset)
 {
-    return bcOffset >= localVariableInfo.start_offset && bcOffset <= localVariableInfo.end_offset;
+    return bcOffset >= localVariableInfo.startOffset && bcOffset <= localVariableInfo.endOffset;
 }
 
 void DebuggerImpl::GetClosureVariables(const FrameHandler *frameHandler, Local<JSValueRef> &thisVal,
