@@ -1956,6 +1956,14 @@ std::unique_ptr<RuntimeCallFrame> RuntimeCallFrame::Create(const PtJson &params)
         error += "Unknown 'functionName';";
     }
 
+    std::string moduleName;
+    ret = params.GetString("moduleName", &moduleName);
+    if (ret == Result::SUCCESS) {
+        runtimeCallFrame->moduleName_ = std::move(moduleName);
+    } else {
+        error += "Unknown 'moduleName';";
+    }
+
     std::string scriptId;
     ret = params.GetString("scriptId", &scriptId);
     if (ret == Result::SUCCESS) {
@@ -1999,6 +2007,7 @@ std::unique_ptr<RuntimeCallFrame> RuntimeCallFrame::FromFrameInfo(const FrameInf
 {
     auto runtimeCallFrame = std::make_unique<RuntimeCallFrame>();
     runtimeCallFrame->SetFunctionName(cpuFrameInfo.functionName);
+    runtimeCallFrame->SetModuleName(cpuFrameInfo.moduleName);
     runtimeCallFrame->SetScriptId(std::to_string(cpuFrameInfo.scriptId));
     runtimeCallFrame->SetColumnNumber(cpuFrameInfo.columnNumber);
     runtimeCallFrame->SetLineNumber(cpuFrameInfo.lineNumber);
@@ -2011,6 +2020,7 @@ std::unique_ptr<PtJson> RuntimeCallFrame::ToJson() const
     std::unique_ptr<PtJson> result = PtJson::CreateObject();
 
     result->Add("functionName", functionName_.c_str());
+    result->Add("moduleName", moduleName_.c_str());
     result->Add("scriptId", scriptId_.c_str());
     result->Add("url", url_.c_str());
     result->Add("lineNumber", lineNumber_);

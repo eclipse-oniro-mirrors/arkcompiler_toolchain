@@ -1614,6 +1614,17 @@ public:
         return functionName_;
     }
 
+    RuntimeCallFrame &SetModuleName(const std::string &moduleName)
+    {
+        moduleName_ = moduleName;
+        return *this;
+    }
+
+    const std::string &GetModuleName() const
+    {
+        return moduleName_;
+    }
+
     RuntimeCallFrame &SetScriptId(const std::string &scriptId)
     {
         scriptId_ = scriptId;
@@ -1663,6 +1674,7 @@ private:
     NO_MOVE_SEMANTIC(RuntimeCallFrame);
 
     std::string functionName_ {};
+    std::string moduleName_ {};
     std::string scriptId_ {};
     std::string url_ {};
     int32_t lineNumber_ {0};
