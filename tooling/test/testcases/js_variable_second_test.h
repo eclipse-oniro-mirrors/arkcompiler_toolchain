@@ -37,8 +37,8 @@ public:
             std::string sourceFile = DEBUGGER_JS_DIR "variable_second.js";
             static_cast<JsVariableSecondTestChannel *>(channel_)->Initial(vm_, runtime_);
             runtime_->Enable();
-            // 107: breakpointer line
-            location_ = TestUtil::GetLocation(sourceFile.c_str(), 107, 0, panfaFile.c_str());
+            // 125: breakpointer line
+            location_ = TestUtil::GetLocation(sourceFile.c_str(), 125, 0, panfaFile.c_str());
             ASSERT_TRUE(location_.GetMethodId().IsValid());
             TestUtil::SuspendUntilContinue(DebugEvent::LOAD_MODULE);
             ASSERT_EQ(moduleName, panfaFile);
@@ -261,7 +261,9 @@ private:
                                "number", "0", "0", "        19", "number", "0", "0", "        20", "number", "0",
                                "0", "        21", "number", "0", "0", "        22", "number", "0", "0", "        23",
                                "number", "0", "0" } },
-            { "dataview0", { "object", "Object", "Object", "[object DataView]", "none" } },
+            { "dataview0", { "object", "dataview", "Dataview", "DataView(24)", "[object DataView]", "buffer",
+                             "object", "arraybuffer", "Arraybuffer", "ArrayBuffer(24)", "[object ArrayBuffer]",
+                             "byteLength", "number", "24", "24", "byteOffset", "number", "0", "0" } },
             { "bigint0", { "bigint", "999n", "999" } },
             { "typedarray0", { "object", "Object", "Uint8Array(0)", "", "none" } },
             { "sharedarraybuffer0", { "object", "Object", "SharedArrayBuffer(32)", "[object SharedArrayBuffer]",
@@ -315,8 +317,8 @@ private:
                            "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", "0", "object", "Object",
                            "Uint8Array(24)", "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
                            "length", "number", "1", "1" } },
-            { "array18", { "object", "array", "Array", "Array(1)", "[object DataView]", "0", "object", "Object",
-                           "Object", "[object DataView]", "length", "number", "1", "1" } },
+            { "array18", { "object", "array", "Array", "Array(1)", "[object DataView]", "0", "object", "dataview",
+                           "Dataview", "DataView(24)", "[object DataView]", "length", "number", "1", "1" } },
             { "array19", { "object", "array", "Array", "Array(1)", "999", "0", "bigint", "999n", "999", "length",
                            "number", "1", "1" } },
             { "array20", { "object", "array", "Array", "Array(3)", "banana,apple,peach", "0", "string", "banana",
@@ -369,8 +371,35 @@ private:
             { "iterator17", { "undefined" } },
             { "iterator18", { "undefined" } },
             { "iterator19", { "undefined" } },
-            { "weakMap", { "object", "weakmap", "Weakmap", "WeakMap", "[object WeakMap]", "none" } },
-            { "weakSet", { "object", "weakset", "Weakset", "WeakSet", "[object WeakSet]", "none" } },
+            { "weakMap0", { "object", "weakmap", "Weakmap", "WeakMap(0)", "[object WeakMap]", "size", "number",
+                            "0", "0", "[[Entries]]", "object", "array", "Array", "Array(0)", "" } },
+            { "p1", { "object", "Object", "Number{[[PrimitiveValue]]: 1}", "1", "[[PrimitiveValue]]", "number",
+                      "1", "1" } },
+            { "p2", { "object", "Object", "Number{[[PrimitiveValue]]: 2}", "2", "[[PrimitiveValue]]", "number",
+                      "2", "2" } },
+            { "weakMap1", { "object", "weakmap", "Weakmap", "WeakMap(2) {Object => 'hello', Object => 'world'}",
+                            "[object WeakMap]", "size", "number", "2", "2", "[[Entries]]", "object", "array",
+                            "Array", "Array(2)", "[object Object],[object Object]" } },
+            { "weakMap2", { "object", "weakmap", "Weakmap", "WeakMap(0)", "[object WeakMap]", "size", "number",
+                            "0", "0", "[[Entries]]", "object", "array", "Array", "Array(0)", "",
+                            "0", "string", "hello", "hello" } },
+            { "weakMap3", { "object", "weakmap", "Weakmap", "WeakMap(1) {Object => 'weakMap0'}", "[object WeakMap]",
+                            "size", "number", "1", "1", "[[Entries]]", "object", "array", "Array", "Array(1)",
+                            "[object Object]" } },
+            { "weakMap4", { "object", "weakmap", "Weakmap", "WeakMap(2) {Object => 37, Object => 'azerty'}",
+                            "[object WeakMap]", "size", "number", "2", "2", "[[Entries]]", "object", "array",
+                            "Array", "Array(2)", "[object Object],[object Object]" } },
+            { "weakMap5", { "object", "weakmap", "Weakmap", "WeakMap(1) {Object => undefined}", "[object WeakMap]",
+                            "size", "number", "1", "1", "[[Entries]]", "object", "array", "Array", "Array(1)",
+                            "[object Object]" } },
+            { "weakSet0", { "object", "weakset", "Weakset", "WeakSet(0)", "[object WeakSet]", "size", "number",
+                            "0", "0", "[[Entries]]", "object", "array", "Array", "Array(0)", "" } },
+            { "weakSet1", { "object", "weakset", "Weakset", "WeakSet(1) {Object}", "[object WeakSet]", "size",
+                            "number", "1", "1", "[[Entries]]", "object", "array", "Array", "Array(1)",
+                            "[object Object]" } },
+            { "weakSet2", { "object", "weakset", "Weakset", "WeakSet(2) {Object, Object}", "[object WeakSet]",
+                            "size", "number", "2", "2", "[[Entries]]", "object", "array", "Array", "Array(2)",
+                            "[object Object],[object Object]" } },
         };
 
         int32_t index_ {0};

@@ -229,10 +229,16 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
         GetDateTimeFormatValue(value, outPropertyDesc);
     } else if (value->IsMap()) {
         GetMapValue(value, outPropertyDesc);
+    } else if (value->IsWeakMap()) {
+        GetWeakMapValue(value, outPropertyDesc);
     } else if (value->IsRegExp()) {
         GetRegExpValue(value, outPropertyDesc);
     } else if (value->IsSet()) {
         GetSetValue(value, outPropertyDesc);
+    } else if (value->IsWeakSet()) {
+        GetWeakSetValue(value, outPropertyDesc);
+    } else if (value->IsDataView()) {
+        GetDataViewValue(value, outPropertyDesc);
     } else if (value->IsHashMap()) {
         GetHashMapValue(value, outPropertyDesc);
     } else if (value->IsHashSet()) {
@@ -611,6 +617,32 @@ void RuntimeImpl::GetMapValue(Local<JSValueRef> value,
     SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");
 }
 
+void RuntimeImpl::GetWeakMapValue(Local<JSValueRef> value,
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+{
+    Local<WeakMapRef> weakMapRef = value->ToObject(vm_);
+    int32_t size = weakMapRef->GetSize();
+    int32_t len = weakMapRef->GetTotalElements();
+    int32_t index = 0;
+    Local<JSValueRef> jsValueRef = NumberRef::New(vm_, size);
+    SetKeyValue(jsValueRef, outPropertyDesc, "size");
+    jsValueRef = ArrayRef::New(vm_, size);
+    for (int32_t i = 0; i < len; i++) {
+        Local<JSValueRef> jsKey = weakMapRef->GetKey(vm_, i);
+        if (jsKey->IsHole() || !jsKey->IsObject()) {
+            continue;
+        }
+        Local<JSValueRef> jsValue = weakMapRef->GetValue(vm_, i);
+        Local<ObjectRef> objRef = ObjectRef::New(vm_);
+        objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "key"), jsKey);
+        objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), jsValue);
+        DebuggerApi::AddInternalProperties(vm_, objRef, ArkInternalValueType::Entry, internalObjects_);
+        ArrayRef::SetValueAt(vm_, jsValueRef, index++, objRef);
+    }
+    DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
+    SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");
+}
+
 void RuntimeImpl::GetSetValue(Local<JSValueRef> value,
     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
@@ -636,6 +668,48 @@ void RuntimeImpl::GetSetValue(Local<JSValueRef> value,
     }
     DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
     SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");
+}
+
+void RuntimeImpl::GetWeakSetValue(Local<JSValueRef> value,
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+{
+    Local<WeakSetRef> weakSetRef = value->ToObject(vm_);
+    int32_t size = weakSetRef->GetSize();
+    int32_t len = weakSetRef->GetTotalElements();
+    int32_t index = 0;
+    Local<JSValueRef> jsValueRef = NumberRef::New(vm_, size);
+    SetKeyValue(jsValueRef, outPropertyDesc, "size");
+    jsValueRef = ArrayRef::New(vm_, size);
+    for (int32_t i = 0; i < len; ++i) {
+        Local<JSValueRef> elementRef = weakSetRef->GetValue(vm_, i);
+        if (elementRef->IsHole()) {
+            continue;
+        } else if (elementRef->IsObject()) {
+            Local<ObjectRef> objRef = ObjectRef::New(vm_);
+            objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), elementRef);
+            DebuggerApi::AddInternalProperties(vm_, objRef, ArkInternalValueType::Entry, internalObjects_);
+            ArrayRef::SetValueAt(vm_, jsValueRef, index++, objRef);
+        } else {
+            ArrayRef::SetValueAt(vm_, jsValueRef, index++, elementRef);
+        }
+    }
+    DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
+    SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");
+}
+
+void RuntimeImpl::GetDataViewValue(Local<JSValueRef> value,
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+{
+    Local<DataViewRef> dataViewRef = value->ToObject(vm_);
+    Local<ArrayBufferRef> buffer = dataViewRef->GetArrayBuffer(vm_);
+    int32_t byteLength = dataViewRef->ByteLength();
+    int32_t byteOffset = dataViewRef->ByteOffset();
+    Local<JSValueRef> jsValueRef = ArrayBufferRef::New(vm_, buffer->ByteLength(vm_));
+    SetKeyValue(jsValueRef, outPropertyDesc, "buffer");
+    jsValueRef = NumberRef::New(vm_, byteLength);
+    SetKeyValue(jsValueRef, outPropertyDesc, "byteLength");
+    jsValueRef = NumberRef::New(vm_, byteOffset);
+    SetKeyValue(jsValueRef, outPropertyDesc, "byteOffset");
 }
 
 void RuntimeImpl::GetRegExpValue(Local<JSValueRef> value,

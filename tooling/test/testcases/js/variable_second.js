@@ -102,8 +102,26 @@ var o = {
         var iterator17 = obj0[Symbol.iterator];
         var iterator19 = sharedarraybuffer0[Symbol.iterator];
 
-        var weakMap = new WeakMap();
-        var weakSet = new WeakSet();
+        var weakMap0 = new WeakMap();
+        var p1 = new Number(1);
+        var p2 = new Number(2);
+        var weakMap1 = new WeakMap([[p1, 'hello'], [p2, 'world']]);
+        var weakMap2 = new WeakMap();
+        weakMap2[0] = 'hello';
+        var weakMap3 = new WeakMap();
+        weakMap3.set(weakMap0, "weakMap0");
+        var weakMap4 = new WeakMap();
+        weakMap4.set(p1, 37);
+        weakMap4.set(p2, 'azerty');
+        var weakMap5 = new WeakMap();
+        weakMap5.set(p1, undefined);
+
+        var weakSet0 = new WeakSet();
+        var weakSet1 = new WeakSet();
+        weakSet1.add(p1);
+        var weakSet2 = new WeakSet();
+        weakSet2.add(p2);
+        weakSet2.add(weakSet1);
 
         var nop = undefined;
     }
