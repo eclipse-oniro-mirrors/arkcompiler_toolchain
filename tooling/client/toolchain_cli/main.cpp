@@ -88,6 +88,7 @@ int Main(const int argc, const char** argv)
 
         std::cout << ">>> ";
         std::string inputStr;
+        int cmdId = 0;
         while(getline(std::cin, inputStr)) {
             if((!strcmp(inputStr.c_str(), "quit"))||(!strcmp(inputStr.c_str(), "q"))) {
                 LOGE("toolchain_cli: quit");
@@ -95,8 +96,11 @@ int Main(const int argc, const char** argv)
                 break;
             }
             std::vector<std::string> cliCmdStr = SplitString(inputStr, " ");
-            OHOS::ArkCompiler::Toolchain::CliCommand cmd(&cliSocket, cliCmdStr);
-            std::cout << cmd.ExecCommand();
+            cmdId += 1;
+            OHOS::ArkCompiler::Toolchain::CliCommand cmd(&cliSocket, cliCmdStr, cmdId);
+            if(ERR_FAIL == cmd.ExecCommand()) {
+                cmdId -= 1;
+            }
             std::cout << ">>> ";
         }
     }

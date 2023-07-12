@@ -12,3 +12,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#ifndef ECMASCRIPT_TOOLING_CLIENT_DOMAIN_HEAPPROFILER_CLIENT_H
+#define ECMASCRIPT_TOOLING_CLIENT_DOMAIN_HEAPPROFILER_CLIENT_H
+
+#include <iostream>
+
+namespace OHOS::ArkCompiler::Toolchain {
+class HeapProfilerClient final {
+public:
+    HeapProfilerClient() = default;
+    ~HeapProfilerClient() = default;
+
+    bool DispatcherCmd(int id, const std::string cmd, std::string* reqStr);
+    std::string HeapDumpCommand(int id);
+    std::string AllocationTrackCommand(int id);
+    std::string AllocationTrackStopCommand(int id);
+    std::string Enable(int id);
+    std::string Disable(int id);
+    std::string Samping(int id);
+    std::string SampingStop(int id);
+    std::string CollectGarbage(int id);
+private:
+
+};
+} //OHOS::ArkCompiler::Toolchain
+#endif

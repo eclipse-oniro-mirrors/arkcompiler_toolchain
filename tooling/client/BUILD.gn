@@ -32,11 +32,13 @@ config("hiviewdfx_config") {
   include_dirs = [ "$hilog_root/include" ]
 }
 
-ohos_source_set("websocket_client") {
+ohos_source_set("libark_toolchain_client_set") {
   stack_protector_ret = false
   defines = []
   deps = []
-  configs = []
+  configs = [
+    sdk_libc_secshared_config,
+  ]
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
@@ -46,20 +48,47 @@ ohos_source_set("websocket_client") {
     "$toolchain_root",
     "$toolchain_root/inspector",
     "$toolchain_root/websocket",
+    "$toolchain_root/tooling/base",
     "$toolchain_root/tooling/client",
+    "//third_party/cJSON",
   ]
 
-  sources = [ "websocket/websocket_client.cpp" ]
+  sources = [
+    "websocket/websocket_client.cpp",
+    "domain/heapprofiler_client.cpp",
+  ]
 
   deps += [
     "$toolchain_root/websocket:websocket",
+    "$toolchain_root/tooling:libark_ecma_debugger_set",
     "$ark_third_party_root/openssl:libcrypto_shared",
     sdk_libc_secshared_dep,
   ]
 
-  configs += [ 
-    ":hiviewdfx_config", 
+  external_deps += [
+    "ets_runtime:libark_jsruntime",
+    "libuv:uv",
   ]
+
+  configs += [
+    ":hiviewdfx_config",
+  ]
+
+  cflags_cc = [
+    "-Wno-error=vla-extension",
+  ]
+
+  subsystem_name = "arkcompiler"
+  part_name = "toolchain"
+}
+
+ohos_shared_library("libark_toolchain_client") {
+  stack_protector_ret = false
+  deps = [ ":libark_toolchain_client_set" ]
+
+  if (!is_mingw && !is_mac) {
+    output_extension = "so"
+  }
 
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
