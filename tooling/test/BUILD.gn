@@ -47,6 +47,7 @@ test_js_files = [
   "export_variable_first",
   "export_variable_second",
   "module_variable",
+  "local_variable_scope",
 ]
 
 foreach(file, test_js_files) {

@@ -53,6 +53,7 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsVariableFirstTest", GetJsVariableFirstTest());
     TestUtil::RegisterTest("JsVariableSecondTest", GetJsVariableSecondTest());
     TestUtil::RegisterTest("JsModuleVariableTest", GetJsModuleVariableTest());
+    TestUtil::RegisterTest("JsLocalVariableScopeTest", GetJsLocalVariableScopeTest());
 }
 
 std::vector<const char *> GetTestList()
