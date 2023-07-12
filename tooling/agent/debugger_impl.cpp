@@ -1129,7 +1129,7 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
     }
 }
 
-bool DebuggerImpl::IsWithinVariableScope(LocalVariableInfo localVariableInfo, uint32_t bcOffset)
+bool DebuggerImpl::IsWithinVariableScope(const LocalVariableInfo &localVariableInfo, uint32_t bcOffset)
 {
     return bcOffset >= localVariableInfo.startOffset && bcOffset <= localVariableInfo.endOffset;
 }
