@@ -32,6 +32,7 @@
 #include "test/testcases/js_variable_first_test.h"
 #include "test/testcases/js_variable_second_test.h"
 #include "test/testcases/js_module_variable_test.h"
+#include "test/testcases/js_local_variable_scope_test.h"
 
 namespace panda::ecmascript::tooling::test {
 static std::string g_currentTestName = "";
