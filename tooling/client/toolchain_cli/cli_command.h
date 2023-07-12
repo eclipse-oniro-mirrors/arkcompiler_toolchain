@@ -20,8 +20,10 @@
 #include <map>
 #include <cstdlib>
 #include <functional>
-#include "../websocket/websocket_client.h"
+
 #include "log_wrapper.h"
+#include "websocket/websocket_client.h"
+#include "domain/heapprofiler_client.h"
 
 namespace OHOS::ArkCompiler::Toolchain{
 using ErrCode = int;
@@ -34,56 +36,37 @@ enum {
 
 class CliCommand {
 public:
-    CliCommand(ToolchainWebsocket* cliSocket, std::vector<std::string> cliCmdStr)
+    CliCommand(ToolchainWebsocket* cliSocket, std::vector<std::string> cliCmdStr, int cmdId)
     {
         cliSocket_ = std::move(cliSocket);
+        id_ = cmdId;
         cmd_ = cliCmdStr[0];
         for (unsigned int i = 1; i < cliCmdStr.size(); i++) {
             argList_.push_back(cliCmdStr[i]);
         }
     }
-    
+
     ~CliCommand()
     {
     }
 
     ErrCode OnCommand();
-    std::string ExecCommand();
-    std::string GetCommand(const std::string &str);
-    ErrCode CreateCommandMap();
-    ErrCode ExecAllocationTrackCommand();
-    ErrCode ExecBreakCommand();
-    ErrCode ExecBackTrackCommand();
-    ErrCode ExecContinueCommand();
-    ErrCode ExecCpuProfileCommand();
-    ErrCode ExecDeleteCommand();
-    ErrCode ExecDisableCommand();
-    ErrCode ExecDisplayCommand();
-    ErrCode ExecEnableCommand();
-    ErrCode ExecFinishCommand();
-    ErrCode ExecFrameCommand();
-    ErrCode ExecHeapDumpCommand();
+    ErrCode ExecCommand();
+    void CreateCommandMap();
+    ErrCode HeapProfilerCommand(const std::string cmd);
+    ErrCode DebuggerCommand(const std::string cmd);
+    ErrCode CpuProfileCommand(const std::string cmd);
+    ErrCode RuntimeCommand(const std::string cmd);
     ErrCode ExecHelpCommand();
-    ErrCode ExecIgnoreCommand();
-    ErrCode ExecInfoBCommand();
-    ErrCode ExecInfoSCommand();
-    ErrCode ExecJumpCommand();
-    ErrCode ExecListCommand();
-    ErrCode ExecNextCommand();
-    ErrCode ExecPrintCommand();
-    ErrCode ExecPtypeCommand();
-    ErrCode ExecRunCommand();
-    ErrCode ExecSetValueCommand();
-    ErrCode ExecStepCommand();
-    ErrCode ExecUndisplayCommand();
-    ErrCode ExecWatchCommand();
-    
+
 private:
     std::string cmd_;
     VecStr argList_;
     std::map<StrPair, std::function<int()>> commandMap_;
     std::string resultReceiver_ = "";
     ToolchainWebsocket* cliSocket_ {nullptr};
+    HeapProfilerClient heapProfilerCli_;
+    int id_ = 0;
 };
 } // namespace OHOS::ArkCompiler::Toolchain
 

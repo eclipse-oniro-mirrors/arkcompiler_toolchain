@@ -33,8 +33,8 @@ config("hiviewdfx_config") {
 }
 
 ohos_executable("toolchain_cli") {
-  sources = [ 
-    "main.cpp", 
+  sources = [
+    "main.cpp",
     "cli_command.cpp",
     ]
 
@@ -43,11 +43,12 @@ ohos_executable("toolchain_cli") {
     "$toolchain_root/tooling",
     "$toolchain_root/inspector",
     "$toolchain_root/websocket",
+    "$toolchain_root/tooling/client",
     "$toolchain_root/tooling/client/toolchain_cli",
   ]
 
   deps = [
-    "$toolchain_root/tooling/client:websocket_client",
+    "$toolchain_root/tooling/client:libark_toolchain_client_set",
   ]
 
   configs = [ ":hiviewdfx_config" ]
