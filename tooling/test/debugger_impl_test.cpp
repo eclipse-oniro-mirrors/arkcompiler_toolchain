@@ -509,6 +509,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_Resume__001)
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
     auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    debuggerImpl->SetDebuggerState(DebuggerState::PAUSED);
     auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
 
     // DebuggerImpl::DispatcherImpl::Resume -- params == nullptr
@@ -539,6 +540,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_Resume__002)
     ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
     auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    debuggerImpl->SetDebuggerState(DebuggerState::PAUSED);
     auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
 
     std::string msg = std::string() +
