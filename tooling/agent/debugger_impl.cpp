@@ -1098,7 +1098,7 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
         int32_t regIndex = localVariableInfo.regNumber;
         uint32_t bcOffset = DebuggerApi::GetBytecodeOffset(frameHandler);
         // if the bytecodeOffset is not in the range of the variable's scope,
-        // which is indicated as [start_offset, end_offset], ignore it.
+        // which is indicated as [start_offset, end_offset), ignore it.
         if (!IsWithinVariableScope(localVariableInfo, bcOffset)) {
             continue;
         }
@@ -1131,7 +1131,7 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
 
 bool DebuggerImpl::IsWithinVariableScope(const LocalVariableInfo &localVariableInfo, uint32_t bcOffset)
 {
-    return bcOffset >= localVariableInfo.startOffset && bcOffset <= localVariableInfo.endOffset;
+    return bcOffset >= localVariableInfo.startOffset && bcOffset < localVariableInfo.endOffset;
 }
 
 void DebuggerImpl::GetClosureVariables(const FrameHandler *frameHandler, Local<JSValueRef> &thisVal,
