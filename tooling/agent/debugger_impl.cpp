@@ -601,6 +601,7 @@ DispatchResponse DebuggerImpl::Disable()
 {
     DebuggerApi::RemoveAllBreakpoints(jsDebugger_);
     frontend_.RunIfWaitingForDebugger(vm_);
+    frontend_.Resumed(vm_);
     vm_->GetJsDebuggerManager()->SetDebugMode(false);
     debuggerState_ = DebuggerState::DISABLED;
     return DispatchResponse::Ok();
@@ -729,9 +730,12 @@ DispatchResponse DebuggerImpl::RemoveBreakpoint(const RemoveBreakpointParams &pa
 
 DispatchResponse DebuggerImpl::Resume([[maybe_unused]] const ResumeParams &params)
 {
+    if (debuggerState_ != DebuggerState::PAUSED) {
+        return DispatchResponse::Fail("Can only perform operation while paused");
+    }
     frontend_.Resumed(vm_);
-    debuggerState_ = DebuggerState::ENABLED;
     singleStepper_.reset();
+    debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
 
