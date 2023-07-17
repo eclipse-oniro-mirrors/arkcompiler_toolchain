@@ -111,7 +111,10 @@ ohos_source_set("libark_ecma_debugger_set") {
 
 ohos_shared_library("libark_ecma_debugger") {
   stack_protector_ret = false
-  deps = [ ":libark_ecma_debugger_set" ]
+  deps = [
+    ":libark_ecma_debugger_set",
+    "$ark_third_party_root/libuv:uv",
+  ]
 
   if (is_mac) {
     deps += [ "$ark_third_party_root/cJSON:cjson_static" ]
@@ -122,15 +125,9 @@ ohos_shared_library("libark_ecma_debugger") {
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
   if (!is_cross_platform_build) {
-    external_deps += [
-      "ets_runtime:libark_jsruntime",
-      "libuv:uv",
-    ]
+    external_deps += [ "ets_runtime:libark_jsruntime" ]
   } else {
-    deps += [
-      "$ark_third_party_root/libuv:uv",
-      "../../ets_runtime:libark_jsruntime",
-    ]
+    deps += [ "../../ets_runtime:libark_jsruntime" ]
   }
   deps += hiviewdfx_deps
 

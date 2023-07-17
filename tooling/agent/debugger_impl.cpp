@@ -243,14 +243,21 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
 
 void DebuggerImpl::NotifyNativeCalling(const void *nativeAddress)
 {
-    // native calling only after step into should be reported
+    tooling::NativeCalling nativeCalling;
     if (singleStepper_ != nullptr &&
         singleStepper_->GetStepperType() == StepperType::STEP_INTO) {
-        tooling::NativeCalling nativeCalling;
         nativeCalling.SetNativeAddress(nativeAddress);
-        frontend_.NativeCalling(vm_, nativeCalling);
-        frontend_.WaitForDebugger(vm_);
+        nativeCalling.SetIntoStatus(true);
     }
+
+    nativePointer_ = DebuggerApi::GetNativePointer(vm_);
+    nativeCalling.SetNativePointer(nativePointer_);
+    std::vector<std::unique_ptr<CallFrame>> callFrames;
+    if (GenerateCallFrames(&callFrames)) {
+        nativeCalling.SetCallFrames(std::move(callFrames));
+    }
+    frontend_.NativeCalling(vm_, nativeCalling);
+    frontend_.WaitForDebugger(vm_);
 }
 
 // only use for test case
@@ -594,6 +601,7 @@ DispatchResponse DebuggerImpl::Disable()
 {
     DebuggerApi::RemoveAllBreakpoints(jsDebugger_);
     frontend_.RunIfWaitingForDebugger(vm_);
+    frontend_.Resumed(vm_);
     vm_->GetJsDebuggerManager()->SetDebugMode(false);
     debuggerState_ = DebuggerState::DISABLED;
     return DispatchResponse::Ok();
@@ -722,9 +730,12 @@ DispatchResponse DebuggerImpl::RemoveBreakpoint(const RemoveBreakpointParams &pa
 
 DispatchResponse DebuggerImpl::Resume([[maybe_unused]] const ResumeParams &params)
 {
+    if (debuggerState_ != DebuggerState::PAUSED) {
+        return DispatchResponse::Fail("Can only perform operation while paused");
+    }
     frontend_.Resumed(vm_);
-    debuggerState_ = DebuggerState::ENABLED;
     singleStepper_.reset();
+    debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
 

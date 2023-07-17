@@ -584,6 +584,7 @@ HWTEST_F_L0(PtTypesTest, RuntimeCallFrameCreate)
     int32_t lineNumber = 2;
     int32_t columnNumber = 10;
     ptJson->Add("functionName", functionName.c_str());
+    ptJson->Add("moduleName", functionName.c_str());
     ptJson->Add("scriptId", scriptId.c_str());
     ptJson->Add("url", url.c_str());
     ptJson->Add("lineNumber", lineNumber);
@@ -601,6 +602,7 @@ HWTEST_F_L0(PtTypesTest, RuntimeCallFrameCreateFailSwitch)
     int32_t lineNumber = 2;
     int32_t columnNumber = 10;
     ptJson->Add("functionName1", functionName.c_str());
+    ptJson->Add("moduleName1", functionName.c_str());
     ptJson->Add("scriptId1", scriptId.c_str());
     ptJson->Add("url1", url.c_str());
     ptJson->Add("lineNumber1", lineNumber);

@@ -63,6 +63,7 @@ const std::string ObjectClassName::Map = "Map";                        // NOLINT
 const std::string ObjectClassName::Set = "Set";                        // NOLINT (readability-identifier-naming)
 const std::string ObjectClassName::Weakmap = "Weakmap";                // NOLINT (readability-identifier-naming)
 const std::string ObjectClassName::Weakset = "Weakset";                // NOLINT (readability-identifier-naming)
+const std::string ObjectClassName::Dataview = "Dataview";                // NOLINT (readability-identifier-naming)
 const std::string ObjectClassName::ArrayIterator = "ArrayIterator";    // NOLINT (readability-identifier-naming)
 const std::string ObjectClassName::StringIterator = "StringIterator";  // NOLINT (readability-identifier-naming)
 const std::string ObjectClassName::SetIterator = "SetIterator";        // NOLINT (readability-identifier-naming)
@@ -89,6 +90,7 @@ const std::string RemoteObject::MapIteratorDescription = "MapIterator";  // NOLI
 const std::string RemoteObject::WeakRefDescription = "WeakRef";          // NOLINT (readability-identifier-naming)
 const std::string RemoteObject::WeakMapDescription = "WeakMap";          // NOLINT (readability-identifier-naming)
 const std::string RemoteObject::WeakSetDescription = "WeakSet";          // NOLINT (readability-identifier-naming)
+const std::string RemoteObject::DataViewDescription = "DataView";          // NOLINT (readability-identifier-naming)
 const std::string RemoteObject::JSPrimitiveNumberDescription =           // NOLINT (readability-identifier-naming)
     "Number";
 const std::string RemoteObject::JSPrimitiveBooleanDescription =          // NOLINT (readability-identifier-naming)
@@ -152,6 +154,9 @@ std::unique_ptr<RemoteObject> RemoteObject::FromTagged(const EcmaVM *ecmaVm, Loc
     if (tagged->IsWeakSet()) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Weakset, ObjectSubType::Weakset);
     }
+    if (tagged->IsDataView()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Dataview, ObjectSubType::Dataview);
+    }
     if (tagged->IsError()) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Error, ObjectSubType::Error);
     }
@@ -175,6 +180,48 @@ std::unique_ptr<RemoteObject> RemoteObject::FromTagged(const EcmaVM *ecmaVm, Loc
     if (tagged->IsMapIterator()) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::MapIterator,
             ObjectSubType::Iterator);
+    }
+    if (tagged->IsArrayList()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsDeque()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsHashMap()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsHashSet()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsLightWeightMap()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsLightWeightSet()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsLinkedList()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsList()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsPlainArray()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsQueue()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsStack()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsTreeMap()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsTreeSet()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
+    if (tagged->IsVector()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
     if (tagged->IsObject()) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
@@ -291,13 +338,16 @@ std::string ObjectRemoteObject::DescriptionForObject(const EcmaVM *ecmaVm, Local
         return DescriptionForMap(ecmaVm, Local<MapRef>(tagged));
     }
     if (tagged->IsWeakMap()) {
-        return RemoteObject::WeakMapDescription;
+        return DescriptionForWeakMap(ecmaVm, Local<WeakMapRef>(tagged));
     }
     if (tagged->IsSet()) {
         return DescriptionForSet(ecmaVm, Local<SetRef>(tagged));
     }
     if (tagged->IsWeakSet()) {
-        return RemoteObject::WeakSetDescription;
+        return DescriptionForWeakSet(ecmaVm, Local<WeakSetRef>(tagged));
+    }
+    if (tagged->IsDataView()) {
+        return DescriptionForDataView(Local<DataViewRef>(tagged));
     }
     if (tagged->IsError()) {
         return DescriptionForError(ecmaVm, tagged);
@@ -374,6 +424,48 @@ std::string ObjectRemoteObject::DescriptionForObject(const EcmaVM *ecmaVm, Local
     if (tagged->IsJSListFormat()) {
         return DescriptionForJSListFormat();
     }
+    if (tagged->IsArrayList()) {
+        return DescriptionForArrayList();
+    }
+    if (tagged->IsDeque()) {
+        return DescriptionForDeque();
+    }
+    if (tagged->IsHashMap()) {
+        return DescriptionForHashMap();
+    }
+    if (tagged->IsHashSet()) {
+        return DescriptionForHashSet();
+    }
+    if (tagged->IsLightWeightMap()) {
+        return DescriptionForLightWeightMap();
+    }
+    if (tagged->IsLightWeightSet()) {
+        return DescriptionForLightWeightSet();
+    }
+    if (tagged->IsLinkedList()) {
+        return DescriptionForLinkedList();
+    }
+    if (tagged->IsList()) {
+        return DescriptionForList();
+    }
+    if (tagged->IsPlainArray()) {
+        return DescriptionForPlainArray();
+    }
+    if (tagged->IsQueue()) {
+        return DescriptionForQueue();
+    }
+    if (tagged->IsStack()) {
+        return DescriptionForStack();
+    }
+    if (tagged->IsTreeMap()) {
+        return DescriptionForTreeMap();
+    }
+    if (tagged->IsTreeSet()) {
+        return DescriptionForTreeSet();
+    }
+    if (tagged->IsVector()) {
+        return DescriptionForVector();
+    }
     return RemoteObject::ObjectDescription;
 }
 
@@ -400,7 +492,7 @@ std::string ObjectRemoteObject::DescriptionForMap(const EcmaVM *ecmaVm, Local<Ma
 {
     int32_t len = tagged->GetTotalElements();
     int32_t index = 0;
-    std::string description = "Map(" + std::to_string(len) + ")";
+    std::string description = "Map(" + std::to_string(tagged->GetSize()) + ")";
     if (!len) {
         return description;
     }
@@ -424,6 +516,50 @@ std::string ObjectRemoteObject::DescriptionForMap(const EcmaVM *ecmaVm, Local<Ma
 
         description += " => ";
         // add Value
+        if (jsVValue->IsObject()) {
+            description += "Object";
+        } else if (jsVValue->IsString()) {
+            description += cPre + jsVValue->ToString(ecmaVm)->ToString() + cPre;
+        } else {
+            description += jsVValue->ToString(ecmaVm)->ToString();
+        }
+        if (index == tagged->GetSize() - 1 || index >= 4) { // 4:The count of elements
+            description += tagged->GetSize() > 5 ? ", ..." : ""; // 5:The count of elements
+            break;
+        }
+        description += ", ";
+        index++;
+    }
+    description += "}";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForWeakMap(const EcmaVM *ecmaVm, Local<WeakMapRef> tagged)
+{
+    int32_t len = tagged->GetTotalElements();
+    int32_t index = 0;
+    std::string description = "WeakMap(" + std::to_string(tagged->GetSize()) + ")";
+    if (!len) {
+        return description;
+    }
+    description += " {";
+    char cPre = '\'';
+    for (int32_t i = 0; i < len; ++i) {
+        Local<JSValueRef> jsVKey = tagged->GetKey(ecmaVm, i);
+        if (jsVKey->IsHole()) {
+            continue;
+        }
+        Local<JSValueRef> jsVValue = tagged->GetValue(ecmaVm, i);
+        if (jsVKey->IsObject()) {
+            description += "Object";
+        } else if (jsVKey->IsString()) {
+            description += cPre + jsVKey->ToString(ecmaVm)->ToString() + cPre;
+        } else {
+            description += jsVKey->ToString(ecmaVm)->ToString();
+        }
+
+        description += " => ";
+
         if (jsVValue->IsObject()) {
             description += "Object";
         } else if (jsVValue->IsString()) {
@@ -474,6 +610,45 @@ std::string ObjectRemoteObject::DescriptionForSet(const EcmaVM *ecmaVm, Local<Se
         index++;
     }
     description += "}";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForWeakSet(const EcmaVM *ecmaVm, Local<WeakSetRef> tagged)
+{
+    int32_t len = tagged->GetTotalElements();
+    int32_t index = 0;
+    std::string description = ("WeakSet(" + std::to_string(tagged->GetSize()) + ")");
+    if (!len) {
+        return description;
+    }
+    description += " {";
+    char cPre = '\'';
+    for (int32_t i = 0; i < len; ++i) {
+        Local<JSValueRef> jsValue = tagged->GetValue(ecmaVm, i);
+        if (jsValue->IsHole()) {
+            continue;
+        }
+        if (jsValue->IsObject()) {
+            description += "Object";
+        } else if (jsValue->IsString()) {
+            description += cPre + jsValue->ToString(ecmaVm)->ToString() + cPre;
+        } else {
+            description += jsValue->ToString(ecmaVm)->ToString();
+        }
+        if (index == tagged->GetSize() - 1 || index >= 4) { // 4:The count of elements
+            description += tagged->GetSize() > 5 ? ", ..." : ""; // 5:The count of elements
+            break;
+        }
+        description += ", ";
+        index++;
+    }
+    description += "}";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForDataView(Local<DataViewRef> tagged)
+{
+    std::string description = ("DataView(" + std::to_string(tagged->ByteLength()) + ")");
     return description;
 }
 
@@ -633,6 +808,90 @@ std::string ObjectRemoteObject::DescriptionForJSRelativeTimeFormat()
 std::string ObjectRemoteObject::DescriptionForJSListFormat()
 {
     std::string description = RemoteObject::JSListFormatDescription + " {}";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForArrayList()
+{
+    std::string description = "ArrayList";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForDeque()
+{
+    std::string description = "Deque";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForHashMap()
+{
+    std::string description = "HashMap";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForHashSet()
+{
+    std::string description = "HashSet";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForLightWeightMap()
+{
+    std::string description = "LightWeightMap";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForLightWeightSet()
+{
+    std::string description = "LightWeightSet";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForLinkedList()
+{
+    std::string description = "LinkedList";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForList()
+{
+    std::string description = "List";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForPlainArray()
+{
+    std::string description = "PlainArray";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForQueue()
+{
+    std::string description = "Queue";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForStack()
+{
+    std::string description = "Stack";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForTreeMap()
+{
+    std::string description = "TreeMap";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForTreeSet()
+{
+    std::string description = "TreeSet";
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForVector()
+{
+    std::string description = "Vector";
     return description;
 }
 
@@ -1788,6 +2047,14 @@ std::unique_ptr<RuntimeCallFrame> RuntimeCallFrame::Create(const PtJson &params)
         error += "Unknown 'functionName';";
     }
 
+    std::string moduleName;
+    ret = params.GetString("moduleName", &moduleName);
+    if (ret == Result::SUCCESS) {
+        runtimeCallFrame->moduleName_ = std::move(moduleName);
+    } else {
+        error += "Unknown 'moduleName';";
+    }
+
     std::string scriptId;
     ret = params.GetString("scriptId", &scriptId);
     if (ret == Result::SUCCESS) {
@@ -1831,6 +2098,7 @@ std::unique_ptr<RuntimeCallFrame> RuntimeCallFrame::FromFrameInfo(const FrameInf
 {
     auto runtimeCallFrame = std::make_unique<RuntimeCallFrame>();
     runtimeCallFrame->SetFunctionName(cpuFrameInfo.functionName);
+    runtimeCallFrame->SetModuleName(cpuFrameInfo.moduleName);
     runtimeCallFrame->SetScriptId(std::to_string(cpuFrameInfo.scriptId));
     runtimeCallFrame->SetColumnNumber(cpuFrameInfo.columnNumber);
     runtimeCallFrame->SetLineNumber(cpuFrameInfo.lineNumber);
@@ -1843,6 +2111,7 @@ std::unique_ptr<PtJson> RuntimeCallFrame::ToJson() const
     std::unique_ptr<PtJson> result = PtJson::CreateObject();
 
     result->Add("functionName", functionName_.c_str());
+    result->Add("moduleName", moduleName_.c_str());
     result->Add("scriptId", scriptId_.c_str());
     result->Add("url", url_.c_str());
     result->Add("lineNumber", lineNumber_);

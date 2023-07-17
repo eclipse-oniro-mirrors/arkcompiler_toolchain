@@ -286,6 +286,7 @@ public:
         static const std::string Set;             // NOLINT (readability-identifier-naming)
         static const std::string Weakmap;         // NOLINT (readability-identifier-naming)
         static const std::string Weakset;         // NOLINT (readability-identifier-naming)
+        static const std::string Dataview;         // NOLINT (readability-identifier-naming)
         static const std::string ArrayIterator;   // NOLINT (readability-identifier-naming)
         static const std::string StringIterator;  // NOLINT (readability-identifier-naming)
         static const std::string SetIterator;     // NOLINT (readability-identifier-naming)
@@ -317,6 +318,7 @@ public:
     static const std::string WeakRefDescription;         // NOLINT (readability-identifier-naming)
     static const std::string WeakMapDescription;         // NOLINT (readability-identifier-naming)
     static const std::string WeakSetDescription;         // NOLINT (readability-identifier-naming)
+    static const std::string DataViewDescription;         // NOLINT (readability-identifier-naming)
     static const std::string JSPrimitiveRefDescription;     // NOLINT (readability-identifier-naming)
     static const std::string JSPrimitiveNumberDescription;  // NOLINT (readability-identifier-naming)
     static const std::string JSPrimitiveBooleanDescription; // NOLINT (readability-identifier-naming)
@@ -397,7 +399,10 @@ private:
     static std::string DescriptionForRegexp(const EcmaVM *ecmaVm, Local<RegExpRef> tagged);
     static std::string DescriptionForDate(const EcmaVM *ecmaVm, Local<DateRef> tagged);
     static std::string DescriptionForMap(const EcmaVM *ecmaVm, Local<MapRef> tagged);
+    static std::string DescriptionForWeakMap(const EcmaVM *ecmaVm, Local<WeakMapRef> tagged);
     static std::string DescriptionForSet(const EcmaVM *ecmaVm, Local<SetRef> tagged);
+    static std::string DescriptionForWeakSet(const EcmaVM *ecmaVm, Local<WeakSetRef> tagged);
+    static std::string DescriptionForDataView(Local<DataViewRef> tagged);
     static std::string DescriptionForError(const EcmaVM *ecmaVm, Local<JSValueRef> tagged);
     static std::string DescriptionForArrayIterator();
     static std::string DescriptionForMapIterator();
@@ -420,6 +425,21 @@ private:
     static std::string DescriptionForJSLocale();
     static std::string DescriptionForJSRelativeTimeFormat();
     static std::string DescriptionForJSListFormat();
+    // container
+    static std::string DescriptionForArrayList();
+    static std::string DescriptionForDeque();
+    static std::string DescriptionForHashMap();
+    static std::string DescriptionForHashSet();
+    static std::string DescriptionForLightWeightMap();
+    static std::string DescriptionForLightWeightSet();
+    static std::string DescriptionForLinkedList();
+    static std::string DescriptionForList();
+    static std::string DescriptionForPlainArray();
+    static std::string DescriptionForQueue();
+    static std::string DescriptionForStack();
+    static std::string DescriptionForTreeMap();
+    static std::string DescriptionForTreeSet();
+    static std::string DescriptionForVector();
 };
 
 // Runtime.ExceptionDetails
@@ -1599,6 +1619,17 @@ public:
         return functionName_;
     }
 
+    RuntimeCallFrame &SetModuleName(const std::string &moduleName)
+    {
+        moduleName_ = moduleName;
+        return *this;
+    }
+
+    const std::string &GetModuleName() const
+    {
+        return moduleName_;
+    }
+
     RuntimeCallFrame &SetScriptId(const std::string &scriptId)
     {
         scriptId_ = scriptId;
@@ -1648,6 +1679,7 @@ private:
     NO_MOVE_SEMANTIC(RuntimeCallFrame);
 
     std::string functionName_ {};
+    std::string moduleName_ {};
     std::string scriptId_ {};
     std::string url_ {};
     int32_t lineNumber_ {0};

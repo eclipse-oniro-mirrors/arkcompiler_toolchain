@@ -234,17 +234,52 @@ public:
         return nativeAddress_;
     }
 
+    bool GetIntoStatus() const
+    {
+        return isStepInto_.value_or(false);
+    }
+
+    const std::vector<std::unique_ptr<CallFrame>> *GetCallFrames() const
+    {
+        return &callFrames_;
+    }
+
+    const std::vector<void *> *GetNativePointer() const
+    {
+        return &nativePointer_;
+    }
+
     NativeCalling &SetNativeAddress(const void *nativeAddress)
     {
         nativeAddress_ = nativeAddress;
         return *this;
     }
 
+    NativeCalling &SetIntoStatus(bool isStepInto)
+    {
+        isStepInto_ = isStepInto;
+        return *this;
+    }
+
+    NativeCalling &SetCallFrames(std::vector<std::unique_ptr<CallFrame>> callFrames)
+    {
+        callFrames_ = std::move(callFrames);
+        return *this;
+    }
+
+    NativeCalling &SetNativePointer(std::vector<void *> nativePointer)
+    {
+        nativePointer_ = std::move(nativePointer);
+        return *this;
+    }
 private:
     NO_COPY_SEMANTIC(NativeCalling);
     NO_MOVE_SEMANTIC(NativeCalling);
 
     const void *nativeAddress_ { nullptr };
+    std::optional<bool> isStepInto_ {};
+    std::vector<std::unique_ptr<CallFrame>> callFrames_ {};
+    std::vector<void *> nativePointer_ {};
 };
 
 class ScriptFailedToParse final : public PtBaseEvents {

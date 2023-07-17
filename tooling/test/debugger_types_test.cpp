@@ -1769,7 +1769,8 @@ HWTEST_F_L0(DebuggerTypesTest, SamplingHeapProfileNodeCreateTest)
     EXPECT_EQ(object, nullptr);
 
     msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{
-        "callFrame": {"functionName":"Create", "scriptId":"10", "url":"url3", "lineNumber":100, "columnNumber":20},
+        "callFrame": {"functionName":"Create", "moduleName":"entry", "scriptId":"10", "url":"url3", "lineNumber":100,
+                      "columnNumber":20},
         "selfSize":10,
         "id":5,
         "children":[]
@@ -1779,6 +1780,7 @@ HWTEST_F_L0(DebuggerTypesTest, SamplingHeapProfileNodeCreateTest)
     RuntimeCallFrame *runTimeCallFrame = object->GetCallFrame();
     ASSERT_NE(runTimeCallFrame, nullptr);
     EXPECT_EQ(runTimeCallFrame->GetFunctionName(), "Create");
+    EXPECT_EQ(runTimeCallFrame->GetModuleName(), "entry");
     EXPECT_EQ(runTimeCallFrame->GetScriptId(), "10");
     EXPECT_EQ(runTimeCallFrame->GetUrl(), "url3");
     EXPECT_EQ(runTimeCallFrame->GetLineNumber(), 100);
@@ -1801,7 +1803,8 @@ HWTEST_F_L0(DebuggerTypesTest, SamplingHeapProfileNodeToJsonTest)
     Result ret;
 
     msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{
-        "callFrame": {"functionName":"Create", "scriptId":"10", "url":"url3", "lineNumber":100, "columnNumber":20},
+        "callFrame": {"functionName":"Create", "moduleName":"entry", "scriptId":"10", "url":"url3", "lineNumber":100,
+                      "columnNumber":20},
         "selfSize":10,
         "id":5,
         "children":[]
@@ -1816,6 +1819,9 @@ HWTEST_F_L0(DebuggerTypesTest, SamplingHeapProfileNodeToJsonTest)
     ret = tmpJson->GetString("functionName", &tmpStr);
     EXPECT_EQ(ret, Result::SUCCESS);
     EXPECT_EQ(tmpStr, "Create");
+    ret = tmpJson->GetString("moduleName", &tmpStr);
+    EXPECT_EQ(ret, Result::SUCCESS);
+    EXPECT_EQ(tmpStr, "entry");
     ret = tmpJson->GetString("scriptId", &tmpStr);
     EXPECT_EQ(ret, Result::SUCCESS);
     EXPECT_EQ(tmpStr, "10");
@@ -1862,7 +1868,8 @@ HWTEST_F_L0(DebuggerTypesTest, SamplingHeapProfileCreateTest)
 
     msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{
         "head": {
-            "callFrame": {"functionName":"Create", "scriptId":"10", "url":"url3", "lineNumber":100, "columnNumber":20},
+            "callFrame": {"functionName":"Create", "moduleName":"entry", "scriptId":"10", "url":"url3",
+                          "lineNumber":100, "columnNumber":20},
             "selfSize":10,
             "id":5,
             "children":[]
@@ -1877,6 +1884,7 @@ HWTEST_F_L0(DebuggerTypesTest, SamplingHeapProfileCreateTest)
     RuntimeCallFrame *runTimeCallFrame = head->GetCallFrame();
     ASSERT_NE(runTimeCallFrame, nullptr);
     EXPECT_EQ(runTimeCallFrame->GetFunctionName(), "Create");
+    EXPECT_EQ(runTimeCallFrame->GetModuleName(), "entry");
     EXPECT_EQ(runTimeCallFrame->GetScriptId(), "10");
     EXPECT_EQ(runTimeCallFrame->GetUrl(), "url3");
     EXPECT_EQ(runTimeCallFrame->GetLineNumber(), 100);
@@ -1909,7 +1917,8 @@ HWTEST_F_L0(DebuggerTypesTest, SamplingHeapProfileToJsonTest)
 
     msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{
         "head": {
-            "callFrame": {"functionName":"Create", "scriptId":"10", "url":"url3", "lineNumber":100, "columnNumber":20},
+            "callFrame": {"functionName":"Create", "moduleName":"entry", "scriptId":"10", "url":"url3",
+                          "lineNumber":100, "columnNumber":20},
             "selfSize":10,
             "id":5,
             "children":[]
@@ -1930,6 +1939,9 @@ HWTEST_F_L0(DebuggerTypesTest, SamplingHeapProfileToJsonTest)
     ret = varTmpJson->GetString("functionName", &tmpStr);
     EXPECT_EQ(ret, Result::SUCCESS);
     EXPECT_EQ(tmpStr, "Create");
+    ret = varTmpJson->GetString("moduleName", &tmpStr);
+    EXPECT_EQ(ret, Result::SUCCESS);
+    EXPECT_EQ(tmpStr, "entry");
     ret = varTmpJson->GetString("scriptId", &tmpStr);
     EXPECT_EQ(ret, Result::SUCCESS);
     EXPECT_EQ(tmpStr, "10");
@@ -2054,8 +2066,8 @@ HWTEST_F_L0(DebuggerTypesTest, ProfileNodeCreateTest)
     // normal params of params.sub-key=[..]
     msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{
           "id":10,
-          "callFrame": {"functionName":"name0", "scriptId":"12", "url":"url15", "lineNumber":11, "columnNumber":20},
-          "hitCount":15,"children":[],"positionTicks":[],"deoptReason":"yyy"}})";
+          "callFrame": {"functionName":"name0", "moduleName":"entry", "scriptId":"12", "url":"url15", "lineNumber":11,
+          "columnNumber":20}, "hitCount":15, "children":[], "positionTicks":[], "deoptReason":"yyy"}})";
     profileNode = ProfileNode::Create(DispatchRequest(msg).GetParams());
 
     ASSERT_NE(profileNode, nullptr);
@@ -2063,6 +2075,7 @@ HWTEST_F_L0(DebuggerTypesTest, ProfileNodeCreateTest)
     RuntimeCallFrame *runTimeCallFrame = profileNode->GetCallFrame();
     ASSERT_NE(runTimeCallFrame, nullptr);
     EXPECT_EQ(runTimeCallFrame->GetFunctionName(), "name0");
+    EXPECT_EQ(runTimeCallFrame->GetModuleName(), "entry");
     EXPECT_EQ(runTimeCallFrame->GetScriptId(), "12");
     EXPECT_EQ(runTimeCallFrame->GetUrl(), "url15");
     EXPECT_EQ(runTimeCallFrame->GetLineNumber(), 11);
@@ -2083,8 +2096,8 @@ HWTEST_F_L0(DebuggerTypesTest, ProfileNodeToJsonTest)
 
     msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{
           "id":10,
-          "callFrame": {"functionName":"name0", "scriptId":"12", "url":"url15", "lineNumber":11, "columnNumber":20},
-          "hitCount":15,"children":[],"positionTicks":[],"deoptReason":"yyy"}})";
+          "callFrame": {"functionName":"name0", "moduleName":"entry", "scriptId":"12", "url":"url15", "lineNumber":11,
+          "columnNumber":20}, "hitCount":15, "children":[], "positionTicks":[], "deoptReason":"yyy"}})";
     profilenode = ProfileNode::Create(DispatchRequest(msg).GetParams());
     ASSERT_NE(profilenode, nullptr);
     auto json = profilenode->ToJson();
@@ -2099,6 +2112,9 @@ HWTEST_F_L0(DebuggerTypesTest, ProfileNodeToJsonTest)
     ret = tmpJson->GetString("functionName", &tmpStr);
     EXPECT_EQ(ret, Result::SUCCESS);
     EXPECT_EQ(tmpStr, "name0");
+    ret = tmpJson->GetString("moduleName", &tmpStr);
+    EXPECT_EQ(ret, Result::SUCCESS);
+    EXPECT_EQ(tmpStr, "entry");
     ret = tmpJson->GetString("scriptId", &tmpStr);
     EXPECT_EQ(ret, Result::SUCCESS);
     EXPECT_EQ(tmpStr, "12");
@@ -2150,8 +2166,8 @@ HWTEST_F_L0(DebuggerTypesTest, ProfileCreateTest)
     msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{
           "tid":1000, "startTime":10, "endTime":25, "gcTime":25, "cInterpreterTime":25, "asmInterpreterTime":25,
           "aotTime":25, "builtinTime":25, "napiTime":25, "arkuiEngineTime":25, "runtimeTime":25, "otherTime":25,
-          "nodes":[{"id":12, "callFrame": {"functionName":"Create", "scriptId":"10", "url":"url3", "lineNumber":100,
-          "columnNumber":20}}], "samples":[],"timeDeltas":[]}})";
+          "nodes":[{"id":12, "callFrame": {"functionName":"Create", "moduleName":"entry", "scriptId":"10",
+          "url":"url3", "lineNumber":100, "columnNumber":20}}], "samples":[],"timeDeltas":[]}})";
     profile = Profile::Create(DispatchRequest(msg).GetParams());
     ASSERT_NE(profile, nullptr);
 
@@ -2184,8 +2200,8 @@ HWTEST_F_L0(DebuggerTypesTest, ProfileToJsonTest)
     msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{
           "tid":1000, "startTime":10, "endTime":25, "gcTime":25, "cInterpreterTime":25, "asmInterpreterTime":25,
           "aotTime":25, "builtinTime":25, "napiTime":25, "arkuiEngineTime":25, "runtimeTime":25, "otherTime":25,
-          "nodes":[{"id":12, "callFrame": {"functionName":"Create", "scriptId":"10", "url":"url3", "lineNumber":100,
-          "columnNumber":20}}], "samples":[],"timeDeltas":[]}})";
+          "nodes":[{"id":12, "callFrame": {"functionName":"Create", "moduleName":"entry", "scriptId":"10",
+          "url":"url3", "lineNumber":100, "columnNumber":20}}], "samples":[],"timeDeltas":[]}})";
     profile = Profile::Create(DispatchRequest(msg).GetParams());
     ASSERT_NE(profile, nullptr);
     auto json = profile->ToJson();

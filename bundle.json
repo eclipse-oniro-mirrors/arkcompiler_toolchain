@@ -26,12 +26,12 @@
                 "runtime_core",
                 "faultloggerd",
                 "hitrace",
-                "hilog",
-                "libuv"
+                "hilog"
             ],
             "third_party": [
                 "bounds_checking_function",
-                "cjson",
+                "cJSON",
+                "libuv",
                 "openssl"
             ]
         },
