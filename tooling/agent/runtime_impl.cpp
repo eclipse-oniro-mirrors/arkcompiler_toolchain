@@ -197,7 +197,8 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
     bool skipProto = false;
     if (!internalObjects_.IsEmpty() && internalObjects_->Get(vm_, value)->IsNumber()) {
         if (static_cast<ArkInternalValueType>(internalObjects_->Get(vm_, value)->ToNumber(vm_)->Value()) ==
-            ArkInternalValueType::Entry) {
+            ArkInternalValueType::Entry || static_cast<ArkInternalValueType>(internalObjects_->Get(vm_, value)->
+            ToNumber(vm_)->Value()) == ArkInternalValueType::Scope) {
             skipProto = true;
         }
     }

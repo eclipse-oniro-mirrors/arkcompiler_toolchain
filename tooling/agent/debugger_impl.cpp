@@ -1047,6 +1047,7 @@ std::unique_ptr<Scope> DebuggerImpl::GetLocalScopeChain(const FrameHandler *fram
         .SetDescription(RemoteObject::ObjectDescription);
     auto *sp = DebuggerApi::GetSp(frameHandler);
     scopeObjects_[sp] = runtime_->curObjectId_;
+    DebuggerApi::AddInternalProperties(vm_, localObj, ArkInternalValueType::Scope,  runtime_->internalObjects_);
     runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, localObj);
 
     Local<JSValueRef> thisVal = JSNApiHelper::ToLocal<JSValueRef>(
@@ -1089,6 +1090,7 @@ std::unique_ptr<Scope> DebuggerImpl::GetModuleScopeChain()
         .SetClassName(ObjectClassName::Object)
         .SetDescription(RemoteObject::ObjectDescription);
     moduleScope->SetType(Scope::Type::Module()).SetObject(std::move(module));
+    DebuggerApi::AddInternalProperties(vm_, moduleObj, ArkInternalValueType::Scope,  runtime_->internalObjects_);
     runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, moduleObj);
     JSThread *thread = vm_->GetJSThread();
     JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm_));
@@ -1197,12 +1199,15 @@ std::unique_ptr<Scope> DebuggerImpl::GetGlobalScopeChain()
     auto globalScope = std::make_unique<Scope>();
 
     std::unique_ptr<RemoteObject> global = std::make_unique<RemoteObject>();
+    Local<ObjectRef> globalObj = ObjectRef::New(vm_);
     global->SetType(ObjectType::Object)
         .SetObjectId(runtime_->curObjectId_)
         .SetClassName(ObjectClassName::Global)
         .SetDescription(RemoteObject::GlobalDescription);
     globalScope->SetType(Scope::Type::Global()).SetObject(std::move(global));
-    runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, JSNApi::GetGlobalObject(vm_));
+    globalObj = JSNApi::GetGlobalObject(vm_);
+    DebuggerApi::AddInternalProperties(vm_, globalObj, ArkInternalValueType::Scope,  runtime_->internalObjects_);
+    runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, globalObj);
     return globalScope;
 }
 
