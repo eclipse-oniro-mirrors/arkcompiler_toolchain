@@ -141,6 +141,16 @@ public:
         return scriptHash_.has_value();
     }
 
+    bool GetRestrictToFunction() const
+    {
+        return restrictToFunction_.value_or(false);
+    }
+
+    bool HasRestrictToFunction() const
+    {
+        return restrictToFunction_.has_value();
+    }
+
 private:
     NO_COPY_SEMANTIC(BreakpointInfo);
     NO_MOVE_SEMANTIC(BreakpointInfo);
@@ -151,6 +161,7 @@ private:
     std::optional<std::string> condition_ {};
     std::optional<std::string> urlRegex_ {};
     std::optional<std::string> scriptHash_ {};
+    std::optional<bool> restrictToFunction_ {};
 };
 
 // Debugger.BreakpointReturnInfo

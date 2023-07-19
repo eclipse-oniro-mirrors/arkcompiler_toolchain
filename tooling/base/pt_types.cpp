@@ -3254,6 +3254,14 @@ std::unique_ptr<BreakpointInfo> BreakpointInfo::Create(const PtJson &params)
     } else if (ret == Result::TYPE_ERROR) {
         error += "Unknown 'scriptHash';";
     }
+    // restrictToFunction
+    bool restrictToFunction = false;
+    ret = params.GetBool("restrictToFunction", &restrictToFunction);
+    if (ret == Result::SUCCESS) {
+        paramsObject->restrictToFunction_ = restrictToFunction;
+    } else if (ret == Result::TYPE_ERROR) {  // optional value
+        error += "Unknown 'restrictToFunction';";
+    }
 
     if (!error.empty()) {
         LOG_DEBUGGER(ERROR) << "BreakpointInfo::Create " << error;
@@ -3279,6 +3287,9 @@ std::unique_ptr<PtJson> BreakpointInfo::ToJson() const
     }
     if (scriptHash_) {
         result->Add("scriptHash", scriptHash_.value().c_str());
+    }
+    if (restrictToFunction_) {
+        result->Add("restrictToFunction", restrictToFunction_.value());
     }
 
     return result;
