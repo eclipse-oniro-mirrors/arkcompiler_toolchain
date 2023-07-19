@@ -32,6 +32,7 @@
 #include "test/testcases/js_variable_first_test.h"
 #include "test/testcases/js_variable_second_test.h"
 #include "test/testcases/js_module_variable_test.h"
+#include "test/testcases/js_local_variable_scope_test.h"
 #include "test/testcases/js_container_test.h"
 
 namespace panda::ecmascript::tooling::test {
@@ -54,6 +55,7 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsVariableFirstTest", GetJsVariableFirstTest());
     TestUtil::RegisterTest("JsVariableSecondTest", GetJsVariableSecondTest());
     TestUtil::RegisterTest("JsModuleVariableTest", GetJsModuleVariableTest());
+    TestUtil::RegisterTest("JsLocalVariableScopeTest", GetJsLocalVariableScopeTest());
     TestUtil::RegisterTest("JsContainerTest", GetJsContainerTest());
 }
 
