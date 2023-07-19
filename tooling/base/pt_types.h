@@ -164,6 +164,9 @@ private:
     std::optional<bool> restrictToFunction_ {};
 };
 
+// Runtime.ScriptId
+using ScriptId = int32_t;
+
 // Debugger.BreakpointReturnInfo
 class BreakpointReturnInfo : public PtBaseTypes {
 public:
@@ -228,11 +231,7 @@ private:
 };
 
 // ========== Runtime types begin
-// Runtime.ScriptId
-using ScriptId = int32_t;
-
 // Runtime.RemoteObjectId
-
 using RemoteObjectId = int32_t;
 
 // Runtime.ExecutionContextId
