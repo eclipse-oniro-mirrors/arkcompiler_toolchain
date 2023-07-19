@@ -427,7 +427,7 @@ void DebuggerImpl::DispatcherImpl::SetBreakpointByUrl(const DispatchRequest &req
     SendResponse(request, response, result);
 }
 
-void DebuggerImpl::DispatcherImpl::CheckAndSetBreakpointByUrl(const DispatchRequest &request) 
+void DebuggerImpl::DispatcherImpl::CheckAndSetBreakpointByUrl(const DispatchRequest &request)
 {
     std::unique_ptr<CheckAndSetBreakpointByUrlParams> params = CheckAndSetBreakpointByUrlParams::Create(request.GetParams());
     if (params == nullptr) {
@@ -823,13 +823,13 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
 }
 
 DispatchResponse DebuggerImpl::CheckAndSetBreakpointByUrl(const CheckAndSetBreakpointByUrlParams &params,
-                                                          std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
+                                        std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
 {
     if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
         return DispatchResponse::Fail("SetBreakpointByUrl: debugger agent is not enabled");
     }
     if (!params.HasBreakpointsList()) {
-        return DispatchResponse::Fail("SetBreakpointByUrl: no pennding breakpoint exists"); 
+        return DispatchResponse::Fail("SetBreakpointByUrl: no pennding breakpoint exists");
     }
     auto breakpointList = params.GetBreakpointsList();
     for (const auto &breakpoint : *breakpointList) {
@@ -844,7 +844,8 @@ DispatchResponse DebuggerImpl::CheckAndSetBreakpointByUrl(const CheckAndSetBreak
     return DispatchResponse::Ok();
 }
 
-bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint, std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
+bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint, 
+            std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
 {
     const std::string &url = breakpoint.GetUrl();
     int32_t lineNumber = breakpoint.GetLineNumber();
@@ -887,13 +888,12 @@ bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint, std
     auto matchLocationCbFunc = [this, &condFuncRef](const JSPtLocation &location) -> bool {
         return DebuggerApi::SetBreakpoint(jsDebugger_, location, condFuncRef);
     };
-
     if (!extractor->MatchWithLocation(matchLocationCbFunc, lineNumber, columnNumber, url, GetRecordName(url))) {
         LOG_DEBUGGER(ERROR) << "failed to set breakpoint location number: " << lineNumber << ":" << columnNumber;
         return false;
     }
     
-    BreakpointDetails bpMetaData{lineNumber, columnNumber, url};
+    BreakpointDetails bpMetaData {lineNumber, columnNumber, url};
     std::string outId = BreakpointDetails::ToString(bpMetaData);
     std::unique_ptr<BreakpointReturnInfo> bpInfo = std::make_unique<BreakpointReturnInfo>();
     bpInfo->SetScriptId(scriptId).SetLineNumber(lineNumber).SetColumnNumber(columnNumber).SetId(outId);

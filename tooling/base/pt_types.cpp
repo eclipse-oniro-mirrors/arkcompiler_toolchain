@@ -3267,15 +3267,12 @@ std::unique_ptr<BreakpointInfo> BreakpointInfo::Create(const PtJson &params)
         LOG_DEBUGGER(ERROR) << "BreakpointInfo::Create " << error;
         return nullptr;
     }
-    
     return paramsObject;
 }
 
 std::unique_ptr<PtJson> BreakpointInfo::ToJson() const
 {
     std::unique_ptr<PtJson> result = PtJson::CreateObject();
-
-    
     result->Add("lineNumber", lineNumber_);
     result->Add("columnNumber", columnNumber_);
     result->Add("url", url_.c_str());
