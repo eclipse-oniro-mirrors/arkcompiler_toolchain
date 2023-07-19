@@ -42,6 +42,22 @@ std::unique_ptr<PtJson> SetBreakpointByUrlReturns::ToJson() const
     return result;
 }
 
+std::unique_ptr<PtJson> CheckAndSetBreakpointByUrlReturns::ToJson() const
+{
+    std::unique_ptr<PtJson> result = PtJson::CreateObject();
+
+    std::unique_ptr<PtJson> array = PtJson::CreateArray();
+    size_t len = locations_.size();
+    for (size_t i = 0; i < len; i++) {
+        ASSERT(locations_[i] != nullptr);
+        std::unique_ptr<PtJson> location = locations_[i]->ToJson();
+        array->Push(location);
+    }
+    result->Add("locations", array);
+
+    return result;
+}
+
 std::unique_ptr<PtJson> EvaluateOnCallFrameReturns::ToJson() const
 {
     std::unique_ptr<PtJson> result = PtJson::CreateObject();

@@ -299,7 +299,8 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         { "stepOver", &DebuggerImpl::DispatcherImpl::StepOver },
         { "setMixedDebugEnabled", &DebuggerImpl::DispatcherImpl::SetMixedDebugEnabled },
         { "setBlackboxPatterns", &DebuggerImpl::DispatcherImpl::SetBlackboxPatterns },
-        { "replyNativeCalling", &DebuggerImpl::DispatcherImpl::ReplyNativeCalling }
+        { "replyNativeCalling", &DebuggerImpl::DispatcherImpl::ReplyNativeCalling },
+        { "checkAndSetBreakpointByUrl", &DebuggerImpl::DispatcherImpl::CheckAndSetBreakpointByUrl }
     };
 
     const std::string &method = request.GetMethod();
@@ -423,6 +424,20 @@ void DebuggerImpl::DispatcherImpl::SetBreakpointByUrl(const DispatchRequest &req
     std::vector<std::unique_ptr<Location>> outLocations;
     DispatchResponse response = debugger_->SetBreakpointByUrl(*params, &outId, &outLocations);
     SetBreakpointByUrlReturns result(outId, std::move(outLocations));
+    SendResponse(request, response, result);
+}
+
+void DebuggerImpl::DispatcherImpl::CheckAndSetBreakpointByUrl(const DispatchRequest &request) 
+{
+    std::unique_ptr<CheckAndSetBreakpointByUrlParams> params = CheckAndSetBreakpointByUrlParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+
+    std::vector<std::unique_ptr<BreakpointReturnInfo>> outLocations = std::vector<std::unique_ptr<BreakpointReturnInfo>>();
+    DispatchResponse response = debugger_->CheckAndSetBreakpointByUrl(*params, &outLocations);
+    CheckAndSetBreakpointByUrlReturns result(std::move(outLocations));
     SendResponse(request, response, result);
 }
 
@@ -805,6 +820,86 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
     outLocations->emplace_back(std::move(location));
 
     return DispatchResponse::Ok();
+}
+
+DispatchResponse DebuggerImpl::CheckAndSetBreakpointByUrl(const CheckAndSetBreakpointByUrlParams &params,
+                                                          std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
+{
+    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+        return DispatchResponse::Fail("SetBreakpointByUrl: debugger agent is not enabled");
+    }
+    if (!params.HasBreakpointsList()) {
+        return DispatchResponse::Fail("SetBreakpointByUrl: no pennding breakpoint exists"); 
+    }
+    auto breakpointList = params.GetBreakpointsList();
+    for (const auto &breakpoint : *breakpointList) {
+        bool isProcessSucceed = ProcessSingleBreakpoint(*breakpoint, &(*outLocations));
+        if (!isProcessSucceed) {
+            const std::string invalidBpId = "invalid";
+            std::unique_ptr<BreakpointReturnInfo> bpInfo = std::make_unique<BreakpointReturnInfo>();
+            bpInfo->SetId(invalidBpId).SetLineNumber(breakpoint->GetLineNumber()).SetColumnNumber(breakpoint->GetColumnNumber());
+            outLocations->emplace_back(std::move(bpInfo));
+        }
+    }
+    return DispatchResponse::Ok();
+}
+
+bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint, std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
+{
+    const std::string &url = breakpoint.GetUrl();
+    int32_t lineNumber = breakpoint.GetLineNumber();
+    int32_t columnNumber = breakpoint.GetColumnNumber();
+    auto condition = breakpoint.HasCondition() ? breakpoint.GetCondition() : std::optional<std::string> {};
+
+    DebugInfoExtractor *extractor = GetExtractor(url);
+    if (extractor == nullptr) {
+        LOG_DEBUGGER(ERROR) << "CheckAndSetBreakpointByUrl: extractor is null";
+        return false;
+    }
+
+    ScriptId scriptId;
+    std::string fileName;
+    auto matchScriptCbFunc = [&scriptId, &fileName](PtScript *script) -> bool {
+        scriptId = script->GetScriptId();
+        fileName = script->GetFileName();
+        return true;
+    };
+    if (!MatchScripts(matchScriptCbFunc, url, ScriptMatchType::URL)) {
+        LOG_DEBUGGER(ERROR) << "CheckAndSetBreakpointByUrl: unknown Url: " << url;
+        return false;
+    }
+
+    // check breakpoint condition before doing matchWithLocation
+    Local<FunctionRef> condFuncRef = FunctionRef::Undefined(vm_);
+    if (condition.has_value() && !condition.value().empty()) {
+        std::vector<uint8_t> dest;
+        if (!DecodeAndCheckBase64(condition.value(), dest)) {
+            LOG_DEBUGGER(ERROR) << "CheckAndSetBreakpointByUrl: base64 decode failed";
+            return false;
+        }
+        condFuncRef = DebuggerApi::GenerateFuncFromBuffer(vm_, dest.data(), dest.size(), JSPandaFile::ENTRY_FUNCTION_NAME);
+        if (condFuncRef->IsUndefined()) {
+            LOG_DEBUGGER(ERROR) << "CheckAndSetBreakpointByUrl: generate condition function failed";
+            return false;
+        }
+    }
+
+    auto matchLocationCbFunc = [this, &condFuncRef](const JSPtLocation &location) -> bool {
+        return DebuggerApi::SetBreakpoint(jsDebugger_, location, condFuncRef);
+    };
+
+    if (!extractor->MatchWithLocation(matchLocationCbFunc, lineNumber, columnNumber, url, GetRecordName(url))) {
+        LOG_DEBUGGER(ERROR) << "failed to set breakpoint location number: " << lineNumber << ":" << columnNumber;
+        return false;
+    }
+    
+    BreakpointDetails bpMetaData{lineNumber, columnNumber, url};
+    std::string outId = BreakpointDetails::ToString(bpMetaData);
+    std::unique_ptr<BreakpointReturnInfo> bpInfo = std::make_unique<BreakpointReturnInfo>();
+    bpInfo->SetScriptId(scriptId).SetLineNumber(lineNumber).SetColumnNumber(columnNumber).SetId(outId);
+    outLocations->emplace_back(std::move(bpInfo));
+
+    return true;
 }
 
 DispatchResponse DebuggerImpl::SetPauseOnExceptions(const SetPauseOnExceptionsParams &params)

@@ -3200,4 +3200,144 @@ std::unique_ptr<PtJson> TraceConfig::ToJson() const
 
     return result;
 }
+
+std::unique_ptr<BreakpointInfo> BreakpointInfo::Create(const PtJson &params)
+{
+    auto paramsObject = std::make_unique<BreakpointInfo>();
+    std::string error;
+    Result ret;
+    // lineNumber
+    int32_t lineNumber;
+    ret = params.GetInt("lineNumber", &lineNumber);
+    if (ret == Result::SUCCESS) {
+        paramsObject->lineNumber_ = lineNumber;
+    } else {
+        error += "Unknown 'lineNumber';";
+    }
+    // url
+    std::string url;
+    ret = params.GetString("url", &url);
+    if (ret == Result::SUCCESS) {
+        paramsObject->url_ = std::move(url);
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Unknown 'url';";
+    }
+    // columnNumber
+    int32_t columnNumber;
+    ret = params.GetInt("columnNumber", &columnNumber);
+    if (ret == Result::SUCCESS) {
+        paramsObject->columnNumber_ = columnNumber;
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Unknown 'columnNumber';";
+    }
+    // condition
+    std::string condition;
+    ret = params.GetString("condition", &condition);
+    if (ret == Result::SUCCESS) {
+        paramsObject->condition_ = std::move(condition);
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Unknown 'condition';";
+    }
+    // urlRegex
+    std::string urlRegex;
+    ret = params.GetString("urlRegex", &urlRegex);
+    if (ret == Result::SUCCESS) {
+        paramsObject->urlRegex_ = std::move(urlRegex);
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Unknown 'urlRegex';";
+    }
+    // scriptHash
+    std::string scriptHash;
+    ret = params.GetString("scriptHash", &scriptHash);
+    if (ret == Result::SUCCESS) {
+        paramsObject->scriptHash_ = std::move(scriptHash);
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Unknown 'scriptHash';";
+    }
+
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "BreakpointInfo::Create " << error;
+        return nullptr;
+    }
+    
+    return paramsObject;
+}
+
+std::unique_ptr<PtJson> BreakpointInfo::ToJson() const
+{
+    std::unique_ptr<PtJson> result = PtJson::CreateObject();
+
+    
+    result->Add("lineNumber", lineNumber_);
+    result->Add("columnNumber", columnNumber_);
+    result->Add("url", url_.c_str());
+    if (condition_) {
+        result->Add("condition", condition_.value().c_str());
+    }
+    if (urlRegex_) {
+        result->Add("urlRegex", urlRegex_.value().c_str());
+    }
+    if (scriptHash_) {
+        result->Add("scriptHash", scriptHash_.value().c_str());
+    }
+
+    return result;
+}
+
+std::unique_ptr<BreakpointReturnInfo> BreakpointReturnInfo::Create(const PtJson &params)
+{
+    auto paramsObject = std::make_unique<BreakpointReturnInfo>();
+    std::string error;
+    Result ret;
+    // lineNumber
+    int32_t lineNumber;
+    ret = params.GetInt("lineNumber", &lineNumber);
+    if (ret == Result::SUCCESS) {
+        paramsObject->lineNumber_ = lineNumber;
+    } else {
+        error += "Unknown 'lineNumber';";
+    }
+    // columnNumber
+    int32_t columnNumber;
+    ret = params.GetInt("columnNumber", &columnNumber);
+    if (ret == Result::SUCCESS) {
+        paramsObject->columnNumber_ = columnNumber;
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Unknown 'columnNumber';";
+    }
+    // id
+    std::string id;
+    ret = params.GetString("id", &id);
+    if (ret == Result::SUCCESS) {
+        paramsObject->id_ = std::move(id);
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Unknown 'id';";
+    }
+    // scriptId
+    int32_t scriptId;
+    ret = params.GetInt("scriptId", &scriptId);
+    if (ret == Result::SUCCESS) {
+        paramsObject->scriptId_ = scriptId;
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Unknown 'scriptId';";
+    }
+
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "BreakpointReturnInfo::Create " << error;
+        return nullptr;
+    }
+    
+    return paramsObject;
+}
+
+std::unique_ptr<PtJson> BreakpointReturnInfo::ToJson() const
+{
+    std::unique_ptr<PtJson> result = PtJson::CreateObject();
+    result->Add("lineNumber", lineNumber_);
+    result->Add("columnNumber", columnNumber_);
+    result->Add("id", id_.c_str());
+    result->Add("scriptId", scriptId_);
+
+    return result;
+}
 }  // namespace panda::ecmascript::tooling
