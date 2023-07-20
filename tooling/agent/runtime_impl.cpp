@@ -280,7 +280,7 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
     }
 
     Local<ArrayRef> keys = Local<ObjectRef>(value)->GetOwnPropertyNames(vm_);
-    int32_t length = keys->Length(vm_);
+    int32_t length = static_cast<int32_t>(keys->Length(vm_));
     Local<JSValueRef> name = JSValueRef::Undefined(vm_);
     for (int32_t i = 0; i < length; ++i) {
         name = keys->Get(vm_, i);
