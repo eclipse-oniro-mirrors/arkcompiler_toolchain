@@ -36,6 +36,81 @@ config("exceptions") {
   cflags_cc = [ "-fexceptions" ]
 }
 
+common_optimize_on_cflags = []
+common_optimize_on_ldflags = []
+
+if (is_ohos) {
+  common_optimize_on_ldflags += [
+    "-Wl,--warn-shared-textrel",  # Warn in case of text relocations.
+  ]
+}
+
+if (!(is_mac || is_ios)) {
+  # Non-Mac Posix flags.
+
+  common_optimize_on_ldflags += [
+    # Specifically tell the linker to perform optimizations.
+    # -O2 enables string tail merge optimization in gold and lld.
+    "-Wl,-O2",
+  ]
+  if (!is_mingw) {
+    common_optimize_on_ldflags += [ "-Wl,--gc-sections" ]
+  }
+
+  common_optimize_on_cflags += [
+    # Put data and code in their own sections, so that unused symbols
+    # can be removed at link time with --gc-sections.
+    "-fdata-sections",
+    "-ffunction-sections",
+
+    # Don't emit the GCC version ident directives, they just end up in the
+    # .comment section taking up binary size.
+    "-fno-ident",
+  ]
+}
+
+# Turn off optimizations.
+config("no_optimize") {
+  if (is_ohos_or_android) {
+    ldflags = common_optimize_on_ldflags
+    cflags = common_optimize_on_cflags
+
+    # On ohos we kind of optimize some things that don't affect debugging
+    # much even when optimization is disabled to get the binary size down.
+    if (is_clang) {
+      cflags += [ "-Oz" ]
+    } else {
+      cflags += [ "-Os" ]
+    }
+  }
+}
+
+# Default "optimization on" config.
+config("optimize") {
+  ldflags = common_optimize_on_ldflags
+  cflags = common_optimize_on_cflags
+  if (optimize_for_size) {
+    # Favor size over speed.
+    if (is_clang) {
+      cflags += [ "-O2" ]
+    } else {
+      cflags += [ "-Os" ]
+    }
+  } else {
+    cflags += [ "-O2" ]
+  }
+}
+
+# The default optimization applied to all targets. This will be equivalent to
+# either "optimize" or "no_optimize", depending on the build flags.
+config("default_optimization") {
+  if (is_debug) {
+    configs = [ ":no_optimize" ]
+  } else {
+    configs = [ ":optimize" ]
+  }
+}
+
 # default_warnings ------------------------------------------------------------
 #
 # Collects all warning flags that are used by default.This way these
