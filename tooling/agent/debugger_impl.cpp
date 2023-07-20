@@ -70,15 +70,7 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
     }
 #endif
 
-    const JSPandaFile *jsPandaFile = nullptr;
-    JSPandaFileManager::GetInstance()->EnumerateJSPandaFiles([&jsPandaFile, &fileName](
-        const JSPandaFile *pandaFile) {
-        if (fileName == pandaFile->GetJSPandaFileDesc().c_str()) {
-            jsPandaFile = pandaFile;
-            return false;
-        }
-        return true;
-    });
+    const JSPandaFile *jsPandaFile = JSPandaFileManager::GetInstance()->FindJSPandaFile(fileName.c_str()).get();
     if (jsPandaFile == nullptr) {
         LOG_DEBUGGER(ERROR) << "NotifyScriptParsed: unknown file: " << fileName;
         return false;
@@ -90,15 +82,15 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
         return false;
     }
 
-    auto mainMethodIndex = panda_file::File::EntityId(jsPandaFile->GetMainMethodIndex(entryPoint.data()));
+    const char *recordName = entryPoint.data();
+    auto mainMethodIndex = panda_file::File::EntityId(jsPandaFile->GetMainMethodIndex(recordName));
     const std::string &source = extractor->GetSourceCode(mainMethodIndex);
     const std::string &url = extractor->GetSourceFile(mainMethodIndex);
     if (source.empty()) {
         LOG_DEBUGGER(ERROR) << "NotifyScriptParsed: invalid file: " << fileName;
         return false;
     }
-    // store here for performance of get extractor from url
-    extractors_[url] = extractor;
+    recordNames_[url] = recordName;
 
     auto scriptFunc = [this](PtScript *script) -> bool {
         frontend_.ScriptParsed(vm_, *script);
@@ -244,21 +236,34 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
         paused.SetData(std::move(tmpException));
     }
     frontend_.Paused(vm_, paused);
-
+    debuggerState_ = DebuggerState::PAUSED;
     frontend_.WaitForDebugger(vm_);
     DebuggerApi::SetException(vm_, exception);
 }
 
 void DebuggerImpl::NotifyNativeCalling(const void *nativeAddress)
 {
-    // native calling only after step into should be reported
+    tooling::NativeCalling nativeCalling;
     if (singleStepper_ != nullptr &&
         singleStepper_->GetStepperType() == StepperType::STEP_INTO) {
-        tooling::NativeCalling nativeCalling;
         nativeCalling.SetNativeAddress(nativeAddress);
-        frontend_.NativeCalling(vm_, nativeCalling);
-        frontend_.WaitForDebugger(vm_);
+        nativeCalling.SetIntoStatus(true);
     }
+
+    nativePointer_ = DebuggerApi::GetNativePointer(vm_);
+    nativeCalling.SetNativePointer(nativePointer_);
+    std::vector<std::unique_ptr<CallFrame>> callFrames;
+    if (GenerateCallFrames(&callFrames)) {
+        nativeCalling.SetCallFrames(std::move(callFrames));
+    }
+    frontend_.NativeCalling(vm_, nativeCalling);
+    frontend_.WaitForDebugger(vm_);
+}
+
+// only use for test case
+void DebuggerImpl::SetDebuggerState(DebuggerState debuggerState)
+{
+    debuggerState_ = debuggerState;
 }
 
 void DebuggerImpl::NotifyPendingJobEntry()
@@ -588,6 +593,7 @@ DispatchResponse DebuggerImpl::Enable([[maybe_unused]] const EnableParams &param
     for (auto &script : scripts_) {
         frontend_.ScriptParsed(vm_, *script.second);
     }
+    debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
 
@@ -595,7 +601,9 @@ DispatchResponse DebuggerImpl::Disable()
 {
     DebuggerApi::RemoveAllBreakpoints(jsDebugger_);
     frontend_.RunIfWaitingForDebugger(vm_);
+    frontend_.Resumed(vm_);
     vm_->GetJsDebuggerManager()->SetDebugMode(false);
+    debuggerState_ = DebuggerState::DISABLED;
     return DispatchResponse::Ok();
 }
 
@@ -656,7 +664,7 @@ DispatchResponse DebuggerImpl::GetPossibleBreakpoints(const GetPossibleBreakpoin
     auto callbackFunc = [](const JSPtLocation &) -> bool {
         return true;
     };
-    if (extractor->MatchWithLocation(callbackFunc, line, column, url)) {
+    if (extractor->MatchWithLocation(callbackFunc, line, column, url, GetRecordName(url))) {
         std::unique_ptr<BreakLocation> location = std::make_unique<BreakLocation>();
         location->SetScriptId(start->GetScriptId()).SetLine(line).SetColumn(column);
         locations->emplace_back(std::move(location));
@@ -709,7 +717,8 @@ DispatchResponse DebuggerImpl::RemoveBreakpoint(const RemoveBreakpointParams &pa
         LOG_DEBUGGER(INFO) << "remove breakpoint location: " << location.ToString();
         return DebuggerApi::RemoveBreakpoint(jsDebugger_, location);
     };
-    if (!extractor->MatchWithLocation(callbackFunc, metaData.line_, metaData.column_, metaData.url_)) {
+    if (!extractor->MatchWithLocation(callbackFunc, metaData.line_, metaData.column_,
+        metaData.url_, GetRecordName(metaData.url_))) {
         LOG_DEBUGGER(ERROR) << "failed to remove breakpoint location number: "
             << metaData.line_ << ":" << metaData.column_;
         return DispatchResponse::Fail("Breakpoint not found.");
@@ -721,8 +730,12 @@ DispatchResponse DebuggerImpl::RemoveBreakpoint(const RemoveBreakpointParams &pa
 
 DispatchResponse DebuggerImpl::Resume([[maybe_unused]] const ResumeParams &params)
 {
+    if (debuggerState_ != DebuggerState::PAUSED) {
+        return DispatchResponse::Fail("Can only perform operation while paused");
+    }
     frontend_.Resumed(vm_);
     singleStepper_.reset();
+    debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
 
@@ -779,7 +792,7 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
         }
         return DebuggerApi::SetBreakpoint(jsDebugger_, location, condFuncRef);
     };
-    if (!extractor->MatchWithLocation(callbackFunc, lineNumber, columnNumber, url)) {
+    if (!extractor->MatchWithLocation(callbackFunc, lineNumber, columnNumber, url, GetRecordName(url))) {
         LOG_DEBUGGER(ERROR) << "failed to set breakpoint location number: " << lineNumber << ":" << columnNumber;
         return DispatchResponse::Fail("Breakpoint not found.");
     }
@@ -802,7 +815,7 @@ DispatchResponse DebuggerImpl::SetPauseOnExceptions(const SetPauseOnExceptionsPa
 
 DispatchResponse DebuggerImpl::StepInto([[maybe_unused]] const StepIntoParams &params)
 {
-    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+    if (debuggerState_ != DebuggerState::PAUSED) {
         return DispatchResponse::Fail("Can only perform operation while paused");
     }
     singleStepper_ = SingleStepper::GetStepIntoStepper(vm_);
@@ -811,12 +824,13 @@ DispatchResponse DebuggerImpl::StepInto([[maybe_unused]] const StepIntoParams &p
         return DispatchResponse::Fail("Failed to StepInto");
     }
     frontend_.Resumed(vm_);
+    debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
 
 DispatchResponse DebuggerImpl::StepOut()
 {
-    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+    if (debuggerState_ != DebuggerState::PAUSED) {
         return DispatchResponse::Fail("Can only perform operation while paused");
     }
     singleStepper_ = SingleStepper::GetStepOutStepper(vm_);
@@ -825,12 +839,13 @@ DispatchResponse DebuggerImpl::StepOut()
         return DispatchResponse::Fail("Failed to StepOut");
     }
     frontend_.Resumed(vm_);
+    debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
 
 DispatchResponse DebuggerImpl::StepOver([[maybe_unused]] const StepOverParams &params)
 {
-    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+    if (debuggerState_ != DebuggerState::PAUSED) {
         return DispatchResponse::Fail("Can only perform operation while paused");
     }
     singleStepper_ = SingleStepper::GetStepOverStepper(vm_);
@@ -839,6 +854,7 @@ DispatchResponse DebuggerImpl::StepOver([[maybe_unused]] const StepOverParams &p
         return DispatchResponse::Fail("Failed to StepOver");
     }
     frontend_.Resumed(vm_);
+    debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
 
@@ -896,12 +912,20 @@ DebugInfoExtractor *DebuggerImpl::GetExtractor(const std::string &url)
         return extractor;
     }
 
-    auto iter = extractors_.find(url);
-    if (iter == extractors_.end()) {
+    std::string fileName;
+    auto scriptFunc = [&fileName](const PtScript *script) -> bool {
+        fileName = script->GetFileName();
+        return true;
+    };
+    if (!MatchScripts(scriptFunc, url, ScriptMatchType::URL)) {
         return nullptr;
     }
 
-    return iter->second;
+    const JSPandaFile *jsPandaFile = JSPandaFileManager::GetInstance()->FindJSPandaFile(fileName.c_str()).get();
+    if (jsPandaFile == nullptr) {
+        return nullptr;
+    }
+    return JSPandaFileManager::GetInstance()->GetJSPtExtractor(jsPandaFile);
 }
 
 bool DebuggerImpl::GenerateCallFrames(std::vector<std::unique_ptr<CallFrame>> *callFrames)
@@ -1023,6 +1047,7 @@ std::unique_ptr<Scope> DebuggerImpl::GetLocalScopeChain(const FrameHandler *fram
         .SetDescription(RemoteObject::ObjectDescription);
     auto *sp = DebuggerApi::GetSp(frameHandler);
     scopeObjects_[sp] = runtime_->curObjectId_;
+    DebuggerApi::AddInternalProperties(vm_, localObj, ArkInternalValueType::Scope,  runtime_->internalObjects_);
     runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, localObj);
 
     Local<JSValueRef> thisVal = JSNApiHelper::ToLocal<JSValueRef>(
@@ -1065,6 +1090,7 @@ std::unique_ptr<Scope> DebuggerImpl::GetModuleScopeChain()
         .SetClassName(ObjectClassName::Object)
         .SetDescription(RemoteObject::ObjectDescription);
     moduleScope->SetType(Scope::Type::Module()).SetObject(std::move(module));
+    DebuggerApi::AddInternalProperties(vm_, moduleObj, ArkInternalValueType::Scope,  runtime_->internalObjects_);
     runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, moduleObj);
     JSThread *thread = vm_->GetJSThread();
     JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm_));
@@ -1080,12 +1106,21 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
     auto *extractor = GetExtractor(jsPandaFile);
     Local<JSValueRef> value = JSValueRef::Undefined(vm_);
     // in case of arrow function, which doesn't have this in local variable table
-    for (const auto &[varName, regIndex] : extractor->GetLocalVariableTable(methodId)) {
-        value = DebuggerApi::GetVRegValue(vm_, frameHandler, regIndex);
-        if (varName == "4newTarget" || varName == "0this" || varName == "0newTarget" || varName == "0funcObj") {
+    for (const auto &localVariableInfo : extractor->GetLocalVariableTable(methodId)) {
+        std::string varName = localVariableInfo.name;
+        int32_t regIndex = localVariableInfo.regNumber;
+        uint32_t bcOffset = DebuggerApi::GetBytecodeOffset(frameHandler);
+        // if the bytecodeOffset is not in the range of the variable's scope,
+        // which is indicated as [start_offset, end_offset), ignore it.
+        if (!IsWithinVariableScope(localVariableInfo, bcOffset)) {
             continue;
         }
 
+        if (varName == "4newTarget" || varName == "0this" || varName == "0newTarget" || varName == "0funcObj") {
+            continue;
+        }
+        
+        value = DebuggerApi::GetVRegValue(vm_, frameHandler, regIndex);
         if (varName == "this") {
             LOG_DEBUGGER(INFO) << "find 'this' in local variable table";
             thisVal = value;
@@ -1105,6 +1140,11 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
         PropertyAttribute descriptor(value, true, true, true);
         localObj->DefineProperty(vm_, name, descriptor);
     }
+}
+
+bool DebuggerImpl::IsWithinVariableScope(const LocalVariableInfo &localVariableInfo, uint32_t bcOffset)
+{
+    return bcOffset >= localVariableInfo.startOffset && bcOffset < localVariableInfo.endOffset;
 }
 
 void DebuggerImpl::GetClosureVariables(const FrameHandler *frameHandler, Local<JSValueRef> &thisVal,
@@ -1134,6 +1174,9 @@ void DebuggerImpl::GetClosureVariables(const FrameHandler *frameHandler, Local<J
                 continue;
             }
             Local<JSValueRef> name = StringRef::NewFromUtf8(vm_, varName.c_str());
+            if (value->IsHole()) {
+                value = JSValueRef::Undefined(vm_);
+            }
             PropertyAttribute descriptor(value, true, true, true);
             localObj->DefineProperty(vm_, name, descriptor);
         }
@@ -1156,12 +1199,15 @@ std::unique_ptr<Scope> DebuggerImpl::GetGlobalScopeChain()
     auto globalScope = std::make_unique<Scope>();
 
     std::unique_ptr<RemoteObject> global = std::make_unique<RemoteObject>();
+    Local<ObjectRef> globalObj = ObjectRef::New(vm_);
     global->SetType(ObjectType::Object)
         .SetObjectId(runtime_->curObjectId_)
         .SetClassName(ObjectClassName::Global)
         .SetDescription(RemoteObject::GlobalDescription);
     globalScope->SetType(Scope::Type::Global()).SetObject(std::move(global));
-    runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, JSNApi::GetGlobalObject(vm_));
+    globalObj = JSNApi::GetGlobalObject(vm_);
+    DebuggerApi::AddInternalProperties(vm_, globalObj, ArkInternalValueType::Scope,  runtime_->internalObjects_);
+    runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, globalObj);
     return globalScope;
 }
 

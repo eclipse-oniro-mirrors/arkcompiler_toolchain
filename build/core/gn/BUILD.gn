@@ -41,7 +41,7 @@ group("default") {
 group("unittest_packages") {
   testonly = true
   if (host_os != "mac") {
-    deps = [ "//arkcompiler/toolchain:ark_js_host_unittest" ]
+    deps = [ "$toolchain_root:ark_js_host_unittest" ]
   }
 }
 
@@ -51,7 +51,8 @@ group("ets_runtime") {
     "$js_root/ecmascript/js_vm:ark_js_vm",
     "$js_root/ecmascript/quick_fix:quick_fix",
   ]
-  if (target_os == "linux" || (target_cpu == "arm64" && target_os == "ohos")) {
+  if ((target_os == "linux" && target_cpu == "x64") ||
+      (target_cpu == "arm64" && target_os == "ohos")) {
     deps += [
       "$js_root/ecmascript/compiler:ark_aot_compiler",
       "$js_root/ecmascript/compiler:ark_stub_compiler",
@@ -60,18 +61,10 @@ group("ets_runtime") {
 }
 
 group("ets_frontend") {
-  deps = []
-  if (target_os == "linux" && target_cpu == "x64") {
-    deps += [
+  if ((target_os == "linux" && target_cpu == "x64") || target_os == "mingw") {
+    deps = [
       "$ets_frontend_root/es2panda:es2panda",
       "$ets_frontend_root/merge_abc:merge_abc",
-      "$ets_frontend_root/ts2panda:ark_ts2abc_build",
-    ]
-  } else if (target_os == "mingw" && target_cpu == "x86_64") {
-    deps += [
-      "$ets_frontend_root/es2panda:es2panda",
-      "$ets_frontend_root/merge_abc:merge_abc",
-      "$ets_frontend_root/ts2panda:ark_ts2abc_build_win",
     ]
   }
 }
@@ -84,9 +77,8 @@ group("runtime_core") {
 }
 
 group("toolchain") {
-  deps = []
-  if (target_os != "mingw") {
-    deps += [
+  if (target_cpu != "mipsel") {
+    deps = [
       "$toolchain_root/inspector:ark_debugger",
       "$toolchain_root/inspector:connectserver_debugger",
       "$toolchain_root/tooling:libark_ecma_debugger",

@@ -19,6 +19,7 @@ group("fuzztest") {
     "agent:fuzztest",
     "backend:fuzztest",
     "base:fuzztest",
+    "connectserver_fuzzer:fuzztest",
     "dispatchprotocolmessage_fuzzer:fuzztest",
     "initializedebugger_fuzzer:fuzztest",
     "protocolhandler_fuzzer:fuzztest",
@@ -71,5 +72,6 @@ group("fuzztest") {
     "pttypesremoteobjectunserializablevalue_fuzzer:fuzztest",
     "pttypesstringremoteobject_fuzzer:fuzztest",
     "pttypessymbolremoteobject_fuzzer:fuzztest",
+    "wsserver_fuzzer:fuzztest",
   ]
 }

@@ -53,7 +53,7 @@ public:
     void Close();
     void SendReply(const std::string& message) const;
 #if !defined(OHOS_PLATFORM)
-    bool InitTcpWebSocket(uint32_t timeoutLimit = 0);
+    bool InitTcpWebSocket(int port, uint32_t timeoutLimit = 0);
     bool ConnectTcpWebSocket();
 #else
     bool InitUnixWebSocket(const std::string& sockName, uint32_t timeoutLimit = 0);

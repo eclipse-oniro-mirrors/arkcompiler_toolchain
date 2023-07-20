@@ -23,6 +23,7 @@
 #include "test/utils/test_channel.h"
 
 namespace panda::ecmascript::tooling::test {
+using DebuggerStmtCallback = std::function<bool(const JSPtLocation &)>;
 using BreakpointCallback = std::function<bool(const JSPtLocation &)>;
 using LoadModuleCallback = std::function<bool(std::string_view)>;
 using ExceptionCallback = std::function<bool(const JSPtLocation &)>;
@@ -48,6 +49,7 @@ enum class DebugEvent {
 std::ostream &operator<<(std::ostream &out, DebugEvent value);
 
 struct TestEvents {
+    DebuggerStmtCallback debuggerStmt;
     BreakpointCallback breakpoint;
     LoadModuleCallback loadModule;
     ExceptionCallback exception;

@@ -13,6 +13,6 @@
  * limitations under the License.
  */
 
-declare function print(arg:any):string;
-print("Hello world!");
+declare function print(arg:string):string;
+print('Hello world!');
 

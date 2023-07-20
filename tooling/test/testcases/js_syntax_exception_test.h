@@ -55,6 +55,7 @@ public:
         };
 
         loadModule = [this](std::string_view moduleName) {
+            runtime_->Enable();
             // 27: breakpointer line
             location_ = TestUtil::GetLocation(sourceFile_.c_str(), 27, 0, pandaFile_.c_str());
             ASSERT_TRUE(location_.GetMethodId().IsValid());

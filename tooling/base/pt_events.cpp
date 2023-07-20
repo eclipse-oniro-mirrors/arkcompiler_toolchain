@@ -77,8 +77,24 @@ std::unique_ptr<PtJson> NativeCalling::ToJson() const
 {
     std::unique_ptr<PtJson> result = PtJson::CreateObject();
 
-    std::unique_ptr<PtJson> object = PtJson::CreateObject();
     result->Add("nativeAddress", reinterpret_cast<int64_t>(GetNativeAddress()));
+    result->Add("isStepInto", GetIntoStatus());
+    std::unique_ptr<PtJson> nativePointerArray = PtJson::CreateArray();
+    size_t nativePointerLength = nativePointer_.size();
+    for (size_t i = 0; i < nativePointerLength; ++i) {
+        nativePointerArray->Push(reinterpret_cast<int64_t>(nativePointer_[i]));
+    }
+    result->Add("nativePointer", nativePointerArray);
+
+    std::unique_ptr<PtJson> callFrameArray = PtJson::CreateArray();
+    size_t callFrameLength = callFrames_.size();
+    for (size_t i = 0; i < callFrameLength; ++i) {
+        ASSERT(callFrames_[i] != nullptr);
+        callFrameArray->Push(callFrames_[i]->ToJson());
+    }
+    result->Add("callFrames", callFrameArray);
+
+    std::unique_ptr<PtJson> object = PtJson::CreateObject();
     object->Add("method", GetName().c_str());
     object->Add("params", result);
 

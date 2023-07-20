@@ -21,6 +21,9 @@
 #include <dlfcn.h>
 #elif defined(WINDOWS_PLATFORM)
 #include <windows.h>
+#ifdef ERROR
+#undef ERROR
+#endif
 #else
 #error "Unsupported platform"
 #endif

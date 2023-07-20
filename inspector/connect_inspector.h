@@ -42,7 +42,7 @@ void StoreInspectorInfo(const std::string& jsonTreeStr,  const std::string& json
 
 void RemoveMessage(int32_t instanceId);
 
-bool WaitForDebugger();
+bool WaitForConnection();
 
 void SetSwitchCallBack(const std::function<void(bool)>& setSwitchStatus,
     const std::function<void(int32_t)>& createLayoutInfo, int32_t instanceId);

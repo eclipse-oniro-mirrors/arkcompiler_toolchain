@@ -114,7 +114,7 @@ HWTEST_F_L0(HeapProfilerImplTest, GetSamplingProfile)
     auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
     std::unique_ptr<SamplingHeapProfile> profile;
     DispatchResponse response = heapProfiler->GetSamplingProfile(&profile);
-    ASSERT_TRUE(response.GetMessage() == "GetSamplingProfile not support now");
+    ASSERT_TRUE(response.GetMessage() == "GetSamplingProfile fail");
     ASSERT_TRUE(!response.IsOk());
 }
 
@@ -124,8 +124,7 @@ HWTEST_F_L0(HeapProfilerImplTest, StartSampling)
     auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
     StartSamplingParams params;
     DispatchResponse response = heapProfiler->StartSampling(params);
-    ASSERT_TRUE(response.GetMessage() == "StartSampling not support now");
-    ASSERT_TRUE(!response.IsOk());
+    ASSERT_TRUE(response.IsOk());
 }
 
 HWTEST_F_L0(HeapProfilerImplTest, StopSampling)
@@ -134,7 +133,7 @@ HWTEST_F_L0(HeapProfilerImplTest, StopSampling)
     auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
     std::unique_ptr<SamplingHeapProfile> profile;
     DispatchResponse response = heapProfiler->StopSampling(&profile);
-    ASSERT_TRUE(response.GetMessage() == "StopSampling not support now.");
+    ASSERT_TRUE(response.GetMessage() == "StopSampling fail");
     ASSERT_TRUE(!response.IsOk());
 }
 
@@ -303,7 +302,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplGetSamplingProfile)
     std::string msg = std::string() + R"({"id":0,"method":"HeapProfiler.getSamplingProfile","params":{}})";
     DispatchRequest request(msg);
     dispatcherImpl->GetSamplingProfile(request);
-    ASSERT_TRUE(result.find("GetSamplingProfile not support now") != std::string::npos);
+    ASSERT_TRUE(result.find("GetSamplingProfile fail") != std::string::npos);
     if (channel) {
         delete channel;
         channel = nullptr;
@@ -326,7 +325,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplStartSampling)
     msg = std::string() + R"({"id":0,"method":"HeapProfiler.startSampling","params":{"samplingInterval":1000}})";
     DispatchRequest request1(msg);
     dispatcherImpl->StartSampling(request1);
-    ASSERT_TRUE(result.find("StartSampling not support now") != std::string::npos);
+    ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
     if (channel) {
         delete channel;
         channel = nullptr;
@@ -344,7 +343,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplStopSampling)
     std::string msg = std::string() + R"({"id":0,"method":"HeapProfiler.stopSampling","params":{}})";
     DispatchRequest request(msg);
     dispatcherImpl->StopSampling(request);
-    ASSERT_TRUE(result.find("StopSampling not support now") != std::string::npos);
+    ASSERT_TRUE(result.find("StopSampling fail") != std::string::npos);
     if (channel) {
         delete channel;
         channel = nullptr;
@@ -377,5 +376,37 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplTakeHeapSnapshot)
         delete channel;
         channel = nullptr;
     }
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, GetSamplingProfileSuccessful)
+{
+    StartSamplingParams params;
+    ProtocolChannel *channel = nullptr;
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    DispatchResponse response = heapProfiler->StartSampling(params);
+    std::unique_ptr<SamplingHeapProfile> samplingHeapProfile = std::make_unique<SamplingHeapProfile>();
+    DispatchResponse result = heapProfiler->GetSamplingProfile(&samplingHeapProfile);
+    ASSERT_TRUE(result.IsOk());
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, StartSamplingFail)
+{
+    StartSamplingParams params;
+    ProtocolChannel *channel = nullptr;
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    DispatchResponse response = heapProfiler->StartSampling(params);
+    DispatchResponse result = heapProfiler->StartSampling(params);
+    ASSERT_TRUE(!result.IsOk());
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, StopSamplingSuccessful)
+{
+    StartSamplingParams params;
+    ProtocolChannel *channel = nullptr;
+    std::unique_ptr<SamplingHeapProfile> samplingHeapProfile = std::make_unique<SamplingHeapProfile>();
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    DispatchResponse response = heapProfiler->StartSampling(params);
+    DispatchResponse result = heapProfiler->StopSampling(&samplingHeapProfile);
+    ASSERT_TRUE(result.IsOk());
 }
 }  // namespace panda::test

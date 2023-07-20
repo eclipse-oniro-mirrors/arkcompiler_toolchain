@@ -212,7 +212,9 @@ Local<JSValueRef> DebuggerExecutor::GetModuleValue(const EcmaVM *vm, const Frame
     }
     JSThread *thread = vm->GetJSThread();
     JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm));
-    result = DebuggerApi::GetModuleValue(vm, currentModule, varName);
+    if (currentModule->IsSourceTextModule()) {
+        result = DebuggerApi::GetModuleValue(vm, currentModule, varName);
+    }
     return result;
 }
 
@@ -227,7 +229,9 @@ bool DebuggerExecutor::SetModuleValue(const EcmaVM *vm, const FrameHandler *fram
     }
     JSThread *thread = vm->GetJSThread();
     JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm));
-    DebuggerApi::SetModuleValue(vm, currentModule, varName, value);
+    if (currentModule->IsSourceTextModule()) {
+        DebuggerApi::SetModuleValue(vm, currentModule, varName, value);
+    }
     return true;
 }
 }  // namespace panda::ecmascript::tooling

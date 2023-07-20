@@ -16,12 +16,25 @@ import("$build_root/ark.gni")
 import("$build_root/config/clang/clang.gni")
 import("$build_root/third_party_gn/musl/musl_src.gni")
 
+_libs_path_prefix = "."
+if (is_asan) {
+  asan = "-asan"
+} else {
+  asan = ""
+}
+musl_linker_so_out_dir =
+    "${root_out_dir}/common/common/libc/${_libs_path_prefix}"
+musl_linker_so_out_path =
+    "${musl_linker_so_out_dir}/ld-musl-${musl_arch}${asan}.so.1"
+musl_linker_so_out_dir_for_qemu = "${musl_linker_so_out_dir}/lib"
+musl_linker_so_out_path_for_qemu =
+    "${musl_linker_so_out_dir_for_qemu}/ld-musl-${musl_arch}${asan}.so.1"
+
 template("musl_libs") {
   no_default_deps = true
 
   forward_variables_from(invoker, [ "*" ])
   musl_ported_root = "${target_out_dir}/${musl_ported_dir}"
-  _libs_path_prefix = "."
   _libs_out_dir = "usr/lib/${musl_target_triple}"
 
   porting_deps = [
@@ -113,6 +126,7 @@ template("musl_libs") {
       "-Werror=pointer-arith",
       "-Werror=pointer-sign",
       "-Werror=implicit-int",
+      "-fno-omit-frame-pointer",
       "-Werror=implicit-function-declaration",
       "-fdata-sections",
       "-ffunction-sections",
@@ -145,6 +159,8 @@ template("musl_libs") {
     cflags = cflags_all
 
     defines = [ "BROKEN_VFP_ASM" ]
+    defines += [ "FEATURE_ATEXIT_CB_PROTECT" ]
+
     if (is_standard_system) {
       defines += [
         "OHOS_DNS_PROXY_BY_NETSYS=1",
@@ -165,13 +181,17 @@ template("musl_libs") {
       "-Wl,--dynamic-list=${dynamic_list}",
       "-Wl,--exclude-libs=ALL",
       "-Wl,--no-undefined",
-      "-Wl,--hash-style=both",
       "-Wl,--gc-sections",
       "-Wl,--sort-common",
       "-Wl,--sort-section,alignment",
       "-fuse-ld=lld",
       "--target=${musl_target_triple}",
     ]
+    if (current_cpu == "arm" || current_cpu == "arm64") {
+      ldflags += [ "-Wl,--hash-style=both" ]
+    } else {
+      ldflags += [ "-Wl,--hash-style=sysv" ]
+    }
     asmflags = cflags
   }
 
@@ -316,6 +336,9 @@ template("musl_libs") {
       "src/string/memset.c",
       "src/string/mempcpy.c",
     ]
+    if (musl_arch == "mips") {
+      sources_orig += [ "src/string/memset.c" ]
+    }
     sources_orig -= musl_src_filterout
     if (musl_arch == "arm") {
       sources_orig -= [
@@ -447,6 +470,7 @@ template("musl_libs") {
           "$OPTRTDIR/string/aarch64/memset.S",
           "$OPTRTDIR/string/aarch64/stpcpy-sve.S",
           "$OPTRTDIR/string/aarch64/strchr-sve.S",
+          "$OPTRTDIR/string/aarch64/strchrnul-sve.S",
           "$OPTRTDIR/string/aarch64/strcmp-sve.S",
           "$OPTRTDIR/string/aarch64/strcpy-sve.S",
           "$OPTRTDIR/string/aarch64/strlen-sve.S",
@@ -465,6 +489,7 @@ template("musl_libs") {
           "-D__stpcpy_aarch64_sve = stpcpy",
           "-D__strchr_aarch64_sve = strchr",
           "-D__strrchr_aarch64_sve = strrchr",
+          "-D__strchrnul_aarch64_sve = strchrnul",
           "-D__strnlen_aarch64_sve = strnlen",
           "-D__strncmp_aarch64_sve = strncmp",
         ]
@@ -476,6 +501,7 @@ template("musl_libs") {
           "$OPTRTDIR/string/aarch64/memset.S",
           "$OPTRTDIR/string/aarch64/stpcpy-mte.S",
           "$OPTRTDIR/string/aarch64/strchr-mte.S",
+          "$OPTRTDIR/string/aarch64/strchrnul-mte.S",
           "$OPTRTDIR/string/aarch64/strcmp-mte.S",
           "$OPTRTDIR/string/aarch64/strcpy-mte.S",
           "$OPTRTDIR/string/aarch64/strlen-mte.S",
@@ -494,6 +520,7 @@ template("musl_libs") {
           "-D__stpcpy_aarch64_mte = stpcpy",
           "-D__strchr_aarch64_mte = strchr",
           "-D__strrchr_aarch64_mte = strrchr",
+          "-D__strchrnul_aarch64_mte = strchrnul",
           "-D__strnlen_aarch64 = strnlen",
           "-D__strncmp_aarch64_mte = strncmp",
         ]
@@ -505,6 +532,7 @@ template("musl_libs") {
           "$OPTRTDIR/string/aarch64/memset.S",
           "$OPTRTDIR/string/aarch64/stpcpy.S",
           "$OPTRTDIR/string/aarch64/strchr.S",
+          "$OPTRTDIR/string/aarch64/strchrnul.S",
           "$OPTRTDIR/string/aarch64/strcmp.S",
           "$OPTRTDIR/string/aarch64/strcpy.S",
           "$OPTRTDIR/string/aarch64/strlen.S",
@@ -524,6 +552,7 @@ template("musl_libs") {
           "-D__stpcpy_aarch64 = stpcpy",
           "-D__strchr_aarch64 = strchr",
           "-D__strrchr_aarch64 = strrchr",
+          "-D__strchrnul_aarch64 = strchrnul",
           "-D__strnlen_aarch64 = strnlen",
           "-D__strncmp_aarch64 = strncmp",
         ]
@@ -671,6 +700,7 @@ template("musl_libs") {
       "-fno-stack-protector",
       "-ffreestanding",
       "-fPIC",
+      "-O3",
     ]
     if (is_asan) {
       defines = [
@@ -815,6 +845,7 @@ template("musl_libs") {
   }
 
   shared_library("soft_libc_musl_shared") {
+    deps = []
     output_dir = "${target_out_dir}/${_libs_out_dir}"
 
     musl_lib_path = rebase_path("$output_dir")
@@ -824,6 +855,10 @@ template("musl_libs") {
 
     libc_map_path = rebase_path("$musl_ported_root/libc.map.txt")
 
+    if (current_cpu == "mipsel") {
+      libs = [ "atomic" ]
+      deps += [ ":mipsel_atomic_linker" ]
+    }
     ldflags = [
       "-Wl,--version-script=${libc_map_path}",
       "-lpthread",
@@ -840,7 +875,7 @@ template("musl_libs") {
     configs -= musl_inherited_configs
     configs += [ ":soft_musl_config" ]
 
-    deps = [
+    deps += [
       ":soft_libdl",
       ":soft_libpthread",
       ":soft_musl_crt_install_action",
@@ -896,12 +931,22 @@ template("musl_libs") {
     # _libc_shared_outputs = get_target_outputs(":soft_libc_musl_shared")
     _libc_shared_so = "${target_out_dir}/${_libs_out_dir}/libc.so"
     sources = [ _libc_shared_so ]
-    if (is_asan) {
-      asan = "-asan"
-    } else {
-      asan = ""
-    }
-    _muls_linker_so = "${root_out_dir}/common/common/libc/${_libs_path_prefix}/ld-musl-${musl_arch}${asan}.so.1"
-    outputs = [ _muls_linker_so ]
+    outputs = [ musl_linker_so_out_path ]
+  }
+
+  copy("soft_create_linker_for_qemu") {
+    deps = [ ":soft_create_linker" ]
+
+    sources = [ musl_linker_so_out_path ]
+    outputs = [ musl_linker_so_out_path_for_qemu ]
+  }
+
+  copy("mipsel_atomic_linker") {
+    # need install libatomic1-mipsel-cross first
+    atomic_shared_so = "/usr/mipsel-linux-gnu/lib/libatomic.so.1.2.0"
+    sources = [ atomic_shared_so ]
+
+    atomic_linker_so = "${target_out_dir}/${_libs_out_dir}/libatomic.so"
+    outputs = [ atomic_linker_so ]
   }
 }

@@ -30,6 +30,8 @@ namespace panda::ecmascript::tooling {
 namespace test {
 class TestHooks;
 }  // namespace test
+
+enum class DebuggerState { DISABLED, ENABLED, PAUSED };
 class DebuggerImpl final {
 public:
     DebuggerImpl(const EcmaVM *vm, ProtocolChannel *channel, RuntimeImpl *runtime);
@@ -43,6 +45,7 @@ public:
     void NotifyPendingJobEntry();
     void NotifyHandleProtocolCommand();
     void NotifyNativeCalling(const void *nativeAddress);
+    void SetDebuggerState(DebuggerState debuggerState);
 
     DispatchResponse Enable(const EnableParams &params, UniqueDebuggerId *id);
     DispatchResponse Disable();
@@ -159,6 +162,17 @@ private:
     bool DecodeAndCheckBase64(const std::string &src, std::vector<uint8_t> &dest);
     bool IsSkipLine(const JSPtLocation &location);
     bool CheckPauseOnException();
+    bool IsWithinVariableScope(const LocalVariableInfo &localVariableInfo, uint32_t bcOffset);
+
+    const std::string &GetRecordName(const std::string &url)
+    {
+        static const std::string recordName = "";
+        auto iter = recordNames_.find(url);
+        if (iter != recordNames_.end()) {
+            return iter->second;
+        }
+        return recordName;
+    }
 
     class Frontend {
     public:
@@ -187,11 +201,13 @@ private:
     std::unique_ptr<JSPtHooks> hooks_ {nullptr};
     JSDebugger *jsDebugger_ {nullptr};
 
-    std::unordered_map<std::string, DebugInfoExtractor *> extractors_ {};
+    std::unordered_map<std::string, std::string> recordNames_ {};
     std::unordered_map<ScriptId, std::unique_ptr<PtScript>> scripts_ {};
     PauseOnExceptionsState pauseOnException_ {PauseOnExceptionsState::NONE};
+    DebuggerState debuggerState_ {DebuggerState::ENABLED};
     bool pauseOnNextByteCode_ {false};
     std::unique_ptr<SingleStepper> singleStepper_ {nullptr};
+    std::vector<void *>  nativePointer_;
 
     std::unordered_map<JSTaggedType *, RemoteObjectId> scopeObjects_ {};
     std::vector<std::shared_ptr<FrameHandler>> callFrameHandlers_;

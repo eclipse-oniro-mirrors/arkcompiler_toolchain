@@ -109,7 +109,7 @@ size_t PtBase64::Encode(char *output, const void *input, std::size_t len)
     int8_t paddingCnt = (UNENCODED_GROUP_BYTES - remainder) % UNENCODED_GROUP_BYTES;
     switch (paddingCnt) {
         case 1:
-            *dest++ = ENCODE_TABLE[src[0] >> 2];
+            *dest++ = ENCODE_TABLE[src[0] >> 2]; // 2: shift 2bits
             *dest++ = ENCODE_TABLE[((src[0] & 0x03) << 4) | (src[1] >> 4)]; // 4: shift 4bits
             *dest++ = ENCODE_TABLE[((src[1] & 0x0f) << 2)]; // 2: shift 2bits
             *dest++ = '=';

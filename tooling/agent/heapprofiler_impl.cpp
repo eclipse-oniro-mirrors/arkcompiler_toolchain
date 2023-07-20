@@ -132,19 +132,6 @@ void HeapProfilerImpl::DispatcherImpl::StartSampling(const DispatchRequest &requ
     SendResponse(request, response);
 }
 
-void HeapProfilerImpl::DispatcherImpl::StartTrackingHeapObjects(const DispatchRequest &request)
-{
-    std::unique_ptr<StartTrackingHeapObjectsParams> params =
-        StartTrackingHeapObjectsParams::Create(request.GetParams());
-    if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
-    }
-    DispatchResponse response = heapprofiler_->StartTrackingHeapObjects(*params);
-    SendResponse(request, response);
-}
-
-
 void HeapProfilerImpl::DispatcherImpl::StopSampling(const DispatchRequest &request)
 {
     std::unique_ptr<SamplingHeapProfile> profile;
@@ -156,6 +143,18 @@ void HeapProfilerImpl::DispatcherImpl::StopSampling(const DispatchRequest &reque
 
     StopSamplingReturns result(std::move(profile));
     SendResponse(request, response, result);
+}
+
+void HeapProfilerImpl::DispatcherImpl::StartTrackingHeapObjects(const DispatchRequest &request)
+{
+    std::unique_ptr<StartTrackingHeapObjectsParams> params =
+        StartTrackingHeapObjectsParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+    DispatchResponse response = heapprofiler_->StartTrackingHeapObjects(*params);
+    SendResponse(request, response);
 }
 
 void HeapProfilerImpl::DispatcherImpl::StopTrackingHeapObjects(const DispatchRequest &request)
@@ -289,16 +288,39 @@ DispatchResponse HeapProfilerImpl::GetObjectByHeapObjectId([[maybe_unused]] cons
 
 DispatchResponse HeapProfilerImpl::GetSamplingProfile([[maybe_unused]] std::unique_ptr<SamplingHeapProfile> *profile)
 {
-    return DispatchResponse::Fail("GetSamplingProfile not support now");
+    auto samplingInfo = panda::DFXJSNApi::GetAllocationProfile(vm_);
+    if (samplingInfo == nullptr) {
+        return DispatchResponse::Fail("GetSamplingProfile fail");
+    }
+    *profile = SamplingHeapProfile::FromSamplingInfo(std::move(samplingInfo));
+    return DispatchResponse::Ok();
 }
 
 DispatchResponse HeapProfilerImpl::StartSampling([[maybe_unused]] const StartSamplingParams &params)
 {
-    return DispatchResponse::Fail("StartSampling not support now");
+    uint64_t samplingInterval = static_cast<uint64_t>(params.GetSamplingInterval());
+    bool result = panda::DFXJSNApi::StartSampling(vm_, samplingInterval);
+    if (result) {
+        return DispatchResponse::Ok();
+    }
+    return DispatchResponse::Fail("StartSampling fail");
+}
+
+DispatchResponse HeapProfilerImpl::StopSampling([[maybe_unused]] std::unique_ptr<SamplingHeapProfile> *profile)
+{
+    DispatchResponse samplingProfile = GetSamplingProfile(profile);
+    if (samplingProfile.IsOk()) {
+        panda::DFXJSNApi::StopSampling(vm_);
+        return DispatchResponse::Ok();
+    }
+    return DispatchResponse::Fail("StopSampling fail");
 }
 
 DispatchResponse HeapProfilerImpl::StartTrackingHeapObjects(const StartTrackingHeapObjectsParams &params)
 {
+    if (uv_is_active(reinterpret_cast<uv_handle_t*>(&handle_))) {
+        return DispatchResponse::Ok();
+    }
     bool traceAllocation = params.GetTrackAllocations();
     bool result = panda::DFXJSNApi::StartHeapTracking(vm_, INTERVAL, true, &stream_, traceAllocation, false);
 
@@ -327,11 +349,6 @@ void HeapProfilerImpl::HeapTrackingCallback(uv_timer_t* handle)
         return;
     }
     panda::DFXJSNApi::UpdateHeapTracking(heapProfilerImpl->vm_, &(heapProfilerImpl->stream_));
-}
-
-DispatchResponse HeapProfilerImpl::StopSampling([[maybe_unused]] std::unique_ptr<SamplingHeapProfile> *profile)
-{
-    return DispatchResponse::Fail("StopSampling not support now.");
 }
 
 DispatchResponse HeapProfilerImpl::StopTrackingHeapObjects(const StopTrackingHeapObjectsParams &params)

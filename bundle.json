@@ -1,5 +1,5 @@
 {
-    "name": "@ohos/arkcompiler_toolchain",
+    "name": "@ohos/toolchain",
     "version": "3.1",
     "description": "arkcompiler toolchain",
     "homePage": "https://gitee.com/openharmony",
@@ -21,8 +21,19 @@
         "rom": "",
         "ram": "",
         "deps": {
-            "components": [],
-            "third_party": []
+            "components": [
+                "ets_runtime",
+                "runtime_core",
+                "faultloggerd",
+                "hitrace",
+                "hilog"
+            ],
+            "third_party": [
+                "bounds_checking_function",
+                "cJSON",
+                "libuv",
+                "openssl"
+            ]
         },
         "build": {
             "sub_component": [

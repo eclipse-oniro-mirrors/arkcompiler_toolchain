@@ -1,34 +1,19 @@
 {
   "prebuilts_download_dir": "../openharmony_prebuilts",
-  "npm_install_path": ["arkcompiler/ets_frontend/ts2panda"],
-  "node_modules_copy": [
-    {
-      "src": "arkcompiler/ets_frontend/ts2panda/node_modules",
-      "dest": "prebuilts/build-tools/common/ts2abc/node_modules",
-      "use_symlink": "True"
-    }
-  ],
   "file_handle_config": [
     {
-      "src": "/prebuilts/clang/ohos/linux-x86_64/clang_linux-x86_64-025192-20230330",
+      "src": "/prebuilts/clang/ohos/linux-x86_64/clang_linux-x86_64-d1aa60-0630",
       "dest": "/prebuilts/clang/ohos/linux-x86_64/llvm",
       "symlink_src": "/lib/clang/15.0.4",
       "symlink_dest": "/lib/clang/current"
     }
   ],
   "linux": {
-    "node_config": [
-      {
-        "unzip_dir": "prebuilts/build-tools/common/nodejs",
-        "file_path": "/nodejs/v12.18.4/node-v12.18.4-linux-x64.tar.gz",
-        "unzip_filename": "node-v12.18.4-linux-x64"
-      }
-    ],
     "x86_64": {
       "copy_config": [
         {
           "unzip_dir": "prebuilts/build-tools/linux-x86/bin",
-          "file_path": "/openharmony/compiler/gn/1717/linux/gn-linux-x86-1717.tar.gz",
+          "file_path": "/openharmony/compiler/gn/2024/linux/gn-linux-x86-20230426.tar.gz",
           "unzip_filename": "gn"
         },
         {
@@ -38,7 +23,7 @@
         },
         {
           "unzip_dir": "prebuilts/ark_tools",
-          "file_path": "/openharmony/compiler/llvm_prebuilt_libs/ark_js_prebuilts_20230107.tar.gz",
+          "file_path": "/openharmony/compiler/llvm_prebuilt_libs/ark_js_prebuilts_20230707.tar.gz",
           "unzip_filename": "ark_js_prebuilts"
         }
       ],
@@ -50,7 +35,7 @@
         },
         {
           "unzip_dir": "prebuilts/clang/ohos/linux-x86_64",
-          "file_path": "/openharmony/compiler/clang/15.0.4-025192/linux/clang_linux-x86_64-025192-20230330.tar.bz2",
+          "file_path": "/openharmony/compiler/clang/15.0.4-d1aa60/linux/clang_linux-x86_64-d1aa60-0630.tar.bz2",
           "unzip_filename": "llvm"
         }
       ]

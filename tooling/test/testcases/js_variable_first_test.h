@@ -36,6 +36,7 @@ public:
             std::string pandaFile = DEBUGGER_ABC_DIR "variable_first.abc";
             std::string sourceFile = DEBUGGER_JS_DIR "variable_first.js";
             static_cast<JsVariableFirstTestChannel *>(channel_)->Initial(vm_, runtime_);
+            runtime_->Enable();
             // 269: breakpointer line
             location_ = TestUtil::GetLocation(sourceFile.c_str(), 269, 0, pandaFile.c_str());
             ASSERT_TRUE(location_.GetMethodId().IsValid());
@@ -260,7 +261,9 @@ private:
                                "number", "0", "0", "        19", "number", "0", "0", "        20", "number", "0",
                                "0", "        21", "number", "0", "0", "        22", "number", "0", "0", "        23",
                                "number", "0", "0" } },
-            { "dataview0", { "object", "Object", "Object", "[object DataView]", "none" } },
+            { "dataview0", { "object", "dataview", "Dataview", "DataView(24)", "[object DataView]", "buffer",
+                             "object", "arraybuffer", "Arraybuffer", "ArrayBuffer(24)", "[object ArrayBuffer]",
+                             "byteLength", "number", "24", "24", "byteOffset", "number", "0", "0" } },
             { "bigint0", { "bigint", "999n", "999" } },
             { "typedarray0", { "object", "Object", "Uint8Array(0)", "", "none" } },
             { "sharedarraybuffer0", { "object", "Object", "SharedArrayBuffer(32)", "[object SharedArrayBuffer]",
@@ -653,7 +656,9 @@ private:
                             "number", "0", "0", "        18", "number", "0", "0", "        19", "number", "0", "0",
                             "        20", "number", "0", "0", "        21", "number", "0", "0", "        22",
                             "number", "0", "0", "        23", "number", "0", "0" } },
-            { "object17", { "object", "Object", "Object", "[object DataView]", "none" } },
+            { "object17", { "object", "dataview", "Dataview", "DataView(24)", "[object DataView]", "buffer",
+                            "object", "arraybuffer", "Arraybuffer", "ArrayBuffer(24)", "[object ArrayBuffer]",
+                            "byteLength", "number", "24", "24", "byteOffset", "number", "0", "0" } },
             { "object18", { "object", "Object", "Boolean{[[PrimitiveValue]]: false}", "false", "[[PrimitiveValue]]",
                             "boolean", "false", "false" } },
             { "object19", { "function", "Function", "function function0( { [js code] }",

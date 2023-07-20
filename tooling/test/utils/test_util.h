@@ -162,7 +162,7 @@ public:
 
         // Wait for continue
         while (suspended_) {
-            constexpr uint64_t TIMEOUT_MSEC = 120000U;
+            constexpr uint64_t TIMEOUT_MSEC = 300000U;
             bool timeExceeded = suspendCv_.TimedWait(&suspendMutex_, TIMEOUT_MSEC);
             if (timeExceeded) {
                 LOG_DEBUGGER(FATAL) << "Time limit exceeded while suspend";
@@ -190,7 +190,7 @@ private:
             if (lastEvent_ == DebugEvent::VM_DEATH) {
                 return false;
             }
-            constexpr uint64_t TIMEOUT_MSEC = 120000U;
+            constexpr uint64_t TIMEOUT_MSEC = 300000U;
             bool timeExceeded = eventCv_.TimedWait(&eventMutex_, TIMEOUT_MSEC);
             if (timeExceeded) {
                 LOG_DEBUGGER(FATAL) << "Time limit exceeded while waiting " << event;

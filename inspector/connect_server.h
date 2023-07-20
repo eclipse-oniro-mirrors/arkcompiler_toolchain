@@ -18,7 +18,10 @@
 
 #include <functional>
 #include <iostream>
-#include "websocket.h"
+#include "websocket/websocket.h"
+#ifdef WINDOWS_PLATFORM
+#include <pthread.h>
+#endif
 
 namespace OHOS::ArkCompiler::Toolchain {
 class ConnectServer {

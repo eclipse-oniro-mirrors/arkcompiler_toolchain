@@ -37,7 +37,8 @@ public:
     {
         SetCurrentTestName(GetParam());
         TestHelper::CreateEcmaVMWithScope(instance, thread, scope);
-        JSNApi::StartDebugger(DEBUGGER_TEST_LIBRARY, instance, true);
+        JSNApi::DebugOption debugOption = {DEBUGGER_TEST_LIBRARY, true};
+        JSNApi::StartDebugger(instance, debugOption);
     }
 
     void TearDown() override

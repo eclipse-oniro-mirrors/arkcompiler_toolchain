@@ -16,7 +16,7 @@
 #ifndef ARKCOMPILER_TOOLCHAIN_INSPECTOR_INSPECTOR_H
 #define ARKCOMPILER_TOOLCHAIN_INSPECTOR_INSPECTOR_H
 
-#include "ws_server.h"
+#include "inspector/ws_server.h"
 
 #include <string>
 
@@ -32,8 +32,8 @@ using DebuggerPostTask = std::function<void(std::function<void()>&&)>;
 extern "C" {
 #endif
 
-bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode, int32_t instanceId,
-    const DebuggerPostTask& debuggerPostTask);
+bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
+    int32_t instanceId, const DebuggerPostTask& debuggerPostTask, int port);
 
 void StopDebug(const std::string& componentName);
 

@@ -13,6 +13,7 @@
 
 import("$build_root/config/compiler/compiler.gni")
 import("$build_root/config/ohos/config.gni")
+import("$build_root/third_party_gn/musl/musl_config.gni")
 
 assert(is_ohos)
 
@@ -46,8 +47,12 @@ config("runtime_config") {
     rebase_path(libcxxabi_file),
   ]
 
-  if (current_cpu == "arm" && arm_version == 6) {
+  if ((current_cpu == "arm" && arm_version == 6) || current_cpu == "mipsel") {
     libs += [ "atomic" ]
+    libs_out_dir = "usr/lib/${musl_target_triple}"
+    output_dir = "${target_out_dir}/${libs_out_dir}"
+    atomic_path = rebase_path("${output_dir}")
+    ldflags += [ "-L${atomic_path}" ]
   }
 
   ldflags += [ "-Wl,--warn-shared-textrel" ]
