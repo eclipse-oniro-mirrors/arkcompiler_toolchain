@@ -56,6 +56,7 @@ public:
         };
 
         loadModule = [this](std::string_view moduleName) {
+            runtime_->Enable();
             // 28: breakpointer line
             location_ = TestUtil::GetLocation(sourceFile_.c_str(), 28, 0, pandaFile_.c_str());
             std::cout<<"vmStart1"<<std::endl;

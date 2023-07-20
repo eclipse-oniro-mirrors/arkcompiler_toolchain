@@ -636,10 +636,14 @@ std::unique_ptr<StartSamplingParams> StartSamplingParams::Create(const PtJson &p
     std::string error;
     Result ret;
 
-    int32_t samplingInterval;
-    ret = params.GetInt("samplingInterval", &samplingInterval);
+    double samplingInterval;
+    ret = params.GetDouble("samplingInterval", &samplingInterval);
     if (ret == Result::SUCCESS) {
-        paramsObject->samplingInterval_ = samplingInterval;
+        if (samplingInterval <= 0) {
+            error += "Invalid SamplingInterval";
+        } else {
+            paramsObject->samplingInterval_ = samplingInterval;
+        }
     } else if (ret == Result::TYPE_ERROR) {  // optional value
         error += "Unknown 'samplingInterval';";
     }

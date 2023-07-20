@@ -15,6 +15,8 @@ declare_args() {
   ark_standalone_build = true
   use_musl = true
   build_root = "//arkcompiler/toolchain/build"
+  run_with_qemu = false
+  enable_lto = true
 }
 
 if (host_os == "linux") {
@@ -72,12 +74,12 @@ if (host_toolchain == "") {
 # Determine default_toolchain.
 # (like a constant in a build for a certain target on a certain host)
 _default_toolchain = host_toolchain
-if (target_os == "ohos" && target_cpu == "arm") {
-  _default_toolchain = "$build_root/toolchain/ark:ark_clang_arm"
-} else if (target_os == "ohos" && target_cpu == "arm64") {
-  _default_toolchain = "$build_root/toolchain/ark:ark_clang_arm64"
+if (target_os == "ohos") {
+  _default_toolchain = "$build_root/toolchain/ark:ark_clang_${target_cpu}"
 } else if (target_os == "linux" && target_cpu == "x64") {
   _default_toolchain = "$build_root/toolchain/linux:clang_x64"
+} else if (target_os == "linux" && target_cpu == "x86") {
+  _default_toolchain = "$build_root/toolchain/linux:clang_x86"
 } else if (target_os == "mingw" && target_cpu == "x86_64") {
   _default_toolchain = "$build_root/toolchain/mingw:mingw_x86_64"
 } else if (target_os == "android" && target_cpu == "arm64") {
@@ -143,6 +145,7 @@ default_compiler_configs = [
   "$build_root/config/compiler:default_warnings",
   "$build_root/config/compiler:compiler",
   "$build_root/config/compiler:default_include_dirs",
+  "$build_root/config/compiler:default_optimization",
   "$build_root/config/compiler:runtime_config",
   "$build_root/config:default_libs",
   "$build_root/config/compiler:ark_code",

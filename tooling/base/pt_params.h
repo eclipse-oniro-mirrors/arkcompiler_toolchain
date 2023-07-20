@@ -669,7 +669,7 @@ public:
 
     static std::unique_ptr<StartSamplingParams> Create(const PtJson &params);
 
-    int32_t GetSamplingInterval() const
+    double GetSamplingInterval() const
     {
         return samplingInterval_.value_or(32768);
     }
@@ -678,7 +678,7 @@ private:
     NO_COPY_SEMANTIC(StartSamplingParams);
     NO_MOVE_SEMANTIC(StartSamplingParams);
 
-    std::optional<int32_t> samplingInterval_ {32768};
+    std::optional<double> samplingInterval_ {32768};
 };
 
 class StartTrackingHeapObjectsParams : public PtBaseParams {

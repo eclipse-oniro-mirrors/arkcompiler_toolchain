@@ -75,6 +75,13 @@ void* HandleClient(void* const server)
         LOGE("HandleClient server nullptr");
         return nullptr;
     }
+
+#if defined(IOS_PLATFORM) || defined(MAC_PLATFORM)
+    pthread_setname_np("DebugThread");
+#else
+    pthread_setname_np(pthread_self(), "DebugThread");
+#endif
+
     static_cast<WsServer*>(server)->RunServer();
     return nullptr;
 }
@@ -128,7 +135,7 @@ void ResetServiceLocked()
 }
 
 bool InitializeInspector(void* vm, const std::string& componentName, int32_t instanceId,
-    const DebuggerPostTask& debuggerPostTask)
+    const DebuggerPostTask& debuggerPostTask, int port)
 {
     std::unique_lock<std::shared_mutex> lock(g_mutex);
     auto iter = g_inspectors.find(vm);
@@ -147,7 +154,7 @@ bool InitializeInspector(void* vm, const std::string& componentName, int32_t ins
     newInspector->vm_ = vm;
     newInspector->debuggerPostTask_ = debuggerPostTask;
     newInspector->websocketServer_ = std::make_unique<WsServer>(componentName,
-        std::bind(&Inspector::OnMessage, newInspector, std::placeholders::_1), instanceId);
+        std::bind(&Inspector::OnMessage, newInspector, std::placeholders::_1), instanceId, port);
 
     pthread_t tid;
     if (pthread_create(&tid, nullptr, &HandleClient, static_cast<void *>(
@@ -250,8 +257,8 @@ void Inspector::OnMessage(std::string&& msg)
     }
 }
 
-bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode, int32_t instanceId,
-    const DebuggerPostTask& debuggerPostTask)
+bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
+    int32_t instanceId, const DebuggerPostTask& debuggerPostTask, int port)
 {
     g_vm = vm;
 #if !defined(IOS_PLATFORM)
@@ -266,7 +273,7 @@ bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode, in
 
     g_initializeDebugger(vm, std::bind(&SendReply, vm, std::placeholders::_2));
 
-    if (!InitializeInspector(vm, componentName, instanceId, debuggerPostTask)) {
+    if (!InitializeInspector(vm, componentName, instanceId, debuggerPostTask, port)) {
         LOGE("Initialize inspector failed");
         return false;
     }

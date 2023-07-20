@@ -15,12 +15,15 @@
 
 #include "connect_inspector.h"
 #include <mutex>
-#include <shared_mutex>
 #include "log_wrapper.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
-std::shared_mutex g_mutex;
+std::mutex g_connectMutex;
 std::unique_ptr<ConnectInspector> g_inspector = nullptr;
+static constexpr char CONNECTED_MESSAGE[] = "connected";
+static constexpr char OPEN_MESSAGE[] = "layoutOpen";
+static constexpr char CLOSE_MESSAGE[] = "layoutClose";
+static constexpr char REQUEST_MESSAGE[] = "tree";
 
 void* HandleDebugManager(void* const server)
 {
@@ -28,13 +31,19 @@ void* HandleDebugManager(void* const server)
         LOGE("HandleDebugManager server nullptr");
         return nullptr;
     }
+#if defined(IOS_PLATFORM) || defined(MAC_PLATFORM)
+    pthread_setname_np("DebugConnectThread");
+#else
+    pthread_setname_np(pthread_self(), "DebugConnectThread");
+#endif
+
     static_cast<ConnectServer*>(server)->RunServer();
     return nullptr;
 }
 
 void OnMessage(const std::string& message)
 {
-    std::shared_lock<std::shared_mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(g_connectMutex);
     if (message.empty()) {
         LOGE("message is empty");
         return;
@@ -43,29 +52,25 @@ void OnMessage(const std::string& message)
     LOGI("ConnectServer OnMessage: %{public}s", message.c_str());
     if (g_inspector != nullptr && g_inspector->connectServer_ != nullptr) {
         g_inspector->ideMsgQueue_.push(message);
-        std::string checkMessage = "connected";
-        std::string openMessage = "layoutOpen";
-        std::string closeMessage = "layoutClose";
-        std::string requestMessage = "tree";
-        if (message.find(checkMessage, 0) != std::string::npos) {
+        if (message.find(CONNECTED_MESSAGE, 0) != std::string::npos) {
             g_inspector->waitingForDebugger_ = false;
             for (auto& info : g_inspector->infoBuffer_) {
                 g_inspector->connectServer_->SendMessage(info.second);
             }
         }
-        if (message.find(openMessage, 0) != std::string::npos) {
+        if (message.find(OPEN_MESSAGE, 0) != std::string::npos) {
             if (g_inspector->setSwitchStatus_ != nullptr) {
                 LOGI("layoutOpen start");
                 g_inspector->setSwitchStatus_(true);
             }
         }
-        if (message.find(closeMessage, 0) != std::string::npos) {
+        if (message.find(CLOSE_MESSAGE, 0) != std::string::npos) {
             if (g_inspector->setSwitchStatus_ != nullptr) {
                 LOGI("layoutClose start");
                 g_inspector->setSwitchStatus_(false);
             }
         }
-        if (message.find(requestMessage, 0) != std::string::npos) {
+        if (message.find(REQUEST_MESSAGE, 0) != std::string::npos) {
             if (g_inspector->createLayoutInfo_ != nullptr) {
                 LOGI("tree start");
                 g_inspector->createLayoutInfo_(g_inspector->instanceId_);
@@ -77,6 +82,7 @@ void OnMessage(const std::string& message)
 void SetSwitchCallBack(const std::function<void(bool)>& setSwitchStatus,
     const std::function<void(int32_t)>& createLayoutInfo, int32_t instanceId)
 {
+    std::lock_guard<std::mutex> lock(g_connectMutex);
     if (g_inspector != nullptr) {
         g_inspector->setSwitchStatus_ = setSwitchStatus;
         g_inspector->createLayoutInfo_ = createLayoutInfo;
@@ -114,7 +120,7 @@ void StopServer([[maybe_unused]] const std::string& componentName)
 
 void StoreMessage(int32_t instanceId, const std::string& message)
 {
-    std::unique_lock<std::shared_mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(g_connectMutex);
     if (g_inspector->infoBuffer_.count(instanceId) == 1) {
         LOGE("The message with the current instance id has existed.");
         return;
@@ -124,14 +130,14 @@ void StoreMessage(int32_t instanceId, const std::string& message)
 
 void StoreInspectorInfo(const std::string& jsonTreeStr, const std::string& jsonSnapshotStr)
 {
-    std::unique_lock<std::shared_mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(g_connectMutex);
     g_inspector->layoutInspectorInfo_.tree = jsonTreeStr;
     g_inspector->layoutInspectorInfo_.snapShot = jsonSnapshotStr;
 }
 
 void RemoveMessage(int32_t instanceId)
 {
-    std::unique_lock<std::shared_mutex> lock(g_mutex);
+    std::lock_guard<std::mutex> lock(g_connectMutex);
     if (g_inspector->infoBuffer_.count(instanceId) != 1) {
         LOGE("The message with the current instance id does not exist.");
         return;
@@ -154,7 +160,7 @@ void SendMessage(const std::string& message)
     }
 }
 
-bool WaitForDebugger()
+bool WaitForConnection()
 {
     if (g_inspector == nullptr) {
         return true;

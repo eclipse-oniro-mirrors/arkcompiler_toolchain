@@ -277,8 +277,13 @@ bool WebSocket::HttpHandShake()
 }
 
 #if !defined(OHOS_PLATFORM)
-bool WebSocket::InitTcpWebSocket(uint32_t timeoutLimit)
+bool WebSocket::InitTcpWebSocket(int port, uint32_t timeoutLimit)
 {
+    if (port < 0) {
+        LOGE("InitTcpWebSocket invalid port");
+        return false;
+    }
+
     if (socketState_ != SocketState::UNINITED) {
         LOGI("InitTcpWebSocket websocket has inited");
         return true;
@@ -298,7 +303,8 @@ bool WebSocket::InitTcpWebSocket(uint32_t timeoutLimit)
     }
     // allow specified port can be used at once and not wait TIME_WAIT status ending
     int sockOptVal = 1;
-    if ((setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, &sockOptVal, sizeof(sockOptVal))) != SOCKET_SUCCESS) {
+    if ((setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR,
+        reinterpret_cast<char *>(&sockOptVal), sizeof(sockOptVal))) != SOCKET_SUCCESS) {
         LOGE("InitTcpWebSocket setsockopt SO_REUSEADDR failed");
         close(fd_);
         fd_ = -1;
@@ -315,7 +321,7 @@ bool WebSocket::InitTcpWebSocket(uint32_t timeoutLimit)
 
     sockaddr_in addr_sin = {0};
     addr_sin.sin_family = AF_INET;
-    addr_sin.sin_port = htons(9230); // 9230: sockName for tcp
+    addr_sin.sin_port = htons(port);
     addr_sin.sin_addr.s_addr = INADDR_ANY;
     if (bind(fd_, reinterpret_cast<struct sockaddr*>(&addr_sin), sizeof(addr_sin)) < SOCKET_SUCCESS) {
         LOGE("InitTcpWebSocket bind failed");
@@ -345,7 +351,7 @@ bool WebSocket::ConnectTcpWebSocket()
     }
 
     if ((client_ = accept(fd_, nullptr, nullptr)) < SOCKET_SUCCESS) {
-        LOGE("ConnectTcpWebSocket accept failed");
+        LOGI("ConnectTcpWebSocket accept has exited");
         socketState_ = SocketState::UNINITED;
         close(fd_);
         fd_ = -1;
@@ -428,7 +434,7 @@ bool WebSocket::ConnectUnixWebSocket()
     }
 
     if ((client_ = accept(fd_, nullptr, nullptr)) < SOCKET_SUCCESS) {
-        LOGE("ConnectUnixWebSocket accept failed");
+        LOGI("ConnectUnixWebSocket accept has exited");
         socketState_ = SocketState::UNINITED;
         close(fd_);
         fd_ = -1;
@@ -517,6 +523,25 @@ bool WebSocket::Send(int32_t client, const char* buf, size_t totalLen, int32_t f
     return true;
 }
 
+#if !defined(OHOS_PLATFORM)
+bool WebSocket::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
+{
+    if (timeoutLimit > 0) {
+        struct timeval timeout = {timeoutLimit, 0};
+        if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO,
+            reinterpret_cast<char *>(&timeout), sizeof(timeout)) != SOCKET_SUCCESS) {
+            LOGE("SetWebSocketTimeOut setsockopt SO_SNDTIMEO failed");
+            return false;
+        }
+        if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO,
+            reinterpret_cast<char *>(&timeout), sizeof(timeout)) != SOCKET_SUCCESS) {
+            LOGE("SetWebSocketTimeOut setsockopt SO_RCVTIMEO failed");
+            return false;
+        }
+    }
+    return true;
+}
+#else
 bool WebSocket::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
 {
     if (timeoutLimit > 0) {
@@ -532,4 +557,5 @@ bool WebSocket::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
     }
     return true;
 }
+#endif
 } // namespace OHOS::ArkCompiler::Toolchain

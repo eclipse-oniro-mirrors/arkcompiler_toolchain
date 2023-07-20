@@ -45,6 +45,13 @@ public:
         }
     }
 
+    void DebuggerStmt(const JSPtLocation &location) override
+    {
+        if (test_->debugger_) {
+            test_->debuggerStmt(location);
+        }
+    }
+
     void Breakpoint(const JSPtLocation &location) override
     {
         if (test_->breakpoint) {

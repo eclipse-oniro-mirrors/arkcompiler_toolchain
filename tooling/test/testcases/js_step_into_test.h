@@ -30,6 +30,7 @@ public:
         };
 
         loadModule = [this](std::string_view moduleName) {
+            runtime_->Enable();
             // line number for breakpoint array
             size_t breakpoint[POINTER_SIZE][LINE_COLUMN] =
                 {{84, 0}, {87, 0}, {27, 0}, {79, 0}, {42, 0}, {38, 0}, {56, 0}, {60, 0}, {96, 0}, {54, 0}};
@@ -54,6 +55,7 @@ public:
             ASSERT_LOCATION_EQ(location, pointerLocations_.at(breakpointCounter_));
             ++breakpointCounter_;
             TestUtil::SuspendUntilContinue(DebugEvent::BREAKPOINT, location);
+            debugger_->SetDebuggerState(DebuggerState::PAUSED);
             debugger_->StepInto(StepIntoParams());
             return true;
         };

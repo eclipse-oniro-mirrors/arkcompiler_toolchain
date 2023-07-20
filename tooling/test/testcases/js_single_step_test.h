@@ -30,6 +30,7 @@ public:
         };
 
         loadModule = [this](std::string_view moduleName) {
+            runtime_->Enable();
             // 19: line number
             locationStart_ = TestUtil::GetLocation(sourceFile_.c_str(), 19, 0, pandaFile_.c_str());
             // 22: line number

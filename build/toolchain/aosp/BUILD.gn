@@ -14,6 +14,10 @@
 import("$build_root/config/sysroot.gni")
 import("$build_root/toolchain/gcc_toolchain.gni")
 
+declare_args() {
+  aosp_unstripped_runtime_outputs = true
+}
+
 template("aosp_clang_toolchain") {
   gcc_toolchain(target_name) {
     aosp_ndk_lib =
@@ -28,7 +32,10 @@ template("aosp_clang_toolchain") {
     cxx = "$_prefix/clang++"
     ld = cxx
     ar = "$_prefix/llvm-ar"
-    strip = "$_prefix/llvm-strip"
+    if (!is_debug) {
+      strip = "${_prefix}/llvm-strip"
+      use_unstripped_as_runtime_outputs = aosp_unstripped_runtime_outputs
+    }
 
     # Don't use .cr.so for loadable_modules since they are always loaded via
     # absolute path.

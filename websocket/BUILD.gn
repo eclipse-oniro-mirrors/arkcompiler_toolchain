@@ -91,6 +91,7 @@ config("websocket_platform_config") {
 }
 
 ohos_source_set("websocket") {
+  stack_protector_ret = false
   defines = []
   deps = []
 
@@ -112,6 +113,7 @@ ohos_source_set("websocket") {
   include_dirs += [
     "$toolchain_root/inspector",
     "//utils/native/base/include",
+    "//third_party/openssl/include",
   ]
 
   sources = [ "websocket.cpp" ]
@@ -119,12 +121,14 @@ ohos_source_set("websocket") {
   deps += [ sdk_libc_secshared_dep ]
   if (is_cross_platform_build && target_os == "ios") {
     deps += [ "$ark_third_party_root/openssl:libcrypto_static" ]
+  } else if (is_mingw) {
+    deps += [ "$ark_third_party_root/openssl:libcrypto_restool" ]
   } else {
     deps += [ "$ark_third_party_root/openssl:libcrypto_shared" ]
   }
 
   configs += [ ":websocket_platform_config" ]
 
-  subsystem_name = "ark"
+  subsystem_name = "arkcompiler"
   part_name = "toolchain"
 }

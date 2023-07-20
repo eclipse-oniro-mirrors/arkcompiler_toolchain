@@ -47,6 +47,8 @@ test_js_files = [
   "export_variable_first",
   "export_variable_second",
   "module_variable",
+  "local_variable_scope",
+  "container",
 ]
 
 foreach(file, test_js_files) {
@@ -71,6 +73,7 @@ foreach(file, test_js_files) {
 }
 
 ohos_shared_library("debugger_entry") {
+  stack_protector_ret = false
   sources = [ "entry/test_debugger_entry.cpp" ]
 
   configs = [ ":debug_api_test" ]
@@ -87,6 +90,7 @@ ohos_shared_library("debugger_entry") {
 }
 
 ohos_shared_library("jsdebugtest") {
+  stack_protector_ret = false
   sources = [
     "utils/test_entry.cpp",
     "utils/test_extractor.cpp",
@@ -102,7 +106,7 @@ ohos_shared_library("jsdebugtest") {
   test_abc_dir = "/data/test/"
   target_label = get_label_info(":${target_name}", "label_with_toolchain")
   target_toolchain = get_label_info(target_label, "toolchain")
-  if (target_toolchain == host_toolchain) {
+  if (target_toolchain == host_toolchain || ark_standalone_build) {
     test_abc_dir = rebase_path(target_out_dir)
   }
   test_js_dir = rebase_path(test_js_path)

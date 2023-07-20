@@ -25,6 +25,9 @@
 #if defined(WINDOWS_PLATFORM)
 #include <winsock2.h>
 #include <windows.h>
+#ifdef ERROR
+#undef ERROR
+#endif
 #else
 #include <netinet/in.h>
 #include <sys/socket.h>

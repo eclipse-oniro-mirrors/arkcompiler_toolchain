@@ -157,6 +157,7 @@ if (musl_arch == "arm") {
   musl_src_arch_file = [
     "src/fenv/x86_64/fenv.s",
     "src/ldso/x86_64/dlsym.s",
+    "src/ldso/x86_64/dlvsym.s",
     "src/ldso/x86_64/tlsdesc.s",
     "src/math/x86_64/__invtrigl.s",
     "src/math/x86_64/acosl.s",
@@ -201,6 +202,24 @@ if (musl_arch == "arm") {
     "src/thread/x86_64/__unmapself.s",
     "src/thread/x86_64/clone.s",
     "src/thread/x86_64/syscall_cp.s",
+  ]
+} else if (musl_arch == "mips") {
+  musl_src_arch_file = [
+    "src/fenv/mips/fenv.S",
+    "src/fenv/mips/fenv-sf.c",
+    "src/ldso/mips/dlsym.s",
+    "src/ldso/mips/dlsym_time64.S",
+    "src/math/mips/fabs.c",
+    "src/math/mips/fabsf.c",
+    "src/math/mips/sqrt.c",
+    "src/math/mips/sqrtf.c",
+    "src/setjmp/mips/longjmp.S",
+    "src/setjmp/mips/setjmp.S",
+    "src/signal/mips/restore.s",
+    "src/signal/mips/sigsetjmp.s",
+    "src/thread/mips/__unmapself.s",
+    "src/thread/mips/clone.s",
+    "src/thread/mips/syscall_cp.s",
   ]
 }
 
@@ -1688,6 +1707,21 @@ if (musl_arch == "arm") {
     "src/thread/clone.c",
     "src/thread/syscall_cp.c",
   ]
+} else if (musl_arch == "mips") {
+  musl_src_filterout = [
+    "src/fenv/fenv.c",
+    "src/ldso/dlsym.c",
+    "src/math/fabs.c",
+    "src/math/fabsf.c",
+    "src/math/fmaf.c",
+    "src/math/sqrt.c",
+    "src/math/sqrtf.c",
+    "src/setjmp/setjmp.c",
+    "src/signal/restore.c",
+    "src/thread/__unmapself.c",
+    "src/thread/clone.c",
+    "src/thread/syscall_cp.c",
+  ]
 }
 
 musl_src_ldso = [
@@ -1812,6 +1846,42 @@ if (musl_arch == "arm") {
     "arch/generic/bits/termios.h",
     "arch/generic/bits/vt.h",
   ]
+} else if (musl_arch == "mips") {
+  musl_inc_bits_files = [
+    "arch/mips/bits/errno.h",
+    "arch/mips/bits/fcntl.h",
+    "arch/mips/bits/fenv.h",
+    "arch/mips/bits/float.h",
+    "arch/mips/bits/hwcap.h",
+    "arch/mips/bits/ioctl.h",
+    "arch/mips/bits/ipcstat.h",
+    "arch/mips/bits/mman.h",
+    "arch/mips/bits/msg.h",
+    "arch/mips/bits/poll.h",
+    "arch/mips/bits/posix.h",
+    "arch/mips/bits/ptrace.h",
+    "arch/mips/bits/reg.h",
+    "arch/mips/bits/resource.h",
+    "arch/mips/bits/sem.h",
+    "arch/mips/bits/setjmp.h",
+    "arch/mips/bits/shm.h",
+    "arch/mips/bits/signal.h",
+    "arch/mips/bits/socket.h",
+    "arch/mips/bits/stat.h",
+    "arch/mips/bits/statfs.h",
+    "arch/mips/bits/stdint.h",
+    "arch/mips/bits/termios.h",
+    "arch/mips/bits/user.h",
+    "arch/generic/bits/dirent.h",
+    "arch/generic/bits/ioctl_fix.h",
+    "arch/generic/bits/io.h",
+    "arch/generic/bits/ipc.h",
+    "arch/generic/bits/kd.h",
+    "arch/generic/bits/limits.h",
+    "arch/generic/bits/link.h",
+    "arch/generic/bits/soundcard.h",
+    "arch/generic/bits/vt.h",
+  ]
 }
 
 musl_inc_arpa_files = [
@@ -1896,6 +1966,7 @@ musl_inc_sys_files = [
   "include/sys/signal.h",
   "include/sys/socket.h",
   "include/sys/soundcard.h",
+  "include/sys/sspret.h",
   "include/sys/statfs.h",
   "include/sys/stat.h",
   "include/sys/statvfs.h",
@@ -2058,6 +2129,7 @@ musl_src_porting_file = [
   "include/stdlib.h",
   "include/string.h",
   "include/sys/stat.h",
+  "include/sys/sspret.h",
   "include/fortify/fcntl.h",
   "include/fortify/fortify.h",
   "include/fortify/poll.h",
@@ -2135,6 +2207,7 @@ musl_src_porting_file = [
   "src/thread/pthread_rwlock_clockwrlock.c",
   "src/thread/pthread_rwlock_timedwrlock_monotonic_np.c",
   "src/thread/pthread_rwlock_timedwrlock.c",
+  "src/thread/pthread_sigmask.c",
   "src/trace/trace_marker.c",
   "src/ldso/dlclose.c",
   "src/ldso/dlerror.c",
@@ -2155,7 +2228,7 @@ musl_src_porting_file = [
   "src/sched/sched_cpualloc.c",
   "src/signal/signal.c",
   "src/signal/sigaction.c",
-  "src/signal/sigprocmask.c",
+  "src/signal/siginterrupt.c",
   "include/langinfo.h",
   "include/locale.h",
   "src/hilog/hilog_adapter.c",
@@ -2174,6 +2247,13 @@ musl_src_porting_file = [
   "src/ldso/riscv64/dlvsym.s",
   "src/ldso/x86_64/dlvsym.s",
   "src/stdio/__fdopen.c",
+  "src/stdio/vfprintf.c",
+  "src/stdio/__stdio_read.c",
+  "src/stdio/fread.c",
+  "src/stdio/fmemopen.c",
+  "src/stdio/freopen.c",
+  "src/stdio/stdin.c",
+  "src/internal/stdio_impl.h",
   "src/internal/vdso.c",
   "src/time/clock_gettime.c",
   "src/time/clock_getres.c",
@@ -2189,6 +2269,7 @@ musl_src_porting_file = [
   "src/sigchain/sigchain.c",
   "src/conf/legacy.c",
   "src/conf/sysconf.c",
+  "src/env/getenv.c",
 ]
 
 musl_inc_hook_files = [
