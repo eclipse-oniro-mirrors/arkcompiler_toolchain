@@ -427,6 +427,28 @@ std::unique_ptr<StepOverParams> StepOverParams::Create(const PtJson &params)
     return paramsObject;
 }
 
+std::unique_ptr<DropFrameParams> DropFrameParams::Create(const PtJson &params)
+{
+    auto paramsObject = std::make_unique<DropFrameParams>();
+    std::string error;
+    Result ret;
+
+    uint32_t droppedDepth = 0;
+    ret = params.GetUInt("droppedDepth", &droppedDepth);
+    if (ret == Result::SUCCESS) {
+        paramsObject->droppedDepth_ = droppedDepth;
+    } else if (ret == Result::TYPE_ERROR) {  // optional value
+        error += "Unknown 'droppedDepth';";
+    }
+
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "DropFrameParams::Create " << error;
+        return nullptr;
+    }
+
+    return paramsObject;
+}
+
 std::unique_ptr<SetMixedDebugParams> SetMixedDebugParams::Create(const PtJson &params)
 {
     auto paramsObject = std::make_unique<SetMixedDebugParams>();
