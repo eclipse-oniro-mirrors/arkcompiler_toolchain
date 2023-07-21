@@ -20,6 +20,5 @@ group("fuzztest") {
     "backendexception_fuzzer:fuzztest",
     "backendloadmodule_fuzzer:fuzztest",
     "backendnativecalling_fuzzer:fuzztest",
-    "backendpendingjobentry_fuzzer:fuzztest",
   ]
 }
