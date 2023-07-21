@@ -236,6 +236,9 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
         paused.SetData(std::move(tmpException));
     }
     frontend_.Paused(vm_, paused);
+    if (reason != BREAK_ON_START) {
+        singleStepper_.reset();
+    }
     debuggerState_ = DebuggerState::PAUSED;
     frontend_.WaitForDebugger(vm_);
     DebuggerApi::SetException(vm_, exception);
@@ -264,14 +267,6 @@ void DebuggerImpl::NotifyNativeCalling(const void *nativeAddress)
 void DebuggerImpl::SetDebuggerState(DebuggerState debuggerState)
 {
     debuggerState_ = debuggerState;
-}
-
-void DebuggerImpl::NotifyPendingJobEntry()
-{
-    if (singleStepper_ != nullptr) {
-        singleStepper_.reset();
-        pauseOnNextByteCode_ = true;
-    }
 }
 
 void DebuggerImpl::NotifyHandleProtocolCommand()
@@ -734,7 +729,6 @@ DispatchResponse DebuggerImpl::Resume([[maybe_unused]] const ResumeParams &param
         return DispatchResponse::Fail("Can only perform operation while paused");
     }
     frontend_.Resumed(vm_);
-    singleStepper_.reset();
     debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
