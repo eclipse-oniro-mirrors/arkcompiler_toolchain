@@ -309,11 +309,11 @@ private:
     std::optional<std::string> condition_ {};
 };
 
-class CheckAndSetBreakpointByUrlParams : public PtBaseParams {
+class GetPossibleAndSetBreakpointByUrlParams : public PtBaseParams {
 public:
-    CheckAndSetBreakpointByUrlParams() = default;
-    ~CheckAndSetBreakpointByUrlParams() = default;
-    static std::unique_ptr<CheckAndSetBreakpointByUrlParams> Create(const PtJson &params);
+    GetPossibleAndSetBreakpointByUrlParams() = default;
+    ~GetPossibleAndSetBreakpointByUrlParams() = default;
+    static std::unique_ptr<GetPossibleAndSetBreakpointByUrlParams> Create(const PtJson &params);
 
     const std::vector<std::unique_ptr<BreakpointInfo>> *GetBreakpointsList() const
     {
@@ -329,8 +329,8 @@ public:
     }
 
 private:
-    NO_COPY_SEMANTIC(CheckAndSetBreakpointByUrlParams);
-    NO_MOVE_SEMANTIC(CheckAndSetBreakpointByUrlParams);
+    NO_COPY_SEMANTIC(GetPossibleAndSetBreakpointByUrlParams);
+    NO_MOVE_SEMANTIC(GetPossibleAndSetBreakpointByUrlParams);
 
     std::optional<std::vector<std::unique_ptr<BreakpointInfo>>> breakpointsList_ {};
 };

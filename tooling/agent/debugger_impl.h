@@ -60,7 +60,7 @@ public:
     DispatchResponse SetAsyncCallStackDepth();
     DispatchResponse SetBreakpointByUrl(const SetBreakpointByUrlParams &params, std::string *outId,
                                         std::vector<std::unique_ptr<Location>> *outLocations);
-    DispatchResponse CheckAndSetBreakpointByUrl(const CheckAndSetBreakpointByUrlParams &params,
+    DispatchResponse GetPossibleAndSetBreakpointByUrl(const CheckAndSetBreakpointByUrlParams &params,
                                         std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations);
     DispatchResponse SetPauseOnExceptions(const SetPauseOnExceptionsParams &params);
     DispatchResponse StepInto(const StepIntoParams &params);
@@ -129,7 +129,7 @@ public:
         void SetMixedDebugEnabled(const DispatchRequest &request);
         void SetBlackboxPatterns(const DispatchRequest &request);
         void ReplyNativeCalling(const DispatchRequest &request);
-        void CheckAndSetBreakpointByUrl(const DispatchRequest &request);
+        void GetPossibleAndSetBreakpointByUrl(const DispatchRequest &request);
 
     private:
         NO_COPY_SEMANTIC(DispatcherImpl);

@@ -300,7 +300,7 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         { "setMixedDebugEnabled", &DebuggerImpl::DispatcherImpl::SetMixedDebugEnabled },
         { "setBlackboxPatterns", &DebuggerImpl::DispatcherImpl::SetBlackboxPatterns },
         { "replyNativeCalling", &DebuggerImpl::DispatcherImpl::ReplyNativeCalling },
-        { "checkAndSetBreakpointByUrl", &DebuggerImpl::DispatcherImpl::CheckAndSetBreakpointByUrl }
+        { "getPossibleAndSetBreakpointByUrl", &DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl }
     };
 
     const std::string &method = request.GetMethod();
@@ -427,7 +427,7 @@ void DebuggerImpl::DispatcherImpl::SetBreakpointByUrl(const DispatchRequest &req
     SendResponse(request, response, result);
 }
 
-void DebuggerImpl::DispatcherImpl::CheckAndSetBreakpointByUrl(const DispatchRequest &request)
+void DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(const DispatchRequest &request)
 {
     std::unique_ptr<CheckAndSetBreakpointByUrlParams> params = CheckAndSetBreakpointByUrlParams::Create(request.GetParams());
     if (params == nullptr) {
@@ -436,7 +436,7 @@ void DebuggerImpl::DispatcherImpl::CheckAndSetBreakpointByUrl(const DispatchRequ
     }
 
     std::vector<std::unique_ptr<BreakpointReturnInfo>> outLocations = std::vector<std::unique_ptr<BreakpointReturnInfo>>();
-    DispatchResponse response = debugger_->CheckAndSetBreakpointByUrl(*params, &outLocations);
+    DispatchResponse response = debugger_->GetPossibleAndSetBreakpointByUrl(*params, &outLocations);
     CheckAndSetBreakpointByUrlReturns result(std::move(outLocations));
     SendResponse(request, response, result);
 }
@@ -822,7 +822,7 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
     return DispatchResponse::Ok();
 }
 
-DispatchResponse DebuggerImpl::CheckAndSetBreakpointByUrl(const CheckAndSetBreakpointByUrlParams &params,
+DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const CheckAndSetBreakpointByUrlParams &params,
                                         std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
 {
     if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {

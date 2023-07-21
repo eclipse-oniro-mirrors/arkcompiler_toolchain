@@ -328,9 +328,9 @@ std::unique_ptr<SetBreakpointByUrlParams> SetBreakpointByUrlParams::Create(const
     return paramsObject;
 }
 
-std::unique_ptr<CheckAndSetBreakpointByUrlParams> CheckAndSetBreakpointByUrlParams::Create(const PtJson &params)
+std::unique_ptr<GetPossibleAndSetBreakpointByUrlParams> GetPossibleAndSetBreakpointByUrlParams::Create(const PtJson &params)
 {
-    auto paramsObject = std::make_unique<CheckAndSetBreakpointByUrlParams>();
+    auto paramsObject = std::make_unique<GetPossibleAndSetBreakpointByUrlParams>();
     std::string error;
     Result ret;
 
@@ -356,7 +356,7 @@ std::unique_ptr<CheckAndSetBreakpointByUrlParams> CheckAndSetBreakpointByUrlPara
     }
 
     if (!error.empty()) {
-        LOG_DEBUGGER(ERROR) << "CheckAndSetBreakpointByUrlParams::Create " << error;
+        LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrlParams::Create " << error;
         return nullptr;
     }
 

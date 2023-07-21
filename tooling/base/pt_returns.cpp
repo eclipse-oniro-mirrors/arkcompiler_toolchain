@@ -42,7 +42,7 @@ std::unique_ptr<PtJson> SetBreakpointByUrlReturns::ToJson() const
     return result;
 }
 
-std::unique_ptr<PtJson> CheckAndSetBreakpointByUrlReturns::ToJson() const
+std::unique_ptr<PtJson> GetPossibleAndSetBreakpointByUrlReturns::ToJson() const
 {
     std::unique_ptr<PtJson> result = PtJson::CreateObject();
 
