@@ -103,8 +103,6 @@ public:
         TestUtil::Event(DebugEvent::VM_START);
     }
 
-    void PendingJobEntry() override {}
-
     void NativeCalling([[maybe_unused]] const void *nativeAddress) override {}
 
     void TerminateTest()
