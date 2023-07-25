@@ -1212,7 +1212,7 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
         if (varName == "4newTarget" || varName == "0this" || varName == "0newTarget" || varName == "0funcObj") {
             continue;
         }
-        
+
         value = DebuggerApi::GetVRegValue(vm_, frameHandler, regIndex);
         if (varName == "this") {
             LOG_DEBUGGER(INFO) << "find 'this' in local variable table";
