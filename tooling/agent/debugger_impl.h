@@ -42,7 +42,6 @@ public:
                             std::string_view entryPoint = "func_main_0");
     bool NotifySingleStep(const JSPtLocation &location);
     void NotifyPaused(std::optional<JSPtLocation> location, PauseReason reason);
-    void NotifyPendingJobEntry();
     void NotifyHandleProtocolCommand();
     void NotifyNativeCalling(const void *nativeAddress);
     void SetDebuggerState(DebuggerState debuggerState);

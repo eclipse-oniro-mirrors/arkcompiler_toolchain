@@ -79,15 +79,6 @@ void JSPtHooks::LoadModule(std::string_view pandaFileName, std::string_view entr
     }
 }
 
-void JSPtHooks::PendingJobEntry()
-{
-    LOG_DEBUGGER(VERBOSE) << "JSPtHooks: PendingJobEntry";
-
-    [[maybe_unused]] LocalScope scope(debugger_->vm_);
-
-    debugger_->NotifyPendingJobEntry();
-}
-
 void JSPtHooks::NativeCalling(const void *nativeAddress)
 {
     LOG_DEBUGGER(INFO) << "JSPtHooks: NativeCalling, addr = " << nativeAddress;
