@@ -60,7 +60,7 @@ public:
     DispatchResponse SetAsyncCallStackDepth();
     DispatchResponse SetBreakpointByUrl(const SetBreakpointByUrlParams &params, std::string *outId,
                                         std::vector<std::unique_ptr<Location>> *outLocations);
-    DispatchResponse GetPossibleAndSetBreakpointByUrl(const CheckAndSetBreakpointByUrlParams &params,
+    DispatchResponse GetPossibleAndSetBreakpointByUrl(const GetPossibleAndSetBreakpointByUrlParams &params,
                                         std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations);
     DispatchResponse SetPauseOnExceptions(const SetPauseOnExceptionsParams &params);
     DispatchResponse StepInto(const StepIntoParams &params);
