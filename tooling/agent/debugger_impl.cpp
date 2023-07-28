@@ -823,7 +823,7 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
 }
 
 DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const CheckAndSetBreakpointByUrlParams &params,
-                                                                std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
+    std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
 {
     if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
         return DispatchResponse::Fail("GetPossibleAndSetBreakpointByUrl: debugger agent is not enabled");
