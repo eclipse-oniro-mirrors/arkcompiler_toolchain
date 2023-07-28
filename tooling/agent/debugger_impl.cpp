@@ -826,10 +826,10 @@ DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const CheckAndSe
                                                       std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
 {
     if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
-        return DispatchResponse::Fail("SetBreakpointByUrl: debugger agent is not enabled");
+        return DispatchResponse::Fail("GetPossibleAndSetBreakpointByUrl: debugger agent is not enabled");
     }
     if (!params.HasBreakpointsList()) {
-        return DispatchResponse::Fail("SetBreakpointByUrl: no pennding breakpoint exists");
+        return DispatchResponse::Fail("GetPossibleAndSetBreakpointByUrl: no pennding breakpoint exists");
     }
     auto breakpointList = params.GetBreakpointsList();
     for (const auto &breakpoint : *breakpointList) {
@@ -854,7 +854,7 @@ bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
 
     DebugInfoExtractor *extractor = GetExtractor(url);
     if (extractor == nullptr) {
-        LOG_DEBUGGER(ERROR) << "CheckAndSetBreakpointByUrl: extractor is null";
+        LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: extractor is null";
         return false;
     }
 
@@ -866,7 +866,7 @@ bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
         return true;
     };
     if (!MatchScripts(matchScriptCbFunc, url, ScriptMatchType::URL)) {
-        LOG_DEBUGGER(ERROR) << "CheckAndSetBreakpointByUrl: unknown Url: " << url;
+        LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: unknown Url: " << url;
         return false;
     }
 
@@ -875,12 +875,12 @@ bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
     if (condition.has_value() && !condition.value().empty()) {
         std::vector<uint8_t> dest;
         if (!DecodeAndCheckBase64(condition.value(), dest)) {
-            LOG_DEBUGGER(ERROR) << "CheckAndSetBreakpointByUrl: base64 decode failed";
+            LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: base64 decode failed";
             return false;
         }
         condFuncRef = DebuggerApi::GenerateFuncFromBuffer(vm_, dest.data(), dest.size(), JSPandaFile::ENTRY_FUNCTION_NAME);
         if (condFuncRef->IsUndefined()) {
-            LOG_DEBUGGER(ERROR) << "CheckAndSetBreakpointByUrl: generate condition function failed";
+            LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: generate condition function failed";
             return false;
         }
     }
