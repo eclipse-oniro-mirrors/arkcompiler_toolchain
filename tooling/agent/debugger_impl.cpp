@@ -822,7 +822,7 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
     return DispatchResponse::Ok();
 }
 
-DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const CheckAndSetBreakpointByUrlParams &params,
+DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const GetPossibleAndSetBreakpointByUrlParams &params,
     std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
 {
     if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
