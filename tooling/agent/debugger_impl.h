@@ -166,7 +166,7 @@ private:
     bool IsSkipLine(const JSPtLocation &location);
     bool CheckPauseOnException();
     bool IsWithinVariableScope(const LocalVariableInfo &localVariableInfo, uint32_t bcOffset);
-    bool ProcessSingleBreakpoint(const BreakpointInfo &breakpoint, 
+    bool ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
         std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations);
 
     const std::string &GetRecordName(const std::string &url)

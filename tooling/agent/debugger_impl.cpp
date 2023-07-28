@@ -429,7 +429,7 @@ void DebuggerImpl::DispatcherImpl::SetBreakpointByUrl(const DispatchRequest &req
 
 void DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(const DispatchRequest &request)
 {
-    std::unique_ptr<CheckAndSetBreakpointByUrlParams> params = CheckAndSetBreakpointByUrlParams::Create(request.GetParams());
+    std::unique_ptr<GetPossibleAndSetBreakpointByUrlParams> params = GetPossibleAndSetBreakpointByUrlParams::Create(request.GetParams());
     if (params == nullptr) {
         SendResponse(request, DispatchResponse::Fail("wrong params"));
         return;
@@ -437,7 +437,7 @@ void DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(const Dispat
 
     std::vector<std::unique_ptr<BreakpointReturnInfo>> outLocations = std::vector<std::unique_ptr<BreakpointReturnInfo>>();
     DispatchResponse response = debugger_->GetPossibleAndSetBreakpointByUrl(*params, &outLocations);
-    CheckAndSetBreakpointByUrlReturns result(std::move(outLocations));
+    GetPossibleAndSetBreakpointByUrlReturns result(std::move(outLocations));
     SendResponse(request, response, result);
 }
 
@@ -823,7 +823,7 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
 }
 
 DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const CheckAndSetBreakpointByUrlParams &params,
-                                        std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
+                                                      std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
 {
     if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
         return DispatchResponse::Fail("SetBreakpointByUrl: debugger agent is not enabled");
@@ -844,8 +844,8 @@ DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const CheckAndSe
     return DispatchResponse::Ok();
 }
 
-bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint, 
-            std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
+bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
+                                        std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
 {
     const std::string &url = breakpoint.GetUrl();
     int32_t lineNumber = breakpoint.GetLineNumber();
