@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//third_party/FreeBSD/FreeBSD.gni")
 import("//third_party/optimized-routines/optimized-routines.gni")
 import("$build_root/ark.gni")
 import("$build_root/config/clang/clang.gni")
@@ -94,6 +95,7 @@ template("musl_libs") {
     "$build_root/config/compiler:compiler",
     "$build_root/config/compiler:ark_code",
     "$build_root/config/compiler:default_include_dirs",
+    "$build_root/config/compiler:default_optimization",
     "$build_root/config/compiler:runtime_config",
   ]
 
@@ -111,7 +113,6 @@ template("musl_libs") {
 
     cflags_basic = [
       "-Wl,-z,relro,-z,now,-z,noexecstack",
-      "-D_FORTIFY_SOURCE=2",
       "-Wall",
       "--target=${musl_target_triple}",
     ]
@@ -165,6 +166,7 @@ template("musl_libs") {
       defines += [
         "OHOS_DNS_PROXY_BY_NETSYS=1",
         "OHOS_PERMISSION_INTERNET=1",
+        "OHOS_DISABLE_IPV6=0",
       ]
     }
 
@@ -276,6 +278,10 @@ template("musl_libs") {
       "-DOHOS_TCACHE_NSLOTS_LARGE=16",
     ]
 
+    if (is_debug || musl_secure_level > 1) {
+      cflags += [ "-DOHOS_TCACHE_NSLOTS_RANDOM" ]
+    }
+
     if (musl_arch == "arm") {
       cflags += [
         "-march=armv7-a",
@@ -335,11 +341,19 @@ template("musl_libs") {
       "src/env/__init_tls.c",
       "src/string/memset.c",
       "src/string/mempcpy.c",
+      "src/stdlib/qsort.c",
+      "src/stdlib/qsort_nr.c",
     ]
     if (musl_arch == "mips") {
       sources_orig += [ "src/string/memset.c" ]
     }
     sources_orig -= musl_src_filterout
+
+    sources += [
+      "$FREEBSD_DIR/contrib/tcp_wrappers/strcasecmp.c",
+      "$FREEBSD_DIR/lib/libc/stdlib/qsort.c",
+    ]
+
     if (musl_arch == "arm") {
       sources_orig -= [
         "src/thread/${musl_arch}/__set_thread_area.c",
@@ -408,6 +422,15 @@ template("musl_libs") {
     }
 
     defines = []
+    if (musl_arch == "arm") {
+      defines += [ "MUSL_ARM_ARCH" ]
+    }
+    if (musl_arch == "aarch64") {
+      defines += [ "MUSL_AARCH64_ARCH" ]
+    }
+    if (musl_arch == "x86_64") {
+      defines += [ "MUSL_X86_64_ARCH" ]
+    }
     if (musl_secure_level > 0) {
       defines += [ "MALLOC_FREELIST_HARDENED" ]
     }
@@ -454,6 +477,8 @@ template("musl_libs") {
         "$OPTRTDIR/string/arm/strcmp.S",
         "$OPTRTDIR/string/arm/strlen-armv6t2.S",
       ]
+
+      sources += added_freebsd_files
       asmflags = [
         "-D__memcpy_arm = memcpy",
         "-D__memchr_arm = memchr",
@@ -540,6 +565,7 @@ template("musl_libs") {
           "$OPTRTDIR/string/aarch64/strnlen.S",
           "$OPTRTDIR/string/aarch64/strrchr.S",
         ]
+        sources += added_freebsd_files
         asmflags = [
           "-D__memmove_aarch64 = memmove",
           "-D__memcpy_aarch64 = memcpy",
@@ -564,6 +590,7 @@ template("musl_libs") {
       "-fPIC",
       "-ffreestanding",
       "-fstack-protector-strong",
+      "-flto",
     ]
 
     if (use_jemalloc) {
@@ -572,6 +599,22 @@ template("musl_libs") {
         defines += [ "USE_JEMALLOC_DFX_INTF" ]
       }
       include_dirs = [ "//third_party/jemalloc/include/jemalloc" ]
+    }
+
+    if (!defined(include_dirs)) {
+      if (musl_arch == "aarch64") {
+        include_dirs = [ "//third_party/FreeBSD/lib/libc/aarch64" ]
+      }
+      if (musl_arch == "arm") {
+        include_dirs = [ "//third_party/FreeBSD/lib/libc/arm" ]
+      }
+    } else {
+      if (musl_arch == "aarch64") {
+        include_dirs += [ "//third_party/FreeBSD/lib/libc/aarch64" ]
+      }
+      if (musl_arch == "arm") {
+        include_dirs += [ "//third_party/FreeBSD/lib/libc/arm" ]
+      }
     }
 
     configs -= musl_inherited_configs
