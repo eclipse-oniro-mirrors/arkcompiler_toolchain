@@ -823,7 +823,7 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
 }
 
 DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const CheckAndSetBreakpointByUrlParams &params,
-                                                      std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
+                                                                std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
 {
     if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
         return DispatchResponse::Fail("GetPossibleAndSetBreakpointByUrl: debugger agent is not enabled");
@@ -837,7 +837,9 @@ DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const CheckAndSe
         if (!isProcessSucceed) {
             const std::string invalidBpId = "invalid";
             std::unique_ptr<BreakpointReturnInfo> bpInfo = std::make_unique<BreakpointReturnInfo>();
-            bpInfo->SetId(invalidBpId).SetLineNumber(breakpoint->GetLineNumber()).SetColumnNumber(breakpoint->GetColumnNumber());
+            bpInfo->SetId(invalidBpId)
+                .SetLineNumber(breakpoint->GetLineNumber())
+                .SetColumnNumber(breakpoint->GetColumnNumber());
             outLocations->emplace_back(std::move(bpInfo));
         }
     }
@@ -845,7 +847,7 @@ DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const CheckAndSe
 }
 
 bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
-                                        std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
+                                           std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
 {
     const std::string &url = breakpoint.GetUrl();
     int32_t lineNumber = breakpoint.GetLineNumber();
