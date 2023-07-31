@@ -429,7 +429,8 @@ void DebuggerImpl::DispatcherImpl::SetBreakpointByUrl(const DispatchRequest &req
 
 void DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(const DispatchRequest &request)
 {
-    std::unique_ptr<GetPossibleAndSetBreakpointByUrlParams> params = GetPossibleAndSetBreakpointByUrlParams::Create(request.GetParams());
+    std::unique_ptr<GetPossibleAndSetBreakpointByUrlParams> params;
+    params = GetPossibleAndSetBreakpointByUrlParams::Create(request.GetParams());
     if (params == nullptr) {
         SendResponse(request, DispatchResponse::Fail("wrong params"));
         return;
