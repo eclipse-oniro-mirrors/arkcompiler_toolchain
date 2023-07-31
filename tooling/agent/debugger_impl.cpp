@@ -435,9 +435,9 @@ void DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(const Dispat
         return;
     }
 
-    std::vector<std::unique_ptr<BreakpointReturnInfo>> outLocations = std::vector<std::unique_ptr<BreakpointReturnInfo>>();
-    DispatchResponse response = debugger_->GetPossibleAndSetBreakpointByUrl(*params, &outLocations);
-    GetPossibleAndSetBreakpointByUrlReturns result(std::move(outLocations));
+    std::vector<std::unique_ptr<BreakpointReturnInfo>> outLoc = std::vector<std::unique_ptr<BreakpointReturnInfo>>();
+    DispatchResponse response = debugger_->GetPossibleAndSetBreakpointByUrl(*params, &outLoc);
+    GetPossibleAndSetBreakpointByUrlReturns result(std::move(outLoc));
     SendResponse(request, response, result);
 }
 
@@ -822,7 +822,7 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
     return DispatchResponse::Ok();
 }
 
-DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const GetPossibleAndSetBreakpointByUrlParams &params,
+DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const GetPossibleAndSetBreakpointParams &params,
     std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
 {
     if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
@@ -873,22 +873,22 @@ bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
     }
 
     // check breakpoint condition before doing matchWithLocation
-    Local<FunctionRef> condFuncRef = FunctionRef::Undefined(vm_);
+    Local<FunctionRef> funcRef = FunctionRef::Undefined(vm_);
     if (condition.has_value() && !condition.value().empty()) {
         std::vector<uint8_t> dest;
         if (!DecodeAndCheckBase64(condition.value(), dest)) {
             LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: base64 decode failed";
             return false;
         }
-        condFuncRef = DebuggerApi::GenerateFuncFromBuffer(vm_, dest.data(), dest.size(), JSPandaFile::ENTRY_FUNCTION_NAME);
-        if (condFuncRef->IsUndefined()) {
+        funcRef = DebuggerApi::GenerateFuncFromBuffer(vm_, dest.data(), dest.size(), JSPandaFile::ENTRY_FUNCTION_NAME);
+        if (funcRef->IsUndefined()) {
             LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: generate condition function failed";
             return false;
         }
     }
 
-    auto matchLocationCbFunc = [this, &condFuncRef](const JSPtLocation &location) -> bool {
-        return DebuggerApi::SetBreakpoint(jsDebugger_, location, condFuncRef);
+    auto matchLocationCbFunc = [this, &funcRef](const JSPtLocation &location) -> bool {
+        return DebuggerApi::SetBreakpoint(jsDebugger_, location, funcRef);
     };
     if (!extractor->MatchWithLocation(matchLocationCbFunc, lineNumber, columnNumber, url, GetRecordName(url))) {
         LOG_DEBUGGER(ERROR) << "failed to set breakpoint location number: " << lineNumber << ":" << columnNumber;
