@@ -348,7 +348,7 @@ std::unique_ptr<GetPossibleAndSetBreakpointParams> GetPossibleAndSetBreakpointPa
                 breakpointList.emplace_back(std::move(info));
             }
         }
-        if (breakpointList.size()) {
+        if (!breakpointList.empty()) {
             paramsObject->breakpointsList_ = std::move(breakpointList);
         }
     } else if (ret == Result::TYPE_ERROR) {

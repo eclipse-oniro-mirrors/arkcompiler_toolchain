@@ -61,7 +61,7 @@ public:
     DispatchResponse SetBreakpointByUrl(const SetBreakpointByUrlParams &params, std::string *outId,
                                         std::vector<std::unique_ptr<Location>> *outLocations);
     DispatchResponse GetPossibleAndSetBreakpointByUrl(const GetPossibleAndSetBreakpointParams &params,
-                                        std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations);
+                                        std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
     DispatchResponse SetPauseOnExceptions(const SetPauseOnExceptionsParams &params);
     DispatchResponse StepInto(const StepIntoParams &params);
     DispatchResponse StepOut();
@@ -167,7 +167,7 @@ private:
     bool CheckPauseOnException();
     bool IsWithinVariableScope(const LocalVariableInfo &localVariableInfo, uint32_t bcOffset);
     bool ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
-        std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations);
+        std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
 
     const std::string &GetRecordName(const std::string &url)
     {

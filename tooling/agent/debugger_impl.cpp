@@ -436,8 +436,8 @@ void DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(const Dispat
         return;
     }
 
-    std::vector<std::unique_ptr<BreakpointReturnInfo>> outLoc = std::vector<std::unique_ptr<BreakpointReturnInfo>>();
-    DispatchResponse response = debugger_->GetPossibleAndSetBreakpointByUrl(*params, &outLoc);
+    std::vector<std::unique_ptr<BreakpointReturnInfo>> outLoc;
+    DispatchResponse response = debugger_->GetPossibleAndSetBreakpointByUrl(*params, outLoc);
     GetPossibleAndSetBreakpointByUrlReturns result(std::move(outLoc));
     SendResponse(request, response, result);
 }
@@ -824,7 +824,7 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
 }
 
 DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const GetPossibleAndSetBreakpointParams &params,
-    std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
+    std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations)
 {
     if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
         return DispatchResponse::Fail("GetPossibleAndSetBreakpointByUrl: debugger agent is not enabled");
@@ -834,21 +834,21 @@ DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const GetPossibl
     }
     auto breakpointList = params.GetBreakpointsList();
     for (const auto &breakpoint : *breakpointList) {
-        bool isProcessSucceed = ProcessSingleBreakpoint(*breakpoint, &(*outLocations));
+        bool isProcessSucceed = ProcessSingleBreakpoint(*breakpoint, outLocations);
         if (!isProcessSucceed) {
-            const std::string invalidBpId = "invalid";
+            std::string invalidBpId = "invalid";
             std::unique_ptr<BreakpointReturnInfo> bpInfo = std::make_unique<BreakpointReturnInfo>();
             bpInfo->SetId(invalidBpId)
                 .SetLineNumber(breakpoint->GetLineNumber())
                 .SetColumnNumber(breakpoint->GetColumnNumber());
-            outLocations->emplace_back(std::move(bpInfo));
+            outLocations.emplace_back(std::move(bpInfo));
         }
     }
     return DispatchResponse::Ok();
 }
 
 bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
-                                           std::vector<std::unique_ptr<BreakpointReturnInfo>> *outLocations)
+                                           std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations)
 {
     const std::string &url = breakpoint.GetUrl();
     int32_t lineNumber = breakpoint.GetLineNumber();
@@ -900,7 +900,7 @@ bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
     std::string outId = BreakpointDetails::ToString(bpMetaData);
     std::unique_ptr<BreakpointReturnInfo> bpInfo = std::make_unique<BreakpointReturnInfo>();
     bpInfo->SetScriptId(scriptId).SetLineNumber(lineNumber).SetColumnNumber(columnNumber).SetId(outId);
-    outLocations->emplace_back(std::move(bpInfo));
+    outLocations.emplace_back(std::move(bpInfo));
 
     return true;
 }

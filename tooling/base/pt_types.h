@@ -203,7 +203,7 @@ public:
         return id_;
     }
 
-    BreakpointReturnInfo &SetId(std::string id)
+    BreakpointReturnInfo &SetId(std::string &id)
     {
         id_ = id;
         return *this;
@@ -224,7 +224,7 @@ private:
     NO_COPY_SEMANTIC(BreakpointReturnInfo);
     NO_MOVE_SEMANTIC(BreakpointReturnInfo);
 
-    std::string id_ {0};
+    std::string id_;
     int32_t lineNumber_ {0};
     int32_t columnNumber_ {0};
     ScriptId scriptId_ {0};
