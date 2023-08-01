@@ -702,8 +702,8 @@ void RuntimeImpl::GetDataViewValue(Local<JSValueRef> value,
 {
     Local<DataViewRef> dataViewRef = value->ToObject(vm_);
     Local<ArrayBufferRef> buffer = dataViewRef->GetArrayBuffer(vm_);
-    int32_t byteLength = dataViewRef->ByteLength();
-    int32_t byteOffset = dataViewRef->ByteOffset();
+    int32_t byteLength = static_cast<int32_t>(dataViewRef->ByteLength());
+    int32_t byteOffset = static_cast<int32_t>(dataViewRef->ByteOffset());
     Local<JSValueRef> jsValueRef = ArrayBufferRef::New(vm_, buffer->ByteLength(vm_));
     SetKeyValue(jsValueRef, outPropertyDesc, "buffer");
     jsValueRef = NumberRef::New(vm_, byteLength);
