@@ -36,6 +36,7 @@ public:
             std::string pandaFile = DEBUGGER_ABC_DIR "local_variable_scope.abc";
             std::string sourceFile = DEBUGGER_JS_DIR "local_variable_scope.js";
             static_cast<JsLocalVariableScopeTestChannel *>(channel_)->Initial(vm_, runtime_);
+            runtime_->Enable();
             // 37: breakpointer line
             location_ = TestUtil::GetLocation(sourceFile.c_str(), 37, 0, pandaFile.c_str());
             ASSERT_TRUE(location_.GetMethodId().IsValid());

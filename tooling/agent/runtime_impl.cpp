@@ -197,7 +197,8 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
     bool skipProto = false;
     if (!internalObjects_.IsEmpty() && internalObjects_->Get(vm_, value)->IsNumber()) {
         if (static_cast<ArkInternalValueType>(internalObjects_->Get(vm_, value)->ToNumber(vm_)->Value()) ==
-            ArkInternalValueType::Entry) {
+            ArkInternalValueType::Entry || static_cast<ArkInternalValueType>(internalObjects_->Get(vm_, value)->
+            ToNumber(vm_)->Value()) == ArkInternalValueType::Scope) {
             skipProto = true;
         }
     }
@@ -280,7 +281,7 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
     }
 
     Local<ArrayRef> keys = Local<ObjectRef>(value)->GetOwnPropertyNames(vm_);
-    int32_t length = keys->Length(vm_);
+    int32_t length = static_cast<int32_t>(keys->Length(vm_));
     Local<JSValueRef> name = JSValueRef::Undefined(vm_);
     for (int32_t i = 0; i < length; ++i) {
         name = keys->Get(vm_, i);
@@ -702,8 +703,8 @@ void RuntimeImpl::GetDataViewValue(Local<JSValueRef> value,
 {
     Local<DataViewRef> dataViewRef = value->ToObject(vm_);
     Local<ArrayBufferRef> buffer = dataViewRef->GetArrayBuffer(vm_);
-    int32_t byteLength = dataViewRef->ByteLength();
-    int32_t byteOffset = dataViewRef->ByteOffset();
+    int32_t byteLength = static_cast<int32_t>(dataViewRef->ByteLength());
+    int32_t byteOffset = static_cast<int32_t>(dataViewRef->ByteOffset());
     Local<JSValueRef> jsValueRef = ArrayBufferRef::New(vm_, buffer->ByteLength(vm_));
     SetKeyValue(jsValueRef, outPropertyDesc, "buffer");
     jsValueRef = NumberRef::New(vm_, byteLength);

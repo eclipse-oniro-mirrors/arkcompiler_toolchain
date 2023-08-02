@@ -32,6 +32,7 @@
 #include "test/testcases/js_variable_first_test.h"
 #include "test/testcases/js_variable_second_test.h"
 #include "test/testcases/js_module_variable_test.h"
+#include "test/testcases/js_dropframe_test.h"
 #include "test/testcases/js_local_variable_scope_test.h"
 #include "test/testcases/js_container_test.h"
 
@@ -59,9 +60,26 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsContainerTest", GetJsContainerTest());
 }
 
+static void RegisterCInterpTests()
+{
+    TestUtil::RegisterTest("JSDropFrameTest", GetJsDropFrameTest());
+}
+
 std::vector<const char *> GetTestList()
 {
     RegisterTests();
+    std::vector<const char *> res;
+
+    auto &tests = TestUtil::GetTests();
+    for (const auto &entry : tests) {
+        res.push_back(entry.first.c_str());
+    }
+    return res;
+}
+
+std::vector<const char *> GetCInterpTestList()
+{
+    RegisterCInterpTests();
     std::vector<const char *> res;
 
     auto &tests = TestUtil::GetTests();

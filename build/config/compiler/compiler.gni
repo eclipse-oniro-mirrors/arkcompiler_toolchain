@@ -21,6 +21,8 @@ if (current_cpu == "arm" || current_cpu == "arm64") {
 
 is_ohos_or_android = is_ohos || is_android
 
+optimize_for_size = is_ohos_or_android
+
 declare_args() {
   # Set to true to use lld, the LLVM linker. This flag may be used on Windows,
   # Linux.

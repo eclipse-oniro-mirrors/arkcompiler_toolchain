@@ -51,6 +51,7 @@ public:
     bool Add(const char *key, bool value) const;
     bool Add(const char *key, int32_t value) const;
     bool Add(const char *key, int64_t value) const;
+    bool Add(const char *key, uint32_t value) const;
     bool Add(const char *key, double value) const;
     bool Add(const char *key, const char *value) const;
     bool Add(const char *key, const std::unique_ptr<PtJson> &value) const;
@@ -59,6 +60,7 @@ public:
     bool Push(bool value) const;
     bool Push(int32_t value) const;
     bool Push(int64_t value) const;
+    bool Push(uint32_t value) const;
     bool Push(double value) const;
     bool Push(const char *value) const;
     bool Push(const std::unique_ptr<PtJson> &value) const;
@@ -84,6 +86,7 @@ public:
     bool GetBool(bool defaultValue = false) const;
     int32_t GetInt(int32_t defaultValue = 0) const;
     int64_t GetInt64(int64_t defaultValue = 0) const;
+    uint32_t GetUInt(uint32_t defaultValue = 0) const;
     double GetDouble(double defaultValue = 0.0) const;
     std::string GetString() const;
 
@@ -95,6 +98,7 @@ public:
     Result GetBool(const char *key, bool *value) const;
     Result GetInt(const char *key, int32_t *value) const;
     Result GetInt64(const char *key, int64_t *value) const;
+    Result GetUInt(const char *key, uint32_t *value) const;
     Result GetDouble(const char *key, double *value) const;
     Result GetString(const char *key, std::string *value) const;
     Result GetObject(const char *key, std::unique_ptr<PtJson> *value) const;

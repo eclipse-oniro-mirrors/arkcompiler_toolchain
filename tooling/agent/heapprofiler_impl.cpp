@@ -353,6 +353,7 @@ void HeapProfilerImpl::HeapTrackingCallback(uv_timer_t* handle)
 
 DispatchResponse HeapProfilerImpl::StopTrackingHeapObjects(const StopTrackingHeapObjectsParams &params)
 {
+    uv_timer_stop(&handle_);
     bool result = false;
     if (params.GetReportProgress()) {
         HeapProfilerProgress progress(&frontend_);
@@ -360,7 +361,6 @@ DispatchResponse HeapProfilerImpl::StopTrackingHeapObjects(const StopTrackingHea
     } else {
         result = panda::DFXJSNApi::StopHeapTracking(vm_, &stream_, nullptr, false);
     }
-    uv_timer_stop(&handle_);
     if (result) {
         return DispatchResponse::Ok();
     } else {

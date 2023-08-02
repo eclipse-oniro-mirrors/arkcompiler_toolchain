@@ -236,6 +236,9 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
         paused.SetData(std::move(tmpException));
     }
     frontend_.Paused(vm_, paused);
+    if (reason != BREAK_ON_START) {
+        singleStepper_.reset();
+    }
     debuggerState_ = DebuggerState::PAUSED;
     frontend_.WaitForDebugger(vm_);
     DebuggerApi::SetException(vm_, exception);
@@ -266,14 +269,6 @@ void DebuggerImpl::SetDebuggerState(DebuggerState debuggerState)
     debuggerState_ = debuggerState;
 }
 
-void DebuggerImpl::NotifyPendingJobEntry()
-{
-    if (singleStepper_ != nullptr) {
-        singleStepper_.reset();
-        pauseOnNextByteCode_ = true;
-    }
-}
-
 void DebuggerImpl::NotifyHandleProtocolCommand()
 {
     auto *handler = vm_->GetJsDebuggerManager()->GetDebuggerHandler();
@@ -301,6 +296,7 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         { "setBlackboxPatterns", &DebuggerImpl::DispatcherImpl::SetBlackboxPatterns },
         { "replyNativeCalling", &DebuggerImpl::DispatcherImpl::ReplyNativeCalling },
         { "getPossibleAndSetBreakpointByUrl", &DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl }
+        { "dropFrame", &DebuggerImpl::DispatcherImpl::DropFrame }
     };
 
     const std::string &method = request.GetMethod();
@@ -507,6 +503,17 @@ void DebuggerImpl::DispatcherImpl::ReplyNativeCalling(const DispatchRequest &req
 void DebuggerImpl::DispatcherImpl::SetBlackboxPatterns(const DispatchRequest &request)
 {
     DispatchResponse response = debugger_->SetBlackboxPatterns();
+    SendResponse(request, response);
+}
+
+void DebuggerImpl::DispatcherImpl::DropFrame(const DispatchRequest &request)
+{
+    std::unique_ptr<DropFrameParams> params = DropFrameParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+    DispatchResponse response = debugger_->DropFrame(*params);
     SendResponse(request, response);
 }
 
@@ -750,7 +757,6 @@ DispatchResponse DebuggerImpl::Resume([[maybe_unused]] const ResumeParams &param
         return DispatchResponse::Fail("Can only perform operation while paused");
     }
     frontend_.Resumed(vm_);
-    singleStepper_.reset();
     debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
@@ -976,6 +982,31 @@ DispatchResponse DebuggerImpl::ReplyNativeCalling([[maybe_unused]] const ReplyNa
     return DispatchResponse::Ok();
 }
 
+DispatchResponse DebuggerImpl::DropFrame(const DropFrameParams &params)
+{
+    if (debuggerState_ != DebuggerState::PAUSED) {
+        return DispatchResponse::Fail("Can only perform operation while paused");
+    }
+    uint32_t droppedDepth = 1;
+    if (params.HasDroppedDepth()) {
+        droppedDepth = params.GetDroppedDepth();
+    }
+    uint32_t stackDepth = DebuggerApi::GetStackDepth(vm_);
+    if (droppedDepth > stackDepth) {
+        return DispatchResponse::Fail("The input depth exceeds stackDepth");
+    }
+    if (droppedDepth == stackDepth) {
+        return DispatchResponse::Fail("The bottom frame cannot be dropped");
+    }
+    for (uint32_t i = 0; i < droppedDepth; i++) {
+        DebuggerApi::DropLastFrame(vm_);
+    }
+    pauseOnNextByteCode_ = true;
+    frontend_.RunIfWaitingForDebugger(vm_);
+    debuggerState_ = DebuggerState::ENABLED;
+    return DispatchResponse::Ok();
+}
+
 void DebuggerImpl::CleanUpOnPaused()
 {
     runtime_->curObjectId_ = 0;
@@ -1145,6 +1176,7 @@ std::unique_ptr<Scope> DebuggerImpl::GetLocalScopeChain(const FrameHandler *fram
         .SetDescription(RemoteObject::ObjectDescription);
     auto *sp = DebuggerApi::GetSp(frameHandler);
     scopeObjects_[sp] = runtime_->curObjectId_;
+    DebuggerApi::AddInternalProperties(vm_, localObj, ArkInternalValueType::Scope,  runtime_->internalObjects_);
     runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, localObj);
 
     Local<JSValueRef> thisVal = JSNApiHelper::ToLocal<JSValueRef>(
@@ -1187,6 +1219,7 @@ std::unique_ptr<Scope> DebuggerImpl::GetModuleScopeChain()
         .SetClassName(ObjectClassName::Object)
         .SetDescription(RemoteObject::ObjectDescription);
     moduleScope->SetType(Scope::Type::Module()).SetObject(std::move(module));
+    DebuggerApi::AddInternalProperties(vm_, moduleObj, ArkInternalValueType::Scope,  runtime_->internalObjects_);
     runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, moduleObj);
     JSThread *thread = vm_->GetJSThread();
     JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm_));
@@ -1246,7 +1279,9 @@ bool DebuggerImpl::IsWithinVariableScope(const LocalVariableInfo &localVariableI
 void DebuggerImpl::GetClosureVariables(const FrameHandler *frameHandler, Local<JSValueRef> &thisVal,
     Local<ObjectRef> &localObj)
 {
-    JSTaggedValue env = DebuggerApi::GetEnv(frameHandler);
+    JSThread *thread = vm_->GetJSThread();
+    JSHandle<JSTaggedValue> envHandle = JSHandle<JSTaggedValue>(thread, DebuggerApi::GetEnv(frameHandler));
+    JSTaggedValue env = envHandle.GetTaggedValue();
     if (env.IsTaggedArray() && DebuggerApi::GetBytecodeOffset(frameHandler) != 0) {
         LexicalEnv *lexEnv = LexicalEnv::Cast(env.GetTaggedObject());
         if (lexEnv->GetScopeInfo().IsHole()) {
@@ -1254,12 +1289,14 @@ void DebuggerImpl::GetClosureVariables(const FrameHandler *frameHandler, Local<J
         }
         auto *scopeDebugInfo = reinterpret_cast<ScopeDebugInfo *>(JSNativePointer::Cast(
             lexEnv->GetScopeInfo().GetTaggedObject())->GetExternalPointer());
-        JSThread *thread = vm_->GetJSThread();
         for (const auto &[varName, slot] : scopeDebugInfo->scopeInfo) {
             // skip possible duplicate variables both in local variable table and env
             if (varName == "4newTarget") {
                 continue;
             }
+            env = envHandle.GetTaggedValue();
+            lexEnv = LexicalEnv::Cast(env.GetTaggedObject());
+            ASSERT(slot < lexEnv->GetLength() - LexicalEnv::RESERVED_ENV_LENGTH);
             Local<JSValueRef> value = JSNApiHelper::ToLocal<JSValueRef>(
                 JSHandle<JSTaggedValue>(thread, lexEnv->GetProperties(slot)));
             if (varName == "this") {
@@ -1295,12 +1332,15 @@ std::unique_ptr<Scope> DebuggerImpl::GetGlobalScopeChain()
     auto globalScope = std::make_unique<Scope>();
 
     std::unique_ptr<RemoteObject> global = std::make_unique<RemoteObject>();
+    Local<ObjectRef> globalObj = ObjectRef::New(vm_);
     global->SetType(ObjectType::Object)
         .SetObjectId(runtime_->curObjectId_)
         .SetClassName(ObjectClassName::Global)
         .SetDescription(RemoteObject::GlobalDescription);
     globalScope->SetType(Scope::Type::Global()).SetObject(std::move(global));
-    runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, JSNApi::GetGlobalObject(vm_));
+    globalObj = JSNApi::GetGlobalObject(vm_);
+    DebuggerApi::AddInternalProperties(vm_, globalObj, ArkInternalValueType::Scope,  runtime_->internalObjects_);
+    runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, globalObj);
     return globalScope;
 }
 

@@ -257,10 +257,10 @@ std::string WebSocket::Decode()
 
 bool WebSocket::HttpHandShake()
 {
-    char msgBuf[SOCKET_HANDSHAKE_LEN];
-    int32_t msgLen = recv(client_, msgBuf, SOCKET_HANDSHAKE_LEN, 0);
+    char msgBuf[SOCKET_HANDSHAKE_LEN] = {0};
+    ssize_t msgLen = recv(client_, msgBuf, SOCKET_HANDSHAKE_LEN, 0);
     if (msgLen <= 0) {
-        LOGE("ReadMsg failed readRet=%{public}d", msgLen);
+        LOGE("ReadMsg failed, msgLen = %{public}ld, errno = %{public}d", static_cast<long>(msgLen), errno);
         return false;
     } else {
         msgBuf[msgLen - 1] = '\0';
@@ -298,14 +298,14 @@ bool WebSocket::InitTcpWebSocket(int port, uint32_t timeoutLimit)
 #endif
     fd_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (fd_ < SOCKET_SUCCESS) {
-        LOGE("InitTcpWebSocket socket init failed");
+        LOGE("InitTcpWebSocket socket init failed, errno = %{public}d", errno);
         return false;
     }
     // allow specified port can be used at once and not wait TIME_WAIT status ending
     int sockOptVal = 1;
     if ((setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR,
         reinterpret_cast<char *>(&sockOptVal), sizeof(sockOptVal))) != SOCKET_SUCCESS) {
-        LOGE("InitTcpWebSocket setsockopt SO_REUSEADDR failed");
+        LOGE("InitTcpWebSocket setsockopt SO_REUSEADDR failed, errno = %{public}d", errno);
         close(fd_);
         fd_ = -1;
         return false;
@@ -324,13 +324,13 @@ bool WebSocket::InitTcpWebSocket(int port, uint32_t timeoutLimit)
     addr_sin.sin_port = htons(port);
     addr_sin.sin_addr.s_addr = INADDR_ANY;
     if (bind(fd_, reinterpret_cast<struct sockaddr*>(&addr_sin), sizeof(addr_sin)) < SOCKET_SUCCESS) {
-        LOGE("InitTcpWebSocket bind failed");
+        LOGE("InitTcpWebSocket bind failed, errno = %{public}d", errno);
         close(fd_);
         fd_ = -1;
         return false;
     }
     if (listen(fd_, 1) < SOCKET_SUCCESS) {
-        LOGE("InitTcpWebSocket listen failed");
+        LOGE("InitTcpWebSocket listen failed, errno = %{public}d", errno);
         close(fd_);
         fd_ = -1;
         return false;
@@ -379,7 +379,7 @@ bool WebSocket::InitUnixWebSocket(const std::string& sockName, uint32_t timeoutL
     }
     fd_ = socket(AF_UNIX, SOCK_STREAM, 0); // 0: defautlt protocol
     if (fd_ < SOCKET_SUCCESS) {
-        LOGE("InitUnixWebSocket socket init failed");
+        LOGE("InitUnixWebSocket socket init failed, errno = %{public}d", errno);
         return false;
     }
     // set send and recv timeout
@@ -407,13 +407,13 @@ bool WebSocket::InitUnixWebSocket(const std::string& sockName, uint32_t timeoutL
     un.sun_path[0] = '\0';
     uint32_t len = offsetof(struct sockaddr_un, sun_path) + strlen(sockName.c_str()) + 1;
     if (bind(fd_, reinterpret_cast<struct sockaddr*>(&un), static_cast<int32_t>(len)) < SOCKET_SUCCESS) {
-        LOGE("InitUnixWebSocket bind failed");
+        LOGE("InitUnixWebSocket bind failed, errno = %{public}d", errno);
         close(fd_);
         fd_ = -1;
         return false;
     }
     if (listen(fd_, 1) < SOCKET_SUCCESS) { // 1: connection num
-        LOGE("InitUnixWebSocket listen failed");
+        LOGE("InitUnixWebSocket listen failed, errno = %{public}d", errno);
         close(fd_);
         fd_ = -1;
         return false;
@@ -500,7 +500,8 @@ bool WebSocket::Recv(int32_t client, char* buf, size_t totalLen, int32_t flags) 
     while (recvLen < totalLen) {
         ssize_t len = recv(client, buf + recvLen, totalLen - recvLen, flags);
         if (len <= 0) {
-            LOGE("Recv payload in while failed, websocket disconnect");
+            LOGE("Recv payload in while failed, websocket disconnect, len = %{public}ld, errno = %{public}d",
+                 static_cast<long>(len), errno);
             return false;
         }
         recvLen += static_cast<size_t>(len);
@@ -515,7 +516,8 @@ bool WebSocket::Send(int32_t client, const char* buf, size_t totalLen, int32_t f
     while (sendLen < totalLen) {
         ssize_t len = send(client, buf + sendLen, totalLen - sendLen, flags);
         if (len <= 0) {
-            LOGE("Send Message in while failed, websocket disconnect");
+            LOGE("Send Message in while failed, websocket disconnect, len = %{public}ld, errno = %{public}d",
+                 static_cast<long>(len), errno);
             return false;
         }
         sendLen += static_cast<size_t>(len);
@@ -530,12 +532,12 @@ bool WebSocket::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
         struct timeval timeout = {timeoutLimit, 0};
         if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO,
             reinterpret_cast<char *>(&timeout), sizeof(timeout)) != SOCKET_SUCCESS) {
-            LOGE("SetWebSocketTimeOut setsockopt SO_SNDTIMEO failed");
+            LOGE("SetWebSocketTimeOut setsockopt SO_SNDTIMEO failed, errno = %{public}d", errno);
             return false;
         }
         if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO,
             reinterpret_cast<char *>(&timeout), sizeof(timeout)) != SOCKET_SUCCESS) {
-            LOGE("SetWebSocketTimeOut setsockopt SO_RCVTIMEO failed");
+            LOGE("SetWebSocketTimeOut setsockopt SO_RCVTIMEO failed, errno = %{public}d", errno);
             return false;
         }
     }
@@ -547,11 +549,11 @@ bool WebSocket::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
     if (timeoutLimit > 0) {
         struct timeval timeout = {timeoutLimit, 0};
         if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) != SOCKET_SUCCESS) {
-            LOGE("SetWebSocketTimeOut setsockopt SO_SNDTIMEO failed");
+            LOGE("SetWebSocketTimeOut setsockopt SO_SNDTIMEO failed, errno = %{public}d", errno);
             return false;
         }
         if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) != SOCKET_SUCCESS) {
-            LOGE("SetWebSocketTimeOut setsockopt SO_RCVTIMEO failed");
+            LOGE("SetWebSocketTimeOut setsockopt SO_RCVTIMEO failed, errno = %{public}d", errno);
             return false;
         }
     }

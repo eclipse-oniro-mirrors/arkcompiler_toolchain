@@ -42,7 +42,6 @@ public:
                             std::string_view entryPoint = "func_main_0");
     bool NotifySingleStep(const JSPtLocation &location);
     void NotifyPaused(std::optional<JSPtLocation> location, PauseReason reason);
-    void NotifyPendingJobEntry();
     void NotifyHandleProtocolCommand();
     void NotifyNativeCalling(const void *nativeAddress);
     void SetDebuggerState(DebuggerState debuggerState);
@@ -69,6 +68,7 @@ public:
     DispatchResponse SetBlackboxPatterns();
     DispatchResponse SetMixedDebugEnabled(const SetMixedDebugParams &params);
     DispatchResponse ReplyNativeCalling(const ReplyNativeCallingParams &params);
+    DispatchResponse DropFrame(const DropFrameParams &params);
 
     /**
      * @brief: match first script and callback
@@ -130,6 +130,7 @@ public:
         void SetBlackboxPatterns(const DispatchRequest &request);
         void ReplyNativeCalling(const DispatchRequest &request);
         void GetPossibleAndSetBreakpointByUrl(const DispatchRequest &request);
+        void DropFrame(const DispatchRequest &request);
 
     private:
         NO_COPY_SEMANTIC(DispatcherImpl);

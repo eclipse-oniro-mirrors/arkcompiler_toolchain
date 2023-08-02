@@ -437,6 +437,29 @@ private:
     std::optional<std::list<std::unique_ptr<LocationRange>>> skipList_ {};
 };
 
+class DropFrameParams : public PtBaseParams {
+public:
+    DropFrameParams() = default;
+    ~DropFrameParams() override = default;
+    static std::unique_ptr<DropFrameParams> Create(const PtJson &params);
+
+    uint32_t GetDroppedDepth() const
+    {
+        return droppedDepth_.value();
+    }
+
+    bool HasDroppedDepth() const
+    {
+        return droppedDepth_.has_value();
+    }
+
+private:
+    NO_COPY_SEMANTIC(DropFrameParams);
+    NO_MOVE_SEMANTIC(DropFrameParams);
+
+    std::optional<uint32_t> droppedDepth_ {};
+};
+
 class SetMixedDebugParams : public PtBaseParams {
 public:
     SetMixedDebugParams() = default;

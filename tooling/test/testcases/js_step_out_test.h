@@ -30,6 +30,7 @@ public:
         };
 
         loadModule = [this](std::string_view moduleName) {
+            runtime_->Enable();
             // 74、36: line number for breakpoint array
             size_t breakpoint[5][2] = {{74, 0}, {36, 0}, {50, 0}, {61, 0}, {96, 0}};
             // 28: line number for stepinto array
