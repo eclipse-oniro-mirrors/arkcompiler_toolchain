@@ -60,6 +60,18 @@ public:
         WaitForEvent(DebugEvent::BREAKPOINT, predicate, onSuccess);
     }
 
+    static bool WaitForDropframe()
+    {
+        auto predicate = []() REQUIRES(eventMutex_) { return lastEvent_ == DebugEvent::DROPFRAME; };
+        return WaitForEvent(DebugEvent::DROPFRAME, predicate, [] {});
+    }
+
+    static bool WaitForCheckComplete()
+    {
+        auto predicate = []() REQUIRES(eventMutex_) { return lastEvent_ == DebugEvent::CHECK_COMPLETE; };
+        return WaitForEvent(DebugEvent::CHECK_COMPLETE, predicate, [] {});
+    }
+
     static bool WaitForExit()
     {
         return WaitForEvent(DebugEvent::VM_DEATH,

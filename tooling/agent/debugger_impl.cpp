@@ -294,7 +294,8 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         { "stepOver", &DebuggerImpl::DispatcherImpl::StepOver },
         { "setMixedDebugEnabled", &DebuggerImpl::DispatcherImpl::SetMixedDebugEnabled },
         { "setBlackboxPatterns", &DebuggerImpl::DispatcherImpl::SetBlackboxPatterns },
-        { "replyNativeCalling", &DebuggerImpl::DispatcherImpl::ReplyNativeCalling }
+        { "replyNativeCalling", &DebuggerImpl::DispatcherImpl::ReplyNativeCalling },
+        { "dropFrame", &DebuggerImpl::DispatcherImpl::DropFrame }
     };
 
     const std::string &method = request.GetMethod();
@@ -486,6 +487,17 @@ void DebuggerImpl::DispatcherImpl::ReplyNativeCalling(const DispatchRequest &req
 void DebuggerImpl::DispatcherImpl::SetBlackboxPatterns(const DispatchRequest &request)
 {
     DispatchResponse response = debugger_->SetBlackboxPatterns();
+    SendResponse(request, response);
+}
+
+void DebuggerImpl::DispatcherImpl::DropFrame(const DispatchRequest &request)
+{
+    std::unique_ptr<DropFrameParams> params = DropFrameParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+    DispatchResponse response = debugger_->DropFrame(*params);
     SendResponse(request, response);
 }
 
@@ -872,6 +884,31 @@ DispatchResponse DebuggerImpl::ReplyNativeCalling([[maybe_unused]] const ReplyNa
     return DispatchResponse::Ok();
 }
 
+DispatchResponse DebuggerImpl::DropFrame(const DropFrameParams &params)
+{
+    if (debuggerState_ != DebuggerState::PAUSED) {
+        return DispatchResponse::Fail("Can only perform operation while paused");
+    }
+    uint32_t droppedDepth = 1;
+    if (params.HasDroppedDepth()) {
+        droppedDepth = params.GetDroppedDepth();
+    }
+    uint32_t stackDepth = DebuggerApi::GetStackDepth(vm_);
+    if (droppedDepth > stackDepth) {
+        return DispatchResponse::Fail("The input depth exceeds stackDepth");
+    }
+    if (droppedDepth == stackDepth) {
+        return DispatchResponse::Fail("The bottom frame cannot be dropped");
+    }
+    for (uint32_t i = 0; i < droppedDepth; i++) {
+        DebuggerApi::DropLastFrame(vm_);
+    }
+    pauseOnNextByteCode_ = true;
+    frontend_.RunIfWaitingForDebugger(vm_);
+    debuggerState_ = DebuggerState::ENABLED;
+    return DispatchResponse::Ok();
+}
+
 void DebuggerImpl::CleanUpOnPaused()
 {
     runtime_->curObjectId_ = 0;
@@ -1144,7 +1181,9 @@ bool DebuggerImpl::IsWithinVariableScope(const LocalVariableInfo &localVariableI
 void DebuggerImpl::GetClosureVariables(const FrameHandler *frameHandler, Local<JSValueRef> &thisVal,
     Local<ObjectRef> &localObj)
 {
-    JSTaggedValue env = DebuggerApi::GetEnv(frameHandler);
+    JSThread *thread = vm_->GetJSThread();
+    JSHandle<JSTaggedValue> envHandle = JSHandle<JSTaggedValue>(thread, DebuggerApi::GetEnv(frameHandler));
+    JSTaggedValue env = envHandle.GetTaggedValue();
     if (env.IsTaggedArray() && DebuggerApi::GetBytecodeOffset(frameHandler) != 0) {
         LexicalEnv *lexEnv = LexicalEnv::Cast(env.GetTaggedObject());
         if (lexEnv->GetScopeInfo().IsHole()) {
@@ -1152,12 +1191,14 @@ void DebuggerImpl::GetClosureVariables(const FrameHandler *frameHandler, Local<J
         }
         auto *scopeDebugInfo = reinterpret_cast<ScopeDebugInfo *>(JSNativePointer::Cast(
             lexEnv->GetScopeInfo().GetTaggedObject())->GetExternalPointer());
-        JSThread *thread = vm_->GetJSThread();
         for (const auto &[varName, slot] : scopeDebugInfo->scopeInfo) {
             // skip possible duplicate variables both in local variable table and env
             if (varName == "4newTarget") {
                 continue;
             }
+            env = envHandle.GetTaggedValue();
+            lexEnv = LexicalEnv::Cast(env.GetTaggedObject());
+            ASSERT(slot < lexEnv->GetLength() - LexicalEnv::RESERVED_ENV_LENGTH);
             Local<JSValueRef> value = JSNApiHelper::ToLocal<JSValueRef>(
                 JSHandle<JSTaggedValue>(thread, lexEnv->GetProperties(slot)));
             if (varName == "this") {
