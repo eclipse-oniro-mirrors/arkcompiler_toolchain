@@ -1221,23 +1221,25 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
     EntityId methodId = method->GetMethodId();
     const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
     DebugInfoExtractor *extractor = GetExtractor(jsPandaFile);
+    JSThread *thread = vm_->GetJSThread();
 
     if (extractor == nullptr) {
         LOG_DEBUGGER(ERROR) << "GetClosureScopeChains: extractor is null";
         return closureScopes;
     }
 
-    JSTaggedValue currentEnv = DebuggerApi::GetEnv(frameHandler);
+    JSHandle<JSTaggedValue> envHandle = JSHandle<JSTaggedValue>(thread, DebuggerApi::GetEnv(frameHandler));
+    JSTaggedValue currentEnv = envHandle.GetTaggedValue();
     if (!currentEnv.IsTaggedArray()) {
         LOG_DEBUGGER(ERROR) << "GetClosureScopeChains: currentEnv is invalid";
         return closureScopes;
     }
     // check if GetLocalScopeChain has already found and set 'this' value
     bool thisFound = (*thisObj)->HasValue();
-    JSThread *thread = vm_->GetJSThread();
     // currentEnv = currentEnv->parent until currentEnv becomes undefined
     for (; currentEnv.IsTaggedArray(); currentEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject())->GetParentEnv()) {
         LexicalEnv *LexicalEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject());
+        envHandle = JSHandle<JSTaggedValue>(thread, currentEnv);
         if (LexicalEnv->GetScopeInfo().IsHole()) {
             continue;
         }
@@ -1252,6 +1254,8 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
                 continue;
             }
 
+            currentEnv = envHandle.GetTaggedValue();
+            LexicalEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject());
             Local<JSValueRef> value = JSNApiHelper::ToLocal<JSValueRef>(
                 JSHandle<JSTaggedValue>(thread, LexicalEnv->GetProperties(slot)));
             Local<JSValueRef> varName = StringRef::NewFromUtf8(vm_, name.c_str());
@@ -1281,6 +1285,7 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
             runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, closureScopeObj);
             closureScopes.emplace_back(std::move(closureScope));
         }
+        currentEnv = envHandle.GetTaggedValue();
     }
     return closureScopes;
 }

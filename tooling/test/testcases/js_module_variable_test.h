@@ -115,7 +115,6 @@ private:
                     auto frame = paused->GetCallFrames()->at(0).get();
                     ASSERT_EQ(frame->GetFunctionName(), "foo");
                     auto scopes = frame->GetScopeChain();
-                    // ASSERT_EQ(scopes->size(), 3U);  // 3: contain local、global and module
                     for (uint32_t i = 0; i < scopes->size(); i++) {
                         auto scope = scopes->at(i).get();
                         if (scope->GetType() != Scope::Type::Module()) {
