@@ -295,6 +295,7 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         { "setMixedDebugEnabled", &DebuggerImpl::DispatcherImpl::SetMixedDebugEnabled },
         { "setBlackboxPatterns", &DebuggerImpl::DispatcherImpl::SetBlackboxPatterns },
         { "replyNativeCalling", &DebuggerImpl::DispatcherImpl::ReplyNativeCalling },
+        { "getPossibleAndSetBreakpointByUrl", &DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl },
         { "dropFrame", &DebuggerImpl::DispatcherImpl::DropFrame }
     };
 
@@ -419,6 +420,21 @@ void DebuggerImpl::DispatcherImpl::SetBreakpointByUrl(const DispatchRequest &req
     std::vector<std::unique_ptr<Location>> outLocations;
     DispatchResponse response = debugger_->SetBreakpointByUrl(*params, &outId, &outLocations);
     SetBreakpointByUrlReturns result(outId, std::move(outLocations));
+    SendResponse(request, response, result);
+}
+
+void DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(const DispatchRequest &request)
+{
+    std::unique_ptr<GetPossibleAndSetBreakpointParams> params;
+    params = GetPossibleAndSetBreakpointParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+
+    std::vector<std::unique_ptr<BreakpointReturnInfo>> outLoc;
+    DispatchResponse response = debugger_->GetPossibleAndSetBreakpointByUrl(*params, outLoc);
+    GetPossibleAndSetBreakpointByUrlReturns result(std::move(outLoc));
     SendResponse(request, response, result);
 }
 
@@ -813,6 +829,88 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
     return DispatchResponse::Ok();
 }
 
+DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const GetPossibleAndSetBreakpointParams &params,
+    std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations)
+{
+    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+        return DispatchResponse::Fail("GetPossibleAndSetBreakpointByUrl: debugger agent is not enabled");
+    }
+    if (!params.HasBreakpointsList()) {
+        return DispatchResponse::Fail("GetPossibleAndSetBreakpointByUrl: no pennding breakpoint exists");
+    }
+    auto breakpointList = params.GetBreakpointsList();
+    for (const auto &breakpoint : *breakpointList) {
+        bool isProcessSucceed = ProcessSingleBreakpoint(*breakpoint, outLocations);
+        if (!isProcessSucceed) {
+            std::string invalidBpId = "invalid";
+            std::unique_ptr<BreakpointReturnInfo> bpInfo = std::make_unique<BreakpointReturnInfo>();
+            bpInfo->SetId(invalidBpId)
+                .SetLineNumber(breakpoint->GetLineNumber())
+                .SetColumnNumber(breakpoint->GetColumnNumber());
+            outLocations.emplace_back(std::move(bpInfo));
+        }
+    }
+    return DispatchResponse::Ok();
+}
+
+bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
+                                           std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations)
+{
+    const std::string &url = breakpoint.GetUrl();
+    int32_t lineNumber = breakpoint.GetLineNumber();
+    int32_t columnNumber = breakpoint.GetColumnNumber();
+    auto condition = breakpoint.HasCondition() ? breakpoint.GetCondition() : std::optional<std::string> {};
+
+    DebugInfoExtractor *extractor = GetExtractor(url);
+    if (extractor == nullptr) {
+        LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: extractor is null";
+        return false;
+    }
+
+    ScriptId scriptId;
+    std::string fileName;
+    auto matchScriptCbFunc = [&scriptId, &fileName](PtScript *script) -> bool {
+        scriptId = script->GetScriptId();
+        fileName = script->GetFileName();
+        return true;
+    };
+    if (!MatchScripts(matchScriptCbFunc, url, ScriptMatchType::URL)) {
+        LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: unknown Url: " << url;
+        return false;
+    }
+
+    // check breakpoint condition before doing matchWithLocation
+    Local<FunctionRef> funcRef = FunctionRef::Undefined(vm_);
+    if (condition.has_value() && !condition.value().empty()) {
+        std::vector<uint8_t> dest;
+        if (!DecodeAndCheckBase64(condition.value(), dest)) {
+            LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: base64 decode failed";
+            return false;
+        }
+        funcRef = DebuggerApi::GenerateFuncFromBuffer(vm_, dest.data(), dest.size(), JSPandaFile::ENTRY_FUNCTION_NAME);
+        if (funcRef->IsUndefined()) {
+            LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: generate condition function failed";
+            return false;
+        }
+    }
+
+    auto matchLocationCbFunc = [this, &funcRef](const JSPtLocation &location) -> bool {
+        return DebuggerApi::SetBreakpoint(jsDebugger_, location, funcRef);
+    };
+    if (!extractor->MatchWithLocation(matchLocationCbFunc, lineNumber, columnNumber, url, GetRecordName(url))) {
+        LOG_DEBUGGER(ERROR) << "failed to set breakpoint location number: " << lineNumber << ":" << columnNumber;
+        return false;
+    }
+    
+    BreakpointDetails bpMetaData {lineNumber, columnNumber, url};
+    std::string outId = BreakpointDetails::ToString(bpMetaData);
+    std::unique_ptr<BreakpointReturnInfo> bpInfo = std::make_unique<BreakpointReturnInfo>();
+    bpInfo->SetScriptId(scriptId).SetLineNumber(lineNumber).SetColumnNumber(columnNumber).SetId(outId);
+    outLocations.emplace_back(std::move(bpInfo));
+
+    return true;
+}
+
 DispatchResponse DebuggerImpl::SetPauseOnExceptions(const SetPauseOnExceptionsParams &params)
 {
     pauseOnException_ = params.GetState();
@@ -1150,7 +1248,7 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
         if (varName == "4newTarget" || varName == "0this" || varName == "0newTarget" || varName == "0funcObj") {
             continue;
         }
-        
+
         value = DebuggerApi::GetVRegValue(vm_, frameHandler, regIndex);
         if (varName == "this") {
             LOG_DEBUGGER(INFO) << "find 'this' in local variable table";

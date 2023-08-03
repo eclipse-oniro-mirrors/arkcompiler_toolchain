@@ -328,6 +328,41 @@ std::unique_ptr<SetBreakpointByUrlParams> SetBreakpointByUrlParams::Create(const
     return paramsObject;
 }
 
+std::unique_ptr<GetPossibleAndSetBreakpointParams> GetPossibleAndSetBreakpointParams::Create(const PtJson &params)
+{
+    auto paramsObject = std::make_unique<GetPossibleAndSetBreakpointParams>();
+    std::string error;
+    Result ret;
+
+    std::unique_ptr<PtJson> breakpoints;
+    ret = params.GetArray("locations", &breakpoints);
+    if (ret == Result::SUCCESS) {
+        int32_t length = breakpoints->GetSize();
+        std::vector<std::unique_ptr<BreakpointInfo>> breakpointList;
+        for (int32_t i = 0; i < length; i++) {
+            std::unique_ptr<BreakpointInfo> info = BreakpointInfo::Create(*breakpoints->Get(i));
+            if (info == nullptr) {
+                error += "'breakpoints' items BreakpointInfo is invaild;";
+                break;
+            } else {
+                breakpointList.emplace_back(std::move(info));
+            }
+        }
+        if (!breakpointList.empty()) {
+            paramsObject->breakpointsList_ = std::move(breakpointList);
+        }
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Unknown 'breakpoints';";
+    }
+
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointParams::Create " << error;
+        return nullptr;
+    }
+
+    return paramsObject;
+}
+
 std::unique_ptr<SetPauseOnExceptionsParams> SetPauseOnExceptionsParams::Create(const PtJson &params)
 {
     auto paramsObject = std::make_unique<SetPauseOnExceptionsParams>();

@@ -309,6 +309,32 @@ private:
     std::optional<std::string> condition_ {};
 };
 
+class GetPossibleAndSetBreakpointParams : public PtBaseParams {
+public:
+    GetPossibleAndSetBreakpointParams() = default;
+    ~GetPossibleAndSetBreakpointParams() = default;
+    static std::unique_ptr<GetPossibleAndSetBreakpointParams> Create(const PtJson &params);
+
+    const std::vector<std::unique_ptr<BreakpointInfo>> *GetBreakpointsList() const
+    {
+        if (!breakpointsList_) {
+            return nullptr;
+        }
+        return &(breakpointsList_.value());
+    }
+
+    bool HasBreakpointsList() const
+    {
+        return breakpointsList_.has_value();
+    }
+
+private:
+    NO_COPY_SEMANTIC(GetPossibleAndSetBreakpointParams);
+    NO_MOVE_SEMANTIC(GetPossibleAndSetBreakpointParams);
+
+    std::optional<std::vector<std::unique_ptr<BreakpointInfo>>> breakpointsList_ {};
+};
+
 enum class PauseOnExceptionsState : uint8_t { NONE, UNCAUGHT, ALL };
 
 class SetPauseOnExceptionsParams : public PtBaseParams {

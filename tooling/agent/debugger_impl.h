@@ -59,6 +59,8 @@ public:
     DispatchResponse SetAsyncCallStackDepth();
     DispatchResponse SetBreakpointByUrl(const SetBreakpointByUrlParams &params, std::string *outId,
                                         std::vector<std::unique_ptr<Location>> *outLocations);
+    DispatchResponse GetPossibleAndSetBreakpointByUrl(const GetPossibleAndSetBreakpointParams &params,
+                                        std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
     DispatchResponse SetPauseOnExceptions(const SetPauseOnExceptionsParams &params);
     DispatchResponse StepInto(const StepIntoParams &params);
     DispatchResponse StepOut();
@@ -127,6 +129,7 @@ public:
         void SetMixedDebugEnabled(const DispatchRequest &request);
         void SetBlackboxPatterns(const DispatchRequest &request);
         void ReplyNativeCalling(const DispatchRequest &request);
+        void GetPossibleAndSetBreakpointByUrl(const DispatchRequest &request);
         void DropFrame(const DispatchRequest &request);
 
     private:
@@ -164,6 +167,8 @@ private:
     bool IsSkipLine(const JSPtLocation &location);
     bool CheckPauseOnException();
     bool IsWithinVariableScope(const LocalVariableInfo &localVariableInfo, uint32_t bcOffset);
+    bool ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
+        std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
 
     const std::string &GetRecordName(const std::string &url)
     {
