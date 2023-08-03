@@ -155,6 +155,8 @@ private:
         std::unique_ptr<RemoteObject> *thisObj);
     std::unique_ptr<Scope> GetModuleScopeChain();
     std::unique_ptr<Scope> GetGlobalScopeChain();
+    std::vector<std::unique_ptr<Scope>> GetClosureScopeChains(const FrameHandler *frameHandler,
+                                            std::unique_ptr<RemoteObject> *thisObj);
     void GetLocalVariables(const FrameHandler *frameHandler, panda_file::File::EntityId methodId,
         const JSPandaFile *jsPandaFile, Local<JSValueRef> &thisVal, Local<ObjectRef> &localObj);
     void GetClosureVariables(const FrameHandler *frameHandler, Local<JSValueRef> &thisVal,

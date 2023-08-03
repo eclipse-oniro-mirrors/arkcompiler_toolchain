@@ -1137,6 +1137,12 @@ bool DebuggerImpl::GenerateCallFrame(CallFrame *callFrame,
     JSThread *thread = vm_->GetJSThread();
     std::vector<std::unique_ptr<Scope>> scopeChain;
     scopeChain.emplace_back(GetLocalScopeChain(frameHandler, &thisObj));
+    
+    // generate closure scopes
+    auto closureScopeChains = GetClosureScopeChains(frameHandler, &thisObj);
+    for (auto &scope : closureScopeChains) {
+        scopeChain.emplace_back(std::move(scope));
+    }
     if (jsPandaFile != nullptr && !jsPandaFile->IsBundlePack() && jsPandaFile->IsNewVersion()) {
         JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm_));
         if (currentModule->IsSourceTextModule()) { // CJS module is string
@@ -1182,7 +1188,6 @@ std::unique_ptr<Scope> DebuggerImpl::GetLocalScopeChain(const FrameHandler *fram
     Local<JSValueRef> thisVal = JSNApiHelper::ToLocal<JSValueRef>(
         JSHandle<JSTaggedValue>(vm_->GetJSThread(), JSTaggedValue::Hole()));
     GetLocalVariables(frameHandler, methodId, jsPandaFile, thisVal, localObj);
-    GetClosureVariables(frameHandler, thisVal, localObj);
     *thisObj = RemoteObject::FromTagged(vm_, thisVal);
     runtime_->CacheObjectIfNeeded(thisVal, (*thisObj).get());
 
@@ -1206,6 +1211,82 @@ std::unique_ptr<Scope> DebuggerImpl::GetLocalScopeChain(const FrameHandler *fram
     }
 
     return localScope;
+}
+
+std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const FrameHandler *frameHandler,
+    std::unique_ptr<RemoteObject> *thisObj)
+{
+    std::vector<std::unique_ptr<Scope>> closureScopes = std::vector<std::unique_ptr<Scope>>();
+
+    Method *method = DebuggerApi::GetMethod(frameHandler);
+    EntityId methodId = method->GetMethodId();
+    const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
+    DebugInfoExtractor *extractor = GetExtractor(jsPandaFile);
+
+    if (extractor == nullptr) {
+        LOG_DEBUGGER(ERROR) << "GetClosureScopeChains: extractor is null";
+        return closureScopes;
+    }
+
+    JSTaggedValue currentEnv = DebuggerApi::GetEnv(frameHandler);
+    if (!currentEnv.IsTaggedArray()) {
+        LOG_DEBUGGER(ERROR) << "GetClosureScopeChains: currentEnv is invalid";
+        return closureScopes;
+    }
+    // check if GetLocalScopeChain has already found and set 'this' value
+    bool thisFound = (*thisObj)->HasValue();
+    // currentEnv = currentEnv->parent until currentEnv becomes undefined
+    for (; currentEnv.IsTaggedArray(); currentEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject())->GetParentEnv()) {
+        LexicalEnv *LexicalEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject());
+        if (LexicalEnv->GetScopeInfo().IsHole()) {
+            continue;
+        }
+        auto closureScope = std::make_unique<Scope>();
+        auto result = JSNativePointer::Cast(LexicalEnv->GetScopeInfo().GetTaggedObject())->GetExternalPointer();
+        ScopeDebugInfo *scopeDebugInfo = reinterpret_cast<ScopeDebugInfo *>(result);
+        JSThread *thread = vm_->GetJSThread();
+
+        std::unique_ptr<RemoteObject> closure = std::make_unique<RemoteObject>();
+        Local<ObjectRef> closureScopeObj = ObjectRef::New(vm_);
+
+        for (const auto &[name, slot] : scopeDebugInfo->scopeInfo) {
+            if (name == "4newTarget") {
+                continue;
+            }
+
+            Local<JSValueRef> value = JSNApiHelper::ToLocal<JSValueRef>(
+                JSHandle<JSTaggedValue>(thread, LexicalEnv->GetProperties(slot)));
+            Local<JSValueRef> varName = StringRef::NewFromUtf8(vm_, name.c_str());
+            // found 'this' and 'this' is not set in GetLocalScopechain
+            if (!thisFound && name == "this") {
+                *thisObj = RemoteObject::FromTagged(vm_, value);
+                // cache 'this' object
+                runtime_->CacheObjectIfNeeded(value, (*thisObj).get());
+                thisFound = true;
+                continue;
+            }
+            // found closure variable in current lexenv
+            PropertyAttribute descriptor(value, true, true, true);
+            closureScopeObj->DefineProperty(vm_, varName, descriptor);
+        }
+        // at least one closure variable has been found
+        if (closureScopeObj->GetOwnPropertyNames(vm_)->Length(vm_) > 0) { 
+            closure->SetType(ObjectType::Object)
+                .SetObjectId(runtime_->curObjectId_)
+                .SetClassName(ObjectClassName::Object)
+                .SetDescription(RemoteObject::ObjectDescription);
+
+            auto scriptFunc = []([[maybe_unused]] PtScript *script) -> bool {
+                return true;
+            };
+            if (MatchScripts(scriptFunc, extractor->GetSourceFile(methodId), ScriptMatchType::URL)) {
+                closureScope->SetType(Scope::Type::Closure()).SetObject(std::move(closure));
+            }
+            runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, closureScopeObj);
+            closureScopes.emplace_back(std::move(closureScope));
+        }
+    }
+    return closureScopes;
 }
 
 std::unique_ptr<Scope> DebuggerImpl::GetModuleScopeChain()
