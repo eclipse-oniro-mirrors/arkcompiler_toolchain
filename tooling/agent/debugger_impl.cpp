@@ -1217,7 +1217,6 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
     std::unique_ptr<RemoteObject> *thisObj)
 {
     std::vector<std::unique_ptr<Scope>> closureScopes = std::vector<std::unique_ptr<Scope>>();
-
     Method *method = DebuggerApi::GetMethod(frameHandler);
     EntityId methodId = method->GetMethodId();
     const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
@@ -1235,6 +1234,7 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
     }
     // check if GetLocalScopeChain has already found and set 'this' value
     bool thisFound = (*thisObj)->HasValue();
+    JSThread *thread = vm_->GetJSThread();
     // currentEnv = currentEnv->parent until currentEnv becomes undefined
     for (; currentEnv.IsTaggedArray(); currentEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject())->GetParentEnv()) {
         LexicalEnv *LexicalEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject());
@@ -1244,8 +1244,6 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
         auto closureScope = std::make_unique<Scope>();
         auto result = JSNativePointer::Cast(LexicalEnv->GetScopeInfo().GetTaggedObject())->GetExternalPointer();
         ScopeDebugInfo *scopeDebugInfo = reinterpret_cast<ScopeDebugInfo *>(result);
-        JSThread *thread = vm_->GetJSThread();
-
         std::unique_ptr<RemoteObject> closure = std::make_unique<RemoteObject>();
         Local<ObjectRef> closureScopeObj = ObjectRef::New(vm_);
 
@@ -1270,11 +1268,9 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
             closureScopeObj->DefineProperty(vm_, varName, descriptor);
         }
         // at least one closure variable has been found
-        if (closureScopeObj->GetOwnPropertyNames(vm_)->Length(vm_) > 0) { 
-            closure->SetType(ObjectType::Object)
-                .SetObjectId(runtime_->curObjectId_)
-                .SetClassName(ObjectClassName::Object)
-                .SetDescription(RemoteObject::ObjectDescription);
+        if (closureScopeObj->GetOwnPropertyNames(vm_)->Length(vm_) > 0) {
+            closure->SetType(ObjectType::Object).SetObjectId(runtime_->curObjectId_)
+                .SetClassName(ObjectClassName::Object).SetDescription(RemoteObject::ObjectDescription);
 
             auto scriptFunc = []([[maybe_unused]] PtScript *script) -> bool {
                 return true;

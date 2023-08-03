@@ -16,8 +16,8 @@
 #ifndef ECMASCRIPT_TOOLING_TEST_UTILS_TESTCASES_JS_CLOSURE_SCOPE_SECOND_TEST_H
 #define ECMASCRIPT_TOOLING_TEST_UTILS_TESTCASES_JS_CLOSURE_SCOPE_SECOND_TEST_H
 
-#include "test/utils/test_util.h"
 #include <map>
+#include "test/utils/test_util.h"
 
 namespace panda::ecmascript::tooling::test {
 class JsClosureScopeSecondTest : public TestEvents {
@@ -38,8 +38,9 @@ public:
             std::string sourceFile = DEBUGGER_JS_DIR "closure_scope_second.js";
             static_cast<JsClosureScopeSecondTestChannel *>(channel_)->Initial(vm_, runtime_);
             runtime_->Enable();
-            // 29: breakpointer line
-            location_ = TestUtil::GetLocation(sourceFile.c_str(), 28, 0, pandaFile.c_str());
+            // 28: breakpointer line
+            const int32_t line = 28;
+            location_ = TestUtil::GetLocation(sourceFile.c_str(), line, 0, pandaFile.c_str());
             ASSERT_TRUE(location_.GetMethodId().IsValid());
             TestUtil::SuspendUntilContinue(DebugEvent::LOAD_MODULE);
             ASSERT_EQ(moduleName, pandaFile);
@@ -124,7 +125,7 @@ private:
                         std::vector<std::unique_ptr<PropertyDescriptor>> outPropertyDesc;
                         runtime_->GetProperties(params, &outPropertyDesc, {}, {}, {});
                         std::map<std::string, std::string> variables;
-                        auto truthGroundScope_= truthGroundMap_.at(ScopeIndex);
+                        auto truthGroundScope_ = truthGroundMap_.at(ScopeIndex);
                         
                         for (const auto &property : outPropertyDesc) {
                             auto value = property->GetValue();
@@ -132,7 +133,7 @@ private:
                             std::cout << "name: " << name << std::endl;
                             ASSERT_TRUE(truthGroundScope_.find(name) != truthGroundScope_.end());
                             extractVariable(name, value, variables);
-                            ASSERT_EQ(variables[name], truthGroundScope_.at(name)); 
+                            ASSERT_EQ(variables[name], truthGroundScope_.at(name));
                         }
                         ASSERT_EQ(variables.size(), truthGroundScope_.size());
                         ScopeIndex++;
@@ -160,8 +161,8 @@ private:
         }
 
         const std::map<int, std::map<std::string, std::string>> truthGroundMap_ = {
-                {0, {{"i", "5"}}},
-                {1, {{"a", "10"}}}
+            {0, {{"i", "5"}}},
+            {1, {{"a", "10"}}}
         };
 
         int32_t index_ {0};
