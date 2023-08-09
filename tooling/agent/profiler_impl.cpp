@@ -164,6 +164,7 @@ DispatchResponse ProfilerImpl::Enable()
 
 DispatchResponse ProfilerImpl::Start()
 {
+    panda::JSNApi::SetProfilerState(vm_, true);
     panda::DFXJSNApi::StartCpuProfilerForInfo(vm_);
     return DispatchResponse::Ok();
 }
@@ -176,6 +177,7 @@ DispatchResponse ProfilerImpl::Stop(std::unique_ptr<Profile> *profile)
         return DispatchResponse::Fail("Stop is failure");
     }
     *profile = Profile::FromProfileInfo(*profileInfo);
+    panda::JSNApi::SetProfilerState(vm_, false);
     return DispatchResponse::Ok();
 }
 
