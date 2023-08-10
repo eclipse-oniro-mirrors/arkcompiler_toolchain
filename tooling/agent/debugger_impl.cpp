@@ -1236,7 +1236,6 @@ void DebuggerImpl::GenerateClosureChain(const FrameHandler *frameHandler, std::u
 {
     JSThread *thread = vm_->GetJSThread();
     JSTaggedValue currentEnv = DebuggerApi::GetEnv(frameHandler);
-    
     if (!currentEnv.IsTaggedArray()) {
         LOG_DEBUGGER(ERROR) << "DebuggerImpl::GenerateClosureChain: currentEnv is invalid";
         return;
@@ -1252,8 +1251,8 @@ void DebuggerImpl::GenerateClosureChain(const FrameHandler *frameHandler, std::u
         currentEnvHandle = JSHandle<JSTaggedValue>(thread, currentEnv);
         std::unique_ptr<RemoteObject> closureObj = std::make_unique<RemoteObject>();
         auto closureScope = std::make_unique<Scope>();
-        auto scopeDebugInfoPtr = JSNativePointer::Cast(lexicalEnv->GetScopeInfo().GetTaggedObject())->GetExternalPointer();
-        ScopeDebugInfo *scopeDebugInfo = reinterpret_cast<ScopeDebugInfo *>(scopeDebugInfoPtr);
+        auto scopeInfoPtr = JSNativePointer::Cast(lexicalEnv->GetScopeInfo().GetTaggedObject())->GetExternalPointer();
+        ScopeDebugInfo *scopeDebugInfo = reinterpret_cast<ScopeDebugInfo *>(scopeInfoPtr);
         Local<ObjectRef> closureScopeObj = ObjectRef::New(vm_);
 
         for (const auto &[name, slot] : scopeDebugInfo->scopeInfo) {

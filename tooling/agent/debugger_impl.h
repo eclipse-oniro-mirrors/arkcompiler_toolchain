@@ -159,7 +159,7 @@ private:
                                             std::unique_ptr<RemoteObject> *thisObj);
     void GenerateClosureChain(const FrameHandler *frameHandler, std::unique_ptr<RemoteObject> *thisObj,
                                             std::vector<std::unique_ptr<Scope>> &closureScopes,
-                                            const Method *method, 
+                                            const Method *method,
                                             DebugInfoExtractor *extractor);
     void GetLocalVariables(const FrameHandler *frameHandler, panda_file::File::EntityId methodId,
         const JSPandaFile *jsPandaFile, Local<JSValueRef> &thisVal, Local<ObjectRef> &localObj);
