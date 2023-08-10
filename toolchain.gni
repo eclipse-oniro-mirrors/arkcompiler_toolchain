@@ -13,4 +13,4 @@
 
 import("../ets_runtime/js_runtime_config.gni")
 
-toolchain_root = "//arkcompiler//toolchain"
+toolchain_root = "//arkcompiler/toolchain"

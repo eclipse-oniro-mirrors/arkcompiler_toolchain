@@ -26,6 +26,21 @@ template("ark_clang_toolchain") {
     libs_section_prefix += " ${ohos_libc_dir}/crti.o"
     libs_section_postfix = "${ohos_libc_dir}/crtn.o"
 
+    if (invoker.target_name == "ark_clang_arm") {
+      abi_target = "arm-linux-ohos"
+    } else if (invoker.target_name == "ark_clang_arm64") {
+      abi_target = "aarch64-linux-ohos"
+    } else if (invoker.target_name == "ark_clang_x86_64") {
+      abi_target = "x86_64-linux-ohos"
+    }
+
+    clang_rt_dir =
+        rebase_path("${clang_lib_base_path}/${abi_target}", root_build_dir)
+    solink_libs_section_prefix = "${ohos_libc_dir}/crti.o"
+    solink_libs_section_prefix += " ${clang_rt_dir}/clang_rt.crtbegin.o"
+    solink_libs_section_postfix = "${ohos_libc_dir}/crtn.o"
+    solink_libs_section_postfix += " ${clang_rt_dir}/clang_rt.crtend.o"
+
     prefix = rebase_path("${clang_base_path}/bin", root_build_dir)
     cc = "${prefix}/clang"
     cxx = "${prefix}/clang++"
