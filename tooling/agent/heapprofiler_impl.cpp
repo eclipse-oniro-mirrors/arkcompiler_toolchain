@@ -269,6 +269,7 @@ DispatchResponse HeapProfilerImpl::Enable()
 
 DispatchResponse HeapProfilerImpl::Disable()
 {
+    panda::DFXJSNApi::DestroyHeapProfiler(vm_);
     return DispatchResponse::Ok();
 }
 
