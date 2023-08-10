@@ -1235,7 +1235,8 @@ void DebuggerImpl::GenerateClosureChain(const FrameHandler *frameHandler, std::u
     std::vector<std::unique_ptr<Scope>> &closureScopes, const Method *method, DebugInfoExtractor *extractor)
 {
     JSThread *thread = vm_->GetJSThread();
-    JSTaggedValue currentEnv = DebuggerApi::GetEnv(frameHandler);
+    JSHandle<JSTaggedValue> currentEnvHandle = JSHandle<JSTaggedValue>(thread, DebuggerApi::GetEnv(frameHandler));
+    JSTaggedValue currentEnv = currentEnvHandle.GetTaggedValue();
     if (!currentEnv.IsTaggedArray()) {
         LOG_DEBUGGER(ERROR) << "DebuggerImpl::GenerateClosureChain: currentEnv is invalid";
         return;
