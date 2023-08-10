@@ -1241,7 +1241,6 @@ void DebuggerImpl::GenerateClosureChain(const FrameHandler *frameHandler, std::u
         LOG_DEBUGGER(ERROR) << "DebuggerImpl::GenerateClosureChain: currentEnv is invalid";
         return;
     }
-    JSHandle<JSTaggedValue> currentEnvHandle;
     bool thisFound = (*thisObj)->HasValue();
 
     for (; currentEnv.IsTaggedArray(); currentEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject())->GetParentEnv()) {
