@@ -1224,8 +1224,6 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
         LOG_DEBUGGER(ERROR) << "DebuggerImpl::GetClosureScopeChains: DebugInfoExtractor is null";
         return closureScopes;
     }
-
-    [[maybe_unused]] LocalScope localScope(vm_);
     GenerateClosureChain(frameHandler, thisObj, closureScopes, method, extractor);
 
     return closureScopes;
@@ -1245,14 +1243,14 @@ void DebuggerImpl::GenerateClosureChain(const FrameHandler *frameHandler, std::u
 
     for (; currentEnv.IsTaggedArray(); currentEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject())->GetParentEnv()) {
         LexicalEnv *lexicalEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject());
+        currentEnvHandle = JSHandle<JSTaggedValue>(thread, currentEnv);
         if (lexicalEnv->GetScopeInfo().IsHole()) {
             continue;
         }
-        currentEnvHandle = JSHandle<JSTaggedValue>(thread, currentEnv);
-        std::unique_ptr<RemoteObject> closureObj = std::make_unique<RemoteObject>();
         auto closureScope = std::make_unique<Scope>();
         auto scopeInfoPtr = JSNativePointer::Cast(lexicalEnv->GetScopeInfo().GetTaggedObject())->GetExternalPointer();
         ScopeDebugInfo *scopeDebugInfo = reinterpret_cast<ScopeDebugInfo *>(scopeInfoPtr);
+        std::unique_ptr<RemoteObject> closureObj = std::make_unique<RemoteObject>();
         Local<ObjectRef> closureScopeObj = ObjectRef::New(vm_);
 
         for (const auto &[name, slot] : scopeDebugInfo->scopeInfo) {
