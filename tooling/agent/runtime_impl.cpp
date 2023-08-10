@@ -208,6 +208,9 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
     } else if (value->IsSharedArrayBuffer()) {
         Local<ArrayBufferRef> arrayBufferRef(value);
         AddSharedArrayBufferRefs(arrayBufferRef, outPropertyDesc);
+    } else if (value->IsProxy()) {
+        GetProxyValue(value, outPropertyDesc);
+        return DispatchResponse::Ok();
     } else if (value->IsMapIterator()) {
         GetMapIteratorValue(value, outPropertyDesc);
     } else if (value->IsSetIterator()) {
@@ -304,7 +307,7 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
         }
         if (debuggerProperty->HasValue()) {
             Local<JSValueRef> vValue = jsProperty.GetValue(vm_);
-            if (vValue->IsObject() && !vValue->IsProxy()) {
+            if (vValue->IsObject()) {
                 debuggerProperty->GetValue()->SetObjectId(curObjectId_);
                 properties_[curObjectId_++] = Global<JSValueRef>(vm_, vValue);
             }
@@ -396,7 +399,7 @@ void RuntimeImpl::AddTypedArrayRef(Local<ArrayBufferRef> arrayBufferRef, int32_t
 
 void RuntimeImpl::CacheObjectIfNeeded(Local<JSValueRef> valRef, RemoteObject *remoteObj)
 {
-    if (valRef->IsObject() && !valRef->IsProxy()) {
+    if (valRef->IsObject()) {
         remoteObj->SetObjectId(curObjectId_);
         properties_[curObjectId_++] = Global<JSValueRef>(vm_, valRef);
     }
@@ -405,7 +408,7 @@ void RuntimeImpl::CacheObjectIfNeeded(Local<JSValueRef> valRef, RemoteObject *re
 void RuntimeImpl::GetProtoOrProtoType(Local<JSValueRef> value, bool isOwn, bool isAccessorOnly,
     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
-    if (!isAccessorOnly && isOwn && !value->IsProxy()) {
+    if (!isAccessorOnly && isOwn) {
         return;
     }
     // Get Function ProtoOrHClass
@@ -862,5 +865,20 @@ void RuntimeImpl::GetVectorValue(Local<JSValueRef> value,
     Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
     SetKeyValue(size, outPropertyDesc, "size");
     SetKeyValue(jsValueRef, outPropertyDesc, "[[Vector]]");
+}
+
+void RuntimeImpl::GetProxyValue(Local<JSValueRef> value,
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+{
+    Local<ProxyRef> proxyRef = value->ToObject(vm_);
+    if (proxyRef.IsEmpty()) {
+        return;
+    }
+    Local<JSValueRef> target = proxyRef->GetTarget(vm_);
+    SetKeyValue(target, outPropertyDesc, "[[Target]]");
+    Local<JSValueRef> handler = proxyRef->GetHandler(vm_);
+    SetKeyValue(handler, outPropertyDesc, "[[Handler]]");
+    Local<JSValueRef> isRevoked = BooleanRef::New(vm_, proxyRef->IsRevoked());
+    SetKeyValue(isRevoked, outPropertyDesc, "[[IsRevoked]]");
 }
 }  // namespace panda::ecmascript::tooling

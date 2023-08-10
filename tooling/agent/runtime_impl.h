@@ -146,6 +146,8 @@ private:
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
     void GetVectorValue(Local<JSValueRef> value,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+    void GetProxyValue(Local<JSValueRef> value,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
 
     class Frontend {
     public:

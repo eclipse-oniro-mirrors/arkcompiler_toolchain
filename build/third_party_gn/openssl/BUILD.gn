@@ -104,6 +104,7 @@ libcrypto_build_all_generated_darwin64_x86_64_cc_sources = [
   "${openssl_selected_platform_full_path}/crypto/sha/sha512-x86_64.s",
   "${openssl_selected_platform_full_path}/crypto/whrlpool/wp-x86_64.s",
   "${openssl_selected_platform_full_path}/crypto/x86_64cpuid.s",
+  "${openssl_selected_platform_full_path}/engines/e_padlock-x86_64.s",
 ]
 libcrypto_build_all_generated_darwin64_arm64_cc_sources = [
   "${openssl_selected_platform_full_path}/crypto/aes/aesv8-armx.S",
@@ -152,6 +153,7 @@ libcrypto_build_all_generated_linux_x86_64_sources = [
   "${openssl_selected_platform_full_path}/crypto/sha/sha512-x86_64.s",
   "${openssl_selected_platform_full_path}/crypto/whrlpool/wp-x86_64.s",
   "${openssl_selected_platform_full_path}/crypto/x86_64cpuid.s",
+  "${openssl_selected_platform_full_path}/engines/e_padlock-x86_64.s",
 ]
 libcrypto_build_all_generated_linux_x86_sources = []
 libcrypto_build_all_generated_mingw64_sources = [
@@ -186,6 +188,7 @@ libcrypto_build_all_generated_mingw64_sources = [
   "${openssl_selected_platform_full_path}/crypto/sha/sha512-x86_64.s",
   "${openssl_selected_platform_full_path}/crypto/whrlpool/wp-x86_64.s",
   "${openssl_selected_platform_full_path}/crypto/x86_64cpuid.s",
+  "${openssl_selected_platform_full_path}/engines/e_padlock-x86_64.s",
 ]
 
 libcrypto_build_all_generated_selected_platform_sources = []
@@ -285,6 +288,10 @@ action("openssl_build_all_generated") {
   outputs += libcommon_build_all_generated_selected_platform_sources
   outputs += libdefault_build_all_generated_selected_platform_sources
   outputs += libcrypto_build_all_generated_selected_platform_sources
+  outputs += [ "${openssl_selected_platform_full_path}/apps/progs.c" ]
+  if (openssl_selected_platform == "mingw64") {
+    outputs += [ "${openssl_selected_platform_full_path}/apps/openssl.rc" ]
+  }
 }
 
 openssl_internal_cflags = [
@@ -347,6 +354,13 @@ crypto_config_common_public_include_dirs = [
   "${openssl_selected_platform_full_path}/include",
 ]
 
+# located at /system/etc/
+ohos_prebuilt_etc("openssl.cnf") {
+  source = "//third_party/openssl/open_harmony_openssl_config/openssl.cnf"
+  subsystem_name = "thirdparty"
+  part_name = "openssl"
+}
+
 crypto_config_common_cflags = [
   "-Wa,--noexecstack",
   "-DNDEBUG",
@@ -355,7 +369,11 @@ crypto_config_common_cflags = [
   "-DOPENSSL_PIC",
   "-DENGINESDIR=\"\"",
   "-DMODULESDIR=\"\"",
-  "-DOPENSSLDIR=\"\"",
+
+  # to locate openssl.cnf
+  "-DOPENSSLDIR=\"/system/etc\"",
+
+  "-DSTATIC_LEGACY",
 ]
 
 crypto_config_linux_armv4_cflags = [
@@ -407,6 +425,7 @@ crypto_config_darwin64_x86_64_cc_cflags = [
   "-DOPENSSL_BN_ASM_GF2m",
   "-DOPENSSL_BN_ASM_MONT",
   "-DOPENSSL_BN_ASM_MONT5",
+  "-DPADLOCK_ASM",
   "-DPOLY1305_ASM",
   "-DSHA1_ASM",
   "-DSHA256_ASM",
@@ -449,6 +468,7 @@ crypto_config_linux_x86_64_cflags = [
   "-DOPENSSL_BN_ASM_GF2m",
   "-DOPENSSL_BN_ASM_MONT",
   "-DOPENSSL_BN_ASM_MONT5",
+  "-DPADLOCK_ASM",
   "-DPOLY1305_ASM",
   "-DSHA1_ASM",
   "-DSHA256_ASM",
@@ -479,6 +499,7 @@ crypto_config_mingw64_cflags = [
   "-DOPENSSL_BN_ASM_GF2m",
   "-DOPENSSL_BN_ASM_MONT",
   "-DOPENSSL_BN_ASM_MONT5",
+  "-DPADLOCK_ASM",
   "-DPOLY1305_ASM",
   "-DSHA1_ASM",
   "-DSHA256_ASM",
@@ -507,14 +528,27 @@ if (openssl_selected_platform == "linux-armv4") {
   crypto_config_current_platform_cflags += crypto_config_mingw64_cflags
 }
 
+mingw32_libs_path = []
+mingw32_libs = []
+if (is_mingw || is_win) {
+  mingw32_libs_path += [ "//prebuilts/mingw-w64/ohos/linux-x86_64/clang-mingw/x86_64-w64-mingw32/lib" ]
+  mingw32_libs += [
+    "ws2_32",
+    "crypt32",
+  ]
+}
+
 config("crypto_config_private") {
   include_dirs = crypto_config_common_private_include_dirs
   cflags = crypto_config_common_cflags + crypto_config_current_platform_cflags +
            openssl_internal_cflags
+  lib_dirs = mingw32_libs_path
+  libs = mingw32_libs
 }
 
 config("crypto_config_public") {
   include_dirs = crypto_config_common_public_include_dirs
+  libs = mingw32_libs
 }
 
 libcommon_common_sources = [
@@ -662,6 +696,30 @@ libdefault_common_sources = [
   "//third_party/openssl/providers/implementations/storemgmt/file_store.c",
   "//third_party/openssl/providers/implementations/storemgmt/file_store_any2obj.c",
   "//third_party/openssl/ssl/s3_cbc.c",
+]
+liblegacy_sources = [
+  "//third_party/openssl/providers/implementations/ciphers/cipher_blowfish.c",
+  "//third_party/openssl/providers/implementations/ciphers/cipher_blowfish_hw.c",
+  "//third_party/openssl/providers/implementations/ciphers/cipher_cast5.c",
+  "//third_party/openssl/providers/implementations/ciphers/cipher_cast5_hw.c",
+  "//third_party/openssl/providers/implementations/ciphers/cipher_des.c",
+  "//third_party/openssl/providers/implementations/ciphers/cipher_des_hw.c",
+  "//third_party/openssl/providers/implementations/ciphers/cipher_desx.c",
+  "//third_party/openssl/providers/implementations/ciphers/cipher_desx_hw.c",
+  "//third_party/openssl/providers/implementations/ciphers/cipher_idea.c",
+  "//third_party/openssl/providers/implementations/ciphers/cipher_idea_hw.c",
+  "//third_party/openssl/providers/implementations/ciphers/cipher_rc2.c",
+  "//third_party/openssl/providers/implementations/ciphers/cipher_rc2_hw.c",
+  "//third_party/openssl/providers/implementations/ciphers/cipher_rc4.c",
+  "//third_party/openssl/providers/implementations/ciphers/cipher_rc4_hmac_md5.c",
+  "//third_party/openssl/providers/implementations/ciphers/cipher_rc4_hmac_md5_hw.c",
+  "//third_party/openssl/providers/implementations/ciphers/cipher_rc4_hw.c",
+  "//third_party/openssl/providers/implementations/ciphers/cipher_seed.c",
+  "//third_party/openssl/providers/implementations/ciphers/cipher_seed_hw.c",
+  "//third_party/openssl/providers/implementations/digests/md4_prov.c",
+  "//third_party/openssl/providers/implementations/digests/mdc2_prov.c",
+  "//third_party/openssl/providers/implementations/digests/wp_prov.c",
+  "//third_party/openssl/providers/implementations/kdfs/pbkdf1.c",
 ]
 
 ohos_source_set("crypto_source") {
@@ -1390,16 +1448,21 @@ ohos_source_set("crypto_source") {
     "//third_party/openssl/crypto/x509/x_req.c",
     "//third_party/openssl/crypto/x509/x_x509.c",
     "//third_party/openssl/crypto/x509/x_x509a.c",
+    "//third_party/openssl/engines/e_capi.c",
+    "//third_party/openssl/engines/e_padlock.c",
     "//third_party/openssl/providers/baseprov.c",
     "//third_party/openssl/providers/defltprov.c",
+    "//third_party/openssl/providers/legacyprov.c",
     "//third_party/openssl/providers/nullprov.c",
     "//third_party/openssl/providers/prov_running.c",
   ]
+
   sources += libcommon_common_sources
   sources += libcommon_build_all_generated_selected_platform_sources
   sources += libdefault_common_sources
   sources += libdefault_build_all_generated_selected_platform_sources
   sources += libcrypto_build_all_generated_selected_platform_sources
+  sources += liblegacy_sources
 
   if (openssl_selected_platform == "linux-armv4") {
     sources += [
@@ -1411,6 +1474,7 @@ ohos_source_set("crypto_source") {
       "//third_party/openssl/crypto/rc4/rc4_enc.c",
       "//third_party/openssl/crypto/rc4/rc4_skey.c",
       "//third_party/openssl/crypto/whrlpool/wp_block.c",
+      "//third_party/openssl/engines/e_afalg.c",
     ]
   } else if (openssl_selected_platform == "linux-aarch64") {
     sources += [
@@ -1423,6 +1487,7 @@ ohos_source_set("crypto_source") {
       "//third_party/openssl/crypto/rc4/rc4_enc.c",
       "//third_party/openssl/crypto/rc4/rc4_skey.c",
       "//third_party/openssl/crypto/whrlpool/wp_block.c",
+      "//third_party/openssl/engines/e_afalg.c",
     ]
   } else if (openssl_selected_platform == "darwin64-x86_64-cc") {
     sources += [
@@ -1447,6 +1512,7 @@ ohos_source_set("crypto_source") {
       "//third_party/openssl/crypto/bn/asm/x86_64-gcc.c",
       "//third_party/openssl/crypto/bn/rsaz_exp.c",
       "//third_party/openssl/crypto/bn/rsaz_exp_x2.c",
+      "//third_party/openssl/engines/e_afalg.c",
     ]
   } else if (openssl_selected_platform == "linux-x86") {
     sources += []
@@ -1498,7 +1564,10 @@ ohos_shared_library("libcrypto_shared") {
     lib_dirs = [ "//prebuilts/mingw-w64/ohos/linux-x86_64/clang-mingw/x86_64-w64-mingw32/lib" ]
     libs = [ "ws2_32" ]
   }
-  deps = [ ":crypto_source" ]
+  deps = [
+    ":crypto_source",
+    ":openssl.cnf",
+  ]
   output_name = "libcrypto_openssl"
   subsystem_name = "thirdparty"
   part_name = "openssl"
@@ -1612,6 +1681,7 @@ ohos_static_library("libssl_static") {
 ohos_shared_library("libssl_shared") {
   deps = [
     ":libcrypto_shared",
+    ":openssl.cnf",
     ":ssl_source",
   ]
 
@@ -1624,6 +1694,7 @@ ohos_shared_library("libssl_shared") {
   subsystem_name = "thirdparty"
   part_name = "openssl"
 
+  innerapi_tags = [ "platformsdk" ]
   public_configs = [
     ":crypto_config_public",
     ":ssl_config_public",
@@ -1635,4 +1706,105 @@ ohos_shared_library("libssl_shared") {
     # compile libssl_openssl.z.so to the updater image for wpa to use
     "updater",
   ]
+}
+
+ohos_static_library("libapps") {
+  sources = [
+    "//third_party/openssl/apps/lib/app_libctx.c",
+    "//third_party/openssl/apps/lib/app_params.c",
+    "//third_party/openssl/apps/lib/app_provider.c",
+    "//third_party/openssl/apps/lib/app_rand.c",
+    "//third_party/openssl/apps/lib/app_x509.c",
+    "//third_party/openssl/apps/lib/apps.c",
+    "//third_party/openssl/apps/lib/apps_ui.c",
+    "//third_party/openssl/apps/lib/columns.c",
+    "//third_party/openssl/apps/lib/engine.c",
+    "//third_party/openssl/apps/lib/engine_loader.c",
+    "//third_party/openssl/apps/lib/fmt.c",
+    "//third_party/openssl/apps/lib/http_server.c",
+    "//third_party/openssl/apps/lib/names.c",
+    "//third_party/openssl/apps/lib/opt.c",
+    "//third_party/openssl/apps/lib/s_cb.c",
+    "//third_party/openssl/apps/lib/s_socket.c",
+    "//third_party/openssl/apps/lib/tlssrp_depr.c",
+  ]
+  if (openssl_selected_platform == "mingw64") {
+    sources += [ "//third_party/openssl/apps/lib/win32_init.c" ]
+  }
+  subsystem_name = "thirdparty"
+  part_name = "openssl"
+  configs = [ ":crypto_config_private" ]
+}
+
+ohos_executable("openssl") {
+  sources = [
+    "${openssl_selected_platform_full_path}/apps/progs.c",
+    "//third_party/openssl/apps/asn1parse.c",
+    "//third_party/openssl/apps/ca.c",
+    "//third_party/openssl/apps/ciphers.c",
+    "//third_party/openssl/apps/cmp.c",
+    "//third_party/openssl/apps/cms.c",
+    "//third_party/openssl/apps/crl.c",
+    "//third_party/openssl/apps/crl2pkcs7.c",
+    "//third_party/openssl/apps/dgst.c",
+    "//third_party/openssl/apps/dhparam.c",
+    "//third_party/openssl/apps/dsa.c",
+    "//third_party/openssl/apps/dsaparam.c",
+    "//third_party/openssl/apps/ec.c",
+    "//third_party/openssl/apps/ecparam.c",
+    "//third_party/openssl/apps/enc.c",
+    "//third_party/openssl/apps/engine.c",
+    "//third_party/openssl/apps/errstr.c",
+    "//third_party/openssl/apps/fipsinstall.c",
+    "//third_party/openssl/apps/gendsa.c",
+    "//third_party/openssl/apps/genpkey.c",
+    "//third_party/openssl/apps/genrsa.c",
+    "//third_party/openssl/apps/info.c",
+    "//third_party/openssl/apps/kdf.c",
+    "//third_party/openssl/apps/lib/cmp_mock_srv.c",
+    "//third_party/openssl/apps/list.c",
+    "//third_party/openssl/apps/mac.c",
+    "//third_party/openssl/apps/nseq.c",
+    "//third_party/openssl/apps/ocsp.c",
+    "//third_party/openssl/apps/openssl.c",
+    "//third_party/openssl/apps/passwd.c",
+    "//third_party/openssl/apps/pkcs12.c",
+    "//third_party/openssl/apps/pkcs7.c",
+    "//third_party/openssl/apps/pkcs8.c",
+    "//third_party/openssl/apps/pkey.c",
+    "//third_party/openssl/apps/pkeyparam.c",
+    "//third_party/openssl/apps/pkeyutl.c",
+    "//third_party/openssl/apps/prime.c",
+    "//third_party/openssl/apps/rand.c",
+    "//third_party/openssl/apps/rehash.c",
+    "//third_party/openssl/apps/req.c",
+    "//third_party/openssl/apps/rsa.c",
+    "//third_party/openssl/apps/rsautl.c",
+    "//third_party/openssl/apps/s_client.c",
+    "//third_party/openssl/apps/s_server.c",
+    "//third_party/openssl/apps/s_time.c",
+    "//third_party/openssl/apps/sess_id.c",
+    "//third_party/openssl/apps/smime.c",
+    "//third_party/openssl/apps/speed.c",
+    "//third_party/openssl/apps/spkac.c",
+    "//third_party/openssl/apps/srp.c",
+    "//third_party/openssl/apps/storeutl.c",
+    "//third_party/openssl/apps/ts.c",
+    "//third_party/openssl/apps/verify.c",
+    "//third_party/openssl/apps/version.c",
+    "//third_party/openssl/apps/x509.c",
+  ]
+  if (openssl_selected_platform == "mingw64") {
+    sources += [ "${openssl_selected_platform_full_path}/apps/openssl.rc" ]
+  }
+  deps = [
+    ":libapps",
+    ":libcrypto_shared",
+    ":libssl_shared",
+    ":openssl.cnf",
+    ":openssl_build_all_generated",
+  ]
+  subsystem_name = "thirdparty"
+  part_name = "openssl"
+  configs = [ ":crypto_config_private" ]
 }
