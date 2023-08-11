@@ -16,12 +16,12 @@
 #ifndef ECMASCRIPT_TOOLING_TEST_UTILS_TESTCASES_JS_CLOSURE_SCOPE_TEST_H
 #define ECMASCRIPT_TOOLING_TEST_UTILS_TESTCASES_JS_CLOSURE_SCOPE_TEST_H
 
-#include "test/utils/test_util.h"
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <map>
 #include <vector>
+#include "test/utils/test_util.h"
 
 namespace panda::ecmascript::tooling::test {
 class JsClosureScopeTest : public TestEvents {
