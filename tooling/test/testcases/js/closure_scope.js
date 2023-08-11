@@ -14,17 +14,42 @@
  */
 var globalFunc = null;
 
-function func1() {
+function func() {
+    let v1 = 1;
+    function func2() {
+      var v2_1 = 2;
+      const v2_2 = 3;
+      function func3() {
+        const v3 = 4;
+        print(v1);
+        print(v2_1)
+        function func4() {
+          let v4 = 5;
+          print(v2_2);
+          function func5() {
+            print(v3);
+            print(v1);
+          }
+          return func5;
+        }
+        return func4;
+      }
+      return func3;
+    }
+    return func2;
+}
+
+function func6() {
   var a = 10;
   for (let i = 0; i < 10; i++) {
     print(a);
-    function func2() {
+    function func7() {
       let b = 3;
       print(i);
       print(i+1);
     }
     if (i == 5) {
-      globalFunc = function func3() {
+      globalFunc = function func8() {
         print(a);
         print(i);
         print(a+1);
@@ -32,5 +57,11 @@ function func1() {
     }
   }
 }
-func1();
+
+const func2 = func();
+const func3 = func2();
+const func4 = func3();
+const func5 = func4();
+func5();
+func6();
 globalFunc();

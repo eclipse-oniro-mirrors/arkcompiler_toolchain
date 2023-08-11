@@ -50,8 +50,7 @@ test_js_files = [
   "dropframe",
   "local_variable_scope",
   "container",
-  "closure_scope_first",
-  "closure_scope_second",
+  "closure_scope",
 ]
 
 foreach(file, test_js_files) {

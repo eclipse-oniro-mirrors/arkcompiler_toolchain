@@ -29,9 +29,8 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/export_variable_first.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/export_variable_second.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/container.abc -> /data/test" src="out"/>
-            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/closure_scope_first.abc -> /data/test" src="out"/>
-            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/closure_scope_second.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/local_variable_scope.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/closure_scope.abc -> /data/test" src="out"/>
             <option name="push" value="test/test/libjsdebugtest.so -> /data/test" src="out"/>
             <option name="push" value="test/test/libdebugger_entry.so -> /data/test" src="out"/>
             <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>

@@ -148,7 +148,7 @@ private:
     DebugInfoExtractor *GetExtractor(const JSPandaFile *jsPandaFile);
     DebugInfoExtractor *GetExtractor(const std::string &url);
     std::optional<std::string> CmptEvaluateValue(CallFrameId callFrameId, const std::string &expression,
-                                             std::unique_ptr<RemoteObject> *result);
+        std::unique_ptr<RemoteObject> *result);
     bool GenerateCallFrame(CallFrame *callFrame, const FrameHandler *frameHandler, CallFrameId frameId);
     void SaveCallFrameHandler(const FrameHandler *frameHandler);
     std::unique_ptr<Scope> GetLocalScopeChain(const FrameHandler *frameHandler,
@@ -156,7 +156,7 @@ private:
     std::unique_ptr<Scope> GetModuleScopeChain();
     std::unique_ptr<Scope> GetGlobalScopeChain();
     std::vector<std::unique_ptr<Scope>> GetClosureScopeChains(const FrameHandler *frameHandler,
-                                            std::unique_ptr<RemoteObject> *thisObj);
+        std::unique_ptr<RemoteObject> *thisObj);
     void GetLocalVariables(const FrameHandler *frameHandler, panda_file::File::EntityId methodId,
         const JSPandaFile *jsPandaFile, Local<JSValueRef> &thisVal, Local<ObjectRef> &localObj);
     void GetClosureVariables(const FrameHandler *frameHandler, Local<JSValueRef> &thisVal,
