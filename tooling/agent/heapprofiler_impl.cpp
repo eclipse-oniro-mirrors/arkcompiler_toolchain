@@ -371,11 +371,12 @@ DispatchResponse HeapProfilerImpl::StopTrackingHeapObjects(const StopTrackingHea
 
 DispatchResponse HeapProfilerImpl::TakeHeapSnapshot(const StopTrackingHeapObjectsParams &params)
 {
+    bool captureNumericValue = params.GetCaptureNumericValue();
     if (params.GetReportProgress()) {
         HeapProfilerProgress progress(&frontend_);
-        panda::DFXJSNApi::DumpHeapSnapshot(vm_, 0, &stream_, &progress, true);
+        panda::DFXJSNApi::DumpHeapSnapshot(vm_, 0, &stream_, &progress, true, false, captureNumericValue);
     } else {
-        panda::DFXJSNApi::DumpHeapSnapshot(vm_, 0, &stream_, nullptr, true);
+        panda::DFXJSNApi::DumpHeapSnapshot(vm_, 0, &stream_, nullptr, true, false, captureNumericValue);
     }
     return DispatchResponse::Ok();
 }
