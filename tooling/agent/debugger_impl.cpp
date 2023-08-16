@@ -1228,7 +1228,8 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
         return closureScopes;
     }
 
-    JSHandle<JSTaggedValue> envHandle = JSHandle<JSTaggedValue>(thread, DebuggerApi::GetEnv(frameHandler));
+    JSMutableHandle<JSTaggedValue> envHandle = JSMutableHandle<JSTaggedValue>(thread, DebuggerApi::GetEnv(frameHandler));
+    JSMutableHandle<JSTaggedValue> valueHandle = JSMutableHandle<JSTaggedValue>(thread, JSTaggedValue::Hole());
     JSTaggedValue currentEnv = envHandle.GetTaggedValue();
     if (!currentEnv.IsTaggedArray()) {
         LOG_DEBUGGER(ERROR) << "GetClosureScopeChains: currentEnv is invalid";
@@ -1236,10 +1237,11 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
     }
     // check if GetLocalScopeChain has already found and set 'this' value
     bool thisFound = (*thisObj)->HasValue();
+    bool closureVarFound = false;
     // currentEnv = currentEnv->parent until currentEnv becomes undefined
     for (; currentEnv.IsTaggedArray(); currentEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject())->GetParentEnv()) {
         LexicalEnv *lexicalEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject());
-        envHandle = JSHandle<JSTaggedValue>(thread, currentEnv);
+        envHandle.Update(currentEnv);
         if (lexicalEnv->GetScopeInfo().IsHole()) {
             continue;
         }
@@ -1250,14 +1252,13 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
         Local<ObjectRef> closureScopeObj = ObjectRef::New(vm_);
 
         for (const auto &[name, slot] : scopeDebugInfo->scopeInfo) {
-            if (name == "4newTarget") {
+            if (IsVarnameSkipped(name.c_str())) {
                 continue;
             }
-
             currentEnv = envHandle.GetTaggedValue();
             lexicalEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject());
-            Local<JSValueRef> value = JSNApiHelper::ToLocal<JSValueRef>(
-                JSHandle<JSTaggedValue>(thread, lexicalEnv->GetProperties(slot)));
+            valueHandle.Update(lexicalEnv->GetProperties(slot));
+            Local<JSValueRef> value = JSNApiHelper::ToLocal<JSValueRef>(valueHandle);
             Local<JSValueRef> varName = StringRef::NewFromUtf8(vm_, name.c_str());
             // found 'this' and 'this' is not set in GetLocalScopechain
             if (!thisFound && name == "this") {
@@ -1268,11 +1269,12 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
                 continue;
             }
             // found closure variable in current lexenv
+            closureVarFound = true;
             PropertyAttribute descriptor(value, true, true, true);
             closureScopeObj->DefineProperty(vm_, varName, descriptor);
         }
         // at least one closure variable has been found
-        if (closureScopeObj->GetOwnPropertyNames(vm_)->Length(vm_) > 0) {
+        if (closureVarFound) {
             closure->SetType(ObjectType::Object).SetObjectId(runtime_->curObjectId_)
                 .SetClassName(ObjectClassName::Object).SetDescription(RemoteObject::ObjectDescription);
 
@@ -1286,6 +1288,7 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
             closureScopes.emplace_back(std::move(closureScope));
         }
         currentEnv = envHandle.GetTaggedValue();
+        closureVarFound = false;
     }
     return closureScopes;
 }
@@ -1327,7 +1330,7 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
             continue;
         }
 
-        if (varName == "4newTarget" || varName == "0this" || varName == "0newTarget" || varName == "0funcObj") {
+        if (IsVarnameSkipped(varName)) {
             continue;
         }
 
@@ -1358,6 +1361,11 @@ bool DebuggerImpl::IsWithinVariableScope(const LocalVariableInfo &localVariableI
     return bcOffset >= localVariableInfo.startOffset && bcOffset < localVariableInfo.endOffset;
 }
 
+bool DebuggerImpl::IsVarnameSkipped(const std::string &varName)
+{
+    return varName == "4newTarget" || varName == "0this" || varName == "0newTarget" || varName == "0funcObj";
+}
+
 void DebuggerImpl::GetClosureVariables(const FrameHandler *frameHandler, Local<JSValueRef> &thisVal,
     Local<ObjectRef> &localObj)
 {
@@ -1373,7 +1381,7 @@ void DebuggerImpl::GetClosureVariables(const FrameHandler *frameHandler, Local<J
             lexEnv->GetScopeInfo().GetTaggedObject())->GetExternalPointer());
         for (const auto &[varName, slot] : scopeDebugInfo->scopeInfo) {
             // skip possible duplicate variables both in local variable table and env
-            if (varName == "4newTarget") {
+            if (IsVarnameSkipped(varName.c_str())) {
                 continue;
             }
             env = envHandle.GetTaggedValue();
