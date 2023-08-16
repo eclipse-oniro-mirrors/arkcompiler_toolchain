@@ -1228,9 +1228,9 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
         return closureScopes;
     }
 
-    JSMutableHandle<JSTaggedValue> envHandle = JSMutableHandle<JSTaggedValue>(thread, DebuggerApi::GetEnv(frameHandler));
+    JSMutableHandle<JSTaggedValue> enHandle = JSMutableHandle<JSTaggedValue>(thread, DebuggerApi::GetEnv(frameHandler));
     JSMutableHandle<JSTaggedValue> valueHandle = JSMutableHandle<JSTaggedValue>(thread, JSTaggedValue::Hole());
-    JSTaggedValue currentEnv = envHandle.GetTaggedValue();
+    JSTaggedValue currentEnv = enHandle.GetTaggedValue();
     if (!currentEnv.IsTaggedArray()) {
         LOG_DEBUGGER(ERROR) << "GetClosureScopeChains: currentEnv is invalid";
         return closureScopes;
@@ -1241,7 +1241,7 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
     // currentEnv = currentEnv->parent until currentEnv becomes undefined
     for (; currentEnv.IsTaggedArray(); currentEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject())->GetParentEnv()) {
         LexicalEnv *lexicalEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject());
-        envHandle.Update(currentEnv);
+        enHandle.Update(currentEnv);
         if (lexicalEnv->GetScopeInfo().IsHole()) {
             continue;
         }
@@ -1255,7 +1255,7 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
             if (IsVarnameSkipped(name.c_str())) {
                 continue;
             }
-            currentEnv = envHandle.GetTaggedValue();
+            currentEnv = enHandle.GetTaggedValue();
             lexicalEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject());
             valueHandle.Update(lexicalEnv->GetProperties(slot));
             Local<JSValueRef> value = JSNApiHelper::ToLocal<JSValueRef>(valueHandle);
@@ -1287,7 +1287,7 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
             runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, closureScopeObj);
             closureScopes.emplace_back(std::move(closureScope));
         }
-        currentEnv = envHandle.GetTaggedValue();
+        currentEnv = enHandle.GetTaggedValue();
         closureVarFound = false;
     }
     return closureScopes;
