@@ -171,7 +171,7 @@ private:
     bool IsWithinVariableScope(const LocalVariableInfo &localVariableInfo, uint32_t bcOffset);
     bool ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
         std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
-    bool IsVarnameSkipped(const std::string &varName);
+    bool IsVariableSkipped(const std::string &varName);
 
     const std::string &GetRecordName(const std::string &url)
     {
