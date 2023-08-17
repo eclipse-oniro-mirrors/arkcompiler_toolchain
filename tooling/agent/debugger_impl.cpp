@@ -1252,7 +1252,7 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
         Local<ObjectRef> closureScopeObj = ObjectRef::New(vm_);
 
         for (const auto &[name, slot] : scopeDebugInfo->scopeInfo) {
-            if (IsVarnameSkipped(name.c_str())) {
+            if (IsVariableSkipped(name.c_str())) {
                 continue;
             }
             currentEnv = enHandle.GetTaggedValue();
@@ -1337,7 +1337,7 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
             continue;
         }
 
-        if (IsVarnameSkipped(varName)) {
+        if (IsVariableSkipped(varName)) {
             continue;
         }
 
@@ -1368,7 +1368,7 @@ bool DebuggerImpl::IsWithinVariableScope(const LocalVariableInfo &localVariableI
     return bcOffset >= localVariableInfo.startOffset && bcOffset < localVariableInfo.endOffset;
 }
 
-bool DebuggerImpl::IsVarnameSkipped(const std::string &varName)
+bool DebuggerImpl::IsVariableSkipped(const std::string &varName)
 {
     return varName == "4newTarget" || varName == "0this" || varName == "0newTarget" || varName == "0funcObj";
 }
@@ -1388,7 +1388,7 @@ void DebuggerImpl::GetClosureVariables(const FrameHandler *frameHandler, Local<J
             lexEnv->GetScopeInfo().GetTaggedObject())->GetExternalPointer());
         for (const auto &[varName, slot] : scopeDebugInfo->scopeInfo) {
             // skip possible duplicate variables both in local variable table and env
-            if (IsVarnameSkipped(varName.c_str())) {
+            if (IsVariableSkipped(varName.c_str())) {
                 continue;
             }
             env = envHandle.GetTaggedValue();
