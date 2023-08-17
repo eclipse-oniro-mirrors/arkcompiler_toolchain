@@ -1270,6 +1270,13 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
             }
             // found closure variable in current lexenv
             closureVarFound = true;
+            // if value is hole, should manually set it to undefined
+            // otherwise after DefineProperty, corresponding varName
+            // will become undefined
+            if (value->IsHole()) {
+                valueHandle.Update(JSTaggedValue::Undefined());
+                value = JSNApiHelper::ToLocal<JSValueRef>(valueHandle);
+            }
             PropertyAttribute descriptor(value, true, true, true);
             closureScopeObj->DefineProperty(vm_, varName, descriptor);
         }
