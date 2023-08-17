@@ -1378,6 +1378,7 @@ void DebuggerImpl::GetClosureVariables(const FrameHandler *frameHandler, Local<J
 {
     JSThread *thread = vm_->GetJSThread();
     JSHandle<JSTaggedValue> envHandle = JSHandle<JSTaggedValue>(thread, DebuggerApi::GetEnv(frameHandler));
+    JSMutableHandle<JSTaggedValue> valueHandle = JSMutableHandle<JSTaggedValue>(thread, JSTaggedValue::Hole());
     JSTaggedValue env = envHandle.GetTaggedValue();
     if (env.IsTaggedArray() && DebuggerApi::GetBytecodeOffset(frameHandler) != 0) {
         LexicalEnv *lexEnv = LexicalEnv::Cast(env.GetTaggedObject());
@@ -1394,8 +1395,8 @@ void DebuggerImpl::GetClosureVariables(const FrameHandler *frameHandler, Local<J
             env = envHandle.GetTaggedValue();
             lexEnv = LexicalEnv::Cast(env.GetTaggedObject());
             ASSERT(slot < lexEnv->GetLength() - LexicalEnv::RESERVED_ENV_LENGTH);
-            Local<JSValueRef> value = JSNApiHelper::ToLocal<JSValueRef>(
-                JSHandle<JSTaggedValue>(thread, lexEnv->GetProperties(slot)));
+            valueHandle.Update(lexEnv->GetProperties(slot));
+            Local<JSValueRef> value = JSNApiHelper::ToLocal<JSValueRef>(valueHandle);
             if (varName == "this") {
                 if (thisVal->IsHole()) {
                     LOG_DEBUGGER(INFO) << "find 'this' in current lexical env";
