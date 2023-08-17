@@ -35,6 +35,7 @@
 #include "test/testcases/js_dropframe_test.h"
 #include "test/testcases/js_local_variable_scope_test.h"
 #include "test/testcases/js_container_test.h"
+#include "test/testcases/js_closure_scope_test.h"
 
 namespace panda::ecmascript::tooling::test {
 static std::string g_currentTestName = "";
@@ -58,6 +59,7 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsModuleVariableTest", GetJsModuleVariableTest());
     TestUtil::RegisterTest("JsLocalVariableScopeTest", GetJsLocalVariableScopeTest());
     TestUtil::RegisterTest("JsContainerTest", GetJsContainerTest());
+    TestUtil::RegisterTest("JsClosureScopeTest", GetJsClosureScopeTest());
 }
 
 static void RegisterCInterpTests()
