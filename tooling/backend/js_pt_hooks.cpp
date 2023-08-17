@@ -18,12 +18,11 @@
 #include "agent/debugger_impl.h"
 
 namespace panda::ecmascript::tooling {
-void JSPtHooks::DebuggerStmt(const JSPtLocation &location)
+void JSPtHooks::DebuggerStmt([[maybe_unused]] const JSPtLocation &location)
 {
-    LOG_DEBUGGER(INFO) << "JSPHooks: Debugger => " << location.GetMethodId() << ": "
-                        << location.GetBytecodeOffset();
+    LOG_DEBUGGER(VERBOSE) << "JSPHooks: Debugger Statement";
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
-    debugger_->NotifyPaused(location, OTHER);
+    debugger_->NotifyPaused({}, OTHER);
 }
 
 void JSPtHooks::Breakpoint(const JSPtLocation &location)
