@@ -185,6 +185,14 @@ bool DebuggerImpl::CheckPauseOnException()
 
 void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReason reason)
 {
+    if (skipAllPausess_) {
+        return;
+    }
+
+    if (location.has_value() && !breakpointsState_) {
+        return;
+    }
+
     if (reason == EXCEPTION && !CheckPauseOnException()) {
         return;
     }
@@ -288,7 +296,9 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         { "resume", &DebuggerImpl::DispatcherImpl::Resume },
         { "setAsyncCallStackDepth", &DebuggerImpl::DispatcherImpl::SetAsyncCallStackDepth },
         { "setBreakpointByUrl", &DebuggerImpl::DispatcherImpl::SetBreakpointByUrl },
+        { "setBreakpointsActive", &DebuggerImpl::DispatcherImpl::SetBreakpointsActive },
         { "setPauseOnExceptions", &DebuggerImpl::DispatcherImpl::SetPauseOnExceptions },
+        { "setSkipAllPauses", &DebuggerImpl::DispatcherImpl::SetSkipAllPauses },
         { "stepInto", &DebuggerImpl::DispatcherImpl::StepInto },
         { "stepOut", &DebuggerImpl::DispatcherImpl::StepOut },
         { "stepOver", &DebuggerImpl::DispatcherImpl::StepOver },
@@ -423,6 +433,18 @@ void DebuggerImpl::DispatcherImpl::SetBreakpointByUrl(const DispatchRequest &req
     SendResponse(request, response, result);
 }
 
+void DebuggerImpl::DispatcherImpl::SetBreakpointsActive(const DispatchRequest &request)
+{
+    std::unique_ptr<SetBreakpointsActiveParams> params = SetBreakpointsActiveParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+
+    DispatchResponse response = debugger_->SetBreakpointsActive(*params);
+    SendResponse(request, response);
+}
+
 void DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(const DispatchRequest &request)
 {
     std::unique_ptr<GetPossibleAndSetBreakpointParams> params;
@@ -447,6 +469,18 @@ void DebuggerImpl::DispatcherImpl::SetPauseOnExceptions(const DispatchRequest &r
     }
 
     DispatchResponse response = debugger_->SetPauseOnExceptions(*params);
+    SendResponse(request, response);
+}
+
+void DebuggerImpl::DispatcherImpl::SetSkipAllPauses(const DispatchRequest &request)
+{
+    std::unique_ptr<SetSkipAllPausesParams> params = SetSkipAllPausesParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+
+    DispatchResponse response = debugger_->SetSkipAllPauses(*params);
     SendResponse(request, response);
 }
 
@@ -829,6 +863,12 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
     return DispatchResponse::Ok();
 }
 
+DispatchResponse DebuggerImpl::SetBreakpointsActive(const SetBreakpointsActiveParams &params)
+{
+    breakpointsState_  = params.GetBreakpointsState();
+    return DispatchResponse::Ok();
+}
+
 DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const GetPossibleAndSetBreakpointParams &params,
     std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations)
 {
@@ -914,6 +954,12 @@ bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
 DispatchResponse DebuggerImpl::SetPauseOnExceptions(const SetPauseOnExceptionsParams &params)
 {
     pauseOnException_ = params.GetState();
+    return DispatchResponse::Ok();
+}
+
+DispatchResponse DebuggerImpl::SetSkipAllPauses(const SetSkipAllPausesParams &params)
+{
+    skipAllPausess_ = params.GetSkipAllPausesState();
     return DispatchResponse::Ok();
 }
 
