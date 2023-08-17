@@ -328,6 +328,48 @@ std::unique_ptr<SetBreakpointByUrlParams> SetBreakpointByUrlParams::Create(const
     return paramsObject;
 }
 
+std::unique_ptr<SetBreakpointsActiveParams> SetBreakpointsActiveParams::Create(const PtJson &params)
+{
+    auto paramsObject = std::make_unique<SetBreakpointsActiveParams>();
+    std::string error;
+    Result ret;
+
+    bool breakpointsState;
+    ret = params.GetBool("active", &breakpointsState);
+    if (ret == Result::SUCCESS) {
+        paramsObject->breakpointsState_ = std::move(breakpointsState);
+    } else if (ret == Result::TYPE_ERROR) {  // optional value
+        error += "Unknown 'active';";
+    }
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "SetBreakpointsActiveParams::Create " << error;
+        return nullptr;
+    }
+
+    return paramsObject;
+}
+
+std::unique_ptr<SetSkipAllPausesParams> SetSkipAllPausesParams::Create(const PtJson &params)
+{
+    auto paramsObject = std::make_unique<SetSkipAllPausesParams>();
+    std::string error;
+    Result ret;
+
+    bool skipAllPausesState;
+    ret = params.GetBool("skip", &skipAllPausesState);
+    if (ret == Result::SUCCESS) {
+        paramsObject->skipAllPausesState_ = std::move(skipAllPausesState);
+    } else if (ret == Result::TYPE_ERROR) {  // optional value
+        error += "Unknown 'skip';";
+    }
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "SetSkipAllPausesParams::Create " << error;
+        return nullptr;
+    }
+
+    return paramsObject;
+}
+
 std::unique_ptr<GetPossibleAndSetBreakpointParams> GetPossibleAndSetBreakpointParams::Create(const PtJson &params)
 {
     auto paramsObject = std::make_unique<GetPossibleAndSetBreakpointParams>();

@@ -59,9 +59,11 @@ public:
     DispatchResponse SetAsyncCallStackDepth();
     DispatchResponse SetBreakpointByUrl(const SetBreakpointByUrlParams &params, std::string *outId,
                                         std::vector<std::unique_ptr<Location>> *outLocations);
+    DispatchResponse SetBreakpointsActive(const SetBreakpointsActiveParams &params);
     DispatchResponse GetPossibleAndSetBreakpointByUrl(const GetPossibleAndSetBreakpointParams &params,
                                         std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
     DispatchResponse SetPauseOnExceptions(const SetPauseOnExceptionsParams &params);
+    DispatchResponse SetSkipAllPauses(const SetSkipAllPausesParams &params);
     DispatchResponse StepInto(const StepIntoParams &params);
     DispatchResponse StepOut();
     DispatchResponse StepOver(const StepOverParams &params);
@@ -122,7 +124,9 @@ public:
         void Resume(const DispatchRequest &request);
         void SetAsyncCallStackDepth(const DispatchRequest &request);
         void SetBreakpointByUrl(const DispatchRequest &request);
+        void SetBreakpointsActive(const DispatchRequest &request);
         void SetPauseOnExceptions(const DispatchRequest &request);
+        void SetSkipAllPauses(const DispatchRequest &request);
         void StepInto(const DispatchRequest &request);
         void StepOut(const DispatchRequest &request);
         void StepOver(const DispatchRequest &request);
@@ -215,6 +219,8 @@ private:
     PauseOnExceptionsState pauseOnException_ {PauseOnExceptionsState::NONE};
     DebuggerState debuggerState_ {DebuggerState::ENABLED};
     bool pauseOnNextByteCode_ {false};
+    bool breakpointsState_ {true};
+    bool skipAllPausess_ {false};
     std::unique_ptr<SingleStepper> singleStepper_ {nullptr};
     std::vector<void *>  nativePointer_;
 

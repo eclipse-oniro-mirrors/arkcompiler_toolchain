@@ -309,6 +309,43 @@ private:
     std::optional<std::string> condition_ {};
 };
 
+
+class SetBreakpointsActiveParams : public PtBaseParams {
+public:
+    SetBreakpointsActiveParams() = default;
+    ~SetBreakpointsActiveParams() override = default;
+
+    static std::unique_ptr<SetBreakpointsActiveParams> Create(const PtJson &params);
+
+    bool GetBreakpointsState() const
+    {
+        return breakpointsState_.value_or(false);
+    }
+private:
+    NO_COPY_SEMANTIC(SetBreakpointsActiveParams);
+    NO_MOVE_SEMANTIC(SetBreakpointsActiveParams);
+
+    std::optional<bool> breakpointsState_ {};
+};
+
+class SetSkipAllPausesParams : public PtBaseParams {
+public:
+    SetSkipAllPausesParams() = default;
+    ~SetSkipAllPausesParams() override = default;
+
+    static std::unique_ptr<SetSkipAllPausesParams> Create(const PtJson &params);
+
+    bool GetSkipAllPausesState() const
+    {
+        return skipAllPausesState_.value_or(false);
+    }
+private:
+    NO_COPY_SEMANTIC(SetSkipAllPausesParams);
+    NO_MOVE_SEMANTIC(SetSkipAllPausesParams);
+
+    std::optional<bool> skipAllPausesState_ {};
+};
+
 class GetPossibleAndSetBreakpointParams : public PtBaseParams {
 public:
     GetPossibleAndSetBreakpointParams() = default;
