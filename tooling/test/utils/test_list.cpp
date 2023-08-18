@@ -54,6 +54,7 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsStepIntoTest", GetJsStepIntoTest());
     TestUtil::RegisterTest("JsStepOverTest", GetJsStepOverTest());
     TestUtil::RegisterTest("JsStepOutTest", GetJsStepOutTest());
+    TestUtil::RegisterTest("JSDropFrameTest", GetJsDropFrameTest());
     TestUtil::RegisterTest("JsVariableFirstTest", GetJsVariableFirstTest());
     TestUtil::RegisterTest("JsVariableSecondTest", GetJsVariableSecondTest());
     TestUtil::RegisterTest("JsModuleVariableTest", GetJsModuleVariableTest());

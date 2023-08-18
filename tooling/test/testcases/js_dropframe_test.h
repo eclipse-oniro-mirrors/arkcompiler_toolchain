@@ -51,7 +51,9 @@ public:
             static_cast<JsDropFrameTestChannel *>(channel_)->Initial(vm_, runtime_);
             runtime_->Enable();
             size_t breakpoint[POINTER_SIZE][LINE_COLUMN] =
-                {{26, 0}, {42, 0}, {57, 0}, {69, 0}, {87, 0}, {100, 0}, {117, 0}}; // 0-based
+                {{26, 0}, {42, 0}, {57, 0}, {69, 0}, {87, 0}, {100, 0}, {117, 0},
+                 {143, 0}, {151, 0}, {164, 0}, {172, 0}, {182, 0}, {192, 0}, {206, 0},
+                 {217, 0}, {224, 0}, {230, 0}}; // 0-based
             SetJSPtLocation(breakpoint[0], POINTER_SIZE, pointerLocations_);
             InitBreakpointOpQueue();
             TestUtil::SuspendUntilContinue(DebugEvent::LOAD_MODULE);
@@ -89,8 +91,8 @@ public:
         };
 
         vmDeath = [this]() {
-            ASSERT_EQ(breakpointCounter_, 29U);  // a total of 29 times hitting breakpoints
-            ASSERT_EQ(dropframeCounter_, 23U); // a total of 23 times dropping frames
+            ASSERT_EQ(breakpointCounter_, 59U);  // a total of 59 times hitting breakpoints
+            ASSERT_EQ(dropframeCounter_, 47U); // a total of 47 times dropping frames
             return true;
         };
     }
@@ -137,7 +139,8 @@ private:
                         auto scopes = frame->GetScopeChain();
                         for (uint32_t i = 0; i < scopes->size(); i++) {
                             auto scope = scopes->at(i).get();
-                            if (scope->GetType() != Scope::Type::Local()) {
+                            std::string scopeType = scope->GetType();
+                            if (scopeType != Scope::Type::Local() && scopeType != Scope::Type::Closure()) {
                                 continue;
                             }
                             auto localId = scope->GetObject()->GetObjectId();
@@ -229,7 +232,61 @@ private:
             { { "a", "11" }, { "b", "7933" }, { "c", "192298" }, {"x", "7"} },
             { { "a", "12" }, { "b", "7933" }, { "c", "192298" }, {"x", "7"} },
             { { "a", "7" }, { "b", "7933" }, { "c", "192298" }, {"x", "7"} },
-            { { "a", "10" }, { "b", "7933" }, { "c", "192298" }, {"x", "7"} }
+            { { "a", "10" }, { "b", "7933" }, { "c", "192298" }, {"x", "7"} },
+            { { "a", "19" }, { "b", "2" }, { "c", "3" }, {"d", "1"} },
+            { { "a", "19" }, { "b", "2" }, { "c", "3" }, {"d", "1"} },
+            { { "a", "19" }, { "b", "2" }, { "c", "3" }, {"d", "1"} },
+            { { "a", "20" }, { "b", "3" }, { "c", "4" }, {"d", "3"} },
+            { { "a", "19" }, { "b", "2" }, { "c", "3" }, {"d", "2"} },
+            { { "a", "20" }, { "b", "3" }, { "c", "4" }, {"d", "3"} },
+            { { "a", "23" }, { "b", "6" }, { "c", "7" }, {"d", "7"} },
+            { { "a", "20" }, { "b", "3" }, { "c", "4" }, {"d", "4"} },
+            { { "a", "23" }, { "b", "6" }, { "c", "7" }, {"d", "7"} },
+            { { "a", "29" }, { "b", "12" }, { "c", "13" }, {"d", "14"} },
+            { { "a", "39" }, { "b", "22" }, { "c", "23" }, {"d", "25"} },
+            { { "a", "29" }, { "b", "12" }, { "c", "13" }, {"d", "15"} },
+            { { "a", "39" }, { "b", "22" }, { "c", "23" }, {"d", "25"} },
+            { { "a", "54" }, { "b", "37" }, { "c", "38" }, {"d", "41"} },
+            { { "a", "54" }, { "b", "37" }, { "c", "38" }, {"d", "42"} },
+            { { "a", "19" }, { "b", "2" }, { "c", "3" } },
+            { { "a", "54" }, { "b", "37" }, { "c", "38" }, {"d", "42"} },
+            { { "a", "76" }, { "b", "60" }, { "c", "62" }, {"d", "1"}, {"e", "77"} },
+            { { "a", "75" }, { "b", "58" }, { "c", "59" }, {"d", "1"}, {"e", "1"} },
+            { { "a", "75" }, { "b", "58" }, { "c", "59" }, {"d", "1"} },
+            { { "a", "75" }, { "b", "58" }, { "c", "59" } },
+            { { "a", "76" }, { "b", "60" }, { "c", "62" }, {"d", "1"}, {"e", "77"} },
+            { { "a", "81" }, { "b", "65" }, { "c", "67" }, {"d", "5"} },
+            { { "a", "76" }, { "b", "60" }, { "c", "62" }, {"d", "5"} },
+            { { "a", "75" }, { "b", "58" }, { "c", "59" } },
+            { { "a", "81" }, { "b", "65" }, { "c", "67" }, {"d", "5"} },
+            { { "a", "87" }, { "b", "71" }, { "c", "73" }, {"d", "6"} },
+            { { "a", "81" }, { "b", "65" }, { "c", "67" }, {"d", "6"} },
+            { { "a", "87" }, { "b", "71" }, { "c", "73" }, {"d", "6"} },
+            { { "a", "88" }, { "b", "73" }, { "c", "76" }, {"d", "7"}, {"e", "84"} },
+            { { "a", "87" }, { "b", "71" }, { "c", "73" }, {"d", "7"}, {"e", "1"} },
+            { { "a", "87" }, { "b", "71" }, { "c", "73" }, {"d", "7"} },
+            { { "a", "75" }, { "b", "58" }, { "c", "59" } },
+            { { "a", "88" }, { "b", "73" }, { "c", "76" }, {"d", "7"}, {"e", "84"} },
+            { { "a", "88" }, { "b", "73" }, { "c", "76" }, {"d", "11"} },
+            { { "a", "75" }, { "b", "58" }, { "c", "59" } },
+            { { "a", "88" }, { "b", "73" }, { "c", "76" }, {"d", "11"} },
+            { { "a", "6" }, { "b", "13" }, { "c", "3" }, {"d", "11"}, {"e", "11"} },
+            { { "a", "1" }, { "b", "2" }, { "c", "3" }, {"d", "10"}, {"e", "1"} },
+            { { "a", "1" }, { "b", "2" }, { "c", "3" }, {"d", "10"} },
+            { { "a", "1" }, { "b", "2" }, { "c", "3" }, {"d", "10"} },
+            { { "a", "1" }, { "b", "2" }, { "c", "3" } },
+            { { "a", "6" }, { "b", "13" }, { "c", "3" }, {"d", "11"}, {"e", "11"} },
+            { { "a", "7" }, { "b", "14" }, { "c", "14" }, {"d", "11"} },
+            { { "a", "1" }, { "b", "2" }, { "c", "3" }, {"d", "10"} },
+            { { "a", "1" }, { "b", "2" }, { "c", "3" } },
+            { { "a", "7" }, { "b", "14" }, { "c", "14" }, {"d", "11"} },
+            { { "a", "8" }, { "b", "16" }, { "c", "18" }, {"d", "11"} },
+            { { "a", "7" }, { "b", "14" }, { "c", "15" }, {"d", "11"} },
+            { { "a", "1" }, { "b", "2" }, { "c", "3" } },
+            { { "a", "8" }, { "b", "16" }, { "c", "18" }, {"d", "11"} },
+            { { "a", "8" }, { "b", "16" }, { "c", "18" }, {"d", "19"} },
+            { { "a", "1" }, { "b", "2" }, { "c", "3" } },
+            { { "a", "8" }, { "b", "16" }, { "c", "18" }, {"d", "19"} }
         };
 
         int32_t index_ {0};
@@ -244,7 +301,7 @@ private:
     };
 
     static constexpr size_t LINE_COLUMN = 2;
-    static constexpr size_t POINTER_SIZE = 7;
+    static constexpr size_t POINTER_SIZE = 17;
 
     std::string pandaFile_ = DEBUGGER_ABC_DIR "dropframe.abc";
     std::string sourceFile_ = DEBUGGER_JS_DIR "dropframe.js";
@@ -253,7 +310,7 @@ private:
     size_t dropframeCounter_ = 0;
     bool dropFrameChecked_ = false;
     std::vector<JSPtLocation> pointerLocations_;
-    size_t breakpointHitTimes[POINTER_SIZE] = {2, 2, 4, 6, 6, 4, 5};
+    size_t breakpointHitTimes[POINTER_SIZE] = {2, 2, 4, 6, 6, 4, 5, 10, 2, 2, 4, 2, 2, 2, 2, 2, 2};
     std::queue<std::pair<uint8_t, uint8_t>> breakpointOp;
 
     void InitBreakpointOpQueue()
@@ -281,6 +338,30 @@ private:
         breakpointOp.push({25, breakpointOpType::DROPLASTFRAME});
         breakpointOp.push({25, breakpointOpType::DROPLASTFRAME});
         breakpointOp.push({28, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({30, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({32, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({34, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({37, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({40, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({42, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({42, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({42, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({44, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({44, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({46, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({48, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({48, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({48, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({50, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({52, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({52, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({52, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({52, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({54, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({54, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({56, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({56, breakpointOpType::DROPLASTFRAME});
+        breakpointOp.push({58, breakpointOpType::DROPLASTFRAME});
     }
 
     void DropFrameIfChecked()

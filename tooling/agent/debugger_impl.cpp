@@ -1036,6 +1036,12 @@ DispatchResponse DebuggerImpl::DropFrame(const DropFrameParams &params)
     uint32_t droppedDepth = 1;
     if (params.HasDroppedDepth()) {
         droppedDepth = params.GetDroppedDepth();
+        if (droppedDepth == 0) {
+            return DispatchResponse::Ok();
+        }
+        if (droppedDepth > 1) {
+            return DispatchResponse::Fail("Not yet support dropping multiple frames");
+        }
     }
     uint32_t stackDepth = DebuggerApi::GetStackDepth(vm_);
     if (droppedDepth > stackDepth) {
@@ -1043,6 +1049,10 @@ DispatchResponse DebuggerImpl::DropFrame(const DropFrameParams &params)
     }
     if (droppedDepth == stackDepth) {
         return DispatchResponse::Fail("The bottom frame cannot be dropped");
+    }
+    uint32_t stackDepthOverBuiltin = DebuggerApi::GetStackDepthOverBuiltin(vm_);
+    if (droppedDepth >= stackDepthOverBuiltin) {
+        return DispatchResponse::Fail("Frames to be dropped contain builtin frame");
     }
     for (uint32_t i = 0; i < droppedDepth; i++) {
         DebuggerApi::DropLastFrame(vm_);
