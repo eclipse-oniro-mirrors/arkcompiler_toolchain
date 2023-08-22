@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,6 +27,7 @@ void RuntimeImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
     static std::unordered_map<std::string, AgentHandler> dispatcherTable {
         { "enable", &RuntimeImpl::DispatcherImpl::Enable },
+        { "disable", &RuntimeImpl::DispatcherImpl::Disable },
         { "getProperties", &RuntimeImpl::DispatcherImpl::GetProperties },
         { "runIfWaitingForDebugger", &RuntimeImpl::DispatcherImpl::RunIfWaitingForDebugger },
         { "callFunctionOn", &RuntimeImpl::DispatcherImpl::CallFunctionOn },
