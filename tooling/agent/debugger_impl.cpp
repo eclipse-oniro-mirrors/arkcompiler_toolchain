@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -865,7 +865,7 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
 
 DispatchResponse DebuggerImpl::SetBreakpointsActive(const SetBreakpointsActiveParams &params)
 {
-    breakpointsState_  = params.GetBreakpointsState();
+    breakpointsState_ = params.GetBreakpointsState();
     return DispatchResponse::Ok();
 }
 
@@ -1338,8 +1338,10 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
         }
         // at least one closure variable has been found
         if (closureVarFound) {
-            closure->SetType(ObjectType::Object).SetObjectId(runtime_->curObjectId_)
-                .SetClassName(ObjectClassName::Object).SetDescription(RemoteObject::ObjectDescription);
+            closure->SetType(ObjectType::Object)
+                .SetObjectId(runtime_->curObjectId_)
+                .SetClassName(ObjectClassName::Object)
+                .SetDescription(RemoteObject::ObjectDescription);
 
             auto scriptFunc = []([[maybe_unused]] PtScript *script) -> bool {
                 return true;
@@ -1347,6 +1349,8 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
             if (MatchScripts(scriptFunc, extractor->GetSourceFile(methodId), ScriptMatchType::URL)) {
                 closureScope->SetType(Scope::Type::Closure()).SetObject(std::move(closure));
             }
+            DebuggerApi::AddInternalProperties(
+                vm_, closureScopeObj, ArkInternalValueType::Scope,  runtime_->internalObjects_);
             runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, closureScopeObj);
             closureScopes.emplace_back(std::move(closureScope));
         }
