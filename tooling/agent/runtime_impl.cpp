@@ -706,10 +706,9 @@ void RuntimeImpl::GetDataViewValue(Local<JSValueRef> value,
     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
     Local<DataViewRef> dataViewRef = value->ToObject(vm_);
-    Local<ArrayBufferRef> buffer = dataViewRef->GetArrayBuffer(vm_);
     int32_t byteLength = static_cast<int32_t>(dataViewRef->ByteLength());
     int32_t byteOffset = static_cast<int32_t>(dataViewRef->ByteOffset());
-    Local<JSValueRef> jsValueRef = ArrayBufferRef::New(vm_, buffer->ByteLength(vm_));
+    Local<JSValueRef> jsValueRef = dataViewRef->GetArrayBuffer(vm_);
     SetKeyValue(jsValueRef, outPropertyDesc, "buffer");
     jsValueRef = NumberRef::New(vm_, byteLength);
     SetKeyValue(jsValueRef, outPropertyDesc, "byteLength");
