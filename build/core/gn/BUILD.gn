@@ -56,6 +56,7 @@ group("ets_runtime") {
     deps += [
       "$js_root/ecmascript/compiler:ark_aot_compiler",
       "$js_root/ecmascript/compiler:ark_stub_compiler",
+      "$js_root/ecmascript/pgo_profiler/prof_dump:profdump",
     ]
   }
 }
