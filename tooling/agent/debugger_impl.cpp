@@ -1193,7 +1193,6 @@ bool DebuggerImpl::GenerateCallFrame(CallFrame *callFrame,
     JSThread *thread = vm_->GetJSThread();
     std::vector<std::unique_ptr<Scope>> scopeChain;
     scopeChain.emplace_back(GetLocalScopeChain(frameHandler, &thisObj));
-    
     // generate closure scopes
     auto closureScopeChains = GetClosureScopeChains(frameHandler, &thisObj);
     for (auto &scope : closureScopeChains) {
@@ -1284,9 +1283,10 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
         return closureScopes;
     }
 
-    JSMutableHandle<JSTaggedValue> enHandle = JSMutableHandle<JSTaggedValue>(thread, DebuggerApi::GetEnv(frameHandler));
+    JSMutableHandle<JSTaggedValue> envHandle = JSMutableHandle<JSTaggedValue>(
+        thread, DebuggerApi::GetEnv(frameHandler));
     JSMutableHandle<JSTaggedValue> valueHandle = JSMutableHandle<JSTaggedValue>(thread, JSTaggedValue::Hole());
-    JSTaggedValue currentEnv = enHandle.GetTaggedValue();
+    JSTaggedValue currentEnv = envHandle.GetTaggedValue();
     if (!currentEnv.IsTaggedArray()) {
         LOG_DEBUGGER(ERROR) << "GetClosureScopeChains: currentEnv is invalid";
         return closureScopes;
@@ -1297,7 +1297,7 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
     // currentEnv = currentEnv->parent until currentEnv becomes undefined
     for (; currentEnv.IsTaggedArray(); currentEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject())->GetParentEnv()) {
         LexicalEnv *lexicalEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject());
-        enHandle.Update(currentEnv);
+        envHandle.Update(currentEnv);
         if (lexicalEnv->GetScopeInfo().IsHole()) {
             continue;
         }
@@ -1311,7 +1311,7 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
             if (IsVariableSkipped(name.c_str())) {
                 continue;
             }
-            currentEnv = enHandle.GetTaggedValue();
+            currentEnv = envHandle.GetTaggedValue();
             lexicalEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject());
             valueHandle.Update(lexicalEnv->GetProperties(slot));
             Local<JSValueRef> value = JSNApiHelper::ToLocal<JSValueRef>(valueHandle);
@@ -1348,13 +1348,13 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
             };
             if (MatchScripts(scriptFunc, extractor->GetSourceFile(methodId), ScriptMatchType::URL)) {
                 closureScope->SetType(Scope::Type::Closure()).SetObject(std::move(closure));
+                DebuggerApi::AddInternalProperties(
+                    vm_, closureScopeObj, ArkInternalValueType::Scope,  runtime_->internalObjects_);
+                runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, closureScopeObj);
+                closureScopes.emplace_back(std::move(closureScope));
             }
-            DebuggerApi::AddInternalProperties(
-                vm_, closureScopeObj, ArkInternalValueType::Scope,  runtime_->internalObjects_);
-            runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, closureScopeObj);
-            closureScopes.emplace_back(std::move(closureScope));
         }
-        currentEnv = enHandle.GetTaggedValue();
+        currentEnv = envHandle.GetTaggedValue();
         closureVarFound = false;
     }
     return closureScopes;
@@ -1431,58 +1431,6 @@ bool DebuggerImpl::IsWithinVariableScope(const LocalVariableInfo &localVariableI
 bool DebuggerImpl::IsVariableSkipped(const std::string &varName)
 {
     return varName == "4newTarget" || varName == "0this" || varName == "0newTarget" || varName == "0funcObj";
-}
-
-void DebuggerImpl::GetClosureVariables(const FrameHandler *frameHandler, Local<JSValueRef> &thisVal,
-    Local<ObjectRef> &localObj)
-{
-    JSThread *thread = vm_->GetJSThread();
-    JSHandle<JSTaggedValue> envHandle = JSHandle<JSTaggedValue>(thread, DebuggerApi::GetEnv(frameHandler));
-    JSMutableHandle<JSTaggedValue> valueHandle = JSMutableHandle<JSTaggedValue>(thread, JSTaggedValue::Hole());
-    JSTaggedValue env = envHandle.GetTaggedValue();
-    if (env.IsTaggedArray() && DebuggerApi::GetBytecodeOffset(frameHandler) != 0) {
-        LexicalEnv *lexEnv = LexicalEnv::Cast(env.GetTaggedObject());
-        if (lexEnv->GetScopeInfo().IsHole()) {
-            return;
-        }
-        auto *scopeDebugInfo = reinterpret_cast<ScopeDebugInfo *>(JSNativePointer::Cast(
-            lexEnv->GetScopeInfo().GetTaggedObject())->GetExternalPointer());
-        for (const auto &[varName, slot] : scopeDebugInfo->scopeInfo) {
-            // skip possible duplicate variables both in local variable table and env
-            if (IsVariableSkipped(varName.c_str())) {
-                continue;
-            }
-            env = envHandle.GetTaggedValue();
-            lexEnv = LexicalEnv::Cast(env.GetTaggedObject());
-            ASSERT(slot < lexEnv->GetLength() - LexicalEnv::RESERVED_ENV_LENGTH);
-            valueHandle.Update(lexEnv->GetProperties(slot));
-            Local<JSValueRef> value = JSNApiHelper::ToLocal<JSValueRef>(valueHandle);
-            if (varName == "this") {
-                if (thisVal->IsHole()) {
-                    LOG_DEBUGGER(INFO) << "find 'this' in current lexical env";
-                    thisVal = value;
-                }
-                continue;
-            }
-            Local<JSValueRef> name = StringRef::NewFromUtf8(vm_, varName.c_str());
-            if (value->IsHole()) {
-                value = JSValueRef::Undefined(vm_);
-            }
-            PropertyAttribute descriptor(value, true, true, true);
-            localObj->DefineProperty(vm_, name, descriptor);
-        }
-    }
-
-    // if 'this' is not in current lexical env, we should try to find from it's parent env
-    if (thisVal->IsHole()) {
-        auto [level, slot] = DebuggerApi::GetLevelSlot(frameHandler, "this");
-        if (LIKELY(level != -1)) {
-            LOG_DEBUGGER(INFO) << "find 'this' in parent lexical env";
-            thisVal = DebuggerApi::GetProperties(vm_, frameHandler, level, slot);
-        } else {
-            thisVal = JSValueRef::Undefined(vm_);
-        }
-    }
 }
 
 std::unique_ptr<Scope> DebuggerImpl::GetGlobalScopeChain()
