@@ -16,10 +16,10 @@
 #ifndef ECMASCRIPT_TOOLING_CLIENT_TOOLCHAIN_CLI_COMMAND_H
 #define ECMASCRIPT_TOOLING_CLIENT_TOOLCHAIN_CLI_COMMAND_H
 
-#include <vector>
-#include <map>
 #include <cstdlib>
 #include <functional>
+#include <map>
+#include <vector>
 
 #include "log_wrapper.h"
 #include "websocket/websocket_client.h"
@@ -36,9 +36,8 @@ enum {
 
 class CliCommand {
 public:
-    CliCommand(ToolchainWebsocket* cliSocket, std::vector<std::string> cliCmdStr, int cmdId)
+    CliCommand(std::vector<std::string> cliCmdStr, int cmdId)
     {
-        cliSocket_ = std::move(cliSocket);
         id_ = cmdId;
         cmd_ = cliCmdStr[0];
         for (unsigned int i = 1; i < cliCmdStr.size(); i++) {
@@ -59,14 +58,23 @@ public:
     ErrCode RuntimeCommand(const std::string cmd);
     ErrCode ExecHelpCommand();
 
+    uint32_t GetId() const
+    {
+        return id_;
+    }
+
+    VecStr GetArgList()
+    {
+        return argList_;
+    }
+
 private:
-    std::string cmd_;
-    VecStr argList_;
+    std::string cmd_ ;
+    VecStr argList_ {};
     std::map<StrPair, std::function<int()>> commandMap_;
     std::string resultReceiver_ = "";
-    ToolchainWebsocket* cliSocket_ {nullptr};
     HeapProfilerClient heapProfilerCli_;
-    int id_ = 0;
+    uint32_t id_ = 0;
 };
 } // namespace OHOS::ArkCompiler::Toolchain
 

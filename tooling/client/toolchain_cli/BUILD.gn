@@ -43,8 +43,11 @@ ohos_executable("toolchain_cli") {
     "$toolchain_root/tooling",
     "$toolchain_root/inspector",
     "$toolchain_root/websocket",
+    "$toolchain_root/tooling/base",
     "$toolchain_root/tooling/client",
     "$toolchain_root/tooling/client/toolchain_cli",
+    "//third_party/cJSON",
+    "//third_party/libuv/include",
   ]
 
   deps = [

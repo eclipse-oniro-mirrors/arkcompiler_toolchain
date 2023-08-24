@@ -16,9 +16,10 @@
 #ifndef ECMASCRIPT_TOOLING_CLIENT_WEBSOCKET_CLIENT_H
 #define ECMASCRIPT_TOOLING_CLIENT_WEBSOCKET_CLIENT_H
 
+#include <atomic>
 #include <iostream>
 #include <memory>
-#include <atomic>
+#include <map>
 
 #include "websocket.h"
 
@@ -54,6 +55,7 @@ public:
     void Close();
     bool SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit);
     bool IsConnected();
+
 private:
     int32_t client_ {-1};
     std::atomic<ToolchainSocketState> socketState_ {ToolchainSocketState::UNINITED};

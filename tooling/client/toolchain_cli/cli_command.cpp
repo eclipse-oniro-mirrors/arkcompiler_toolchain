@@ -17,10 +17,15 @@
 #include <cstring>
 #include <cstdlib>
 #include <functional>
+#include <mutex>
+
 #include "cli_command.h"
 #include "log_wrapper.h"
+#include "manager/domain_manager.h"
 
 namespace OHOS::ArkCompiler::Toolchain{
+extern ToolchainWebsocket g_cliSocket;
+extern DomainManager g_domainManager;
 const std::string HELP_MSG = "usage: <command> <options>\n"
     " These are common commands list:\n"
     "  allocationtrack(at)                 allocation-track-start with options\n"
@@ -60,7 +65,7 @@ const std::string HELP_MSG = "usage: <command> <options>\n"
     "  setvar(sv)                          set value with options\n"
     "  step(s)                             step\n"
     "  undisplay                           undisplay\n"
-    "  watch                               watch\n";
+    "  watch(wa)                           watch\n";
 
 const std::vector<std::string> cmdList = {
     "allocationtrack",
@@ -164,36 +169,38 @@ ErrCode CliCommand::HeapProfilerCommand(const std::string cmd)
     std::cout << "exe success, cmd is " << cmd << std::endl;
     std::string request;
     bool result = false;
-    LOGE("HeapProfilerCommand: %{public}d", id_);
-    result = heapProfilerCli_.DispatcherCmd(id_, cmd, &request);
-    std::string lastReply = "{\"id\":" + std::to_string(id_) + ",\"result\":{}}";
-    if (result) {
-        cliSocket_->ClientSendReq(request);
-        while (cliSocket_->IsConnected()) {
-            std::string decMessage = cliSocket_->Decode();
-            std::cout << decMessage << std::endl;
-            if (strstr(decMessage.c_str(), lastReply.c_str())) {
-                break;
-            }
+    HeapProfilerClient* heapProfilerClient = g_domainManager.GetHeapProfilerClient();
+    VecStr argList = GetArgList();
+    if (argList.empty()) {
+        argList.push_back("/data/");
+    }
+    result = heapProfilerClient->DispatcherCmd(id_, cmd, argList[0], &request);
+    if(result) {
+        g_cliSocket.ClientSendReq(request);
+        if(g_domainManager.GetDomainById(id_).empty()) {
+            g_domainManager.SetDomainById(id_, "HeapProfiler");
         }
     } else {
-        std::cout << request << std::endl;
+        return ERR_FAIL;
     }
     return ERR_OK;
 }
 
 ErrCode CliCommand::CpuProfileCommand(const std::string cmd)
 {
+    std::cout << "exe success, cmd is " << cmd << std::endl;
     return ERR_OK;
 }
 
 ErrCode CliCommand::DebuggerCommand(const std::string cmd)
 {
+    std::cout << "exe success, cmd is " << cmd << std::endl;
     return ERR_OK;
 }
 
 ErrCode CliCommand::RuntimeCommand(const std::string cmd)
 {
+    std::cout << "exe success, cmd is " << cmd << std::endl;
     return ERR_OK;
 }
 
@@ -214,8 +221,7 @@ ErrCode CliCommand::OnCommand()
         if (!strcmp(cmdPair.first.c_str(), cmd_.c_str())
             ||!strcmp(cmdPair.second.c_str(), cmd_.c_str())) {
             auto respond = it->second;
-            respond();
-            return ERR_OK;
+            return respond();
         }
     }
 
@@ -234,5 +240,4 @@ ErrCode CliCommand::OnCommand()
 
     return ERR_FAIL;
 }
-
 } // namespace OHOS::ArkCompiler::Toolchain

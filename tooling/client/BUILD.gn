@@ -56,18 +56,19 @@ ohos_source_set("libark_toolchain_client_set") {
   sources = [
     "websocket/websocket_client.cpp",
     "domain/heapprofiler_client.cpp",
+    "manager/domain_manager.cpp",
   ]
 
   deps += [
     "$toolchain_root/websocket:websocket",
     "$toolchain_root/tooling:libark_ecma_debugger_set",
     "$ark_third_party_root/openssl:libcrypto_shared",
+    "//third_party/libuv:uv",
     sdk_libc_secshared_dep,
   ]
 
   external_deps += [
     "ets_runtime:libark_jsruntime",
-    "libuv:uv",
   ]
 
   configs += [
