@@ -84,12 +84,154 @@ struct BreakpointDetails {
 // Debugger.CallFrameId
 using CallFrameId = int32_t;
 
-// ========== Runtime types begin
+// Debugger.BreakpointInfo
+class BreakpointInfo : public PtBaseTypes {
+public:
+    BreakpointInfo() = default;
+    ~BreakpointInfo() override = default;
+
+    static std::unique_ptr<BreakpointInfo> Create(const PtJson &params);
+    std::unique_ptr<PtJson> ToJson() const override;
+
+    int32_t GetLineNumber() const
+    {
+        return lineNumber_;
+    }
+
+    int32_t GetColumnNumber() const
+    {
+        return columnNumber_;
+    }
+
+    const std::string &GetUrl() const
+    {
+        return url_;
+    }
+
+    const std::string &GetCondition() const
+    {
+        ASSERT(HasCondition());
+        return condition_.value();
+    }
+
+    bool HasCondition() const
+    {
+        return condition_.has_value();
+    }
+
+    const std::string &GetUrlRegex() const
+    {
+        ASSERT(HasUrlRegex());
+        return urlRegex_.value();
+    }
+
+    bool HasUrlRegex() const
+    {
+        return urlRegex_.has_value();
+    }
+
+    const std::string &GetScriptHash() const
+    {
+        ASSERT(HasScriptHash());
+        return scriptHash_.value();
+    }
+
+    bool HasScriptHash() const
+    {
+        return scriptHash_.has_value();
+    }
+
+    bool GetRestrictToFunction() const
+    {
+        return restrictToFunction_.value_or(false);
+    }
+
+    bool HasRestrictToFunction() const
+    {
+        return restrictToFunction_.has_value();
+    }
+
+private:
+    NO_COPY_SEMANTIC(BreakpointInfo);
+    NO_MOVE_SEMANTIC(BreakpointInfo);
+
+    int32_t lineNumber_ {0};
+    int32_t columnNumber_ {0};
+    std::string url_ {};
+    std::optional<std::string> condition_ {};
+    std::optional<std::string> urlRegex_ {};
+    std::optional<std::string> scriptHash_ {};
+    std::optional<bool> restrictToFunction_ {};
+};
+
 // Runtime.ScriptId
 using ScriptId = int32_t;
 
-// Runtime.RemoteObjectId
+// Debugger.BreakpointReturnInfo
+class BreakpointReturnInfo : public PtBaseTypes {
+public:
+    BreakpointReturnInfo() = default;
+    ~BreakpointReturnInfo() override = default;
 
+    static std::unique_ptr<BreakpointReturnInfo> Create(const PtJson &params);
+    std::unique_ptr<PtJson> ToJson() const override;
+
+    int32_t GetLineNumber()
+    {
+        return lineNumber_;
+    }
+
+    int32_t GetColumnNumber()
+    {
+        return columnNumber_;
+    }
+
+    BreakpointReturnInfo &SetColumnNumber(int32_t column)
+    {
+        columnNumber_ = column;
+        return *this;
+    }
+
+    BreakpointReturnInfo &SetLineNumber(int32_t line)
+    {
+        lineNumber_ = line;
+        return *this;
+    }
+
+    std::string GetId()
+    {
+        return id_;
+    }
+
+    BreakpointReturnInfo &SetId(std::string &id)
+    {
+        id_ = id;
+        return *this;
+    }
+
+    ScriptId GetScriptId() const
+    {
+        return scriptId_;
+    }
+
+    BreakpointReturnInfo &SetScriptId(ScriptId scriptId)
+    {
+        scriptId_ = scriptId;
+        return *this;
+    }
+
+private:
+    NO_COPY_SEMANTIC(BreakpointReturnInfo);
+    NO_MOVE_SEMANTIC(BreakpointReturnInfo);
+
+    std::string id_;
+    int32_t lineNumber_ {0};
+    int32_t columnNumber_ {0};
+    ScriptId scriptId_ {0};
+};
+
+// ========== Runtime types begin
+// Runtime.RemoteObjectId
 using RemoteObjectId = int32_t;
 
 // Runtime.ExecutionContextId

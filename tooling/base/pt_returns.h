@@ -66,6 +66,23 @@ private:
     std::vector<std::unique_ptr<Location>> locations_ {};
 };
 
+class GetPossibleAndSetBreakpointByUrlReturns : public PtBaseReturns {
+public:
+    explicit GetPossibleAndSetBreakpointByUrlReturns(std::vector<std::unique_ptr<BreakpointReturnInfo>> locations)
+        : locations_(std::move(locations))
+    {}
+    ~GetPossibleAndSetBreakpointByUrlReturns() override = default;
+
+    std::unique_ptr<PtJson> ToJson() const override;
+
+private:
+    GetPossibleAndSetBreakpointByUrlReturns() = default;
+    NO_COPY_SEMANTIC(GetPossibleAndSetBreakpointByUrlReturns);
+    NO_MOVE_SEMANTIC(GetPossibleAndSetBreakpointByUrlReturns);
+
+    std::vector<std::unique_ptr<BreakpointReturnInfo>> locations_ {};
+};
+
 class EvaluateOnCallFrameReturns : public PtBaseReturns {
 public:
     explicit EvaluateOnCallFrameReturns(std::unique_ptr<RemoteObject> result,

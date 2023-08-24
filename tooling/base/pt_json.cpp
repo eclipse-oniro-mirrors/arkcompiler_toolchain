@@ -86,6 +86,11 @@ bool PtJson::Add(const char *key, int64_t value) const
     return Add(key, static_cast<double>(value));
 }
 
+bool PtJson::Add(const char *key, uint32_t value) const
+{
+    return Add(key, static_cast<double>(value));
+}
+
 bool PtJson::Add(const char *key, double value) const
 {
     ASSERT(key != nullptr && !Contains(key));
@@ -161,6 +166,11 @@ bool PtJson::Push(int32_t value) const
 }
 
 bool PtJson::Push(int64_t value) const
+{
+    return Push(static_cast<double>(value));
+}
+
+bool PtJson::Push(uint32_t value) const
 {
     return Push(static_cast<double>(value));
 }
@@ -301,6 +311,15 @@ int64_t PtJson::GetInt64(int64_t defaultValue) const
     return static_cast<int64_t>(object_->valuedouble);
 }
 
+uint32_t PtJson::GetUInt(uint32_t defaultValue) const
+{
+    if (!IsNumber()) {
+        return defaultValue;
+    }
+
+    return static_cast<uint32_t>(object_->valuedouble);
+}
+
 double PtJson::GetDouble(double defaultValue) const
 {
     if (!IsNumber()) {
@@ -359,6 +378,16 @@ Result PtJson::GetInt64(const char *key, int64_t *value) const
     Result ret = GetDouble(key, &result);
     if (ret == Result::SUCCESS) {
         *value = static_cast<int64_t>(result);
+    }
+    return ret;
+}
+
+Result PtJson::GetUInt(const char *key, uint32_t *value) const
+{
+    double result;
+    Result ret = GetDouble(key, &result);
+    if (ret == Result::SUCCESS) {
+        *value = static_cast<uint32_t>(result);
     }
     return ret;
 }

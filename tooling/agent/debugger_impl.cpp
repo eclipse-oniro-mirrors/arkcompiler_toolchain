@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -185,6 +185,14 @@ bool DebuggerImpl::CheckPauseOnException()
 
 void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReason reason)
 {
+    if (skipAllPausess_) {
+        return;
+    }
+
+    if (location.has_value() && !breakpointsState_) {
+        return;
+    }
+
     if (reason == EXCEPTION && !CheckPauseOnException()) {
         return;
     }
@@ -236,6 +244,9 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
         paused.SetData(std::move(tmpException));
     }
     frontend_.Paused(vm_, paused);
+    if (reason != BREAK_ON_START) {
+        singleStepper_.reset();
+    }
     debuggerState_ = DebuggerState::PAUSED;
     frontend_.WaitForDebugger(vm_);
     DebuggerApi::SetException(vm_, exception);
@@ -266,14 +277,6 @@ void DebuggerImpl::SetDebuggerState(DebuggerState debuggerState)
     debuggerState_ = debuggerState;
 }
 
-void DebuggerImpl::NotifyPendingJobEntry()
-{
-    if (singleStepper_ != nullptr) {
-        singleStepper_.reset();
-        pauseOnNextByteCode_ = true;
-    }
-}
-
 void DebuggerImpl::NotifyHandleProtocolCommand()
 {
     auto *handler = vm_->GetJsDebuggerManager()->GetDebuggerHandler();
@@ -293,13 +296,17 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         { "resume", &DebuggerImpl::DispatcherImpl::Resume },
         { "setAsyncCallStackDepth", &DebuggerImpl::DispatcherImpl::SetAsyncCallStackDepth },
         { "setBreakpointByUrl", &DebuggerImpl::DispatcherImpl::SetBreakpointByUrl },
+        { "setBreakpointsActive", &DebuggerImpl::DispatcherImpl::SetBreakpointsActive },
         { "setPauseOnExceptions", &DebuggerImpl::DispatcherImpl::SetPauseOnExceptions },
+        { "setSkipAllPauses", &DebuggerImpl::DispatcherImpl::SetSkipAllPauses },
         { "stepInto", &DebuggerImpl::DispatcherImpl::StepInto },
         { "stepOut", &DebuggerImpl::DispatcherImpl::StepOut },
         { "stepOver", &DebuggerImpl::DispatcherImpl::StepOver },
         { "setMixedDebugEnabled", &DebuggerImpl::DispatcherImpl::SetMixedDebugEnabled },
         { "setBlackboxPatterns", &DebuggerImpl::DispatcherImpl::SetBlackboxPatterns },
-        { "replyNativeCalling", &DebuggerImpl::DispatcherImpl::ReplyNativeCalling }
+        { "replyNativeCalling", &DebuggerImpl::DispatcherImpl::ReplyNativeCalling },
+        { "getPossibleAndSetBreakpointByUrl", &DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl },
+        { "dropFrame", &DebuggerImpl::DispatcherImpl::DropFrame }
     };
 
     const std::string &method = request.GetMethod();
@@ -426,6 +433,33 @@ void DebuggerImpl::DispatcherImpl::SetBreakpointByUrl(const DispatchRequest &req
     SendResponse(request, response, result);
 }
 
+void DebuggerImpl::DispatcherImpl::SetBreakpointsActive(const DispatchRequest &request)
+{
+    std::unique_ptr<SetBreakpointsActiveParams> params = SetBreakpointsActiveParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+
+    DispatchResponse response = debugger_->SetBreakpointsActive(*params);
+    SendResponse(request, response);
+}
+
+void DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(const DispatchRequest &request)
+{
+    std::unique_ptr<GetPossibleAndSetBreakpointParams> params;
+    params = GetPossibleAndSetBreakpointParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+
+    std::vector<std::unique_ptr<BreakpointReturnInfo>> outLoc;
+    DispatchResponse response = debugger_->GetPossibleAndSetBreakpointByUrl(*params, outLoc);
+    GetPossibleAndSetBreakpointByUrlReturns result(std::move(outLoc));
+    SendResponse(request, response, result);
+}
+
 void DebuggerImpl::DispatcherImpl::SetPauseOnExceptions(const DispatchRequest &request)
 {
     std::unique_ptr<SetPauseOnExceptionsParams> params = SetPauseOnExceptionsParams::Create(request.GetParams());
@@ -435,6 +469,18 @@ void DebuggerImpl::DispatcherImpl::SetPauseOnExceptions(const DispatchRequest &r
     }
 
     DispatchResponse response = debugger_->SetPauseOnExceptions(*params);
+    SendResponse(request, response);
+}
+
+void DebuggerImpl::DispatcherImpl::SetSkipAllPauses(const DispatchRequest &request)
+{
+    std::unique_ptr<SetSkipAllPausesParams> params = SetSkipAllPausesParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+
+    DispatchResponse response = debugger_->SetSkipAllPauses(*params);
     SendResponse(request, response);
 }
 
@@ -491,6 +537,17 @@ void DebuggerImpl::DispatcherImpl::ReplyNativeCalling(const DispatchRequest &req
 void DebuggerImpl::DispatcherImpl::SetBlackboxPatterns(const DispatchRequest &request)
 {
     DispatchResponse response = debugger_->SetBlackboxPatterns();
+    SendResponse(request, response);
+}
+
+void DebuggerImpl::DispatcherImpl::DropFrame(const DispatchRequest &request)
+{
+    std::unique_ptr<DropFrameParams> params = DropFrameParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+    DispatchResponse response = debugger_->DropFrame(*params);
     SendResponse(request, response);
 }
 
@@ -734,7 +791,6 @@ DispatchResponse DebuggerImpl::Resume([[maybe_unused]] const ResumeParams &param
         return DispatchResponse::Fail("Can only perform operation while paused");
     }
     frontend_.Resumed(vm_);
-    singleStepper_.reset();
     debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
@@ -807,9 +863,103 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
     return DispatchResponse::Ok();
 }
 
+DispatchResponse DebuggerImpl::SetBreakpointsActive(const SetBreakpointsActiveParams &params)
+{
+    breakpointsState_ = params.GetBreakpointsState();
+    return DispatchResponse::Ok();
+}
+
+DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const GetPossibleAndSetBreakpointParams &params,
+    std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations)
+{
+    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+        return DispatchResponse::Fail("GetPossibleAndSetBreakpointByUrl: debugger agent is not enabled");
+    }
+    if (!params.HasBreakpointsList()) {
+        return DispatchResponse::Fail("GetPossibleAndSetBreakpointByUrl: no pennding breakpoint exists");
+    }
+    auto breakpointList = params.GetBreakpointsList();
+    for (const auto &breakpoint : *breakpointList) {
+        bool isProcessSucceed = ProcessSingleBreakpoint(*breakpoint, outLocations);
+        if (!isProcessSucceed) {
+            std::string invalidBpId = "invalid";
+            std::unique_ptr<BreakpointReturnInfo> bpInfo = std::make_unique<BreakpointReturnInfo>();
+            bpInfo->SetId(invalidBpId)
+                .SetLineNumber(breakpoint->GetLineNumber())
+                .SetColumnNumber(breakpoint->GetColumnNumber());
+            outLocations.emplace_back(std::move(bpInfo));
+        }
+    }
+    return DispatchResponse::Ok();
+}
+
+bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
+                                           std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations)
+{
+    const std::string &url = breakpoint.GetUrl();
+    int32_t lineNumber = breakpoint.GetLineNumber();
+    int32_t columnNumber = breakpoint.GetColumnNumber();
+    auto condition = breakpoint.HasCondition() ? breakpoint.GetCondition() : std::optional<std::string> {};
+
+    DebugInfoExtractor *extractor = GetExtractor(url);
+    if (extractor == nullptr) {
+        LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: extractor is null";
+        return false;
+    }
+
+    ScriptId scriptId;
+    std::string fileName;
+    auto matchScriptCbFunc = [&scriptId, &fileName](PtScript *script) -> bool {
+        scriptId = script->GetScriptId();
+        fileName = script->GetFileName();
+        return true;
+    };
+    if (!MatchScripts(matchScriptCbFunc, url, ScriptMatchType::URL)) {
+        LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: unknown Url: " << url;
+        return false;
+    }
+
+    // check breakpoint condition before doing matchWithLocation
+    Local<FunctionRef> funcRef = FunctionRef::Undefined(vm_);
+    if (condition.has_value() && !condition.value().empty()) {
+        std::vector<uint8_t> dest;
+        if (!DecodeAndCheckBase64(condition.value(), dest)) {
+            LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: base64 decode failed";
+            return false;
+        }
+        funcRef = DebuggerApi::GenerateFuncFromBuffer(vm_, dest.data(), dest.size(), JSPandaFile::ENTRY_FUNCTION_NAME);
+        if (funcRef->IsUndefined()) {
+            LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: generate condition function failed";
+            return false;
+        }
+    }
+
+    auto matchLocationCbFunc = [this, &funcRef](const JSPtLocation &location) -> bool {
+        return DebuggerApi::SetBreakpoint(jsDebugger_, location, funcRef);
+    };
+    if (!extractor->MatchWithLocation(matchLocationCbFunc, lineNumber, columnNumber, url, GetRecordName(url))) {
+        LOG_DEBUGGER(ERROR) << "failed to set breakpoint location number: " << lineNumber << ":" << columnNumber;
+        return false;
+    }
+    
+    BreakpointDetails bpMetaData {lineNumber, columnNumber, url};
+    std::string outId = BreakpointDetails::ToString(bpMetaData);
+    std::unique_ptr<BreakpointReturnInfo> bpInfo = std::make_unique<BreakpointReturnInfo>();
+    bpInfo->SetScriptId(scriptId).SetLineNumber(lineNumber).SetColumnNumber(columnNumber).SetId(outId);
+    outLocations.emplace_back(std::move(bpInfo));
+
+    return true;
+}
+
 DispatchResponse DebuggerImpl::SetPauseOnExceptions(const SetPauseOnExceptionsParams &params)
 {
     pauseOnException_ = params.GetState();
+    return DispatchResponse::Ok();
+}
+
+DispatchResponse DebuggerImpl::SetSkipAllPauses(const SetSkipAllPausesParams &params)
+{
+    skipAllPausess_ = params.GetSkipAllPausesState();
     return DispatchResponse::Ok();
 }
 
@@ -875,6 +1025,41 @@ DispatchResponse DebuggerImpl::ReplyNativeCalling([[maybe_unused]] const ReplyNa
     if (params.GetUserCode()) {
         singleStepper_.reset();
     }
+    return DispatchResponse::Ok();
+}
+
+DispatchResponse DebuggerImpl::DropFrame(const DropFrameParams &params)
+{
+    if (debuggerState_ != DebuggerState::PAUSED) {
+        return DispatchResponse::Fail("Can only perform operation while paused");
+    }
+    uint32_t droppedDepth = 1;
+    if (params.HasDroppedDepth()) {
+        droppedDepth = params.GetDroppedDepth();
+        if (droppedDepth == 0) {
+            return DispatchResponse::Ok();
+        }
+        if (droppedDepth > 1) {
+            return DispatchResponse::Fail("Not yet support dropping multiple frames");
+        }
+    }
+    uint32_t stackDepth = DebuggerApi::GetStackDepth(vm_);
+    if (droppedDepth > stackDepth) {
+        return DispatchResponse::Fail("The input depth exceeds stackDepth");
+    }
+    if (droppedDepth == stackDepth) {
+        return DispatchResponse::Fail("The bottom frame cannot be dropped");
+    }
+    uint32_t stackDepthOverBuiltin = DebuggerApi::GetStackDepthOverBuiltin(vm_);
+    if (droppedDepth >= stackDepthOverBuiltin) {
+        return DispatchResponse::Fail("Frames to be dropped contain builtin frame");
+    }
+    for (uint32_t i = 0; i < droppedDepth; i++) {
+        DebuggerApi::DropLastFrame(vm_);
+    }
+    pauseOnNextByteCode_ = true;
+    frontend_.RunIfWaitingForDebugger(vm_);
+    debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
 }
 
@@ -1008,6 +1193,11 @@ bool DebuggerImpl::GenerateCallFrame(CallFrame *callFrame,
     JSThread *thread = vm_->GetJSThread();
     std::vector<std::unique_ptr<Scope>> scopeChain;
     scopeChain.emplace_back(GetLocalScopeChain(frameHandler, &thisObj));
+    // generate closure scopes
+    auto closureScopeChains = GetClosureScopeChains(frameHandler, &thisObj);
+    for (auto &scope : closureScopeChains) {
+        scopeChain.emplace_back(std::move(scope));
+    }
     if (jsPandaFile != nullptr && !jsPandaFile->IsBundlePack() && jsPandaFile->IsNewVersion()) {
         JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm_));
         if (currentModule->IsSourceTextModule()) { // CJS module is string
@@ -1053,7 +1243,6 @@ std::unique_ptr<Scope> DebuggerImpl::GetLocalScopeChain(const FrameHandler *fram
     Local<JSValueRef> thisVal = JSNApiHelper::ToLocal<JSValueRef>(
         JSHandle<JSTaggedValue>(vm_->GetJSThread(), JSTaggedValue::Hole()));
     GetLocalVariables(frameHandler, methodId, jsPandaFile, thisVal, localObj);
-    GetClosureVariables(frameHandler, thisVal, localObj);
     *thisObj = RemoteObject::FromTagged(vm_, thisVal);
     runtime_->CacheObjectIfNeeded(thisVal, (*thisObj).get());
 
@@ -1077,6 +1266,98 @@ std::unique_ptr<Scope> DebuggerImpl::GetLocalScopeChain(const FrameHandler *fram
     }
 
     return localScope;
+}
+
+std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const FrameHandler *frameHandler,
+    std::unique_ptr<RemoteObject> *thisObj)
+{
+    std::vector<std::unique_ptr<Scope>> closureScopes;
+    Method *method = DebuggerApi::GetMethod(frameHandler);
+    EntityId methodId = method->GetMethodId();
+    const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
+    DebugInfoExtractor *extractor = GetExtractor(jsPandaFile);
+    JSThread *thread = vm_->GetJSThread();
+
+    if (extractor == nullptr) {
+        LOG_DEBUGGER(ERROR) << "GetClosureScopeChains: extractor is null";
+        return closureScopes;
+    }
+
+    JSMutableHandle<JSTaggedValue> envHandle = JSMutableHandle<JSTaggedValue>(
+        thread, DebuggerApi::GetEnv(frameHandler));
+    JSMutableHandle<JSTaggedValue> valueHandle = JSMutableHandle<JSTaggedValue>(thread, JSTaggedValue::Hole());
+    JSTaggedValue currentEnv = envHandle.GetTaggedValue();
+    if (!currentEnv.IsTaggedArray()) {
+        LOG_DEBUGGER(ERROR) << "GetClosureScopeChains: currentEnv is invalid";
+        return closureScopes;
+    }
+    // check if GetLocalScopeChain has already found and set 'this' value
+    bool thisFound = (*thisObj)->HasValue();
+    bool closureVarFound = false;
+    // currentEnv = currentEnv->parent until currentEnv becomes undefined
+    for (; currentEnv.IsTaggedArray(); currentEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject())->GetParentEnv()) {
+        LexicalEnv *lexicalEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject());
+        envHandle.Update(currentEnv);
+        if (lexicalEnv->GetScopeInfo().IsHole()) {
+            continue;
+        }
+        auto closureScope = std::make_unique<Scope>();
+        auto result = JSNativePointer::Cast(lexicalEnv->GetScopeInfo().GetTaggedObject())->GetExternalPointer();
+        ScopeDebugInfo *scopeDebugInfo = reinterpret_cast<ScopeDebugInfo *>(result);
+        std::unique_ptr<RemoteObject> closure = std::make_unique<RemoteObject>();
+        Local<ObjectRef> closureScopeObj = ObjectRef::New(vm_);
+
+        for (const auto &[name, slot] : scopeDebugInfo->scopeInfo) {
+            if (IsVariableSkipped(name.c_str())) {
+                continue;
+            }
+            currentEnv = envHandle.GetTaggedValue();
+            lexicalEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject());
+            valueHandle.Update(lexicalEnv->GetProperties(slot));
+            Local<JSValueRef> value = JSNApiHelper::ToLocal<JSValueRef>(valueHandle);
+            Local<JSValueRef> varName = StringRef::NewFromUtf8(vm_, name.c_str());
+            // found 'this' and 'this' is not set in GetLocalScopechain
+            if (!thisFound && name == "this") {
+                *thisObj = RemoteObject::FromTagged(vm_, value);
+                // cache 'this' object
+                runtime_->CacheObjectIfNeeded(value, (*thisObj).get());
+                thisFound = true;
+                continue;
+            }
+            // found closure variable in current lexenv
+            closureVarFound = true;
+            // if value is hole, should manually set it to undefined
+            // otherwise after DefineProperty, corresponding varName
+            // will become undefined
+            if (value->IsHole()) {
+                valueHandle.Update(JSTaggedValue::Undefined());
+                value = JSNApiHelper::ToLocal<JSValueRef>(valueHandle);
+            }
+            PropertyAttribute descriptor(value, true, true, true);
+            closureScopeObj->DefineProperty(vm_, varName, descriptor);
+        }
+        // at least one closure variable has been found
+        if (closureVarFound) {
+            closure->SetType(ObjectType::Object)
+                .SetObjectId(runtime_->curObjectId_)
+                .SetClassName(ObjectClassName::Object)
+                .SetDescription(RemoteObject::ObjectDescription);
+
+            auto scriptFunc = []([[maybe_unused]] PtScript *script) -> bool {
+                return true;
+            };
+            if (MatchScripts(scriptFunc, extractor->GetSourceFile(methodId), ScriptMatchType::URL)) {
+                closureScope->SetType(Scope::Type::Closure()).SetObject(std::move(closure));
+                DebuggerApi::AddInternalProperties(
+                    vm_, closureScopeObj, ArkInternalValueType::Scope,  runtime_->internalObjects_);
+                runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, closureScopeObj);
+                closureScopes.emplace_back(std::move(closureScope));
+            }
+        }
+        currentEnv = envHandle.GetTaggedValue();
+        closureVarFound = false;
+    }
+    return closureScopes;
 }
 
 std::unique_ptr<Scope> DebuggerImpl::GetModuleScopeChain()
@@ -1116,10 +1397,10 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
             continue;
         }
 
-        if (varName == "4newTarget" || varName == "0this" || varName == "0newTarget" || varName == "0funcObj") {
+        if (IsVariableSkipped(varName)) {
             continue;
         }
-        
+
         value = DebuggerApi::GetVRegValue(vm_, frameHandler, regIndex);
         if (varName == "this") {
             LOG_DEBUGGER(INFO) << "find 'this' in local variable table";
@@ -1147,51 +1428,9 @@ bool DebuggerImpl::IsWithinVariableScope(const LocalVariableInfo &localVariableI
     return bcOffset >= localVariableInfo.startOffset && bcOffset < localVariableInfo.endOffset;
 }
 
-void DebuggerImpl::GetClosureVariables(const FrameHandler *frameHandler, Local<JSValueRef> &thisVal,
-    Local<ObjectRef> &localObj)
+bool DebuggerImpl::IsVariableSkipped(const std::string &varName)
 {
-    JSTaggedValue env = DebuggerApi::GetEnv(frameHandler);
-    if (env.IsTaggedArray() && DebuggerApi::GetBytecodeOffset(frameHandler) != 0) {
-        LexicalEnv *lexEnv = LexicalEnv::Cast(env.GetTaggedObject());
-        if (lexEnv->GetScopeInfo().IsHole()) {
-            return;
-        }
-        auto *scopeDebugInfo = reinterpret_cast<ScopeDebugInfo *>(JSNativePointer::Cast(
-            lexEnv->GetScopeInfo().GetTaggedObject())->GetExternalPointer());
-        JSThread *thread = vm_->GetJSThread();
-        for (const auto &[varName, slot] : scopeDebugInfo->scopeInfo) {
-            // skip possible duplicate variables both in local variable table and env
-            if (varName == "4newTarget") {
-                continue;
-            }
-            Local<JSValueRef> value = JSNApiHelper::ToLocal<JSValueRef>(
-                JSHandle<JSTaggedValue>(thread, lexEnv->GetProperties(slot)));
-            if (varName == "this") {
-                if (thisVal->IsHole()) {
-                    LOG_DEBUGGER(INFO) << "find 'this' in current lexical env";
-                    thisVal = value;
-                }
-                continue;
-            }
-            Local<JSValueRef> name = StringRef::NewFromUtf8(vm_, varName.c_str());
-            if (value->IsHole()) {
-                value = JSValueRef::Undefined(vm_);
-            }
-            PropertyAttribute descriptor(value, true, true, true);
-            localObj->DefineProperty(vm_, name, descriptor);
-        }
-    }
-
-    // if 'this' is not in current lexical env, we should try to find from it's parent env
-    if (thisVal->IsHole()) {
-        auto [level, slot] = DebuggerApi::GetLevelSlot(frameHandler, "this");
-        if (LIKELY(level != -1)) {
-            LOG_DEBUGGER(INFO) << "find 'this' in parent lexical env";
-            thisVal = DebuggerApi::GetProperties(vm_, frameHandler, level, slot);
-        } else {
-            thisVal = JSValueRef::Undefined(vm_);
-        }
-    }
+    return varName == "4newTarget" || varName == "0this" || varName == "0newTarget" || varName == "0funcObj";
 }
 
 std::unique_ptr<Scope> DebuggerImpl::GetGlobalScopeChain()
