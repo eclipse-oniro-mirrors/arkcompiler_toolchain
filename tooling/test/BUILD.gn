@@ -47,8 +47,10 @@ test_js_files = [
   "export_variable_first",
   "export_variable_second",
   "module_variable",
+  "dropframe",
   "local_variable_scope",
   "container",
+  "closure_scope",
 ]
 
 foreach(file, test_js_files) {
@@ -149,13 +151,14 @@ host_unittest_action("DebuggerEntryTest") {
     ":jsdebugtest",
     "$ark_third_party_root/icu/icu4c:shared_icui18n",
     "$ark_third_party_root/icu/icu4c:shared_icuuc",
-    "//arkcompiler/ets_runtime:libark_jsruntime_test",
-    "//arkcompiler/toolchain/tooling:libark_ecma_debugger_test",
+    "$toolchain_root/tooling:libark_ecma_debugger_test",
   ]
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
   deps += hiviewdfx_deps
+
+  external_deps += [ "ets_runtime:libark_jsruntime_test" ]
 }
 
 host_unittest_action("DebuggerTest") {
@@ -191,14 +194,44 @@ host_unittest_action("DebuggerTest") {
     "$ark_third_party_root/cJSON:cjson",
     "$ark_third_party_root/icu/icu4c:shared_icui18n",
     "$ark_third_party_root/icu/icu4c:shared_icuuc",
-    "//arkcompiler/ets_runtime:libark_jsruntime_test",
-    "//arkcompiler/toolchain/tooling:libark_ecma_debugger_test",
+    "$toolchain_root/tooling:libark_ecma_debugger_test",
     sdk_libc_secshared_dep,
   ]
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
   deps += hiviewdfx_deps
+
+  external_deps += [ "ets_runtime:libark_jsruntime_test" ]
+}
+
+host_unittest_action("DebuggerCInterpTest") {
+  module_out_path = module_output_path
+
+  sources = [
+    # test file
+    "debugger_cinterp_test.cpp",
+  ]
+
+  cflags_cc = [ "-Wno-gnu-zero-variadic-macro-arguments" ]
+
+  defines = [ "DEBUGGER_TEST_LIBRARY=\"libdebugger_entry.so\"" ]
+
+  configs = [ ":debug_api_test" ]
+
+  deps = [
+    ":debugger_entry_resource",
+    ":jsdebugtest",
+    "$ark_third_party_root/icu/icu4c:shared_icui18n",
+    "$ark_third_party_root/icu/icu4c:shared_icuuc",
+    "$toolchain_root/tooling:libark_ecma_debugger_test",
+  ]
+
+  # hiviewdfx libraries
+  external_deps = hiviewdfx_ext_deps
+  deps += hiviewdfx_deps
+
+  external_deps += [ "ets_runtime:libark_jsruntime_test" ]
 }
 
 group("debugger_entry_resource") {
@@ -212,6 +245,7 @@ group("unittest") {
 
   # deps file
   deps = [
+    ":DebuggerCInterpTest",
     ":DebuggerEntryTest",
     ":DebuggerTest",
   ]
@@ -222,6 +256,7 @@ group("host_unittest") {
 
   # deps file
   deps = [
+    ":DebuggerCInterpTestAction",
     ":DebuggerEntryTestAction",
     ":DebuggerTestAction",
   ]

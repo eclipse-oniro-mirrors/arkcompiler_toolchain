@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef ARKCOMPILER_TOOLCHAIN_INSPECTOR_DEFINE_H
-#define ARKCOMPILER_TOOLCHAIN_INSPECTOR_DEFINE_H
+#ifndef ARKCOMPILER_TOOLCHAIN_WEBSOCKET_DEFINE_H
+#define ARKCOMPILER_TOOLCHAIN_WEBSOCKET_DEFINE_H
 
 #include <fstream>
 #include <openssl/sha.h>
@@ -58,4 +58,4 @@ std::vector<std::string> ProtocolSplit(const std::string& str, const std::string
 }
 } // namespace OHOS::ArkCompiler::Toolchain
 
-#endif // ARKCOMPILER_TOOLCHAIN_INSPECTOR_DEFINE_H
+#endif // ARKCOMPILER_TOOLCHAIN_WEBSOCKET_DEFINE_H

@@ -42,7 +42,6 @@ public:
                             std::string_view entryPoint = "func_main_0");
     bool NotifySingleStep(const JSPtLocation &location);
     void NotifyPaused(std::optional<JSPtLocation> location, PauseReason reason);
-    void NotifyPendingJobEntry();
     void NotifyHandleProtocolCommand();
     void NotifyNativeCalling(const void *nativeAddress);
     void SetDebuggerState(DebuggerState debuggerState);
@@ -60,13 +59,18 @@ public:
     DispatchResponse SetAsyncCallStackDepth();
     DispatchResponse SetBreakpointByUrl(const SetBreakpointByUrlParams &params, std::string *outId,
                                         std::vector<std::unique_ptr<Location>> *outLocations);
+    DispatchResponse SetBreakpointsActive(const SetBreakpointsActiveParams &params);
+    DispatchResponse GetPossibleAndSetBreakpointByUrl(const GetPossibleAndSetBreakpointParams &params,
+                                        std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
     DispatchResponse SetPauseOnExceptions(const SetPauseOnExceptionsParams &params);
+    DispatchResponse SetSkipAllPauses(const SetSkipAllPausesParams &params);
     DispatchResponse StepInto(const StepIntoParams &params);
     DispatchResponse StepOut();
     DispatchResponse StepOver(const StepOverParams &params);
     DispatchResponse SetBlackboxPatterns();
     DispatchResponse SetMixedDebugEnabled(const SetMixedDebugParams &params);
     DispatchResponse ReplyNativeCalling(const ReplyNativeCallingParams &params);
+    DispatchResponse DropFrame(const DropFrameParams &params);
 
     /**
      * @brief: match first script and callback
@@ -120,13 +124,17 @@ public:
         void Resume(const DispatchRequest &request);
         void SetAsyncCallStackDepth(const DispatchRequest &request);
         void SetBreakpointByUrl(const DispatchRequest &request);
+        void SetBreakpointsActive(const DispatchRequest &request);
         void SetPauseOnExceptions(const DispatchRequest &request);
+        void SetSkipAllPauses(const DispatchRequest &request);
         void StepInto(const DispatchRequest &request);
         void StepOut(const DispatchRequest &request);
         void StepOver(const DispatchRequest &request);
         void SetMixedDebugEnabled(const DispatchRequest &request);
         void SetBlackboxPatterns(const DispatchRequest &request);
         void ReplyNativeCalling(const DispatchRequest &request);
+        void GetPossibleAndSetBreakpointByUrl(const DispatchRequest &request);
+        void DropFrame(const DispatchRequest &request);
 
     private:
         NO_COPY_SEMANTIC(DispatcherImpl);
@@ -144,17 +152,17 @@ private:
     DebugInfoExtractor *GetExtractor(const JSPandaFile *jsPandaFile);
     DebugInfoExtractor *GetExtractor(const std::string &url);
     std::optional<std::string> CmptEvaluateValue(CallFrameId callFrameId, const std::string &expression,
-                                             std::unique_ptr<RemoteObject> *result);
+        std::unique_ptr<RemoteObject> *result);
     bool GenerateCallFrame(CallFrame *callFrame, const FrameHandler *frameHandler, CallFrameId frameId);
     void SaveCallFrameHandler(const FrameHandler *frameHandler);
     std::unique_ptr<Scope> GetLocalScopeChain(const FrameHandler *frameHandler,
         std::unique_ptr<RemoteObject> *thisObj);
     std::unique_ptr<Scope> GetModuleScopeChain();
     std::unique_ptr<Scope> GetGlobalScopeChain();
+    std::vector<std::unique_ptr<Scope>> GetClosureScopeChains(const FrameHandler *frameHandler,
+        std::unique_ptr<RemoteObject> *thisObj);
     void GetLocalVariables(const FrameHandler *frameHandler, panda_file::File::EntityId methodId,
         const JSPandaFile *jsPandaFile, Local<JSValueRef> &thisVal, Local<ObjectRef> &localObj);
-    void GetClosureVariables(const FrameHandler *frameHandler, Local<JSValueRef> &thisVal,
-        Local<ObjectRef> &localObj);
     void CleanUpOnPaused();
     void UpdateScopeObject(const FrameHandler *frameHandler, std::string_view varName, Local<JSValueRef> newVal);
     void ClearSingleStepper();
@@ -163,6 +171,9 @@ private:
     bool IsSkipLine(const JSPtLocation &location);
     bool CheckPauseOnException();
     bool IsWithinVariableScope(const LocalVariableInfo &localVariableInfo, uint32_t bcOffset);
+    bool ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
+        std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
+    bool IsVariableSkipped(const std::string &varName);
 
     const std::string &GetRecordName(const std::string &url)
     {
@@ -206,6 +217,8 @@ private:
     PauseOnExceptionsState pauseOnException_ {PauseOnExceptionsState::NONE};
     DebuggerState debuggerState_ {DebuggerState::ENABLED};
     bool pauseOnNextByteCode_ {false};
+    bool breakpointsState_ {true};
+    bool skipAllPausess_ {false};
     std::unique_ptr<SingleStepper> singleStepper_ {nullptr};
     std::vector<void *>  nativePointer_;
 

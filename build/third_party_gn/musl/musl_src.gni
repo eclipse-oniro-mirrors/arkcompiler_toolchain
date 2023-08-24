@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import("//third_party/FreeBSD/FreeBSD.gni")
 import("$build_root/third_party_gn/musl/musl_config.gni")
 
 if (musl_arch == "arm") {
@@ -152,6 +153,7 @@ if (musl_arch == "arm") {
     "src/thread/aarch64/__unmapself.s",
     "src/thread/aarch64/clone.s",
     "src/thread/aarch64/syscall_cp.s",
+    "src/misc/aarch64/syscall.s",
   ]
 } else if (musl_arch == "x86_64") {
   musl_src_arch_file = [
@@ -228,6 +230,7 @@ musl_src_file = [
   "src/thread/pthread_cond_timedwait_monotonic_np.c",
   "src/thread/pthread_cond_timeout_np.c",
   "src/internal/pthread_impl.h",
+  "src/internal/locale_impl.h",
   "src/thread/pthread_rwlock_clockrdlock.c",
   "src/thread/pthread_rwlock_timedrdlock.c",
   "src/thread/pthread_rwlock_timedrdlock_monotonic_np.c",
@@ -1657,6 +1660,7 @@ if (musl_arch == "arm") {
     "src/thread/__unmapself.c",
     "src/thread/clone.c",
     "src/thread/syscall_cp.c",
+    "src/misc/syscall.c",
   ]
 } else if (musl_arch == "x86_64") {
   musl_src_filterout = [
@@ -2163,6 +2167,7 @@ musl_src_porting_file = [
   "src/env/__init_tls.c",
   "src/env/__libc_start_main.c",
   "src/internal/pthread_impl.h",
+  "src/internal/locale_impl.h",
   "src/internal/syscall.h",
   "ldso/namespace.h",
   "ldso/ns_config.h",
@@ -2180,6 +2185,7 @@ musl_src_porting_file = [
   "src/malloc/stats.c",
   "src/malloc/calloc.c",
   "src/malloc/free.c",
+  "src/network/getnameinfo.c",
   "src/malloc/libc_calloc.c",
   "src/malloc/realloc.c",
   "src/network/inet_legacy.c",
@@ -2195,14 +2201,18 @@ musl_src_porting_file = [
   "src/thread/arm/syscall_cp.s",
   "src/thread/pthread_mutex_clocklock.c",
   "src/thread/pthread_mutex_timedlock.c",
+  "src/thread/pthread_mutex_lock.c",
   "src/thread/pthread_mutex_timedlock_monotonic_np.c",
   "src/thread/pthread_mutex_lock_timeout_np.c",
+  "src/thread/pthread_mutex_init.c",
   "src/thread/pthread_rwlock_clockrdlock.c",
   "src/thread/pthread_rwlock_timedrdlock.c",
   "src/thread/pthread_rwlock_timedrdlock_monotonic_np.c",
+  "src/thread/pthread_rwlock_init.c",
   "src/thread/pthread_cond_timedwait_monotonic_np.c",
   "src/thread/pthread_cond_timeout_np.c",
   "src/thread/pthread_cond_clockwait.c",
+  "src/thread/pthread_cond_init.c",
   "src/thread/pthread_create.c",
   "src/thread/pthread_rwlock_clockwrlock.c",
   "src/thread/pthread_rwlock_timedwrlock_monotonic_np.c",
@@ -2237,6 +2247,7 @@ musl_src_porting_file = [
   "src/locale/dcngettext.c",
   "src/locale/locale_map.c",
   "src/locale/langinfo.c",
+  "src/locale/newlocale.c",
   "src/time/__tz.c",
   "src/time/gmtime_r.c",
   "src/time/strftime.c",
@@ -2249,10 +2260,22 @@ musl_src_porting_file = [
   "src/stdio/__fdopen.c",
   "src/stdio/vfprintf.c",
   "src/stdio/__stdio_read.c",
+  "src/stdio/__stdio_write.c",
+  "src/stdio/__stdout_write.c",
   "src/stdio/fread.c",
   "src/stdio/fmemopen.c",
   "src/stdio/freopen.c",
   "src/stdio/stdin.c",
+  "src/stdio/__fmodeflags.c",
+  "src/stdio/fopen.c",
+  "src/stdio/ofl.c",
+  "src/stdio/fclose.c",
+  "src/stdio/__toread.c",
+  "src/stdio/__towrite.c",
+  "src/stdio/stderr.c",
+  "src/stdio/fgets.c",
+  "src/stdio/vsnprintf.c",
+  "src/stdio/vsscanf.c",
   "src/internal/stdio_impl.h",
   "src/internal/vdso.c",
   "src/time/clock_gettime.c",
@@ -2270,6 +2293,21 @@ musl_src_porting_file = [
   "src/conf/legacy.c",
   "src/conf/sysconf.c",
   "src/env/getenv.c",
+  "src/string/strcasecmp.c",
+  "src/string/strncasecmp.c",
+  "src/string/strncat.c",
+  "src/string/stpncpy.c",
+  "src/string/strncpy.c",
+  "src/string/strcspn.c",
+  "src/thread/pthread_once.c",
+  "src/thread/pthread_cancel.c",
+  "src/mq/mq_notify.c",
+  "src/aio/aio.c",
+  "src/misc/aarch64/syscall.s",
+  "src/stdlib/strtod.c",
+  "src/thread/sem_timedwait.c",
+  "src/stdio/vfscanf.c",
+  "src/stdio/fileno.c",
 ]
 
 musl_inc_hook_files = [
@@ -2279,4 +2317,21 @@ musl_inc_hook_files = [
   "//third_party/musl/porting/linux/user/src/hook/musl_malloc_dispatch_table.h",
   "//third_party/musl/porting/linux/user/src/hook/musl_malloc_dispatch.h",
   "//third_party/musl/porting/linux/user/src/hook/musl_preinit_common.h",
+]
+
+added_freebsd_files = [
+  "$FREEBSD_DIR/contrib/gdtoa/strtod.c",
+  "$FREEBSD_DIR/contrib/gdtoa/gethex.c",
+  "$FREEBSD_DIR/contrib/gdtoa/smisc.c",
+  "$FREEBSD_DIR/contrib/gdtoa/misc.c",
+  "$FREEBSD_DIR/contrib/gdtoa/strtord.c",
+  "$FREEBSD_DIR/contrib/gdtoa/hexnan.c",
+  "$FREEBSD_DIR/contrib/gdtoa/gmisc.c",
+  "$FREEBSD_DIR/contrib/gdtoa/hd_init.c",
+  "$FREEBSD_DIR/contrib/gdtoa/strtodg.c",
+  "$FREEBSD_DIR/contrib/gdtoa/ulp.c",
+  "$FREEBSD_DIR/contrib/gdtoa/strtof.c",
+  "$FREEBSD_DIR/contrib/gdtoa/sum.c",
+  "$FREEBSD_DIR/lib/libc/gdtoa/glue.c",
+  "$FREEBSD_DIR/lib/libc/stdio/parsefloat.c",
 ]

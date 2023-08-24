@@ -18,12 +18,11 @@
 #include "agent/debugger_impl.h"
 
 namespace panda::ecmascript::tooling {
-void JSPtHooks::DebuggerStmt(const JSPtLocation &location)
+void JSPtHooks::DebuggerStmt([[maybe_unused]] const JSPtLocation &location)
 {
-    LOG_DEBUGGER(INFO) << "JSPHooks: Debugger => " << location.GetMethodId() << ": "
-                        << location.GetBytecodeOffset();
+    LOG_DEBUGGER(VERBOSE) << "JSPHooks: Debugger Statement";
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
-    debugger_->NotifyPaused(location, OTHER);
+    debugger_->NotifyPaused({}, OTHER);
 }
 
 void JSPtHooks::Breakpoint(const JSPtLocation &location)
@@ -77,15 +76,6 @@ void JSPtHooks::LoadModule(std::string_view pandaFileName, std::string_view entr
     if (debugger_->NotifyScriptParsed(scriptId++, pandaFileName.data(), entryPoint)) {
         firstTime_ = true;
     }
-}
-
-void JSPtHooks::PendingJobEntry()
-{
-    LOG_DEBUGGER(VERBOSE) << "JSPtHooks: PendingJobEntry";
-
-    [[maybe_unused]] LocalScope scope(debugger_->vm_);
-
-    debugger_->NotifyPendingJobEntry();
 }
 
 void JSPtHooks::NativeCalling(const void *nativeAddress)

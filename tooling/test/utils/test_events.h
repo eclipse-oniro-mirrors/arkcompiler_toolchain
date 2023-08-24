@@ -43,7 +43,9 @@ enum class DebugEvent {
     VM_START,
     VM_INITIALIZATION,
     VM_DEATH,
-    UNINITIALIZED
+    UNINITIALIZED,
+    DROPFRAME,
+    CHECK_COMPLETE
 };
 
 std::ostream &operator<<(std::ostream &out, DebugEvent value);

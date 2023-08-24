@@ -269,6 +269,7 @@ DispatchResponse HeapProfilerImpl::Enable()
 
 DispatchResponse HeapProfilerImpl::Disable()
 {
+    panda::DFXJSNApi::DestroyHeapProfiler(vm_);
     return DispatchResponse::Ok();
 }
 
@@ -298,6 +299,7 @@ DispatchResponse HeapProfilerImpl::GetSamplingProfile([[maybe_unused]] std::uniq
 
 DispatchResponse HeapProfilerImpl::StartSampling([[maybe_unused]] const StartSamplingParams &params)
 {
+    panda::JSNApi::SetProfilerState(vm_, true);
     uint64_t samplingInterval = static_cast<uint64_t>(params.GetSamplingInterval());
     bool result = panda::DFXJSNApi::StartSampling(vm_, samplingInterval);
     if (result) {
@@ -311,6 +313,7 @@ DispatchResponse HeapProfilerImpl::StopSampling([[maybe_unused]] std::unique_ptr
     DispatchResponse samplingProfile = GetSamplingProfile(profile);
     if (samplingProfile.IsOk()) {
         panda::DFXJSNApi::StopSampling(vm_);
+        panda::JSNApi::SetProfilerState(vm_, false);
         return DispatchResponse::Ok();
     }
     return DispatchResponse::Fail("StopSampling fail");
@@ -318,6 +321,7 @@ DispatchResponse HeapProfilerImpl::StopSampling([[maybe_unused]] std::unique_ptr
 
 DispatchResponse HeapProfilerImpl::StartTrackingHeapObjects(const StartTrackingHeapObjectsParams &params)
 {
+    panda::JSNApi::SetProfilerState(vm_, true);
     if (uv_is_active(reinterpret_cast<uv_handle_t*>(&handle_))) {
         return DispatchResponse::Ok();
     }
@@ -353,6 +357,7 @@ void HeapProfilerImpl::HeapTrackingCallback(uv_timer_t* handle)
 
 DispatchResponse HeapProfilerImpl::StopTrackingHeapObjects(const StopTrackingHeapObjectsParams &params)
 {
+    uv_timer_stop(&handle_);
     bool result = false;
     if (params.GetReportProgress()) {
         HeapProfilerProgress progress(&frontend_);
@@ -360,8 +365,8 @@ DispatchResponse HeapProfilerImpl::StopTrackingHeapObjects(const StopTrackingHea
     } else {
         result = panda::DFXJSNApi::StopHeapTracking(vm_, &stream_, nullptr, false);
     }
-    uv_timer_stop(&handle_);
     if (result) {
+        panda::JSNApi::SetProfilerState(vm_, false);
         return DispatchResponse::Ok();
     } else {
         return DispatchResponse::Fail("StopHeapTracking fail");
@@ -370,11 +375,12 @@ DispatchResponse HeapProfilerImpl::StopTrackingHeapObjects(const StopTrackingHea
 
 DispatchResponse HeapProfilerImpl::TakeHeapSnapshot(const StopTrackingHeapObjectsParams &params)
 {
+    bool captureNumericValue = params.GetCaptureNumericValue();
     if (params.GetReportProgress()) {
         HeapProfilerProgress progress(&frontend_);
-        panda::DFXJSNApi::DumpHeapSnapshot(vm_, 0, &stream_, &progress, true);
+        panda::DFXJSNApi::DumpHeapSnapshot(vm_, 0, &stream_, &progress, true, false, captureNumericValue);
     } else {
-        panda::DFXJSNApi::DumpHeapSnapshot(vm_, 0, &stream_, nullptr, true);
+        panda::DFXJSNApi::DumpHeapSnapshot(vm_, 0, &stream_, nullptr, true, false, captureNumericValue);
     }
     return DispatchResponse::Ok();
 }

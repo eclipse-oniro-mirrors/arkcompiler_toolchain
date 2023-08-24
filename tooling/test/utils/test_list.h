@@ -24,6 +24,7 @@
 
 namespace panda::ecmascript::tooling::test {
 std::vector<const char *> GetTestList();
+std::vector<const char *> GetCInterpTestList();
 
 void SetCurrentTestName(const std::string &testName);
 std::string GetCurrentTestName();

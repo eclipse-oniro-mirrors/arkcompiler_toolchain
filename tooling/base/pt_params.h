@@ -309,6 +309,69 @@ private:
     std::optional<std::string> condition_ {};
 };
 
+
+class SetBreakpointsActiveParams : public PtBaseParams {
+public:
+    SetBreakpointsActiveParams() = default;
+    ~SetBreakpointsActiveParams() override = default;
+
+    static std::unique_ptr<SetBreakpointsActiveParams> Create(const PtJson &params);
+
+    bool GetBreakpointsState() const
+    {
+        return breakpointsState_.value_or(false);
+    }
+private:
+    NO_COPY_SEMANTIC(SetBreakpointsActiveParams);
+    NO_MOVE_SEMANTIC(SetBreakpointsActiveParams);
+
+    std::optional<bool> breakpointsState_ {};
+};
+
+class SetSkipAllPausesParams : public PtBaseParams {
+public:
+    SetSkipAllPausesParams() = default;
+    ~SetSkipAllPausesParams() override = default;
+
+    static std::unique_ptr<SetSkipAllPausesParams> Create(const PtJson &params);
+
+    bool GetSkipAllPausesState() const
+    {
+        return skipAllPausesState_.value_or(false);
+    }
+private:
+    NO_COPY_SEMANTIC(SetSkipAllPausesParams);
+    NO_MOVE_SEMANTIC(SetSkipAllPausesParams);
+
+    std::optional<bool> skipAllPausesState_ {};
+};
+
+class GetPossibleAndSetBreakpointParams : public PtBaseParams {
+public:
+    GetPossibleAndSetBreakpointParams() = default;
+    ~GetPossibleAndSetBreakpointParams() = default;
+    static std::unique_ptr<GetPossibleAndSetBreakpointParams> Create(const PtJson &params);
+
+    const std::vector<std::unique_ptr<BreakpointInfo>> *GetBreakpointsList() const
+    {
+        if (!breakpointsList_) {
+            return nullptr;
+        }
+        return &(breakpointsList_.value());
+    }
+
+    bool HasBreakpointsList() const
+    {
+        return breakpointsList_.has_value();
+    }
+
+private:
+    NO_COPY_SEMANTIC(GetPossibleAndSetBreakpointParams);
+    NO_MOVE_SEMANTIC(GetPossibleAndSetBreakpointParams);
+
+    std::optional<std::vector<std::unique_ptr<BreakpointInfo>>> breakpointsList_ {};
+};
+
 enum class PauseOnExceptionsState : uint8_t { NONE, UNCAUGHT, ALL };
 
 class SetPauseOnExceptionsParams : public PtBaseParams {
@@ -409,6 +472,29 @@ private:
     NO_MOVE_SEMANTIC(StepOverParams);
 
     std::optional<std::list<std::unique_ptr<LocationRange>>> skipList_ {};
+};
+
+class DropFrameParams : public PtBaseParams {
+public:
+    DropFrameParams() = default;
+    ~DropFrameParams() override = default;
+    static std::unique_ptr<DropFrameParams> Create(const PtJson &params);
+
+    uint32_t GetDroppedDepth() const
+    {
+        return droppedDepth_.value();
+    }
+
+    bool HasDroppedDepth() const
+    {
+        return droppedDepth_.has_value();
+    }
+
+private:
+    NO_COPY_SEMANTIC(DropFrameParams);
+    NO_MOVE_SEMANTIC(DropFrameParams);
+
+    std::optional<uint32_t> droppedDepth_ {};
 };
 
 class SetMixedDebugParams : public PtBaseParams {

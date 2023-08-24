@@ -267,6 +267,29 @@ var o = {
         var regExp20 = /^[a-zA-Z]\/w{5,17}$/;
         var regExp21 = new RegExp('^[0-9a-zA-Z_]{1,}$', 'u');
 
+        var target = {
+            name: "openharmony",
+            age: 3
+        };
+        var handler = {
+            get(target, key) {
+                let result = target[key];
+                if (key === "age") result += "岁";
+                return result;
+            },
+            set(target, key, value) {
+                if (key === "age" && typeof value !== "number") {
+                    throw Error("age字段必须为Number类型");
+                }
+                return Reflect.set(target, key, value);
+            }
+        }
+        var {proxy, revoke} = Proxy.revocable(target, handler);
+        var proxy1 = new Proxy(target, handler);
+        var proxy2 = Proxy.revocable(target, handler);
+
+        revoke();
+        proxy2.revoke();
         var nop = undefined;
     }
 }

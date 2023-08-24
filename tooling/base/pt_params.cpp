@@ -328,6 +328,83 @@ std::unique_ptr<SetBreakpointByUrlParams> SetBreakpointByUrlParams::Create(const
     return paramsObject;
 }
 
+std::unique_ptr<SetBreakpointsActiveParams> SetBreakpointsActiveParams::Create(const PtJson &params)
+{
+    auto paramsObject = std::make_unique<SetBreakpointsActiveParams>();
+    std::string error;
+    Result ret;
+
+    bool breakpointsState;
+    ret = params.GetBool("active", &breakpointsState);
+    if (ret == Result::SUCCESS) {
+        paramsObject->breakpointsState_ = std::move(breakpointsState);
+    } else if (ret == Result::TYPE_ERROR) {  // optional value
+        error += "Unknown 'active';";
+    }
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "SetBreakpointsActiveParams::Create " << error;
+        return nullptr;
+    }
+
+    return paramsObject;
+}
+
+std::unique_ptr<SetSkipAllPausesParams> SetSkipAllPausesParams::Create(const PtJson &params)
+{
+    auto paramsObject = std::make_unique<SetSkipAllPausesParams>();
+    std::string error;
+    Result ret;
+
+    bool skipAllPausesState;
+    ret = params.GetBool("skip", &skipAllPausesState);
+    if (ret == Result::SUCCESS) {
+        paramsObject->skipAllPausesState_ = std::move(skipAllPausesState);
+    } else if (ret == Result::TYPE_ERROR) {  // optional value
+        error += "Unknown 'skip';";
+    }
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "SetSkipAllPausesParams::Create " << error;
+        return nullptr;
+    }
+
+    return paramsObject;
+}
+
+std::unique_ptr<GetPossibleAndSetBreakpointParams> GetPossibleAndSetBreakpointParams::Create(const PtJson &params)
+{
+    auto paramsObject = std::make_unique<GetPossibleAndSetBreakpointParams>();
+    std::string error;
+    Result ret;
+
+    std::unique_ptr<PtJson> breakpoints;
+    ret = params.GetArray("locations", &breakpoints);
+    if (ret == Result::SUCCESS) {
+        int32_t length = breakpoints->GetSize();
+        std::vector<std::unique_ptr<BreakpointInfo>> breakpointList;
+        for (int32_t i = 0; i < length; i++) {
+            std::unique_ptr<BreakpointInfo> info = BreakpointInfo::Create(*breakpoints->Get(i));
+            if (info == nullptr) {
+                error += "'breakpoints' items BreakpointInfo is invaild;";
+                break;
+            } else {
+                breakpointList.emplace_back(std::move(info));
+            }
+        }
+        if (!breakpointList.empty()) {
+            paramsObject->breakpointsList_ = std::move(breakpointList);
+        }
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Unknown 'breakpoints';";
+    }
+
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointParams::Create " << error;
+        return nullptr;
+    }
+
+    return paramsObject;
+}
+
 std::unique_ptr<SetPauseOnExceptionsParams> SetPauseOnExceptionsParams::Create(const PtJson &params)
 {
     auto paramsObject = std::make_unique<SetPauseOnExceptionsParams>();
@@ -421,6 +498,28 @@ std::unique_ptr<StepOverParams> StepOverParams::Create(const PtJson &params)
 
     if (!error.empty()) {
         LOG_DEBUGGER(ERROR) << "StepOverParams::Create " << error;
+        return nullptr;
+    }
+
+    return paramsObject;
+}
+
+std::unique_ptr<DropFrameParams> DropFrameParams::Create(const PtJson &params)
+{
+    auto paramsObject = std::make_unique<DropFrameParams>();
+    std::string error;
+    Result ret;
+
+    uint32_t droppedDepth = 0;
+    ret = params.GetUInt("droppedDepth", &droppedDepth);
+    if (ret == Result::SUCCESS) {
+        paramsObject->droppedDepth_ = droppedDepth;
+    } else if (ret == Result::TYPE_ERROR) {  // optional value
+        error += "Unknown 'droppedDepth';";
+    }
+
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "DropFrameParams::Create " << error;
         return nullptr;
     }
 
