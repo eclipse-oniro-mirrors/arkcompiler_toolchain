@@ -17,14 +17,31 @@
 #define ECMASCRIPT_TOOLING_CLIENT_DOMAIN_HEAPPROFILER_CLIENT_H
 
 #include <iostream>
+#include <fstream>
+#include <map>
+
+#include "pt_json.h"
+
+using PtJson = panda::ecmascript::tooling::PtJson;
 
 namespace OHOS::ArkCompiler::Toolchain {
+enum HeapProfilerEvent {
+    DAFAULT_VALUE = 0,
+    ALLOCATION = 1,
+    ALLOCATION_STOP,
+    HEAPDUMP,
+    ENABLE,
+    DISABLE,
+    SAMPLING,
+    SAMPLING_STOP,
+    COLLECT_GARBAGE
+};
 class HeapProfilerClient final {
 public:
     HeapProfilerClient() = default;
     ~HeapProfilerClient() = default;
 
-    bool DispatcherCmd(int id, const std::string cmd, std::string* reqStr);
+    bool DispatcherCmd(int id, const std::string &cmd, const std::string &arg, std::string* reqStr);
     std::string HeapDumpCommand(int id);
     std::string AllocationTrackCommand(int id);
     std::string AllocationTrackStopCommand(int id);
@@ -33,8 +50,14 @@ public:
     std::string Samping(int id);
     std::string SampingStop(int id);
     std::string CollectGarbage(int id);
-private:
+    void RecvReply(std::unique_ptr<PtJson> json);
+    bool WriteHeapProfilerForFile(std::string fileName, std::string data);
 
+private:
+    std::string fileName_;
+    std::map<uint32_t, HeapProfilerEvent> idEventMap_;
+    std::string path_;
+    bool isAllocationMsg_ {false};
 };
 } //OHOS::ArkCompiler::Toolchain
 #endif

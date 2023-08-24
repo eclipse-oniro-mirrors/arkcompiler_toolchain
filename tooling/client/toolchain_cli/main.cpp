@@ -16,10 +16,24 @@
 #include <cstring>
 #include <iostream>
 #include <vector>
+#include <pthread.h>
+#include <thread>
+#include <uv.h>
+#include <securec.h>
 
 #include "cli_command.h"
+#include "manager/domain_manager.h"
 
 namespace OHOS::ArkCompiler::Toolchain{
+DomainManager g_domainManager;
+ToolchainWebsocket g_cliSocket;
+uint32_t g_messageId = 0;
+uv_async_t* g_socketSignal;
+uv_async_t* g_inputSignal;
+uv_async_t* g_releaseHandle;
+uv_loop_t* g_loop;
+
+
 bool StrToUInt(const char *content, uint32_t *result)
 {
     const int DEC = 10;
@@ -52,10 +66,108 @@ std::vector<std::string> SplitString(const std::string &str, const std::string &
     return value;
 }
 
+void ReleaseHandle(uv_async_t *handle)
+{
+    uv_close(reinterpret_cast<uv_handle_t*>(g_inputSignal), [](uv_handle_t* handle) {
+        if (handle != nullptr) {
+            delete reinterpret_cast<uv_async_t*>(handle);
+            handle = nullptr;
+        }
+    });
+
+    uv_close(reinterpret_cast<uv_handle_t*>(g_socketSignal), [](uv_handle_t* handle) {
+        if (handle != nullptr) {
+            delete reinterpret_cast<uv_async_t*>(handle);
+            handle = nullptr;
+        }
+    });
+
+    uv_close(reinterpret_cast<uv_handle_t*>(g_releaseHandle), [](uv_handle_t* handle) {
+        if (handle != nullptr) {
+            delete reinterpret_cast<uv_async_t*>(handle);
+            handle = nullptr;
+        }
+    });
+
+    if (g_loop != nullptr) {
+        uv_stop(g_loop);
+    }
+}
+
+void InputOnMessage(uv_async_t *handle)
+{
+    char* msg = static_cast<char*>(handle->data);
+    std::string inputStr = std::string(msg);
+    std::vector<std::string> cliCmdStr = SplitString(inputStr, " ");
+    g_messageId += 1;
+    CliCommand cmd(cliCmdStr, g_messageId);
+    if(ERR_FAIL == cmd.ExecCommand()) {
+        g_messageId -= 1;
+    }
+
+    std::cout << ">>> ";
+    fflush(stdout);
+    if (msg != nullptr) {
+        free(msg);
+    }
+}
+
+void GetInputCommand(void *arg)
+{
+    std::cout << ">>> ";
+    std::string inputStr;
+    while(getline(std::cin, inputStr)) {
+        if(inputStr.empty()) {
+            std::cout << ">>> ";
+            continue;
+        }
+        if((!strcmp(inputStr.c_str(), "quit"))||(!strcmp(inputStr.c_str(), "q"))) {
+            LOGE("toolchain_cli: quit");
+            g_cliSocket.Close();
+            if (uv_is_active(reinterpret_cast<uv_handle_t*>(g_releaseHandle))) {
+                uv_async_send(g_releaseHandle);
+            }
+            break;
+        }
+        if(uv_is_active(reinterpret_cast<uv_handle_t*>(g_inputSignal))) {
+            uint32_t len = inputStr.length();
+            char* msg = (char*)malloc(len);
+            if((msg != nullptr) && uv_is_active(reinterpret_cast<uv_handle_t*>(g_inputSignal))){
+                strncpy(msg, inputStr.c_str(), len);
+                g_inputSignal->data = std::move(msg);
+                uv_async_send(g_inputSignal);
+            }
+        }
+    }
+}
+
+void SocketOnMessage(uv_async_t *handle)
+{
+    char* msg = static_cast<char*>(handle->data);
+    g_domainManager.DispatcherReply(msg);
+    if (msg != nullptr) {
+        free(msg);
+    }
+}
+
+void GetSocketMessage(void *arg)
+{
+    while (g_cliSocket.IsConnected()) {
+        std::string decMessage = g_cliSocket.Decode();
+        uint32_t len = decMessage.length();
+        char* msg = (char*)malloc(len);
+        if ((msg != nullptr) && uv_is_active(reinterpret_cast<uv_handle_t*>(g_socketSignal))) {
+            strncpy(msg, decMessage.c_str(), len);
+            g_socketSignal->data = std::move(msg);
+            uv_async_send(g_socketSignal);
+        }
+    }
+}
+
 int Main(const int argc, const char** argv)
 {
     uint32_t port = 0;
-    OHOS::ArkCompiler::Toolchain::ToolchainWebsocket cliSocket;
+
     if(argc < 2) {
         LOGE("toolchain_cli is missing a parameter");
         return -1;
@@ -66,43 +178,44 @@ int Main(const int argc, const char** argv)
                 LOGE("toolchain_cli:InitToolchainWebSocketForPort the port = %{public}d is wrong.", port);
                 return -1;
             }
-            if(!cliSocket.InitToolchainWebSocketForPort(port, 5)) {
+            if(!g_cliSocket.InitToolchainWebSocketForPort(port, 5)) {
                 LOGE("toolchain_cli:InitToolchainWebSocketForPort failed");
                 return -1;
             }
         } else {
-            if(!cliSocket.InitToolchainWebSocketForSockName(argv[1])) {
+            if(!g_cliSocket.InitToolchainWebSocketForSockName(argv[1])) {
                 LOGE("toolchain_cli:InitToolchainWebSocketForSockName failed");
                 return -1;
             }
         }
 
-        if (!cliSocket.ClientSendWSUpgradeReq()) {
+        if (!g_cliSocket.ClientSendWSUpgradeReq()) {
             LOGE("toolchain_cli:ClientSendWSUpgradeReq failed");
             return -1;
         }
-        if (!cliSocket.ClientRecvWSUpgradeRsp()) {
+        if (!g_cliSocket.ClientRecvWSUpgradeRsp()) {
             LOGE("toolchain_cli:ClientRecvWSUpgradeRsp failed");
             return -1;
         }
 
-        std::cout << ">>> ";
-        std::string inputStr;
-        int cmdId = 0;
-        while(getline(std::cin, inputStr)) {
-            if((!strcmp(inputStr.c_str(), "quit"))||(!strcmp(inputStr.c_str(), "q"))) {
-                LOGE("toolchain_cli: quit");
-                cliSocket.Close();
-                break;
-            }
-            std::vector<std::string> cliCmdStr = SplitString(inputStr, " ");
-            cmdId += 1;
-            OHOS::ArkCompiler::Toolchain::CliCommand cmd(&cliSocket, cliCmdStr, cmdId);
-            if(ERR_FAIL == cmd.ExecCommand()) {
-                cmdId -= 1;
-            }
-            std::cout << ">>> ";
-        }
+        g_loop = uv_default_loop();
+
+        g_inputSignal = new uv_async_t;
+        uv_async_init(g_loop, g_inputSignal, reinterpret_cast<uv_async_cb>(InputOnMessage));
+
+        g_socketSignal = new uv_async_t;
+        uv_async_init(g_loop, g_socketSignal, reinterpret_cast<uv_async_cb>(SocketOnMessage));
+
+        g_releaseHandle = new uv_async_t;
+        uv_async_init(g_loop, g_releaseHandle, reinterpret_cast<uv_async_cb>(ReleaseHandle));
+
+        uv_thread_t inputTid;
+        uv_thread_create(&inputTid, GetInputCommand, nullptr);
+        
+        uv_thread_t socketTid;
+        uv_thread_create(&socketTid, GetSocketMessage, nullptr);
+
+        uv_run(g_loop, UV_RUN_DEFAULT);
     }
     return 0;
 }
