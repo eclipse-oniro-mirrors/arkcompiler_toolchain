@@ -24,6 +24,7 @@ static constexpr char CONNECTED_MESSAGE[] = "connected";
 static constexpr char OPEN_MESSAGE[] = "layoutOpen";
 static constexpr char CLOSE_MESSAGE[] = "layoutClose";
 static constexpr char REQUEST_MESSAGE[] = "tree";
+static constexpr char STOPDEBUGGER_MESSAGE[] = "stopDebugger";
 
 void* HandleDebugManager(void* const server)
 {
@@ -76,6 +77,13 @@ void OnMessage(const std::string& message)
                 g_inspector->createLayoutInfo_(g_inspector->instanceId_);
             }
         }
+        if (message.find(STOPDEBUGGER_MESSAGE, 0) != std::string::npos) {
+            g_inspector->waitingForDebugger_ = true;
+            if (g_inspector->setDebugMode_ != nullptr) {
+                LOGI("stopDebugger start");
+                g_inspector->setDebugMode_();
+            }
+        }
     }
 }
 
@@ -87,6 +95,15 @@ void SetSwitchCallBack(const std::function<void(bool)>& setSwitchStatus,
         g_inspector->setSwitchStatus_ = setSwitchStatus;
         g_inspector->createLayoutInfo_ = createLayoutInfo;
         g_inspector->instanceId_ = instanceId;
+    }
+}
+
+// stop debugger but the application continues to run
+void SetDebugModeCallBack(const std::function<void()>& setDebugMode)
+{
+    std::lock_guard<std::mutex> lock(g_connectMutex);
+    if (g_inspector != nullptr) {
+        g_inspector->setDebugMode_ = setDebugMode;
     }
 }
 
