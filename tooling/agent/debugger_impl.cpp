@@ -1068,17 +1068,14 @@ DispatchResponse DebuggerImpl::DropFrame(const DropFrameParams &params)
 
 void DebuggerImpl::CleanUpOnPaused()
 {
-    ReleaseGlobalRefProperties();
-    runtime_->curObjectId_ = 0;
-    runtime_->properties_.clear();
-
+    CleanUpRuntimeProperties();
     callFrameHandlers_.clear();
     scopeObjects_.clear();
 }
 
-void DebuggerImpl::ReleaseGlobalRefProperties()
+void DebuggerImpl::CleanUpRuntimeProperties()
 {
-    LOG_DEBUGGER(INFO) << "ReleaseGlobalRefProperties OnPaused";
+    LOG_DEBUGGER(INFO) << "CleanUpRuntimeProperties OnPaused";
     if (runtime_->properties_.empty()) {
         return;
     }
@@ -1086,6 +1083,8 @@ void DebuggerImpl::ReleaseGlobalRefProperties()
     for (; validObjId >= 0; validObjId--) {
         runtime_->properties_[validObjId].FreeGlobalHandleAddr();
     }
+    runtime_->curObjectId_ = 0;
+    runtime_->properties_.clear();
 }
 
 std::string DebuggerImpl::Trim(const std::string &str)
