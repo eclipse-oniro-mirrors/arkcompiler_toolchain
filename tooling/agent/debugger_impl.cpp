@@ -1068,11 +1068,24 @@ DispatchResponse DebuggerImpl::DropFrame(const DropFrameParams &params)
 
 void DebuggerImpl::CleanUpOnPaused()
 {
+    ReleaseGlobalRefProperties();
     runtime_->curObjectId_ = 0;
     runtime_->properties_.clear();
 
     callFrameHandlers_.clear();
     scopeObjects_.clear();
+}
+
+void DebuggerImpl::ReleaseGlobalRefProperties()
+{
+    LOG_DEBUGGER(INFO) << "ReleaseGlobalRefProperties OnPaused";
+    if (runtime_->properties_.empty()) {
+        return;
+    }
+    RemoteObjectId validObjId = runtime_->curObjectId_ - 1;
+    for (; validObjId >= 0; validObjId--) {
+        runtime_->properties_[validObjId].FreeGlobalHandleAddr();
+    }
 }
 
 std::string DebuggerImpl::Trim(const std::string &str)
