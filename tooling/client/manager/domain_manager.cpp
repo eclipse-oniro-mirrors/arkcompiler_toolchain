@@ -18,6 +18,8 @@
 #include "domain_manager.h"
 #include "log_wrapper.h"
 #include "pt_json.h"
+#include "manager/variable_manager.h"
+#include "domain/runtime_client.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;
@@ -60,12 +62,19 @@ void DomainManager::DispatcherReply(char* msg)
 
     if (domain == "HeapProfiler") {
         heapProfilerClient_.RecvReply(std::move(json));
-    }else if (domain == "Profiler") {
+    } else if (domain == "Profiler") {
         profilerClient_.RecvProfilerResult(std::move(json));
-    }else if (domain == "Runtime") {
-    
+    } else if (domain == "Runtime") {
+        RuntimeClient &runtimeClient = RuntimeClient::getInstance();
+        if (id == static_cast<int32_t>(runtimeClient.GetIdByMethod("getProperties"))) {
+            VariableManager &variableManager = VariableManager::getInstance();
+            variableManager.HandleMessage(std::move(json));
+            variableManager.ShowVariableInfos();
+        } else {
+            LOGI("Runtime replay message is %{public}s", json->Stringify().c_str());
+        }
     }else if (domain == "Debugger") {
-
+        LOGI("Debugger replay message is %{public}s", json->Stringify().c_str());
     }
 }
 }

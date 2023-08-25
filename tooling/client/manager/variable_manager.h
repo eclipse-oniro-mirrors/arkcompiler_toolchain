@@ -12,3 +12,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#ifndef ECMASCRIPT_TOOLING_CLIENT_MANAGER_VARIABLE_MANAGER_H
+#define ECMASCRIPT_TOOLING_CLIENT_MANAGER_VARIABLE_MANAGER_H
+
+#include <iostream>
+#include <map>
+#include "pt_json.h"
+#include "pt_types.h"
+namespace OHOS::ArkCompiler::Toolchain {
+using PtJson = panda::ecmascript::tooling::PtJson;
+using Result = panda::ecmascript::tooling::Result;
+using panda::ecmascript::tooling::PropertyDescriptor;
+class VariableManager final {
+public:
+    VariableManager(const VariableManager&) = delete;
+    VariableManager& operator=(const VariableManager&) = delete;
+
+    static VariableManager& getInstance() {
+        static VariableManager instance;
+        return instance;
+    }
+
+    void HandleMessage(const std::unique_ptr<PtJson> json);
+
+    void ShowVariableInfos();
+
+    std::string FindObjectIdByIndex(const int32_t index);
+
+private:
+    VariableManager() = default;
+    ~VariableManager() = default;
+    std::multimap<int32_t, std::unique_ptr<PropertyDescriptor>> variableInfos_ {};
+};
+} //OHOS::ArkCompiler::Toolchain
+#endif

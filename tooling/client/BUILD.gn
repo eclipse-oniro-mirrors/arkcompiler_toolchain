@@ -57,7 +57,10 @@ ohos_source_set("libark_toolchain_client_set") {
     "websocket/websocket_client.cpp",
     "domain/heapprofiler_client.cpp",
     "domain/profiler_client.cpp",
+    "domain/debugger_client.cpp",
+    "domain/runtime_client.cpp",
     "manager/domain_manager.cpp",
+    "manager/variable_manager.cpp"
   ]
 
   deps += [

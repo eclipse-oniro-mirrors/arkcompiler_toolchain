@@ -24,6 +24,7 @@
 #include "log_wrapper.h"
 #include "websocket/websocket_client.h"
 #include "domain/heapprofiler_client.h"
+#include "domain/profiler_client.h"
 
 namespace OHOS::ArkCompiler::Toolchain{
 using ErrCode = int;

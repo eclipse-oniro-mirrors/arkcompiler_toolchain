@@ -12,3 +12,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#ifndef ECMASCRIPT_TOOLING_CLIENT_DOMAIN_RUNTIME_CLIENT_H
+#define ECMASCRIPT_TOOLING_CLIENT_DOMAIN_RUNTIME_CLIENT_H
+
+#include <iostream>
+#include <map>
+
+namespace OHOS::ArkCompiler::Toolchain {
+class RuntimeClient final {
+public:
+    RuntimeClient(const RuntimeClient&) = delete;
+    RuntimeClient& operator=(const RuntimeClient&) = delete;
+
+    static RuntimeClient& getInstance() {
+        static RuntimeClient instance;
+        return instance;
+    }
+
+    bool DispatcherCmd(int id, const std::string &cmd, std::string* reqStr);
+    std::string HeapusageCommand(int id);
+    std::string RuntimeEnableCommand(int id);
+    std::string RuntimeDisableCommand(int id);
+    std::string RunIfWaitingForDebuggerCommand(int id);
+    std::string GetPropertiesCommand(int id);
+    std::string GetPropertiesCommand2(int id);
+
+    std::map<std::string, int> GetIdMethodMap() const {
+        return idMethodMap_;
+    }
+
+    void SetObjectId(const std::string objectId) {
+        objectId_ = objectId;
+    }
+
+    int GetIdByMethod(const std::string method);
+
+private:
+    RuntimeClient() = default;
+    ~RuntimeClient() = default;
+    std::map<std::string, int> idMethodMap_ {};
+    std::string objectId_ {"0"};
+
+};
+} //OHOS::ArkCompiler::Toolchain
+#endif
