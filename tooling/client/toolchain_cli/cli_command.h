@@ -52,10 +52,10 @@ public:
     ErrCode OnCommand();
     ErrCode ExecCommand();
     void CreateCommandMap();
-    ErrCode HeapProfilerCommand(const std::string cmd);
-    ErrCode DebuggerCommand(const std::string cmd);
-    ErrCode CpuProfileCommand(const std::string cmd);
-    ErrCode RuntimeCommand(const std::string cmd);
+    ErrCode HeapProfilerCommand(const std::string &cmd);
+    ErrCode DebuggerCommand(const std::string &cmd);
+    ErrCode CpuProfileCommand(const std::string &cmd);
+    ErrCode RuntimeCommand(const std::string &cmd);
     ErrCode ExecHelpCommand();
 
     uint32_t GetId() const
