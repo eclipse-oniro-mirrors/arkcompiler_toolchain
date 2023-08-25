@@ -28,44 +28,46 @@ extern ToolchainWebsocket g_cliSocket;
 extern DomainManager g_domainManager;
 const std::string HELP_MSG = "usage: <command> <options>\n"
     " These are common commands list:\n"
-    "  allocationtrack(at)                 allocation-track-start with options\n"
-    "  allocationtrack-stop(at-stop)       allocation-track-stop\n"
-    "  heapdump(hd)                        heapdump with options\n"
-    "  heapprofiler-enable(hp-enable)      heapdump enable\n"
-    "  heapprofiler-disable(hp-disable)    heapdump disable\n"
-    "  sampling(sampling)                  heapprofiler sampling\n"
-    "  sampling-stop(sampling-stop)        heapprofiler sampling stop\n"
-    "  collectgarbage(gc)                  heapprofiler collectgarbage\n"
-    "  cpuprofile(cp)                      cpuprofile start\n"
-    "  cpuprofile-stop(cp-stop)            cpuprofile stop\n"
-    "  cpuprofile-enable(cp-enable)        cpuprofile enable\n"
-    "  cpuprofile-disable(cp-disable)      cpuprofile disable\n"
-    "  runtime-enable(rt-enable)           runtime enable\n"
-    "  heapusage(hu)                       runtime getHeapUsage\n"
-    "  break(b)                            break with options\n"
-    "  backtrack(bt)                       backtrace\n"
-    "  continue(c)                         continue\n"
-    "  delete(d)                           delete with options\n"
-    "  disable                             disable\n"
-    "  display                             display\n"
-    "  enable                              enable\n"
-    "  finish(fin)                         finish\n"
-    "  frame(f)                            frame\n"
-    "  help(h)                             list available commands\n"
-    "  ignore(ig)                          ignore\n"
-    "  infobreakpoints(infob)              info-breakpoints\n"
-    "  infosource(infos)                   info-source\n"
-    "  jump(j)                             jump\n"
-    "  list(l)                             list\n"
-    "  next(n)                             next\n"
-    "  print(p)                            print with options\n"
-    "  ptype                               ptype\n"
-    "  quit(q)                             quit\n"
-    "  run(r)                              run\n"
-    "  setvar(sv)                          set value with options\n"
-    "  step(s)                             step\n"
-    "  undisplay                           undisplay\n"
-    "  watch(wa)                           watch\n";
+    "  allocationtrack(at)                           allocation-track-start with options\n"
+    "  allocationtrack-stop(at-stop)                 allocation-track-stop\n"
+    "  heapdump(hd)                                  heapdump with options\n"
+    "  heapprofiler-enable(hp-enable)                heapdump enable\n"
+    "  heapprofiler-disable(hp-disable)              heapdump disable\n"
+    "  sampling(sampling)                            heapprofiler sampling\n"
+    "  sampling-stop(sampling-stop)                  heapprofiler sampling stop\n"
+    "  collectgarbage(gc)                            heapprofiler collectgarbage\n"
+    "  cpuprofile(cp)                                cpuprofile start\n"
+    "  cpuprofile-stop(cp-stop)                      cpuprofile stop\n"
+    "  cpuprofile-enable(cp-enable)                  cpuprofile enable\n"
+    "  cpuprofile-disable(cp-disable)                cpuprofile disable\n"
+    "  cpuprofile-show(cp-show)                      cpuprofile show\n"
+    "  cpuprofile-setSamplingInterval(cp-ssi)        cpuprofile setSamplingInterval\n"
+    "  runtime-enable(rt-enable)                     runtime enable\n"
+    "  heapusage(hu)                                 runtime getHeapUsage\n"
+    "  break(b)                                      break with options\n"
+    "  backtrack(bt)                                 backtrace\n"
+    "  continue(c)                                   continue\n"
+    "  delete(d)                                     delete with options\n"
+    "  disable                                       disable\n"
+    "  display                                       display\n"
+    "  enable                                        enable\n"
+    "  finish(fin)                                   finish\n"
+    "  frame(f)                                      frame\n"
+    "  help(h)                                       list available commands\n"
+    "  ignore(ig)                                    ignore\n"
+    "  infobreakpoints(infob)                        info-breakpoints\n"
+    "  infosource(infos)                             info-source\n"
+    "  jump(j)                                       jump\n"
+    "  list(l)                                       list\n"
+    "  next(n)                                       next\n"
+    "  print(p)                                      print with options\n"
+    "  ptype                                         ptype\n"
+    "  quit(q)                                       quit\n"
+    "  run(r)                                        run\n"
+    "  setvar(sv)                                    set value with options\n"
+    "  step(s)                                       step\n"
+    "  undisplay                                     undisplay\n"
+    "  watch(wa)                                     watch\n";
 
 const std::vector<std::string> cmdList = {
     "allocationtrack",
@@ -80,6 +82,8 @@ const std::vector<std::string> cmdList = {
     "cpuprofile-stop",
     "cpuprofile-enable",
     "cpuprofile-disable",
+    "cpuprofile-show",
+    "cpuprofile-setSamplingInterval",
     "runtime-enable",
     "heapusage",
     "break",
@@ -136,6 +140,10 @@ void CliCommand::CreateCommandMap()
             std::bind(&CliCommand::CpuProfileCommand, this, "cpuprofile-enable")},
         {std::make_pair("cpuprofile-disable","cp-disable"),
             std::bind(&CliCommand::CpuProfileCommand, this, "cpuprofile-disable")},
+        {std::make_pair("cpuprofile-show","cp-show"),
+            std::bind(&CliCommand::CpuProfileCommand, this, "cpuprofile-show")},
+        {std::make_pair("cpuprofile-setSamplingInterval","cp-ssi"),
+            std::bind(&CliCommand::CpuProfileCommand, this, "cpuprofile-setSamplingInterval")},
         {std::make_pair("runtime-enable","rt-enable"), std::bind(&CliCommand::RuntimeCommand, this, "runtime-enable")},
         {std::make_pair("heapusage","hu"), std::bind(&CliCommand::RuntimeCommand, this, "heapusage")},
         {std::make_pair("break","b"), std::bind(&CliCommand::DebuggerCommand, this, "break")},
@@ -164,7 +172,7 @@ void CliCommand::CreateCommandMap()
     };
 }
 
-ErrCode CliCommand::HeapProfilerCommand(const std::string cmd)
+ErrCode CliCommand::HeapProfilerCommand(const std::string &cmd)
 {
     std::cout << "exe success, cmd is " << cmd << std::endl;
     std::string request;
@@ -186,19 +194,42 @@ ErrCode CliCommand::HeapProfilerCommand(const std::string cmd)
     return ERR_OK;
 }
 
-ErrCode CliCommand::CpuProfileCommand(const std::string cmd)
+ErrCode CliCommand::CpuProfileCommand(const std::string &cmd)
+{
+    std::cout << "exe success, cmd is " << cmd << std::endl;
+    std::string request;
+    bool result = false;
+    ProfilerClient* profilerClient = g_domainManager.GetProfilerClient();
+    ProfilerSingleton& pro = ProfilerSingleton::getInstance();
+    if (cmd == "cpuprofile-show") {
+        pro.ShowCpuFile();
+        return ERR_OK;
+    }
+    if (cmd == "cpuprofile-setSamplingInterval") {
+        profilerClient->SetSamplingInterval(std::atoi(GetArgList()[0].c_str()));
+    }
+    if (cmd == "cpuprofile-stop" && GetArgList().size() == 1) {
+        pro.SetAddress(GetArgList()[0]);
+    }
+    result = profilerClient->DispatcherCmd(id_, cmd, &request);
+    if (result) {
+        g_cliSocket.ClientSendReq(request);
+        if (g_domainManager.GetDomainById(id_) == "") {
+            g_domainManager.SetDomainById(id_, "Profiler");
+        }
+    } else {
+        return ERR_FAIL;
+    }
+    return ERR_OK;
+}
+
+ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
 {
     std::cout << "exe success, cmd is " << cmd << std::endl;
     return ERR_OK;
 }
 
-ErrCode CliCommand::DebuggerCommand(const std::string cmd)
-{
-    std::cout << "exe success, cmd is " << cmd << std::endl;
-    return ERR_OK;
-}
-
-ErrCode CliCommand::RuntimeCommand(const std::string cmd)
+ErrCode CliCommand::RuntimeCommand(const std::string &cmd)
 {
     std::cout << "exe success, cmd is " << cmd << std::endl;
     return ERR_OK;

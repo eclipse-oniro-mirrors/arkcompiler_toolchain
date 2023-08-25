@@ -55,9 +55,15 @@ public:
         return &heapProfilerClient_;
     }
 
+    ProfilerClient* GetProfilerClient()
+    {
+        return &profilerClient_;
+    }
+
 private:
-    HeapProfilerClient heapProfilerClient_;
-    std::map<uint32_t, std::string> idDomainMap_;
+    HeapProfilerClient heapProfilerClient_ {};
+    ProfilerClient profilerClient_ {};
+    std::map<uint32_t, std::string> idDomainMap_ {};
 };
 } //OHOS::ArkCompiler::Toolchain
 #endif

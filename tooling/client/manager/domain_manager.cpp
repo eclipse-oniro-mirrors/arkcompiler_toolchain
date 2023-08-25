@@ -61,7 +61,7 @@ void DomainManager::DispatcherReply(char* msg)
     if (domain == "HeapProfiler") {
         heapProfilerClient_.RecvReply(std::move(json));
     }else if (domain == "Profiler") {
-
+        profilerClient_.RecvProfilerResult(std::move(json));
     }else if (domain == "Runtime") {
     
     }else if (domain == "Debugger") {
