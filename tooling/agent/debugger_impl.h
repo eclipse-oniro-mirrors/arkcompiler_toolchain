@@ -164,7 +164,7 @@ private:
     void GetLocalVariables(const FrameHandler *frameHandler, panda_file::File::EntityId methodId,
         const JSPandaFile *jsPandaFile, Local<JSValueRef> &thisVal, Local<ObjectRef> &localObj);
     void CleanUpOnPaused();
-    void ReleaseGlobalRefProperties();
+    void CleanUpRuntimeProperties();
     void UpdateScopeObject(const FrameHandler *frameHandler, std::string_view varName, Local<JSValueRef> newVal);
     void ClearSingleStepper();
     Local<JSValueRef> ConvertToLocal(const std::string &varValue);
