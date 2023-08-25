@@ -22,6 +22,9 @@
 #include "cli_command.h"
 #include "log_wrapper.h"
 #include "manager/domain_manager.h"
+#include "domain/debugger_client.h"
+#include "manager/variable_manager.h"
+#include "domain/runtime_client.h"
 
 namespace OHOS::ArkCompiler::Toolchain{
 extern ToolchainWebsocket g_cliSocket;
@@ -162,13 +165,15 @@ void CliCommand::CreateCommandMap()
         {std::make_pair("jump","j"), std::bind(&CliCommand::DebuggerCommand, this, "jump")},
         {std::make_pair("list","l"), std::bind(&CliCommand::DebuggerCommand, this, "list")},
         {std::make_pair("next","n"), std::bind(&CliCommand::DebuggerCommand, this, "next")},
-        {std::make_pair("print","p"), std::bind(&CliCommand::DebuggerCommand, this, "print")},
+        {std::make_pair("print","p"), std::bind(&CliCommand::RuntimeCommand, this, "print")},
+        {std::make_pair("print2","p2"), std::bind(&CliCommand::RuntimeCommand, this, "print2")},
         {std::make_pair("ptype","ptype"), std::bind(&CliCommand::DebuggerCommand, this, "ptype")},
         {std::make_pair("run","r"), std::bind(&CliCommand::DebuggerCommand, this, "run")},
         {std::make_pair("setvar","sv"), std::bind(&CliCommand::DebuggerCommand, this, "setvar")},
         {std::make_pair("step","s"), std::bind(&CliCommand::DebuggerCommand, this, "step")},
         {std::make_pair("undisplay","undisplay"), std::bind(&CliCommand::DebuggerCommand, this, "undisplay")},
         {std::make_pair("watch","wa"), std::bind(&CliCommand::DebuggerCommand, this, "watch")},
+        {std::make_pair("resume","resume"), std::bind(&CliCommand::DebuggerCommand, this, "resume")},
     };
 }
 
@@ -226,12 +231,46 @@ ErrCode CliCommand::CpuProfileCommand(const std::string &cmd)
 ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
 {
     std::cout << "exe success, cmd is " << cmd << std::endl;
+    std::string request;
+    bool result = false;
+    LOGE("DebuggerCommand: %{public}d", id_);
+    DebugerClient debuggerCli;
+    if (GetArgList().size() == 2) {
+        debuggerCli.AddBreakPointInfo(GetArgList()[0], GetArgList()[1]);
+    }
+    result = debuggerCli.DispatcherCmd(id_, cmd, &request);
+    if (result) {
+        g_cliSocket.ClientSendReq(request);
+        if (g_domainManager.GetDomainById(id_) == "") {
+            g_domainManager.SetDomainById(id_, "Debugger");
+        }
+    } else {
+        return ERR_FAIL;
+    }
     return ERR_OK;
 }
 
 ErrCode CliCommand::RuntimeCommand(const std::string &cmd)
 {
     std::cout << "exe success, cmd is " << cmd << std::endl;
+    std::string request;
+    bool result = false;
+    LOGE("RuntimeCommand: %{public}d", id_);
+    RuntimeClient &runtimeClient = RuntimeClient::getInstance();
+    VariableManager &variableManager = VariableManager::getInstance();
+    if (cmd == "print" && GetArgList().size() == 1) {
+        std::string objectId = variableManager.FindObjectIdByIndex(std::stoi(GetArgList()[0]));
+        runtimeClient.SetObjectId(objectId);
+    }
+    result = runtimeClient.DispatcherCmd(id_, cmd, &request);
+    if (result) {
+        g_cliSocket.ClientSendReq(request);
+        if (g_domainManager.GetDomainById(id_) == "") {
+            g_domainManager.SetDomainById(id_, "Runtime");
+        }
+    } else {
+        return ERR_FAIL;
+    }
     return ERR_OK;
 }
 
