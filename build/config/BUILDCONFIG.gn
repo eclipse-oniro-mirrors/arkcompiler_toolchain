@@ -17,6 +17,7 @@ declare_args() {
   build_root = "//arkcompiler/toolchain/build"
   run_with_qemu = false
   enable_lto = true
+  enable_lto_O0 = false
 }
 
 if (host_os == "linux") {
