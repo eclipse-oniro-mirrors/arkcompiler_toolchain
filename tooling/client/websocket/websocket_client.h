@@ -32,15 +32,15 @@ struct ToolchainWebSocketFrame {
     char maskingkey[5] = {0};
     std::unique_ptr<char []> payload = nullptr;
 };
-class ToolchainWebsocket : public WebSocket {
+class WebsocketClient : public WebSocket {
 public:
     enum ToolchainSocketState : uint8_t {
         UNINITED,
         INITED,
         CONNECTED,
     };
-    ToolchainWebsocket() = default;
-    ~ToolchainWebsocket() = default;
+    WebsocketClient() = default;
+    ~WebsocketClient() = default;
     bool InitToolchainWebSocketForPort(int port, uint32_t timeoutLimit = 5);
     bool InitToolchainWebSocketForSockName(const std::string &sockName, uint32_t timeoutLimit = 0);
     bool ClientSendWSUpgradeReq();

@@ -22,6 +22,7 @@
 
 using Result = panda::ecmascript::tooling::Result;
 namespace OHOS::ArkCompiler::Toolchain {
+static constexpr int32_t SAMPLING_INTERVAL = 16384;
 bool HeapProfilerClient::DispatcherCmd(int id, const std::string &cmd, const std::string &arg, std::string* reqStr)
 {
     if (reqStr == nullptr) {
@@ -41,7 +42,6 @@ bool HeapProfilerClient::DispatcherCmd(int id, const std::string &cmd, const std
     };
 
     auto entry = dispatcherTable.find(cmd);
-
     if (entry != dispatcherTable.end() && entry->second != nullptr) {
         *reqStr = entry->second();
         LOGE("DispatcherCmd reqStr1: %{public}s", reqStr->c_str());
@@ -126,7 +126,7 @@ std::string HeapProfilerClient::Samping(int id)
     request->Add("method", "HeapProfiler.startSampling");
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
-    params->Add("samplingInterval", 16384);
+    params->Add("samplingInterval", SAMPLING_INTERVAL);
     request->Add("params", params);
     return request->Stringify();
 }
@@ -205,8 +205,17 @@ void HeapProfilerClient::RecvReply(std::unique_ptr<PtJson> json)
         time(&timep);
         char tmp1[16];
         char tmp2[16];
-        strftime(tmp1, sizeof(tmp1), "%Y%m%d", localtime(&timep));
-        strftime(tmp2, sizeof(tmp2), "%H%M%S", localtime(&timep));
+        size_t result = 0;
+        result = strftime(tmp1, sizeof(tmp1), "%Y%m%d", localtime(&timep));
+        if (result == 0) {
+            LOGE("get time failed");
+            return;
+        }
+        result = strftime(tmp2, sizeof(tmp2), "%H%M%S", localtime(&timep));
+        if (result == 0) {
+            LOGE("get time failed");
+            return;
+        }
         if (isAllocationMsg_) {
             fileName_ = "Heap-" + std::string(tmp1) + "T" + std::string(tmp2) + ".heaptimeline";
         } else {
@@ -240,4 +249,4 @@ bool HeapProfilerClient::WriteHeapProfilerForFile(std::string fileName, std::str
     ofs.clear();
     return true;
 }
-} //OHOS::ArkCompiler::Toolchain
+} // OHOS::ArkCompiler::Toolchain

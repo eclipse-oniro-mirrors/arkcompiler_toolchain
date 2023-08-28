@@ -29,7 +29,8 @@ public:
     VariableManager(const VariableManager&) = delete;
     VariableManager& operator=(const VariableManager&) = delete;
 
-    static VariableManager& getInstance() {
+    static VariableManager& getInstance()
+    {
         static VariableManager instance;
         return instance;
     }
@@ -45,5 +46,5 @@ private:
     ~VariableManager() = default;
     std::multimap<int32_t, std::unique_ptr<PropertyDescriptor>> variableInfos_ {};
 };
-} //OHOS::ArkCompiler::Toolchain
+} // OHOS::ArkCompiler::Toolchain
 #endif

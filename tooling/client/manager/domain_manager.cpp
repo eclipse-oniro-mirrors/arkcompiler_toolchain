@@ -15,11 +15,11 @@
 
 #include <cstring>
 
-#include "domain_manager.h"
 #include "log_wrapper.h"
 #include "pt_json.h"
 #include "manager/variable_manager.h"
 #include "domain/runtime_client.h"
+#include "domain_manager.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;
@@ -73,7 +73,7 @@ void DomainManager::DispatcherReply(char* msg)
         } else {
             LOGI("Runtime replay message is %{public}s", json->Stringify().c_str());
         }
-    }else if (domain == "Debugger") {
+    } else if (domain == "Debugger") {
         LOGI("Debugger replay message is %{public}s", json->Stringify().c_str());
     }
 }

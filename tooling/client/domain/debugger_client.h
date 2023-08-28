@@ -18,17 +18,16 @@
 
 #include <iostream>
 #include <vector>
-#include "toolchain_cli/cli_command.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 struct BreakPointInfo {
     std::string lineNumber;
     std::string url;
 };
-class DebugerClient final {
+class DebuggerClient final {
 public:
-    DebugerClient() = default;
-    ~DebugerClient() = default;
+    DebuggerClient() = default;
+    ~DebuggerClient() = default;
 
     bool DispatcherCmd(int id, const std::string &cmd, std::string* reqStr);
     std::string BreakCommand(int id);
@@ -60,5 +59,5 @@ public:
 private:
     std::vector<BreakPointInfo> breakPointInfoList_ {};
 };
-} //OHOS::ArkCompiler::Toolchain
+} // OHOS::ArkCompiler::Toolchain
 #endif

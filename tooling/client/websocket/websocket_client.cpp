@@ -24,7 +24,7 @@
 
 
 namespace OHOS::ArkCompiler::Toolchain {
-bool ToolchainWebsocket::InitToolchainWebSocketForPort (int port, uint32_t timeoutLimit)
+bool WebsocketClient::InitToolchainWebSocketForPort (int port, uint32_t timeoutLimit)
 {
     if (socketState_ != ToolchainSocketState::UNINITED) {
         LOGE("InitToolchainWebSocketForPort::client has inited.");
@@ -78,7 +78,7 @@ bool ToolchainWebsocket::InitToolchainWebSocketForPort (int port, uint32_t timeo
     return true;
 }
 
-bool ToolchainWebsocket::InitToolchainWebSocketForSockName(const std::string &sockName, uint32_t timeoutLimit)
+bool WebsocketClient::InitToolchainWebSocketForSockName(const std::string &sockName, uint32_t timeoutLimit)
 {
     if (socketState_ != ToolchainSocketState::UNINITED) {
         LOGE("InitToolchainWebSocketForSockName::client has inited.");
@@ -133,7 +133,7 @@ bool ToolchainWebsocket::InitToolchainWebSocketForSockName(const std::string &so
     return true;
 }
 
-bool ToolchainWebsocket::ClientSendWSUpgradeReq()
+bool WebsocketClient::ClientSendWSUpgradeReq()
 {
     if (socketState_ == ToolchainSocketState::UNINITED) {
         LOGE("ClientSendWSUpgradeReq::client has not inited.");
@@ -158,7 +158,7 @@ bool ToolchainWebsocket::ClientSendWSUpgradeReq()
     return true;
 }
 
-bool ToolchainWebsocket::ClientRecvWSUpgradeRsp()
+bool WebsocketClient::ClientRecvWSUpgradeRsp()
 {
     if (socketState_ == ToolchainSocketState::UNINITED) {
         LOGE("ClientRecvWSUpgradeRsp::client has not inited.");
@@ -184,7 +184,7 @@ bool ToolchainWebsocket::ClientRecvWSUpgradeRsp()
     return true;
 }
 
-bool ToolchainWebsocket::ClientSendReq(const std::string &message)
+bool WebsocketClient::ClientSendReq(const std::string &message)
 {
     if (socketState_ != ToolchainSocketState::CONNECTED) {
         LOGE("ClientSendReq::client has not connected.");
@@ -247,15 +247,15 @@ bool ToolchainWebsocket::ClientSendReq(const std::string &message)
     return true;
 }
 
-std::string ToolchainWebsocket::Decode()
+std::string WebsocketClient::Decode()
 {
     if (socketState_ != ToolchainSocketState::CONNECTED) {
-        LOGE("ToolchainWebsocket:Decode failed, websocket not connected!");
+        LOGE("WebsocketClient:Decode failed, websocket not connected!");
         return "";
     }
     char recvbuf[SOCKET_HEADER_LEN + 1];
     if (!Recv(client_, recvbuf, SOCKET_HEADER_LEN, 0)) {
-        LOGE("ToolchainWebsocket:Decode failed, client websocket disconnect");
+        LOGE("WebsocketClient:Decode failed, client websocket disconnect");
         socketState_ = ToolchainSocketState::INITED;
         close(client_);
         client_ = -1;
@@ -279,32 +279,32 @@ std::string ToolchainWebsocket::Decode()
         pongFrame[0] = 0x8a; // 0x8a: 0x8a means a pong frame
         pongFrame[1] = 0x0;
         if (!Send(client_, pongFrame, SOCKET_HEADER_LEN, 0)) {
-            LOGE("ToolchainWebsocket Decode: Send pong frame failed");
+            LOGE("WebsocketClient Decode: Send pong frame failed");
             return "";
         }
     }
     return "";
 }
 
-bool ToolchainWebsocket::HandleFrame(ToolchainWebSocketFrame& wsFrame)
+bool WebsocketClient::HandleFrame(ToolchainWebSocketFrame& wsFrame)
 {
     if (wsFrame.payloadLen == 126) { // 126: the payloadLen read from frame
         char recvbuf[PAYLOAD_LEN + 1] = {0};
         if (!Recv(client_, recvbuf, PAYLOAD_LEN, 0)) {
-            LOGE("ToolchainWebsocket HandleFrame: Recv payloadLen == 126 failed");
+            LOGE("WebsocketClient HandleFrame: Recv payloadLen == 126 failed");
             return false;
         }
 
         uint16_t msgLen = 0;
         if (memcpy_s(&msgLen, sizeof(recvbuf), recvbuf, sizeof(recvbuf) - 1) != EOK) {
-            LOGE("ToolchainWebsocket HandleFrame: memcpy_s failed");
+            LOGE("WebsocketClient HandleFrame: memcpy_s failed");
             return false;
         }
         wsFrame.payloadLen = ntohs(msgLen);
     } else if (wsFrame.payloadLen > 126) { // 126: the payloadLen read from frame
         char recvbuf[EXTEND_PAYLOAD_LEN + 1] = {0};
         if (!Recv(client_, recvbuf, EXTEND_PAYLOAD_LEN, 0)) {
-            LOGE("ToolchainWebsocket HandleFrame: Recv payloadLen > 127 failed");
+            LOGE("WebsocketClient HandleFrame: Recv payloadLen > 127 failed");
             return false;
         }
         wsFrame.payloadLen = NetToHostLongLong(recvbuf, EXTEND_PAYLOAD_LEN);
@@ -312,10 +312,10 @@ bool ToolchainWebsocket::HandleFrame(ToolchainWebSocketFrame& wsFrame)
     return DecodeMessage(wsFrame);
 }
 
-bool ToolchainWebsocket::DecodeMessage(ToolchainWebSocketFrame& wsFrame)
+bool WebsocketClient::DecodeMessage(ToolchainWebSocketFrame& wsFrame)
 {
     if (wsFrame.payloadLen == 0 || wsFrame.payloadLen > UINT64_MAX) {
-        LOGE("ToolchainWebsocket:ReadMsg length error, expected greater than zero and less than UINT64_MAX");
+        LOGE("WebsocketClient:ReadMsg length error, expected greater than zero and less than UINT64_MAX");
         return false;
     }
     uint64_t msgLen = wsFrame.payloadLen;
@@ -323,12 +323,12 @@ bool ToolchainWebsocket::DecodeMessage(ToolchainWebSocketFrame& wsFrame)
     if (wsFrame.mask == 1) {
         char buf[msgLen + 1];
         if (!Recv(client_, wsFrame.maskingkey, SOCKET_MASK_LEN, 0)) {
-            LOGE("ToolchainWebsocket DecodeMessage: Recv maskingkey failed");
+            LOGE("WebsocketClient DecodeMessage: Recv maskingkey failed");
             return false;
         }
 
         if (!Recv(client_, buf, msgLen, 0)) {
-            LOGE("ToolchainWebsocket DecodeMessage: Recv message with mask failed");
+            LOGE("WebsocketClient DecodeMessage: Recv message with mask failed");
             return false;
         }
 
@@ -339,12 +339,12 @@ bool ToolchainWebsocket::DecodeMessage(ToolchainWebSocketFrame& wsFrame)
     } else {
         char buf[msgLen + 1];
         if (!Recv(client_, buf, msgLen, 0)) {
-            LOGE("ToolchainWebsocket DecodeMessage: Recv message without mask failed");
+            LOGE("WebsocketClient DecodeMessage: Recv message without mask failed");
             return false;
         }
 
         if (memcpy_s(wsFrame.payload.get(), msgLen, buf, msgLen) != EOK) {
-            LOGE("ToolchainWebsocket DecodeMessage: memcpy_s failed");
+            LOGE("WebsocketClient DecodeMessage: memcpy_s failed");
             return false;
         }
     }
@@ -352,7 +352,7 @@ bool ToolchainWebsocket::DecodeMessage(ToolchainWebSocketFrame& wsFrame)
     return true;
 }
 
-uint64_t ToolchainWebsocket::NetToHostLongLong(char* buf, uint32_t len)
+uint64_t WebsocketClient::NetToHostLongLong(char* buf, uint32_t len)
 {
     uint64_t result = 0;
     for (uint32_t i = 0; i < len; i++) {
@@ -364,27 +364,27 @@ uint64_t ToolchainWebsocket::NetToHostLongLong(char* buf, uint32_t len)
     return result;
 }
 
-bool ToolchainWebsocket::Send(int32_t fd, const char* buf, size_t totalLen, int32_t flags) const
+bool WebsocketClient::Send(int32_t fd, const char* buf, size_t totalLen, int32_t flags) const
 {
     size_t sendLen = 0;
     while (sendLen < totalLen) {
-		ssize_t len = send(fd, buf + sendLen, totalLen - sendLen, flags);
-		if (len <= 0) {
-            LOGE("ToolchainWebsocket Send Message in while failed, ToolchainWebsocket disconnect");
+        ssize_t len = send(fd, buf + sendLen, totalLen - sendLen, flags);
+        if (len <= 0) {
+            LOGE("WebsocketClient Send Message in while failed, WebsocketClient disconnect");
             return false;
         }
         sendLen += static_cast<size_t>(len);
-	}
-	return true;
+    }
+    return true;
 }
 
-bool ToolchainWebsocket::Recv(int32_t fd, char* buf, size_t totalLen, int32_t flags) const
+bool WebsocketClient::Recv(int32_t fd, char* buf, size_t totalLen, int32_t flags) const
 {
     size_t recvLen = 0;
     while (recvLen < totalLen) {
         ssize_t len = recv(fd, buf + recvLen, totalLen - recvLen, flags);
         if (len <= 0) {
-            LOGE("ToolchainWebsocket Recv payload in while failed, ToolchainWebsocket disconnect");
+            LOGE("WebsocketClient Recv payload in while failed, WebsocketClient disconnect");
             return false;
         }
         recvLen += static_cast<size_t>(len);
@@ -393,7 +393,7 @@ bool ToolchainWebsocket::Recv(int32_t fd, char* buf, size_t totalLen, int32_t fl
     return true;
 }
 
-void ToolchainWebsocket::Close()
+void WebsocketClient::Close()
 {
     if (socketState_ == ToolchainSocketState::UNINITED) {
         return;
@@ -403,25 +403,25 @@ void ToolchainWebsocket::Close()
     client_ = -1;
 }
 
-bool ToolchainWebsocket::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
+bool WebsocketClient::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
 {
     if (timeoutLimit > 0) {
         struct timeval timeout = {timeoutLimit, 0};
         if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO,
             reinterpret_cast<char *>(&timeout), sizeof(timeout)) != SOCKET_SUCCESS) {
-            LOGE("ToolchainWebsocket:SetWebSocketTimeOut setsockopt SO_SNDTIMEO failed");
+            LOGE("WebsocketClient:SetWebSocketTimeOut setsockopt SO_SNDTIMEO failed");
             return false;
         }
         if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO,
             reinterpret_cast<char *>(&timeout), sizeof(timeout)) != SOCKET_SUCCESS) {
-            LOGE("ToolchainWebsocket:SetWebSocketTimeOut setsockopt SO_RCVTIMEO failed");
+            LOGE("WebsocketClient:SetWebSocketTimeOut setsockopt SO_RCVTIMEO failed");
             return false;
         }
     }
     return true;
 }
 
-bool ToolchainWebsocket::IsConnected()
+bool WebsocketClient::IsConnected()
 {
     return socketState_ == ToolchainSocketState::CONNECTED;
 }

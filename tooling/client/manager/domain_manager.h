@@ -18,15 +18,16 @@
 
 #include <iostream>
 
-#include "toolchain_cli/cli_command.h"
+#include "domain/heapprofiler_client.h"
+#include "domain/profiler_client.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
-class DomainManager{
+class DomainManager {
 public:
     DomainManager() = default;
     ~DomainManager() = default;
 
-    void DispatcherReply(char* decMessage);
+    void DispatcherReply(char* msg);
 
     std::string GetDomainById(uint32_t id)
     {
@@ -65,5 +66,5 @@ private:
     ProfilerClient profilerClient_ {};
     std::map<uint32_t, std::string> idDomainMap_ {};
 };
-} //OHOS::ArkCompiler::Toolchain
+} // OHOS::ArkCompiler::Toolchain
 #endif
