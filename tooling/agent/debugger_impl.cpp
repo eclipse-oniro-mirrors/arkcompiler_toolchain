@@ -1199,7 +1199,7 @@ bool DebuggerImpl::GenerateCallFrame(CallFrame *callFrame,
     for (auto &scope : closureScopeChains) {
         scopeChain.emplace_back(std::move(scope));
     }
-    if (jsPandaFile != nullptr && !jsPandaFile->IsBundlePack() && jsPandaFile->IsNewVersion()) {
+    if (jsPandaFile != nullptr && jsPandaFile->IsMergedPF() && jsPandaFile->IsNewVersion()) {
         JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm_));
         if (currentModule->IsSourceTextModule()) { // CJS module is string
             scopeChain.emplace_back(GetModuleScopeChain());
