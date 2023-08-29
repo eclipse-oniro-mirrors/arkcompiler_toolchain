@@ -90,7 +90,12 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
         LOG_DEBUGGER(ERROR) << "NotifyScriptParsed: invalid file: " << fileName;
         return false;
     }
-    recordNames_[url] = recordName;
+
+    // multiple modules.abc share the same ets, only need to save the first recordName to set breakpoint
+    auto iter = recordNames_.find(url);
+    if (iter == recordNames_.end()) {
+        recordNames_[url] = recordName;
+    }
 
     auto scriptFunc = [this](PtScript *script) -> bool {
         frontend_.ScriptParsed(vm_, *script);
