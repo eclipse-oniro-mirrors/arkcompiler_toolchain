@@ -25,7 +25,8 @@ public:
     RuntimeClient(const RuntimeClient&) = delete;
     RuntimeClient& operator=(const RuntimeClient&) = delete;
 
-    static RuntimeClient& getInstance() {
+    static RuntimeClient& getInstance()
+    {
         static RuntimeClient instance;
         return instance;
     }
@@ -38,11 +39,13 @@ public:
     std::string GetPropertiesCommand(int id);
     std::string GetPropertiesCommand2(int id);
 
-    std::map<std::string, int> GetIdMethodMap() const {
+    std::map<std::string, int> GetIdMethodMap() const
+    {
         return idMethodMap_;
     }
 
-    void SetObjectId(const std::string objectId) {
+    void SetObjectId(const std::string objectId)
+    {
         objectId_ = objectId;
     }
 
@@ -53,7 +56,6 @@ private:
     ~RuntimeClient() = default;
     std::map<std::string, int> idMethodMap_ {};
     std::string objectId_ {"0"};
-
 };
-} //OHOS::ArkCompiler::Toolchain
+} // OHOS::ArkCompiler::Toolchain
 #endif

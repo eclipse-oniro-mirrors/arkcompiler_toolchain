@@ -25,14 +25,18 @@
 #include "websocket/websocket_client.h"
 #include "domain/heapprofiler_client.h"
 #include "domain/profiler_client.h"
+#include "manager/domain_manager.h"
 
-namespace OHOS::ArkCompiler::Toolchain{
+namespace OHOS::ArkCompiler::Toolchain {
 using ErrCode = int;
 using StrPair = std::pair<std::string, std::string>;
 using VecStr = std::vector<std::string>;
-enum {
-    ERR_OK                = 0,
-    ERR_FAIL              = 1
+extern DomainManager g_domainManager;
+extern WebsocketClient g_cliSocket;
+
+enum ReturnCode {
+    ERR_OK   = 0,
+    ERR_FAIL = 1
 };
 
 class CliCommand {
@@ -79,4 +83,4 @@ private:
 };
 } // namespace OHOS::ArkCompiler::Toolchain
 
-#endif //ECMASCRIPT_TOOLING_CLIENT_TOOLCHAIN_CLI_COMMAND_H
+#endif // ECMASCRIPT_TOOLING_CLIENT_TOOLCHAIN_CLI_COMMAND_H

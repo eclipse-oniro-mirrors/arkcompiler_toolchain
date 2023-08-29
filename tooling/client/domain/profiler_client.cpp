@@ -138,8 +138,17 @@ void ProfilerClient::RecvProfilerResult(std::unique_ptr<PtJson> json)
     time(&timep);
     char tmp1[16];
     char tmp2[16];
-    strftime(tmp1, sizeof(tmp1), "%Y%m%d", localtime(&timep));
-    strftime(tmp2, sizeof(tmp2), "%H%M%S", localtime(&timep));
+    size_t timeResult = 0;
+    timeResult = strftime(tmp1, sizeof(tmp1), "%Y%m%d", localtime(&timep));
+    if (timeResult == 0) {
+        LOGE("get time failed");
+        return;
+    }
+    timeResult = strftime(tmp2, sizeof(tmp2), "%H%M%S", localtime(&timep));
+    if (timeResult == 0) {
+        LOGE("get time failed");
+        return;
+    }
     std::string fileName = "CPU-" + std::string(tmp1) + "T" + std::string(tmp2) + ".cpuprofile";
     std::string cpufile = pro.GetAddress() + fileName;
     std::cout << "toolchain_client: cpuprofile file name is " << cpufile << std::endl;

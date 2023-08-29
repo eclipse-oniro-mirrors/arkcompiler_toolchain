@@ -59,5 +59,5 @@ private:
     std::string path_;
     bool isAllocationMsg_ {false};
 };
-} //OHOS::ArkCompiler::Toolchain
+} // OHOS::ArkCompiler::Toolchain
 #endif

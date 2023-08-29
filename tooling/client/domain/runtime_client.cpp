@@ -23,7 +23,7 @@
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 namespace OHOS::ArkCompiler::Toolchain {
-bool RuntimeClient::DispatcherCmd(int id, const std::string &cmd, std::string* reqStr )
+bool RuntimeClient::DispatcherCmd(int id, const std::string &cmd, std::string* reqStr)
 {
     std::map<std::string, std::function<std::string()>> dispatcherTable {
         { "heapusage", std::bind(&RuntimeClient::HeapusageCommand, this, id)},
@@ -35,7 +35,6 @@ bool RuntimeClient::DispatcherCmd(int id, const std::string &cmd, std::string* r
     };
 
     auto entry = dispatcherTable.find(cmd);
-
     if (entry != dispatcherTable.end()) {
         *reqStr = entry->second();
         LOGE("RuntimeClient DispatcherCmd reqStr1: %{public}s", reqStr->c_str());
@@ -135,4 +134,4 @@ int RuntimeClient::GetIdByMethod(const std::string method)
     }
     return 0;
 }
-} //OHOS::ArkCompiler::Toolchain
+} // OHOS::ArkCompiler::Toolchain

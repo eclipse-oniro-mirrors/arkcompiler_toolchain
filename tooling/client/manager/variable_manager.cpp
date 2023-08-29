@@ -13,9 +13,6 @@
  * limitations under the License.
  */
 
-#include <cstring>
-#include <iostream>
-
 #include "log_wrapper.h"
 #include "manager/variable_manager.h"
 

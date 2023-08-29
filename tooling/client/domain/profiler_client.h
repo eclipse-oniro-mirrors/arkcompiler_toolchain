@@ -46,7 +46,7 @@ public:
     void ShowCpuFile()
     {
         size_t size = cpulist_.size();
-        for (size_t i = 0;i < size;i++) {
+        for (size_t i = 0; i < size; i++) {
             std::cout << cpulist_[i] << std::endl;
         }
     }
@@ -87,5 +87,5 @@ private:
     int32_t interval_ = 0;
     std::map<uint32_t, std::string> idEventMap_ {};
 };
-} //OHOS::ArkCompiler::Toolchain
+} // OHOS::ArkCompiler::Toolchain
 #endif
