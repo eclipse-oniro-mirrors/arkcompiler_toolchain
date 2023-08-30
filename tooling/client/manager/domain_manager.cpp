@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#include <cstring>
-
 #include "log_wrapper.h"
 #include "pt_json.h"
 #include "manager/variable_manager.h"
@@ -52,7 +50,7 @@ void DomainManager::DispatcherReply(char* msg)
     ret = json->GetString("method", &wholeMethod);
     if (ret == Result::SUCCESS) {
         std::string::size_type length = wholeMethod.length();
-        std::string::size_type indexPoint;
+        std::string::size_type indexPoint = 0;
         indexPoint = wholeMethod.find_first_of('.', 0);
         if (indexPoint == std::string::npos || indexPoint == 0 || indexPoint == length - 1) {
             return;

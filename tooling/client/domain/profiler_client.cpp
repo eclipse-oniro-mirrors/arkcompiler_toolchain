@@ -134,17 +134,31 @@ void ProfilerClient::RecvProfilerResult(std::unique_ptr<PtJson> json)
         return;
     }
     ProfilerSingleton& pro = ProfilerSingleton::getInstance();
-    time_t timep;
-    time(&timep);
+    time_t timep = time(nullptr);
+    if (timep == -1) {
+        LOGE("get timep failed");
+        return;
+    }
     char tmp1[16];
     char tmp2[16];
+    tm* localTime1 = localtime(&timep);
+    if (localTime1 == nullptr) {
+        LOGE("get localTime1 failed");
+        return;
+    }
     size_t timeResult = 0;
-    timeResult = strftime(tmp1, sizeof(tmp1), "%Y%m%d", localtime(&timep));
+    timeResult = strftime(tmp1, sizeof(tmp1), "%Y%m%d", localTime1);
     if (timeResult == 0) {
         LOGE("get time failed");
         return;
     }
-    timeResult = strftime(tmp2, sizeof(tmp2), "%H%M%S", localtime(&timep));
+
+    tm* localTime2 = localtime(&timep);
+    if (localTime2 == nullptr) {
+        LOGE("get localTime2 failed");
+        return;
+    }
+    timeResult = strftime(tmp2, sizeof(tmp2), "%H%M%S", localTime2);
     if (timeResult == 0) {
         LOGE("get time failed");
         return;
@@ -179,4 +193,4 @@ void ProfilerClient::SetSamplingInterval(int interval)
 {
     this->interval_ = interval;
 }
-} //OHOS::ArkCompiler::Toolchain
+} // OHOS::ArkCompiler::Toolchain

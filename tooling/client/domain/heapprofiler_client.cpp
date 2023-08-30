@@ -175,13 +175,13 @@ void HeapProfilerClient::RecvReply(std::unique_ptr<PtJson> json)
         LOGE("find params error");
         return;
     }
-    
+
     std::string wholeMethod;
     std::string method;
     ret = json->GetString("method", &wholeMethod);
     if (ret == Result::SUCCESS) {
         std::string::size_type length = wholeMethod.length();
-        std::string::size_type indexPoint;
+        std::string::size_type indexPoint = 0;
         indexPoint = wholeMethod.find_first_of('.', 0);
         if (indexPoint == std::string::npos || indexPoint == 0 || indexPoint == length - 1) {
             return;
@@ -201,17 +201,31 @@ void HeapProfilerClient::RecvReply(std::unique_ptr<PtJson> json)
 
     std::string head = "{\"snapshot\":\n";
     if (!strncmp(chunk.c_str(), head.c_str(), head.length())) {
-        time_t timep;
-        time(&timep);
+        time_t timep = time(nullptr);
+        if (timep == -1) {
+            LOGE("get timep failed");
+            return;
+        }
         char tmp1[16];
         char tmp2[16];
+        tm* localTime1 = localtime(&timep);
+        if (localTime1 == nullptr) {
+            LOGE("get localTime1 failed");
+            return;
+        }
         size_t result = 0;
-        result = strftime(tmp1, sizeof(tmp1), "%Y%m%d", localtime(&timep));
+        result = strftime(tmp1, sizeof(tmp1), "%Y%m%d", localTime1);
         if (result == 0) {
             LOGE("get time failed");
             return;
         }
-        result = strftime(tmp2, sizeof(tmp2), "%H%M%S", localtime(&timep));
+
+        tm* localTime2 = localtime(&timep);
+        if (localTime2 == nullptr) {
+            LOGE("get localTime2 failed");
+            return;
+        }
+        result = strftime(tmp2, sizeof(tmp2), "%H%M%S", localTime2);
         if (result == 0) {
             LOGE("get time failed");
             return;
