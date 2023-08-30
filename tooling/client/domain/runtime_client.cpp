@@ -17,10 +17,6 @@
 #include "pt_json.h"
 #include "log_wrapper.h"
 
-#include <map>
-#include <functional>
-#include <cstring>
-
 using PtJson = panda::ecmascript::tooling::PtJson;
 namespace OHOS::ArkCompiler::Toolchain {
 bool RuntimeClient::DispatcherCmd(int id, const std::string &cmd, std::string* reqStr)

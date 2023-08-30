@@ -28,13 +28,12 @@
 #include "manager/domain_manager.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
-using ErrCode = int;
 using StrPair = std::pair<std::string, std::string>;
 using VecStr = std::vector<std::string>;
 extern DomainManager g_domainManager;
 extern WebsocketClient g_cliSocket;
 
-enum ReturnCode {
+enum class ErrCode : uint8_t {
     ERR_OK   = 0,
     ERR_FAIL = 1
 };
@@ -76,7 +75,7 @@ public:
 private:
     std::string cmd_ ;
     VecStr argList_ {};
-    std::map<StrPair, std::function<int()>> commandMap_;
+    std::map<StrPair, std::function<ErrCode()>> commandMap_;
     std::string resultReceiver_ = "";
     HeapProfilerClient heapProfilerCli_;
     uint32_t id_ = 0;

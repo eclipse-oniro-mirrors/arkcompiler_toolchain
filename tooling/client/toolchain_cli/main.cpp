@@ -93,22 +93,19 @@ void ReleaseHandle(uv_async_t *handle)
 
 void InputOnMessage(uv_async_t *handle)
 {
-    LOGE("InputOnMessage: beign");
     char* msg = static_cast<char*>(handle->data);
     std::string inputStr = std::string(msg);
     std::vector<std::string> cliCmdStr = SplitString(inputStr, " ");
     g_messageId += 1;
     CliCommand cmd(cliCmdStr, g_messageId);
-    if (ERR_FAIL == cmd.ExecCommand()) {
+    if (ErrCode::ERR_FAIL == cmd.ExecCommand()) {
         g_messageId -= 1;
     }
-    LOGE("InputOnMessage: cmd");
     std::cout << ">>> ";
     fflush(stdout);
     if (msg != nullptr) {
         free(msg);
     }
-    LOGE("InputOnMessage: end");
 }
 
 void GetInputCommand(void *arg)
@@ -130,14 +127,17 @@ void GetInputCommand(void *arg)
         }
         if (uv_is_active(reinterpret_cast<uv_handle_t*>(g_inputSignal))) {
             uint32_t len = inputStr.length();
-            LOGE("GetInputCommand: len is %{public}d", len);
             char* msg = (char*)malloc(len + 1);
             if ((msg != nullptr) && uv_is_active(reinterpret_cast<uv_handle_t*>(g_inputSignal))) {
-                strncpy_s(msg, len + 1, inputStr.c_str(), len);
-                LOGE("GetInputCommand: msg is %{public}s", msg);
+                if (strncpy_s(msg, len + 1, inputStr.c_str(), len) != 0) {
+                    g_cliSocket.Close();
+                    if (uv_is_active(reinterpret_cast<uv_handle_t*>(g_releaseHandle))) {
+                        uv_async_send(g_releaseHandle);
+                    }
+                    break;
+                }
                 g_inputSignal->data = std::move(msg);
                 uv_async_send(g_inputSignal);
-                LOGE("GetInputCommand: end");
             }
         }
     }
@@ -162,7 +162,13 @@ void GetSocketMessage(void *arg)
         }
         char* msg = (char*)malloc(len + 1);
         if ((msg != nullptr) && uv_is_active(reinterpret_cast<uv_handle_t*>(g_socketSignal))) {
-            strncpy_s(msg, len + 1, decMessage.c_str(), len);
+            if (strncpy_s(msg, len + 1, decMessage.c_str(), len) != 0) {
+                g_cliSocket.Close();
+                if (uv_is_active(reinterpret_cast<uv_handle_t*>(g_releaseHandle))) {
+                    uv_async_send(g_releaseHandle);
+                }
+                break;
+            }
             g_socketSignal->data = std::move(msg);
             uv_async_send(g_socketSignal);
         }

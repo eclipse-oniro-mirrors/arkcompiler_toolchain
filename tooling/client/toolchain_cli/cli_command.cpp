@@ -117,7 +117,7 @@ ErrCode CliCommand::ExecCommand()
 {
     CreateCommandMap();
 
-    int result = OnCommand();
+    ErrCode result = OnCommand();
     return result;
 }
 
@@ -194,9 +194,9 @@ ErrCode CliCommand::HeapProfilerCommand(const std::string &cmd)
             g_domainManager.SetDomainById(id_, "HeapProfiler");
         }
     } else {
-        return ERR_FAIL;
+        return ErrCode::ERR_FAIL;
     }
-    return ERR_OK;
+    return ErrCode::ERR_OK;
 }
 
 ErrCode CliCommand::CpuProfileCommand(const std::string &cmd)
@@ -208,7 +208,7 @@ ErrCode CliCommand::CpuProfileCommand(const std::string &cmd)
     ProfilerSingleton& pro = ProfilerSingleton::getInstance();
     if (cmd == "cpuprofile-show") {
         pro.ShowCpuFile();
-        return ERR_OK;
+        return ErrCode::ERR_OK;
     }
     if (cmd == "cpuprofile-setSamplingInterval") {
         profilerClient->SetSamplingInterval(std::atoi(GetArgList()[0].c_str()));
@@ -223,9 +223,9 @@ ErrCode CliCommand::CpuProfileCommand(const std::string &cmd)
             g_domainManager.SetDomainById(id_, "Profiler");
         }
     } else {
-        return ERR_FAIL;
+        return ErrCode::ERR_FAIL;
     }
-    return ERR_OK;
+    return ErrCode::ERR_OK;
 }
 
 ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
@@ -245,9 +245,9 @@ ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
             g_domainManager.SetDomainById(id_, "Debugger");
         }
     } else {
-        return ERR_FAIL;
+        return ErrCode::ERR_FAIL;
     }
-    return ERR_OK;
+    return ErrCode::ERR_OK;
 }
 
 ErrCode CliCommand::RuntimeCommand(const std::string &cmd)
@@ -269,20 +269,20 @@ ErrCode CliCommand::RuntimeCommand(const std::string &cmd)
             g_domainManager.SetDomainById(id_, "Runtime");
         }
     } else {
-        return ERR_FAIL;
+        return ErrCode::ERR_FAIL;
     }
-    return ERR_OK;
+    return ErrCode::ERR_OK;
 }
 
 ErrCode CliCommand::ExecHelpCommand()
 {
     std::cout << HELP_MSG;
-    return ERR_OK;
+    return ErrCode::ERR_OK;
 }
 
 ErrCode CliCommand::OnCommand()
 {
-    std::map<StrPair, std::function<int()>>::iterator it;
+    std::map<StrPair, std::function<ErrCode()>>::iterator it;
     StrPair cmdPair;
     bool haveCmdFlag = false;
 
@@ -308,6 +308,6 @@ ErrCode CliCommand::OnCommand()
         ExecHelpCommand();
     }
 
-    return ERR_FAIL;
+    return ErrCode::ERR_FAIL;
 }
 } // namespace OHOS::ArkCompiler::Toolchain
