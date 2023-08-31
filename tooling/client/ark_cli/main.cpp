@@ -33,9 +33,9 @@ uv_loop_t* g_loop;
 
 bool StrToUInt(const char *content, uint32_t *result)
 {
-    const int DEC = 10;
+    const int dec = 10;
     char *endPtr = nullptr;
-    *result = std::strtoul(content, &endPtr, DEC);
+    *result = std::strtoul(content, &endPtr, dec);
     if (endPtr == content || *endPtr != '\0') {
         return false;
     }
@@ -98,7 +98,7 @@ void InputOnMessage(uv_async_t *handle)
     std::vector<std::string> cliCmdStr = SplitString(inputStr, " ");
     g_messageId += 1;
     CliCommand cmd(cliCmdStr, g_messageId);
-    if (ErrCode::ERR_FAIL == cmd.ExecCommand()) {
+    if (cmd.ExecCommand() == ErrCode::ERR_FAIL) {
         g_messageId -= 1;
     }
     std::cout << ">>> ";
@@ -117,8 +117,8 @@ void GetInputCommand(void *arg)
             std::cout << ">>> ";
             continue;
         }
-        if ((!strcmp(inputStr.c_str(), "quit"))||(!strcmp(inputStr.c_str(), "q"))) {
-            LOGE("toolchain_cli: quit");
+        if ((!strcmp(inputStr.c_str(), "quit")) || (!strcmp(inputStr.c_str(), "q"))) {
+            LOGE("arkdb: quit");
             g_cliSocket.Close();
             if (uv_is_active(reinterpret_cast<uv_handle_t*>(g_releaseHandle))) {
                 uv_async_send(g_releaseHandle);
@@ -180,32 +180,32 @@ int Main(const int argc, const char** argv)
     uint32_t port = 0;
 
     if (argc < 2) { // 2: two parameters
-        LOGE("toolchain_cli is missing a parameter");
+        LOGE("arkdb is missing a parameter");
         return -1;
     }
-    if (strstr(argv[0], "toolchain_cli") != nullptr) {
+    if (strstr(argv[0], "arkdb") != nullptr) {
         if (StrToUInt(argv[1], &port)) {
             if ((port <= 0) || (port >= 65535)) { // 65535: max port
-                LOGE("toolchain_cli:InitToolchainWebSocketForPort the port = %{public}d is wrong.", port);
+                LOGE("arkdb:InitToolchainWebSocketForPort the port = %{public}d is wrong.", port);
                 return -1;
             }
             if (!g_cliSocket.InitToolchainWebSocketForPort(port, 5)) { // 5: five times
-                LOGE("toolchain_cli:InitToolchainWebSocketForPort failed");
+                LOGE("arkdb:InitToolchainWebSocketForPort failed");
                 return -1;
             }
         } else {
             if (!g_cliSocket.InitToolchainWebSocketForSockName(argv[1])) {
-                LOGE("toolchain_cli:InitToolchainWebSocketForSockName failed");
+                LOGE("arkdb:InitToolchainWebSocketForSockName failed");
                 return -1;
             }
         }
 
         if (!g_cliSocket.ClientSendWSUpgradeReq()) {
-            LOGE("toolchain_cli:ClientSendWSUpgradeReq failed");
+            LOGE("arkdb:ClientSendWSUpgradeReq failed");
             return -1;
         }
         if (!g_cliSocket.ClientRecvWSUpgradeRsp()) {
-            LOGE("toolchain_cli:ClientRecvWSUpgradeRsp failed");
+            LOGE("arkdb:ClientRecvWSUpgradeRsp failed");
             return -1;
         }
 
@@ -222,7 +222,7 @@ int Main(const int argc, const char** argv)
 
         uv_thread_t inputTid;
         uv_thread_create(&inputTid, GetInputCommand, nullptr);
-        
+
         uv_thread_t socketTid;
         uv_thread_create(&socketTid, GetSocketMessage, nullptr);
 

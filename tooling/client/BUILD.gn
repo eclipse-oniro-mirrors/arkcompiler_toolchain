@@ -32,64 +32,54 @@ config("hiviewdfx_config") {
   include_dirs = [ "$hilog_root/include" ]
 }
 
-ohos_source_set("libark_toolchain_client_set") {
+ohos_source_set("libark_client_set") {
   stack_protector_ret = false
   defines = []
   deps = []
-  configs = [
-    sdk_libc_secshared_config,
-  ]
+  configs = [ sdk_libc_secshared_config ]
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
   deps += hiviewdfx_deps
 
   include_dirs = [
-    "$toolchain_root",
-    "$toolchain_root/inspector",
-    "$toolchain_root/websocket",
-    "$toolchain_root/tooling/base",
-    "$toolchain_root/tooling/client",
+    "//arkcompiler/toolchain/inspector",
+    "//arkcompiler/toolchain/websocket",
+    "//arkcompiler/toolchain/tooling/base",
+    "//arkcompiler/toolchain/tooling/client",
     "//third_party/cJSON",
   ]
 
   sources = [
-    "websocket/websocket_client.cpp",
+    "domain/debugger_client.cpp",
     "domain/heapprofiler_client.cpp",
     "domain/profiler_client.cpp",
-    "domain/debugger_client.cpp",
     "domain/runtime_client.cpp",
     "manager/domain_manager.cpp",
-    "manager/variable_manager.cpp"
+    "manager/variable_manager.cpp",
+    "websocket/websocket_client.cpp",
   ]
 
   deps += [
-    "$toolchain_root/websocket:websocket",
-    "$toolchain_root/tooling:libark_ecma_debugger_set",
     "$ark_third_party_root/openssl:libcrypto_shared",
+    "//arkcompiler/toolchain/tooling:libark_ecma_debugger_set",
     "//third_party/libuv:uv",
     sdk_libc_secshared_dep,
   ]
 
-  external_deps += [
-    "ets_runtime:libark_jsruntime",
-  ]
+  external_deps += [ "ets_runtime:libark_jsruntime" ]
 
-  configs += [
-    ":hiviewdfx_config",
-  ]
+  configs += [ ":hiviewdfx_config" ]
 
-  cflags_cc = [
-    "-Wno-error=vla-extension",
-  ]
+  cflags_cc = [ "-Wno-error=vla-extension" ]
 
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
 }
 
-ohos_shared_library("libark_toolchain_client") {
+ohos_shared_library("libark_client") {
   stack_protector_ret = false
-  deps = [ ":libark_toolchain_client_set" ]
+  deps = [ ":libark_client_set" ]
 
   if (!is_mingw && !is_mac) {
     output_extension = "so"
@@ -98,4 +88,3 @@ ohos_shared_library("libark_toolchain_client") {
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
 }
-
