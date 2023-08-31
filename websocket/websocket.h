@@ -24,6 +24,15 @@ namespace panda::test {
 class WebSocketTest;
 }
 namespace OHOS::ArkCompiler::Toolchain {
+enum class FrameType : uint8_t {
+    CONTINUATION = 0x0,
+    TEXT = 0x1,
+    BINARY = 0x2,
+    CLOSE = 0x8,
+    PING = 0x9,
+    PONG = 0xa,
+};
+
 struct WebSocketFrame {
     uint8_t fin = 0;
     uint8_t opcode = 0;
@@ -51,7 +60,7 @@ public:
     ~WebSocket() = default;
     std::string Decode();
     void Close();
-    void SendReply(const std::string& message) const;
+    bool SendReply(const std::string& message, FrameType frameType = FrameType::TEXT, bool isLast = true) const;
 #if !defined(OHOS_PLATFORM)
     bool InitTcpWebSocket(int port, uint32_t timeoutLimit = 0);
     bool ConnectTcpWebSocket();
@@ -73,6 +82,8 @@ private:
     bool SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit);
     bool Recv(int32_t client, char* buf, size_t totalLen, int32_t flags) const;
     bool Send(int32_t client, const char* buf, size_t totalLen, int32_t flags) const;
+    std::string ResolveHeader(int32_t index, WebSocketFrame& wsFrame, const char* recvbuf);
+    char GetFrameType(FrameType frameType) const;
 
     int32_t client_ {-1};
     int32_t fd_ {-1};

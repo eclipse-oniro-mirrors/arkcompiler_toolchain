@@ -27,19 +27,26 @@ namespace OHOS::ArkCompiler::Toolchain {
  *    3. message's length >= 65536
  */
 
-void WebSocket::SendReply(const std::string& message) const
+// if the data is too large, it will be split into multiple frames, the first frame will be marked as 0x0
+// and the last frame will be marked as 0x1.
+// we just add the 'isLast' parameter to indicate whether it is the last frame.
+bool WebSocket::SendReply(const std::string& message, FrameType frameType, bool isLast) const
 {
     if (socketState_ != SocketState::CONNECTED) {
         LOGE("SendReply failed, websocket not connected");
-        return;
+        return false;
     }
     const size_t msgLen = message.length();
     const uint32_t headerSize = 11; // 11: the maximum expandable length
     std::unique_ptr<char []> msgBuf = std::make_unique<char []>(msgLen + headerSize);
     char* sendBuf = msgBuf.get();
+    if (!isLast) {
+        sendBuf[0] = 0x0; // 0x0: 0x0 means a continuation frame
+    } else {
+        sendBuf[0] = 0x80; // 0x80: 0x80 means a text frame
+    }
     uint32_t sendMsgLen;
-    sendBuf[0] = 0x81; // 0x81: the text message sent by the server should start with '0x81'.
-
+    sendBuf[0] |= GetFrameType(frameType);
     // Depending on the length of the messages, server will use shift operation to get the res
     // and store them in the buffer.
     if (msgLen <= 125) { // 125: situation 1 when message's length <= 125
@@ -63,12 +70,34 @@ void WebSocket::SendReply(const std::string& message) const
     }
     if (memcpy_s(sendBuf + sendMsgLen, msgLen, message.c_str(), msgLen) != EOK) {
         LOGE("SendReply: memcpy_s failed");
-        return;
+        return false;
     }
     sendBuf[sendMsgLen + msgLen] = '\0';
     if (!Send(client_, sendBuf, sendMsgLen + msgLen, 0)) {
         LOGE("SendReply: send failed");
-        return;
+        return false;
+    }
+    return true;
+}
+
+char WebSocket::GetFrameType(FrameType frameType) const
+{
+    switch (frameType) {
+        case FrameType::CONTINUATION:
+            return 0x0; // 0x0: 0x0 means a continuation frame
+        case FrameType::TEXT:
+            return 0x1; // 0x1: 0x1 means a text frame
+        case FrameType::BINARY:
+            return 0x2; // 0x2: 0x2 means a binary frame
+        case FrameType::CLOSE:
+            return 0x8; // 0x8: 0x8 means a close frame
+        case FrameType::PING:
+            return 0x9; // 0x9: 0x9 means a ping frame
+        case FrameType::PONG:
+            return 0xa; // 0xa: 0xa means a pong frame
+        default:
+            LOGF("GetFrameType failed, invalid frame type");
+            return 0x0;
     }
 }
 
@@ -147,8 +176,8 @@ bool WebSocket::HandleFrame(WebSocketFrame& wsFrame)
 
 bool WebSocket::DecodeMessage(WebSocketFrame& wsFrame)
 {
-    if (wsFrame.payloadLen == 0 || wsFrame.payloadLen > UINT64_MAX) {
-        LOGE("ReadMsg length error, expected greater than zero and less than UINT64_MAX");
+    if (wsFrame.payloadLen > UINT64_MAX) {
+        LOGE("ReadMsg length error, the length should be less than UINT64_MAX");
         return false;
     }
     uint64_t msgLen = wsFrame.payloadLen;
@@ -210,6 +239,17 @@ bool WebSocket::ProtocolUpgrade(const HttpProtocol& req)
     return true;
 }
 
+std::string WebSocket::ResolveHeader(int32_t index, WebSocketFrame& wsFrame, const char* recvbuf)
+{
+    index++;
+    wsFrame.mask = static_cast<uint8_t>((recvbuf[index] >> 7) & 0x1); // 7: to get the mask
+    wsFrame.payloadLen = recvbuf[index] & 0x7f;
+    if (HandleFrame(wsFrame)) {
+        return wsFrame.payload.get();
+    }
+    return "";
+}
+
 std::string WebSocket::Decode()
 {
     if (socketState_ != SocketState::CONNECTED) {
@@ -235,13 +275,7 @@ std::string WebSocket::Decode()
     wsFrame.fin = static_cast<uint8_t>(recvbuf[index] >> 7); // 7: shift right by 7 bits to get the fin
     wsFrame.opcode = static_cast<uint8_t>(recvbuf[index] & 0xf);
     if (wsFrame.opcode == 0x1) { // 0x1: 0x1 means a text frame
-        index++;
-        wsFrame.mask = static_cast<uint8_t>((recvbuf[index] >> 7) & 0x1); // 7: to get the mask
-        wsFrame.payloadLen = recvbuf[index] & 0x7f;
-        if (HandleFrame(wsFrame)) {
-            return wsFrame.payload.get();
-        }
-        return "";
+        return ResolveHeader(index, wsFrame, recvbuf);
     } else if (wsFrame.opcode == 0x9) { // 0x9: 0x9 means a ping frame
         // send pong frame
         char pongFrame[SOCKET_HEADER_LEN] = {0};
@@ -249,8 +283,12 @@ std::string WebSocket::Decode()
         pongFrame[1] = 0x0;
         if (!Send(client_, pongFrame, SOCKET_HEADER_LEN, 0)) {
             LOGE("Decode: Send pong frame failed");
-            return "";
         }
+        return ResolveHeader(index, wsFrame, recvbuf);
+    } else if (wsFrame.opcode == 0xa) { // 0xa: 0xa means a pong frame
+        // pong frame does not contain any data
+        LOGI("Decode: pong frame");
+        return "";
     }
     return "";
 }

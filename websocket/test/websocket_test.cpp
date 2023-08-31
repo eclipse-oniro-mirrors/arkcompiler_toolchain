@@ -215,7 +215,7 @@ public:
             return true;
         }
 
-        bool ClientSendReq(const std::string &message)
+        bool ClientSendReq(const std::string &message, FrameType frameType = FrameType::TEXT, bool isLast = true)
         {
             if (socketState_ != SocketState::CONNECTED) {
                 std::cerr << "ClientSendReq::client has not connected..." << std::endl;
@@ -226,7 +226,12 @@ public:
             std::unique_ptr<char []> msgBuf = std::make_unique<char []>(msgLen + 15); // 15: the maximum expand length
             char *sendBuf = msgBuf.get();
             uint32_t sendMsgLen = 0;
-            sendBuf[0] = 0x81; // 0x81: the text message sent by the server should start with '0x81'.
+            if (isLast) {
+                sendBuf[0] = 0x80; // 0x80: 0x80 means the last frame
+            } else {
+                sendBuf[0] = 0x0; // 0x0: 0x0 means not the last frame
+            }
+            sendBuf[0] |= GetFrameType(frameType);
             uint32_t mask = 1;
             // Depending on the length of the messages, client will use shift operation to get the res
             // and store them in the buffer.
@@ -314,6 +319,7 @@ public:
     static constexpr char SERVER_OK[]      = "server ok";
     static constexpr char CLIENT_OK[]      = "client ok";
     static constexpr char QUIT[]           = "quit";
+    static constexpr char PING[]           = "ping";
     static const std::string LONG_MSG;
     static const std::string LONG_LONG_MSG;
 };
@@ -373,6 +379,10 @@ HWTEST_F(WebSocketTest, ConnectWebSocketTest, testing::ext::TestSize.Level0)
             retClient = clientSocket.ClientSendReq(CLIENT_OK);
             EXPECT_TRUE(retClient);
         }
+        retClient = clientSocket.ClientSendReq(PING, FrameType::PING); // send a ping frame and wait for pong frame
+        EXPECT_TRUE(retClient);
+        recv = clientSocket.Decode(); // get the pong frame
+        EXPECT_EQ(strcmp(recv.c_str(), ""), 0); // pong frame has no data
         retClient = clientSocket.ClientSendReq(QUIT);
         EXPECT_TRUE(retClient);
         clientSocket.Close();
@@ -400,6 +410,8 @@ HWTEST_F(WebSocketTest, ConnectWebSocketTest, testing::ext::TestSize.Level0)
         serverSocket.SendReply(SERVER_OK);
         recv = serverSocket.Decode();
         EXPECT_EQ(strcmp(recv.c_str(), CLIENT_OK), 0);
+        recv = serverSocket.Decode();
+        EXPECT_EQ(strcmp(recv.c_str(), PING), 0); // the ping frame has "PING" and send a pong frame
         recv = serverSocket.Decode();
         EXPECT_EQ(strcmp(recv.c_str(), QUIT), 0);
         serverSocket.Close();
