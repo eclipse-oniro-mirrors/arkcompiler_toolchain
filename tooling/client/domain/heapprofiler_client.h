@@ -51,7 +51,7 @@ public:
     std::string SampingStop(int id);
     std::string CollectGarbage(int id);
     void RecvReply(std::unique_ptr<PtJson> json);
-    bool WriteHeapProfilerForFile(std::string fileName, std::string data);
+    bool WriteHeapProfilerForFile(const std::string &fileName, const std::string &data);
 
 private:
     std::string fileName_;

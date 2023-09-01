@@ -46,11 +46,11 @@ bool HeapProfilerClient::DispatcherCmd(int id, const std::string &cmd, const std
         *reqStr = entry->second();
         LOGE("DispatcherCmd reqStr1: %{public}s", reqStr->c_str());
         return true;
-    } else {
-        *reqStr = "Unknown commond: " + cmd;
-        LOGE("DispatcherCmd reqStr2: %{public}s", reqStr->c_str());
-        return false;
     }
+
+    *reqStr = "Unknown commond: " + cmd;
+    LOGE("DispatcherCmd reqStr2: %{public}s", reqStr->c_str());
+    return false;
 }
 
 std::string HeapProfilerClient::HeapDumpCommand(int id)
@@ -169,27 +169,30 @@ void HeapProfilerClient::RecvReply(std::unique_ptr<PtJson> json)
     }
 
     Result ret;
+    std::string wholeMethod;
+    std::string method;
+    ret = json->GetString("method", &wholeMethod);
+    if (ret != Result::SUCCESS) {
+        LOGE("find method error");
+        return;
+    }
+
+    std::string::size_type length = wholeMethod.length();
+    std::string::size_type indexPoint = 0;
+    indexPoint = wholeMethod.find_first_of('.', 0);
+    if (indexPoint == std::string::npos || indexPoint == 0 || indexPoint == length - 1) {
+        return;
+    }
+    method = wholeMethod.substr(indexPoint + 1, length);
+    if (method == "lastSeenObjectId") {
+        isAllocationMsg_ = true;
+    }
+
     std::unique_ptr<PtJson> params;
     ret = json->GetObject("params", &params);
     if (ret != Result::SUCCESS) {
         LOGE("find params error");
         return;
-    }
-
-    std::string wholeMethod;
-    std::string method;
-    ret = json->GetString("method", &wholeMethod);
-    if (ret == Result::SUCCESS) {
-        std::string::size_type length = wholeMethod.length();
-        std::string::size_type indexPoint = 0;
-        indexPoint = wholeMethod.find_first_of('.', 0);
-        if (indexPoint == std::string::npos || indexPoint == 0 || indexPoint == length - 1) {
-            return;
-        }
-        method = wholeMethod.substr(indexPoint + 1, length);
-        if (method == "lastSeenObjectId") {
-            isAllocationMsg_ = true;
-        }
     }
 
     std::string chunk;
@@ -248,7 +251,7 @@ void HeapProfilerClient::RecvReply(std::unique_ptr<PtJson> json)
     WriteHeapProfilerForFile(fileName_, chunk);
 }
 
-bool HeapProfilerClient::WriteHeapProfilerForFile(std::string fileName, std::string data)
+bool HeapProfilerClient::WriteHeapProfilerForFile(const std::string &fileName, const std::string &data)
 {
     std::ofstream ofs;
     std::string pathname = path_ + fileName;

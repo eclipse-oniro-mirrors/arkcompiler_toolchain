@@ -49,9 +49,7 @@ public:
         }
     }
 
-    ~CliCommand()
-    {
-    }
+    ~CliCommand() = default;
 
     ErrCode OnCommand();
     ErrCode ExecCommand();

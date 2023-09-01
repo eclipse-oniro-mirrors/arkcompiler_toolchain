@@ -77,27 +77,24 @@ config("hiviewdfx_config") {
   }
 }
 
-ohos_executable("toolchain_cli") {
+ohos_executable("arkdb") {
   sources = [
-    "main.cpp",
     "cli_command.cpp",
-    ]
+    "main.cpp",
+  ]
 
   include_dirs = [
-    "$toolchain_root",
-    "$toolchain_root/tooling",
-    "$toolchain_root/inspector",
-    "$toolchain_root/websocket",
-    "$toolchain_root/tooling/base",
-    "$toolchain_root/tooling/client",
-    "$toolchain_root/tooling/client/toolchain_cli",
+    "//arkcompiler/toolchain/tooling",
+    "//arkcompiler/toolchain/inspector",
+    "//arkcompiler/toolchain/websocket",
+    "//arkcompiler/toolchain/tooling/base",
+    "//arkcompiler/toolchain/tooling/client",
+    "//arkcompiler/toolchain/tooling/client/ark_cli",
     "//third_party/cJSON",
     "//third_party/libuv/include",
   ]
 
-  deps = [
-    "$toolchain_root/tooling/client:libark_toolchain_client_set",
-  ]
+  deps = [ "//arkcompiler/toolchain/tooling/client:libark_client_set" ]
 
   external_deps = [
     "ets_runtime:libark_jsruntime",
