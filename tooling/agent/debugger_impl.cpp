@@ -814,7 +814,8 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
     }
     const std::string &url = params.GetUrl();
     int32_t lineNumber = params.GetLine();
-    int32_t columnNumber = params.GetColumn();
+    // it is not support column breakpoint now, so columnNumber is not useful
+    int32_t columnNumber = -1;
     auto condition = params.HasCondition() ? params.GetCondition() : std::optional<std::string> {};
 
     DebugInfoExtractor *extractor = GetExtractor(url);
@@ -903,7 +904,8 @@ bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
 {
     const std::string &url = breakpoint.GetUrl();
     int32_t lineNumber = breakpoint.GetLineNumber();
-    int32_t columnNumber = breakpoint.GetColumnNumber();
+    // it is not support column breakpoint now, so columnNumber is not useful
+    int32_t columnNumber = -1;
     auto condition = breakpoint.HasCondition() ? breakpoint.GetCondition() : std::optional<std::string> {};
 
     DebugInfoExtractor *extractor = GetExtractor(url);
