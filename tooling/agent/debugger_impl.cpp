@@ -87,7 +87,7 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
     const std::string &source = extractor->GetSourceCode(mainMethodIndex);
     const std::string &url = extractor->GetSourceFile(mainMethodIndex);
     if (source.empty()) {
-        LOG_DEBUGGER(ERROR) << "NotifyScriptParsed: invalid file: " << fileName;
+        LOG_DEBUGGER(WARN) << "NotifyScriptParsed: invalid debugger file: " << fileName;
         return false;
     }
 
