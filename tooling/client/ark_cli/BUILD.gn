@@ -84,17 +84,17 @@ ohos_executable("arkdb") {
   ]
 
   include_dirs = [
-    "//arkcompiler/toolchain/tooling",
-    "//arkcompiler/toolchain/inspector",
-    "//arkcompiler/toolchain/websocket",
-    "//arkcompiler/toolchain/tooling/base",
-    "//arkcompiler/toolchain/tooling/client",
-    "//arkcompiler/toolchain/tooling/client/ark_cli",
+    "./",
+    "../",
+    "../../base",
+    "../../../inspector",
+    "../../../tooling",
+    "../../../websocket",
     "//third_party/cJSON",
     "//third_party/libuv/include",
   ]
 
-  deps = [ "//arkcompiler/toolchain/tooling/client:libark_client_set" ]
+  deps = [ "../:libark_client_set" ]
 
   external_deps = [
     "ets_runtime:libark_jsruntime",
