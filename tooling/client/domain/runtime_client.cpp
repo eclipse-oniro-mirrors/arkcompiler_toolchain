@@ -19,6 +19,7 @@
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 namespace OHOS::ArkCompiler::Toolchain {
+RuntimeClient RuntimeClient::instance;
 bool RuntimeClient::DispatcherCmd(int id, const std::string &cmd, std::string* reqStr)
 {
     std::map<std::string, std::function<std::string()>> dispatcherTable {
@@ -120,6 +121,11 @@ std::string RuntimeClient::GetPropertiesCommand2(int id)
     params->Add("ownProperties", false);
     request->Add("params", params);
     return request->Stringify();
+}
+
+RuntimeClient& RuntimeClient::getInstance()
+{
+    return instance;
 }
 
 int RuntimeClient::GetIdByMethod(const std::string method)

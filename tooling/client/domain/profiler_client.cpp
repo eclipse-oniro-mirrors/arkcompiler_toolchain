@@ -16,6 +16,7 @@
 #include "domain/profiler_client.h"
 #include "pt_types.h"
 #include "log_wrapper.h"
+#include "utils/utils.h"
 
 #include <map>
 #include <functional>
@@ -25,6 +26,7 @@
 using Result = panda::ecmascript::tooling::Result;
 using Profile = panda::ecmascript::tooling::Profile;
 namespace OHOS::ArkCompiler::Toolchain {
+ProfilerSingleton ProfilerSingleton::instance;
 bool ProfilerClient::DispatcherCmd(int id, const std::string &cmd, std::string* reqStr)
 {
     std::map<std::string, std::function<std::string()>> dispatcherTable {
@@ -107,6 +109,11 @@ std::string ProfilerClient::SetSamplingIntervalCommand(int id)
     return request->Stringify();
 }
 
+ProfilerSingleton& ProfilerSingleton::getInstance()
+{
+    return instance;
+}
+
 void ProfilerClient::RecvProfilerResult(std::unique_ptr<PtJson> json)
 {
     if (json == nullptr) {
@@ -133,43 +140,23 @@ void ProfilerClient::RecvProfilerResult(std::unique_ptr<PtJson> json)
         LOGE("toolchain_client: the cmd is not cp-stop!");
         return;
     }
-    ProfilerSingleton& pro = ProfilerSingleton::getInstance();
-    time_t timep = time(nullptr);
-    if (timep == -1) {
-        LOGE("get timep failed");
-        return;
-    }
-    char tmp1[16];
-    char tmp2[16];
-    tm* localTime1 = localtime(&timep);
-    if (localTime1 == nullptr) {
-        LOGE("get localTime1 failed");
-        return;
-    }
-    size_t timeResult = 0;
-    timeResult = strftime(tmp1, sizeof(tmp1), "%Y%m%d", localTime1);
-    if (timeResult == 0) {
-        LOGE("get time failed");
+
+    char date[16];
+    char time[16];
+    bool res = Utils::GetCurrentTime(date, time, sizeof(date));
+    if (!res) {
+        LOGE("arkdb: get time failed");
         return;
     }
 
-    tm* localTime2 = localtime(&timep);
-    if (localTime2 == nullptr) {
-        LOGE("get localTime2 failed");
-        return;
-    }
-    timeResult = strftime(tmp2, sizeof(tmp2), "%H%M%S", localTime2);
-    if (timeResult == 0) {
-        LOGE("get time failed");
-        return;
-    }
-    std::string fileName = "CPU-" + std::string(tmp1) + "T" + std::string(tmp2) + ".cpuprofile";
+    ProfilerSingleton& pro = ProfilerSingleton::getInstance();
+    std::string fileName = "CPU-" + std::string(date) + "T" + std::string(time) + ".cpuprofile";
     std::string cpufile = pro.GetAddress() + fileName;
     std::cout << "toolchain_client: cpuprofile file name is " << cpufile << std::endl;
     std::cout << ">>> ";
     fflush(stdout);
     WriteCpuProfileForFile(cpufile, profile->Stringify());
-    pro.SaveCpuName(fileName);
+    pro.AddCpuName(fileName);
 }
 
 bool ProfilerClient::WriteCpuProfileForFile(const std::string &fileName, const std::string &data)

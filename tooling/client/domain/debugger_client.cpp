@@ -56,11 +56,11 @@ bool DebuggerClient::DispatcherCmd(int id, const std::string &cmd, std::string* 
         *reqStr = entry->second();
         LOGE("DebuggerClient DispatcherCmd reqStr1: %{public}s", reqStr->c_str());
         return true;
-    } else {
-        *reqStr = "Unknown commond: " + cmd;
-        LOGE("DebuggerClient DispatcherCmd reqStr2: %{public}s", reqStr->c_str());
-        return false;
     }
+
+    *reqStr = "Unknown commond: " + cmd;
+    LOGE("DebuggerClient DispatcherCmd reqStr2: %{public}s", reqStr->c_str());
+    return false;
 }
 
 std::string DebuggerClient::BreakCommand(int id)
@@ -70,8 +70,8 @@ std::string DebuggerClient::BreakCommand(int id)
     request->Add("method", "Debugger.setBreakpointByUrl");
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
-    params->Add("columnNumber", 0);
-    params->Add("lineNumber", std::stoi(breakPointInfoList_.back().lineNumber));
+    params->Add("columnNumber", breakPointInfoList_.back().columnNumber);
+    params->Add("lineNumber", breakPointInfoList_.back().lineNumber);
     params->Add("url", breakPointInfoList_.back().url.c_str());
     request->Add("params", params);
     return request->Stringify();
@@ -211,11 +211,12 @@ std::string DebuggerClient::ResumeCommand(int id)
     return request->Stringify();
 }
 
-void DebuggerClient::AddBreakPointInfo(std::string url, std::string lineNumber)
+void DebuggerClient::AddBreakPointInfo(const std::string& url, const int& lineNumber, const int& columnNumber)
 {
     BreakPointInfo breakPointInfo;
     breakPointInfo.url = url;
     breakPointInfo.lineNumber = lineNumber;
+    breakPointInfo.columnNumber = columnNumber;
     breakPointInfoList_.emplace_back(breakPointInfo);
 }
 } // OHOS::ArkCompiler::Toolchain

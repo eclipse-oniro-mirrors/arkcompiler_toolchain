@@ -21,7 +21,8 @@
 
 namespace OHOS::ArkCompiler::Toolchain {
 struct BreakPointInfo {
-    std::string lineNumber;
+    int lineNumber;
+    int columnNumber;
     std::string url;
 };
 class DebuggerClient final {
@@ -54,7 +55,7 @@ public:
     std::string WatchCommand(int id);
     std::string ResumeCommand(int id);
 
-    void AddBreakPointInfo(std::string url, std::string lineNumber);
+    void AddBreakPointInfo(const std::string& url, const int& lineNumber, const int& columnNumber = 0);
 
 private:
     std::vector<BreakPointInfo> breakPointInfoList_ {};

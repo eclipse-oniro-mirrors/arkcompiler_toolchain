@@ -15,6 +15,7 @@
 
 #include "domain/heapprofiler_client.h"
 #include "log_wrapper.h"
+#include "utils/utils.h"
 
 #include <map>
 #include <functional>
@@ -204,39 +205,17 @@ void HeapProfilerClient::RecvReply(std::unique_ptr<PtJson> json)
 
     std::string head = "{\"snapshot\":\n";
     if (!strncmp(chunk.c_str(), head.c_str(), head.length())) {
-        time_t timep = time(nullptr);
-        if (timep == -1) {
-            LOGE("get timep failed");
-            return;
-        }
-        char tmp1[16];
-        char tmp2[16];
-        tm* localTime1 = localtime(&timep);
-        if (localTime1 == nullptr) {
-            LOGE("get localTime1 failed");
-            return;
-        }
-        size_t result = 0;
-        result = strftime(tmp1, sizeof(tmp1), "%Y%m%d", localTime1);
-        if (result == 0) {
-            LOGE("get time failed");
-            return;
-        }
-
-        tm* localTime2 = localtime(&timep);
-        if (localTime2 == nullptr) {
-            LOGE("get localTime2 failed");
-            return;
-        }
-        result = strftime(tmp2, sizeof(tmp2), "%H%M%S", localTime2);
-        if (result == 0) {
-            LOGE("get time failed");
+        char date[16];
+        char time[16];
+        bool res = Utils::GetCurrentTime(date, time, sizeof(date));
+        if (!res) {
+            LOGE("arkdb: get time failed");
             return;
         }
         if (isAllocationMsg_) {
-            fileName_ = "Heap-" + std::string(tmp1) + "T" + std::string(tmp2) + ".heaptimeline";
+            fileName_ = "Heap-" + std::string(date) + "T" + std::string(time) + ".heaptimeline";
         } else {
-            fileName_ = "Heap-" + std::string(tmp1) + "T" + std::string(tmp2) + ".heapsnapshot";
+            fileName_ = "Heap-" + std::string(date) + "T" + std::string(time) + ".heapsnapshot";
         }
         std::cout << "file name is " << fileName_ << std::endl;
         std::cout << ">>> ";
