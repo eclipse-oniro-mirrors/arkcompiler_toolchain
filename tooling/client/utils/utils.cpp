@@ -17,8 +17,6 @@
 #include "log_wrapper.h"
 
 #include <ctime>
-#include <cstring>
-#include <fstream>
 
 namespace OHOS::ArkCompiler::Toolchain {
 bool Utils::GetCurrentTime(char *date, char *tim, size_t size)

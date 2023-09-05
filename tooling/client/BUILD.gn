@@ -43,10 +43,10 @@ ohos_source_set("libark_client_set") {
   deps += hiviewdfx_deps
 
   include_dirs = [
-    "//arkcompiler/toolchain/inspector",
-    "//arkcompiler/toolchain/websocket",
-    "//arkcompiler/toolchain/tooling/base",
-    "//arkcompiler/toolchain/tooling/client",
+    "./",
+    "../base",
+    "../../inspector",
+    "../../websocket",
     "//third_party/cJSON",
   ]
 
@@ -62,8 +62,8 @@ ohos_source_set("libark_client_set") {
   ]
 
   deps += [
+    "../:libark_ecma_debugger_set",
     "$ark_third_party_root/openssl:libcrypto_shared",
-    "//arkcompiler/toolchain/tooling:libark_ecma_debugger_set",
     "//third_party/libuv:uv",
     sdk_libc_secshared_dep,
   ]
