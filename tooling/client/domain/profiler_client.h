@@ -25,22 +25,13 @@
 
 namespace OHOS::ArkCompiler::Toolchain {
 using PtJson = panda::ecmascript::tooling::PtJson;
-
 class ProfilerSingleton {
 public:
-    ProfilerSingleton(const ProfilerSingleton&) = delete;
-    ProfilerSingleton& operator=(const ProfilerSingleton&) = delete;
+    static ProfilerSingleton& getInstance();
 
-    static ProfilerSingleton& getInstance()
-    {
-        static ProfilerSingleton instance;
-        return instance;
-    }
-
-    std::vector<std::string> SaveCpuName(const std::string &data)
+    void AddCpuName(const std::string &data)
     {
         cpulist_.emplace_back(data);
-        return cpulist_;
     }
 
     void ShowCpuFile()
@@ -56,7 +47,7 @@ public:
         address_ = address;
     }
 
-    std::string GetAddress()
+    const std::string& GetAddress() const
     {
         return address_;
     }
@@ -64,8 +55,10 @@ public:
 private:
     std::vector<std::string> cpulist_;
     std::string address_ = "";
-    ProfilerSingleton() {}
-    ~ProfilerSingleton() {}
+    static ProfilerSingleton instance;
+    ProfilerSingleton() = default;
+    ProfilerSingleton(const ProfilerSingleton&) = delete;
+    ProfilerSingleton& operator=(const ProfilerSingleton&) = delete;
 };
 
 class ProfilerClient final {

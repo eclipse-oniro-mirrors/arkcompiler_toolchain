@@ -219,7 +219,7 @@ ErrCode CliCommand::CpuProfileCommand(const std::string &cmd)
     result = profilerClient->DispatcherCmd(id_, cmd, &request);
     if (result) {
         g_cliSocket.ClientSendReq(request);
-        if (g_domainManager.GetDomainById(id_) == "") {
+        if (g_domainManager.GetDomainById(id_).empty()) {
             g_domainManager.SetDomainById(id_, "Profiler");
         }
     } else {
@@ -236,12 +236,12 @@ ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
     LOGE("DebuggerCommand: %{public}d", id_);
     DebuggerClient debuggerCli;
     if (GetArgList().size() == 2) { // 2: two parameters
-        debuggerCli.AddBreakPointInfo(GetArgList()[0], GetArgList()[1]);
+        debuggerCli.AddBreakPointInfo(GetArgList()[0], std::stoi(GetArgList()[1]));
     }
     result = debuggerCli.DispatcherCmd(id_, cmd, &request);
     if (result) {
         g_cliSocket.ClientSendReq(request);
-        if (g_domainManager.GetDomainById(id_) == "") {
+        if (g_domainManager.GetDomainById(id_).empty()) {
             g_domainManager.SetDomainById(id_, "Debugger");
         }
     } else {
@@ -265,7 +265,7 @@ ErrCode CliCommand::RuntimeCommand(const std::string &cmd)
     result = runtimeClient.DispatcherCmd(id_, cmd, &request);
     if (result) {
         g_cliSocket.ClientSendReq(request);
-        if (g_domainManager.GetDomainById(id_) == "") {
+        if (g_domainManager.GetDomainById(id_).empty()) {
             g_domainManager.SetDomainById(id_, "Runtime");
         }
     } else {

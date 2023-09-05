@@ -26,14 +26,7 @@ using Result = panda::ecmascript::tooling::Result;
 using panda::ecmascript::tooling::PropertyDescriptor;
 class VariableManager final {
 public:
-    VariableManager(const VariableManager&) = delete;
-    VariableManager& operator=(const VariableManager&) = delete;
-
-    static VariableManager& getInstance()
-    {
-        static VariableManager instance;
-        return instance;
-    }
+    static VariableManager& getInstance();
 
     void HandleMessage(const std::unique_ptr<PtJson> json);
 
@@ -43,8 +36,10 @@ public:
 
 private:
     VariableManager() = default;
-    ~VariableManager() = default;
+    static VariableManager instance;
     std::multimap<int32_t, std::unique_ptr<PropertyDescriptor>> variableInfos_ {};
+    VariableManager(const VariableManager&) = delete;
+    VariableManager& operator=(const VariableManager&) = delete;
 };
 } // OHOS::ArkCompiler::Toolchain
 #endif

@@ -18,6 +18,7 @@
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 namespace OHOS::ArkCompiler::Toolchain {
+VariableManager VariableManager::instance;
 void VariableManager::HandleMessage(const std::unique_ptr<PtJson> json)
 {
     if (json == nullptr) {
@@ -49,6 +50,11 @@ void VariableManager::HandleMessage(const std::unique_ptr<PtJson> json)
         std::unique_ptr<PropertyDescriptor> variableInfo = PropertyDescriptor::Create(*(innerResult->Get(i)));
         variableInfos_.emplace(i + 5, std::move(variableInfo)); // 5: index start at 5
     }
+}
+
+VariableManager& VariableManager::getInstance()
+{
+    return instance;
 }
 
 void VariableManager::ShowVariableInfos()
