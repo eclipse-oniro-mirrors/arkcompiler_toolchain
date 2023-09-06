@@ -14,12 +14,11 @@
  */
 
 #include "domain/debugger_client.h"
-#include "pt_json.h"
+
 #include "log_wrapper.h"
+#include "pt_json.h"
 
 #include <map>
-#include <functional>
-#include <cstring>
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 namespace OHOS::ArkCompiler::Toolchain {

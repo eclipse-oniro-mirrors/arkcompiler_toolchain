@@ -22,9 +22,6 @@ namespace OHOS::ArkCompiler::Toolchain {
 class Utils {
 public:
     static bool GetCurrentTime(char *date, char *tim, size_t size);
-
-private:
-
 };
 } // OHOS::ArkCompiler::Toolchain
 #endif
