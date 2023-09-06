@@ -24,7 +24,7 @@
 
 
 namespace OHOS::ArkCompiler::Toolchain {
-bool WebsocketClient::InitToolchainWebSocketForPort (int port, uint32_t timeoutLimit)
+bool WebsocketClient::InitToolchainWebSocketForPort(int port, uint32_t timeoutLimit)
 {
     if (socketState_ != ToolchainSocketState::UNINITED) {
         LOGE("InitToolchainWebSocketForPort::client has inited.");
