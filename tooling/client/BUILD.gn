@@ -62,8 +62,8 @@ ohos_source_set("libark_client_set") {
   ]
 
   deps += [
-    "../:libark_ecma_debugger_set",
     "$ark_third_party_root/openssl:libcrypto_shared",
+    "../:libark_ecma_debugger_set",
     "//third_party/libuv:uv",
     sdk_libc_secshared_dep,
   ]
