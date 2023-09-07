@@ -508,11 +508,17 @@ public:
         return enabled_;
     }
 
+    bool GetMixedStackEnabled() const
+    {
+        return mixedStackEnabled_;
+    }
+
 private:
     NO_COPY_SEMANTIC(SetMixedDebugParams);
     NO_MOVE_SEMANTIC(SetMixedDebugParams);
 
     bool enabled_ { false };
+    bool mixedStackEnabled_ {false};
 };
 
 class ReplyNativeCallingParams : public PtBaseParams {

@@ -79,6 +79,18 @@ std::unique_ptr<PtJson> NativeCalling::ToJson() const
 
     result->Add("nativeAddress", reinterpret_cast<int64_t>(GetNativeAddress()));
     result->Add("isStepInto", GetIntoStatus());
+
+    std::unique_ptr<PtJson> object = PtJson::CreateObject();
+    object->Add("method", GetName().c_str());
+    object->Add("params", result);
+
+    return object;
+}
+
+std::unique_ptr<PtJson> MixedStack::ToJson() const
+{
+    std::unique_ptr<PtJson> result = PtJson::CreateObject();
+
     std::unique_ptr<PtJson> nativePointerArray = PtJson::CreateArray();
     size_t nativePointerLength = nativePointer_.size();
     for (size_t i = 0; i < nativePointerLength; ++i) {

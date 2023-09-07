@@ -540,6 +540,14 @@ std::unique_ptr<SetMixedDebugParams> SetMixedDebugParams::Create(const PtJson &p
         error += "Unknown 'enabled';";
     }
 
+    bool mixedStackEnabled = false;
+    ret = params.GetBool("mixedStackEnabled", &mixedStackEnabled);
+    if (ret == Result::SUCCESS) {
+        paramsObject->mixedStackEnabled_ = mixedStackEnabled;
+    } else if (ret == Result::TYPE_ERROR) {  // optional value
+        error += "Unknown 'enabled';";
+    }
+
     if (!error.empty()) {
         LOG_DEBUGGER(ERROR) << "SetMixedDebugParams::Create " << error;
         return nullptr;
