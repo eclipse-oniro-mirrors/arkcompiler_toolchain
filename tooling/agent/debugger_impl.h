@@ -195,6 +195,7 @@ private:
         void Paused(const EcmaVM *vm, const tooling::Paused &paused);
         void Resumed(const EcmaVM *vm);
         void NativeCalling(const EcmaVM *vm, const tooling::NativeCalling &nativeCalling);
+        void MixedStack(const EcmaVM *vm, const tooling::MixedStack &mixedStack);
         void ScriptFailedToParse(const EcmaVM *vm);
         void ScriptParsed(const EcmaVM *vm, const PtScript &script);
         void WaitForDebugger(const EcmaVM *vm);
@@ -220,6 +221,7 @@ private:
     bool pauseOnNextByteCode_ {false};
     bool breakpointsState_ {true};
     bool skipAllPausess_ {false};
+    bool mixStackEnabled_ {false};
     std::unique_ptr<SingleStepper> singleStepper_ {nullptr};
     std::vector<void *>  nativePointer_;
 

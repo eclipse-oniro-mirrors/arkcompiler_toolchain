@@ -259,21 +259,26 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
 
 void DebuggerImpl::NotifyNativeCalling(const void *nativeAddress)
 {
-    tooling::NativeCalling nativeCalling;
-    if (singleStepper_ != nullptr &&
-        singleStepper_->GetStepperType() == StepperType::STEP_INTO) {
-        nativeCalling.SetNativeAddress(nativeAddress);
-        nativeCalling.SetIntoStatus(true);
+    if (mixStackEnabled_) {
+        tooling::MixedStack mixedStack;
+        nativePointer_ = DebuggerApi::GetNativePointer(vm_);
+        mixedStack.SetNativePointer(nativePointer_);
+        std::vector<std::unique_ptr<CallFrame>> callFrames;
+        if (GenerateCallFrames(&callFrames)) {
+            mixedStack.SetCallFrames(std::move(callFrames));
+        }
+        frontend_.MixedStack(vm_, mixedStack);
     }
 
-    nativePointer_ = DebuggerApi::GetNativePointer(vm_);
-    nativeCalling.SetNativePointer(nativePointer_);
-    std::vector<std::unique_ptr<CallFrame>> callFrames;
-    if (GenerateCallFrames(&callFrames)) {
-        nativeCalling.SetCallFrames(std::move(callFrames));
+    // native calling only after step into should be reported
+    if (singleStepper_ != nullptr &&
+        singleStepper_->GetStepperType() == StepperType::STEP_INTO) {
+        tooling::NativeCalling nativeCalling;
+        nativeCalling.SetIntoStatus(true);
+        nativeCalling.SetNativeAddress(nativeAddress);
+        frontend_.NativeCalling(vm_, nativeCalling);
+        frontend_.WaitForDebugger(vm_);
     }
-    frontend_.NativeCalling(vm_, nativeCalling);
-    frontend_.WaitForDebugger(vm_);
 }
 
 // only use for test case
@@ -587,6 +592,15 @@ void DebuggerImpl::Frontend::NativeCalling(const EcmaVM *vm, const tooling::Nati
     }
 
     channel_->SendNotification(nativeCalling);
+}
+
+void DebuggerImpl::Frontend::MixedStack(const EcmaVM *vm, const tooling::MixedStack &mixedStack)
+{
+    if (!AllowNotify(vm)) {
+        return;
+    }
+
+    channel_->SendNotification(mixedStack);
 }
 
 void DebuggerImpl::Frontend::Resumed(const EcmaVM *vm)
@@ -1023,6 +1037,7 @@ DispatchResponse DebuggerImpl::SetBlackboxPatterns()
 DispatchResponse DebuggerImpl::SetMixedDebugEnabled([[maybe_unused]] const SetMixedDebugParams &params)
 {
     vm_->GetJsDebuggerManager()->SetMixedDebugEnabled(params.GetEnabled());
+    mixStackEnabled_ = params.GetMixedStackEnabled();
     return DispatchResponse::Ok();
 }
 
