@@ -18,6 +18,7 @@
 #include "manager/variable_manager.h"
 #include "domain/runtime_client.h"
 #include "domain_manager.h"
+#include "manager/breakpoint_manager.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;
@@ -72,7 +73,7 @@ void DomainManager::DispatcherReply(char* msg)
             LOGI("Runtime replay message is %{public}s", json->Stringify().c_str());
         }
     } else if (domain == "Debugger") {
-        LOGI("Debugger replay message is %{public}s", json->Stringify().c_str());
+        debuggerClient_.RecvReply(std::move(json));
     }
 }
 }

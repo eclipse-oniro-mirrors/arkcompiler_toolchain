@@ -18,7 +18,10 @@
 
 #include <iostream>
 #include <vector>
+#include "pt_json.h"
 
+using PtJson = panda::ecmascript::tooling::PtJson;
+using Result = panda::ecmascript::tooling::Result;
 namespace OHOS::ArkCompiler::Toolchain {
 struct BreakPointInfo {
     int lineNumber;
@@ -56,6 +59,7 @@ public:
     std::string ResumeCommand(int id);
 
     void AddBreakPointInfo(const std::string& url, const int& lineNumber, const int& columnNumber = 0);
+    void RecvReply(std::unique_ptr<PtJson> json);
 
 private:
     std::vector<BreakPointInfo> breakPointInfoList_ {};
