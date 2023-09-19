@@ -73,6 +73,10 @@ public:
             for (size_t index = 0; index < POINTER_SIZE; index++) {
                 for (size_t hitCount = 0; hitCount < breakpointHitTimes[index]; hitCount++) {
                     TestUtil::WaitForBreakpoint(pointerLocations_.at(index));
+                    if (hitCount == breakpointHitTimes[index] - 1) {
+                        auto ret = debugInterface_->RemoveBreakpoint(pointerLocations_.at(index));
+                        ASSERT_TRUE(ret);
+                    }
                     TestUtil::Continue();
                     while (dropFrameChecked_) {
                         dropFrameChecked_ = false;
@@ -83,8 +87,6 @@ public:
                         TestUtil::Continue();
                     }
                 }
-                auto ret = debugInterface_->RemoveBreakpoint(pointerLocations_.at(index));
-                ASSERT_TRUE(ret);
             }
             ASSERT_EXITED();
             return true;
