@@ -255,7 +255,7 @@ private:
     NO_COPY_SEMANTIC(NativeCalling);
     NO_MOVE_SEMANTIC(NativeCalling);
 
-    const void *nativeAddress_ { nullptr };
+    const void *nativeAddress_ {nullptr};
     std::optional<bool> isStepInto_ {};
 };
 
@@ -275,7 +275,7 @@ public:
         return &callFrames_;
     }
 
-    const std::vector<void *> *GetNativePointer() const
+    const std::vector<void *> *GetNativePointers() const
     {
         return &nativePointer_;
     }
@@ -286,7 +286,7 @@ public:
         return *this;
     }
 
-    MixedStack &SetNativePointer(std::vector<void *> nativePointer)
+    MixedStack &SetNativePointers(std::vector<void *> nativePointer)
     {
         nativePointer_ = std::move(nativePointer);
         return *this;
