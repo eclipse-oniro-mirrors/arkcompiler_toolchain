@@ -262,7 +262,7 @@ void DebuggerImpl::NotifyNativeCalling(const void *nativeAddress)
     if (mixStackEnabled_) {
         tooling::MixedStack mixedStack;
         nativePointer_ = DebuggerApi::GetNativePointer(vm_);
-        mixedStack.SetNativePointer(nativePointer_);
+        mixedStack.SetNativePointers(nativePointer_);
         std::vector<std::unique_ptr<CallFrame>> callFrames;
         if (GenerateCallFrames(&callFrames)) {
             mixedStack.SetCallFrames(std::move(callFrames));
