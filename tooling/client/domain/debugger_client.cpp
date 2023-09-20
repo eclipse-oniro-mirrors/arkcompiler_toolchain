@@ -14,7 +14,7 @@
  */
 
 #include "domain/debugger_client.h"
-
+#include "manager/breakpoint_manager.h"
 #include "log_wrapper.h"
 #include "pt_json.h"
 
@@ -93,6 +93,9 @@ std::string DebuggerClient::DeleteCommand(int id)
     request->Add("method", "Debugger.removeBreakpoint");
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
+    std::string breakpointId;
+    breakpointId = breakPointInfoList_.back().url;
+    params->Add("breakpointId",breakpointId.c_str());
     request->Add("params", params);
     return request->Stringify();
 }
@@ -218,4 +221,33 @@ void DebuggerClient::AddBreakPointInfo(const std::string& url, const int& lineNu
     breakPointInfo.columnNumber = columnNumber;
     breakPointInfoList_.emplace_back(breakPointInfo);
 }
+
+void DebuggerClient::RecvReply(std::unique_ptr<PtJson> json)
+{
+    if (json == nullptr) {
+        LOGE("arkdb: json parse error");
+        return;
+    }
+
+    if (!json->IsObject()) {
+        LOGE("arkdb: json parse format error");
+        json->ReleaseRoot();
+        return;
+    }
+    Result ret;
+    std::unique_ptr<PtJson> result;
+    ret = json->GetObject("result", &result);
+    if (ret != Result::SUCCESS) {
+        LOGE("arkdb: find result error");
+        return;
+    }
+    std::string breakpointId;
+    ret = result->GetString("breakpointId", &breakpointId);
+    if (ret == Result::SUCCESS) {
+        BreakPoint &breakpoint = BreakPoint::getInstance();
+        breakpoint.Createbreaklocation(std::move(json));
+    }
+}
+
+
 } // OHOS::ArkCompiler::Toolchain

@@ -20,7 +20,7 @@
 
 #include "domain/heapprofiler_client.h"
 #include "domain/profiler_client.h"
-
+#include "domain/debugger_client.h"
 namespace OHOS::ArkCompiler::Toolchain {
 class DomainManager {
 public:
@@ -64,6 +64,7 @@ public:
 private:
     HeapProfilerClient heapProfilerClient_ {};
     ProfilerClient profilerClient_ {};
+    DebuggerClient debuggerClient_ {};
     std::map<uint32_t, std::string> idDomainMap_ {};
 };
 } // OHOS::ArkCompiler::Toolchain

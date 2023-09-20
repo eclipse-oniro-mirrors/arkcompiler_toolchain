@@ -57,6 +57,7 @@ ohos_source_set("libark_client_set") {
     "domain/runtime_client.cpp",
     "manager/domain_manager.cpp",
     "manager/variable_manager.cpp",
+    "manager/breakpoint_manager.cpp",
     "utils/utils.cpp",
     "websocket/websocket_client.cpp",
   ]

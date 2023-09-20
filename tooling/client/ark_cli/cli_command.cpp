@@ -25,6 +25,7 @@
 #include "manager/variable_manager.h"
 #include "domain/runtime_client.h"
 #include "cli_command.h"
+#include "manager/breakpoint_manager.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 DomainManager g_domainManager;
@@ -232,10 +233,25 @@ ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
 {
     std::cout << "exe success, cmd is " << cmd << std::endl;
     std::string request;
+    DebuggerClient debuggerCli;
+    BreakPoint &breakpoint = BreakPoint::getInstance();
+    if (cmd == "display") {
+        breakpoint.Show();
+        return ErrCode::ERR_OK;
+    }
+    if (cmd == "delete") {
+        std::string bnumber = GetArgList()[0];
+        unsigned int num = std::stoi(bnumber);
+        if (breakpoint.breaklist_.size() >= num && num > 0) {
+            debuggerCli.AddBreakPointInfo(breakpoint.breaklist_[num - 1].breakpointId, 0); //1:breakpoinId
+            breakpoint.Deletebreaklist(num);
+        } else {
+            return ErrCode::ERR_FAIL;
+        }
+    }
     bool result = false;
     LOGE("DebuggerCommand: %{public}d", id_);
-    DebuggerClient debuggerCli;
-    if (GetArgList().size() == 2) { // 2: two parameters
+    if (GetArgList().size() == 2) {
         debuggerCli.AddBreakPointInfo(GetArgList()[0], std::stoi(GetArgList()[1]));
     }
     result = debuggerCli.DispatcherCmd(id_, cmd, &request);
