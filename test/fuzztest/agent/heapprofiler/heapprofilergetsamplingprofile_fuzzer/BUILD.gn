@@ -19,7 +19,7 @@ import("//build/test.gni")
 
 ####################################fuzztest##################################
 ohos_fuzztest("HeapprofilerGetSamplingProfileFuzzTest") {
-  module_out_path = "arkcompiler/toolchain"
+  module_out_path = fuzz_test_output_path
 
   fuzz_config_file = "//arkcompiler/toolchain/test/fuzztest/agent/heapprofiler/heapprofilergetsamplingprofile_fuzzer"
 

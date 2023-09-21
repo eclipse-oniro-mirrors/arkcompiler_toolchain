@@ -14,3 +14,4 @@
 import("../ets_runtime/js_runtime_config.gni")
 
 toolchain_root = "//arkcompiler/toolchain"
+fuzz_test_output_path = "toolchain/toolchain"
