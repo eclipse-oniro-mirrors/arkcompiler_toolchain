@@ -20,7 +20,7 @@ import("//build/test.gni")
 
 ####################################fuzztest##################################
 ohos_fuzztest("BackendLoadModuleFuzzTest") {
-  module_out_path = "arkcompiler/toolchain"
+  module_out_path = fuzz_test_output_path
 
   fuzz_config_file =
       "$toolchain_root/test/fuzztest/backend/backendloadmodule_fuzzer"
