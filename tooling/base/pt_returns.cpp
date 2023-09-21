@@ -280,6 +280,36 @@ std::unique_ptr<PtJson> GetHeapUsageReturns::ToJson() const
     return result;
 }
 
+std::unique_ptr<GetHeapUsageReturns> GetHeapUsageReturns::Create(const PtJson &params)
+{
+    auto heapUsageReturns = std::make_unique<GetHeapUsageReturns>();
+    std::string error;
+    Result ret;
+
+    double usedSize;
+    ret = params.GetDouble("usedSize", &usedSize);
+    if (ret == Result::SUCCESS) {
+        heapUsageReturns->usedSize_ = usedSize;
+    } else {
+        error += "Unknown 'usedSize';";
+    }
+
+    double totalSize;
+    ret = params.GetDouble("totalSize", &totalSize);
+    if (ret == Result::SUCCESS) {
+        heapUsageReturns->totalSize_ = totalSize;
+    } else {
+        error += "Unknown 'totalSize';";
+    }
+
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "HeapUsageReturns::Create " << error;
+        return nullptr;
+    }
+
+    return heapUsageReturns;
+}
+
 std::unique_ptr<PtJson> GetBestEffortCoverageReturns::ToJson() const
 {
     std::unique_ptr<PtJson> result = PtJson::CreateObject();

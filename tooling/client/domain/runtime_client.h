@@ -19,10 +19,14 @@
 #include <iostream>
 #include <map>
 
+#include "pt_types.h"
+
+using PtJson = panda::ecmascript::tooling::PtJson;
+using Result = panda::ecmascript::tooling::Result;
 namespace OHOS::ArkCompiler::Toolchain {
 class RuntimeClient final {
 public:
-    static RuntimeClient& getInstance();
+    static RuntimeClient& GetInstance();
 
     bool DispatcherCmd(int id, const std::string &cmd, std::string *reqStr);
     std::string HeapusageCommand(int id);
@@ -31,24 +35,32 @@ public:
     std::string RunIfWaitingForDebuggerCommand(int id);
     std::string GetPropertiesCommand(int id);
     std::string GetPropertiesCommand2(int id);
-
-    const std::map<std::string, int>& GetIdMethodMap() const
-    {
-        return idMethodMap_;
-    }
+    std::string GetMethodById(const int &id);
+    std::string GetRequestObjectIdById(const int &id);
+    void RecvReply(std::unique_ptr<PtJson> json);
+    void HandleHeapUsage(std::unique_ptr<PtJson> json);
+    void HandleGetProperties(std::unique_ptr<PtJson> json, const int &id);
 
     void SetObjectId(const std::string &objectId)
     {
         objectId_ = objectId;
     }
 
-    int GetIdByMethod(const std::string method);
+    void SetIsInitializeTree(const bool &isInitializeTree)
+    {
+        isInitializeTree_ = isInitializeTree;
+    }
+
+    bool GetIsInitializeTree() const {
+        return isInitializeTree_;
+    }
 
 private:
     RuntimeClient() = default;
-    std::map<std::string, int> idMethodMap_ {};
+    static RuntimeClient instance_;
+    std::map<int, std::tuple<std::string, std::string>> idMethodMap_ {};
     std::string objectId_ {"0"};
-    static RuntimeClient instance;
+    bool isInitializeTree_ {true};
     RuntimeClient(const RuntimeClient&) = delete;
     RuntimeClient& operator=(const RuntimeClient&) = delete;
 };

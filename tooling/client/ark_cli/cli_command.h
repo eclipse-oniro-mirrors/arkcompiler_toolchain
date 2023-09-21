@@ -13,19 +13,19 @@
  * limitations under the License.
  */
 
-#ifndef ECMASCRIPT_TOOLING_CLIENT_TOOLCHAIN_CLI_COMMAND_H
-#define ECMASCRIPT_TOOLING_CLIENT_TOOLCHAIN_CLI_COMMAND_H
+#ifndef ECMASCRIPT_TOOLING_CLIENT_ARK_CLI_CLI_COMMAND_H
+#define ECMASCRIPT_TOOLING_CLIENT_ARK_CLI_CLI_COMMAND_H
 
 #include <cstdlib>
 #include <functional>
 #include <map>
 #include <vector>
 
-#include "log_wrapper.h"
-#include "websocket/websocket_client.h"
 #include "domain/heapprofiler_client.h"
 #include "domain/profiler_client.h"
+#include "log_wrapper.h"
 #include "manager/domain_manager.h"
+#include "websocket/websocket_client.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 using StrPair = std::pair<std::string, std::string>;
@@ -75,9 +75,8 @@ private:
     VecStr argList_ {};
     std::map<StrPair, std::function<ErrCode()>> commandMap_;
     std::string resultReceiver_ = "";
-    HeapProfilerClient heapProfilerCli_;
     uint32_t id_ = 0;
 };
 } // namespace OHOS::ArkCompiler::Toolchain
 
-#endif // ECMASCRIPT_TOOLING_CLIENT_TOOLCHAIN_CLI_COMMAND_H
+#endif // ECMASCRIPT_TOOLING_CLIENT_ARK_CLI_CLI_COMMAND_H

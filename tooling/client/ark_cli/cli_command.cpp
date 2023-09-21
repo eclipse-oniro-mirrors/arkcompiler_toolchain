@@ -13,19 +13,21 @@
  * limitations under the License.
  */
 
-#include <iostream>
-#include <cstring>
+#include "cli_command.h"
+
 #include <cstdlib>
+#include <cstring>
 #include <functional>
+#include <iostream>
 #include <mutex>
 
-#include "log_wrapper.h"
-#include "manager/domain_manager.h"
 #include "domain/debugger_client.h"
-#include "manager/variable_manager.h"
 #include "domain/runtime_client.h"
-#include "cli_command.h"
+#include "log_wrapper.h"
 #include "manager/breakpoint_manager.h"
+#include "manager/domain_manager.h"
+#include "manager/stack_manager.h"
+#include "manager/variable_manager.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 DomainManager g_domainManager;
@@ -54,7 +56,7 @@ const std::string HELP_MSG = "usage: <command> <options>\n"
     "  delete(d)                                     delete with options\n"
     "  disable                                       disable\n"
     "  display                                       display\n"
-    "  enable                                        enable\n"
+    "  enable                                        debugger enable\n"
     "  finish(fin)                                   finish\n"
     "  frame(f)                                      frame\n"
     "  help(h)                                       list available commands\n"
@@ -71,7 +73,13 @@ const std::string HELP_MSG = "usage: <command> <options>\n"
     "  setvar(sv)                                    set value with options\n"
     "  step(s)                                       step\n"
     "  undisplay                                     undisplay\n"
-    "  watch(wa)                                     watch\n";
+    "  watch(wa)                                     watch\n"
+    "  resume                                        resume\n"
+    "  showstack(ss)                                 showstack\n"
+    "  step-into(si)                                 step-into\n"
+    "  step-out(so)                                  step-out\n"
+    "  step-over(sov)                                step-over\n"
+    "  runtime-disable                               rt-disable\n";
 
 const std::vector<std::string> cmdList = {
     "allocationtrack",
@@ -112,7 +120,12 @@ const std::vector<std::string> cmdList = {
     "setvar",
     "step",
     "undisplay",
-    "watch"
+    "watch",
+    "resume",
+    "step-into",
+    "step-out",
+    "step-over",
+    "runtime-disable"
 };
 ErrCode CliCommand::ExecCommand()
 {
@@ -169,12 +182,17 @@ void CliCommand::CreateCommandMap()
         {std::make_pair("print", "p"), std::bind(&CliCommand::RuntimeCommand, this, "print")},
         {std::make_pair("print2", "p2"), std::bind(&CliCommand::RuntimeCommand, this, "print2")},
         {std::make_pair("ptype", "ptype"), std::bind(&CliCommand::DebuggerCommand, this, "ptype")},
-        {std::make_pair("run", "r"), std::bind(&CliCommand::DebuggerCommand, this, "run")},
+        {std::make_pair("run", "r"), std::bind(&CliCommand::RuntimeCommand, this, "run")},
         {std::make_pair("setvar", "sv"), std::bind(&CliCommand::DebuggerCommand, this, "setvar")},
         {std::make_pair("step", "s"), std::bind(&CliCommand::DebuggerCommand, this, "step")},
         {std::make_pair("undisplay", "undisplay"), std::bind(&CliCommand::DebuggerCommand, this, "undisplay")},
         {std::make_pair("watch", "wa"), std::bind(&CliCommand::DebuggerCommand, this, "watch")},
         {std::make_pair("resume", "resume"), std::bind(&CliCommand::DebuggerCommand, this, "resume")},
+        {std::make_pair("showstack","ss"), std::bind(&CliCommand::DebuggerCommand, this, "showstack")},
+        {std::make_pair("step-into","si"), std::bind(&CliCommand::DebuggerCommand, this, "step-into")},
+        {std::make_pair("step-out","so"), std::bind(&CliCommand::DebuggerCommand, this, "step-out")},
+        {std::make_pair("step-over","sov"), std::bind(&CliCommand::DebuggerCommand, this, "step-over")},
+        {std::make_pair("runtime-disable","rt-disable"), std::bind(&CliCommand::RuntimeCommand, this, "runtime-disable")},
     };
 }
 
@@ -206,7 +224,7 @@ ErrCode CliCommand::CpuProfileCommand(const std::string &cmd)
     std::string request;
     bool result = false;
     ProfilerClient* profilerClient = g_domainManager.GetProfilerClient();
-    ProfilerSingleton& pro = ProfilerSingleton::getInstance();
+    ProfilerSingleton& pro = ProfilerSingleton::GetInstance();
     if (cmd == "cpuprofile-show") {
         pro.ShowCpuFile();
         return ErrCode::ERR_OK;
@@ -233,27 +251,39 @@ ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
 {
     std::cout << "exe success, cmd is " << cmd << std::endl;
     std::string request;
+    bool result = false;
     DebuggerClient debuggerCli;
-    BreakPoint &breakpoint = BreakPoint::getInstance();
+    BreakPoint &breakpoint = BreakPoint::GetInstance();
     if (cmd == "display") {
         breakpoint.Show();
         return ErrCode::ERR_OK;
     }
+
     if (cmd == "delete") {
         std::string bnumber = GetArgList()[0];
         unsigned int num = std::stoi(bnumber);
-        if (breakpoint.breaklist_.size() >= num && num > 0) {
-            debuggerCli.AddBreakPointInfo(breakpoint.breaklist_[num - 1].breakpointId, 0); //1:breakpoinId
+        if (breakpoint.Getbreaklist().size() >= num && num > 0) {
+            debuggerCli.AddBreakPointInfo(breakpoint.Getbreaklist()[num - 1].breakpointId, 0); // 1: breakpoinId
             breakpoint.Deletebreaklist(num);
         } else {
             return ErrCode::ERR_FAIL;
         }
     }
-    bool result = false;
-    LOGE("DebuggerCommand: %{public}d", id_);
-    if (GetArgList().size() == 2) {
+
+    if (cmd == "step-into" || cmd == "step-out" || cmd == "step-over") {
+        RuntimeClient &runtimeClient = RuntimeClient::GetInstance();
+        runtimeClient.SetIsInitializeTree(true);
+    }
+
+    if (cmd == "showstack") {
+        StackManager &stackManager = StackManager::GetInstance();
+        stackManager.ShowCallFrames();
+    }
+
+    if (cmd == "break" && GetArgList().size() == 2) { // 2: two parameters
         debuggerCli.AddBreakPointInfo(GetArgList()[0], std::stoi(GetArgList()[1]));
     }
+
     result = debuggerCli.DispatcherCmd(id_, cmd, &request);
     if (result) {
         g_cliSocket.ClientSendReq(request);
@@ -271,16 +301,19 @@ ErrCode CliCommand::RuntimeCommand(const std::string &cmd)
     std::cout << "exe success, cmd is " << cmd << std::endl;
     std::string request;
     bool result = false;
-    LOGE("RuntimeCommand: %{public}d", id_);
-    RuntimeClient &runtimeClient = RuntimeClient::getInstance();
-    VariableManager &variableManager = VariableManager::getInstance();
+    RuntimeClient &runtimeClient = RuntimeClient::GetInstance();
+
     if (cmd == "print" && GetArgList().size() == 1) {
-        std::string objectId = variableManager.FindObjectIdByIndex(std::stoi(GetArgList()[0]));
-        runtimeClient.SetObjectId(objectId);
+        runtimeClient.SetIsInitializeTree(false);
+        VariableManager &variableManager = VariableManager::GetInstance();
+        int32_t objectId = variableManager.FindObjectIdWithIndex(std::stoi(GetArgList()[0]));
+        runtimeClient.SetObjectId(std::to_string(objectId));
     }
+
     result = runtimeClient.DispatcherCmd(id_, cmd, &request);
     if (result) {
         g_cliSocket.ClientSendReq(request);
+        runtimeClient.SetObjectId("0");
         if (g_domainManager.GetDomainById(id_).empty()) {
             g_domainManager.SetDomainById(id_, "Runtime");
         }

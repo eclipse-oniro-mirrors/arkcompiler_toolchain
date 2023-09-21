@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <vector>
+
 #include "pt_json.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
@@ -49,7 +50,6 @@ public:
     std::string JumpCommand(int id);
     std::string NextCommand(int id);
     std::string ListCommand(int id);
-    std::string PrintCommand(int id);
     std::string PtypeCommand(int id);
     std::string RunCommand(int id);
     std::string SetvarCommand(int id);
@@ -57,9 +57,13 @@ public:
     std::string UndisplayCommand(int id);
     std::string WatchCommand(int id);
     std::string ResumeCommand(int id);
+    std::string StepIntoCommand(int id);
+    std::string StepOutCommand(int id);
+    std::string StepOverCommand(int id);
 
     void AddBreakPointInfo(const std::string& url, const int& lineNumber, const int& columnNumber = 0);
     void RecvReply(std::unique_ptr<PtJson> json);
+    void PausedReply(const std::unique_ptr<PtJson> json);
 
 private:
     std::vector<BreakPointInfo> breakPointInfoList_ {};
