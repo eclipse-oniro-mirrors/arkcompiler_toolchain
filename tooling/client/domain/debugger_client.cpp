@@ -97,9 +97,8 @@ std::string DebuggerClient::DeleteCommand(int id)
     request->Add("method", "Debugger.removeBreakpoint");
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
-    std::string breakpointId;
-    breakpointId = breakPointInfoList_.back().url;
-    params->Add("breakpointId",breakpointId.c_str());
+    std::string breakpointId = breakPointInfoList_.back().url;
+    params->Add("breakpointId", breakpointId.c_str());
     request->Add("params", params);
     return request->Stringify();
 }
@@ -273,15 +272,11 @@ void DebuggerClient::RecvReply(std::unique_ptr<PtJson> json)
     ret = json->GetString("method", &wholeMethod);
     if (ret != Result::SUCCESS) {
         LOGE("arkdb: find method error");
-        return;
     }
 
     std::string::size_type length = wholeMethod.length();
     std::string::size_type indexPoint = 0;
     indexPoint = wholeMethod.find_first_of('.', 0);
-    if (indexPoint == std::string::npos || indexPoint == 0 || indexPoint == length - 1) {
-        return;
-    }
     method = wholeMethod.substr(indexPoint + 1, length);
     if (method == "paused") {
         PausedReply(std::move(json));
@@ -300,7 +295,7 @@ void DebuggerClient::RecvReply(std::unique_ptr<PtJson> json)
     std::string breakpointId;
     ret = result->GetString("breakpointId", &breakpointId);
     if (ret == Result::SUCCESS) {
-        BreakPoint &breakpoint = BreakPoint::GetInstance();
+        BreakPointManager &breakpoint = BreakPointManager::GetInstance();
         breakpoint.Createbreaklocation(std::move(json));
     }
 }
@@ -342,5 +337,4 @@ void DebuggerClient::PausedReply(const std::unique_ptr<PtJson> json)
     stackManager.ClearCallFrame();
     stackManager.SetCallFrames(std::move(data));
 }
-
 } // OHOS::ArkCompiler::Toolchain

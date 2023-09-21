@@ -14,10 +14,6 @@
  */
 
 #include "manager/stack_manager.h"
-
-#include <cstring>
-#include <iostream>
-
 #include "log_wrapper.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
@@ -58,7 +54,8 @@ std::map<int32_t, std::map<int32_t, std::string>> StackManager::GetScopeChainInf
     return scopeInfos;
 }
 
-void StackManager::ClearCallFrame() {
+void StackManager::ClearCallFrame()
+{
     callFrames_.clear();
 }
 

@@ -45,5 +45,5 @@ private:
     StackManager(const StackManager&) = delete;
     StackManager& operator=(const StackManager&) = delete;
 };
-} //OHOS::ArkCompiler::Toolchain
+} // OHOS::ArkCompiler::Toolchain
 #endif

@@ -188,11 +188,12 @@ void CliCommand::CreateCommandMap()
         {std::make_pair("undisplay", "undisplay"), std::bind(&CliCommand::DebuggerCommand, this, "undisplay")},
         {std::make_pair("watch", "wa"), std::bind(&CliCommand::DebuggerCommand, this, "watch")},
         {std::make_pair("resume", "resume"), std::bind(&CliCommand::DebuggerCommand, this, "resume")},
-        {std::make_pair("showstack","ss"), std::bind(&CliCommand::DebuggerCommand, this, "showstack")},
-        {std::make_pair("step-into","si"), std::bind(&CliCommand::DebuggerCommand, this, "step-into")},
-        {std::make_pair("step-out","so"), std::bind(&CliCommand::DebuggerCommand, this, "step-out")},
-        {std::make_pair("step-over","sov"), std::bind(&CliCommand::DebuggerCommand, this, "step-over")},
-        {std::make_pair("runtime-disable","rt-disable"), std::bind(&CliCommand::RuntimeCommand, this, "runtime-disable")},
+        {std::make_pair("showstack", "ss"), std::bind(&CliCommand::DebuggerCommand, this, "showstack")},
+        {std::make_pair("step-into", "si"), std::bind(&CliCommand::DebuggerCommand, this, "step-into")},
+        {std::make_pair("step-out", "so"), std::bind(&CliCommand::DebuggerCommand, this, "step-out")},
+        {std::make_pair("step-over", "sov"), std::bind(&CliCommand::DebuggerCommand, this, "step-over")},
+        {std::make_pair("runtime-disable", "rt-disable"),
+            std::bind(&CliCommand::RuntimeCommand, this, "runtime-disable")}
     };
 }
 
@@ -253,7 +254,7 @@ ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
     std::string request;
     bool result = false;
     DebuggerClient debuggerCli;
-    BreakPoint &breakpoint = BreakPoint::GetInstance();
+    BreakPointManager &breakpoint = BreakPointManager::GetInstance();
     if (cmd == "display") {
         breakpoint.Show();
         return ErrCode::ERR_OK;
