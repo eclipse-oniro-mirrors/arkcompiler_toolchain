@@ -28,15 +28,15 @@
 namespace OHOS::ArkCompiler::Toolchain {
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;
-struct Breaklocation{
+struct Breaklocation {
     std::string breakpointId;
     std::string url;
     std::string lineNumber;
     std::string columnNumber;
 };
-class BreakPoint {
+class BreakPointManager {
 public:
-    static BreakPoint& GetInstance();
+    static BreakPointManager& GetInstance();
 
     std::vector<std::string> SplitString(std::string &str, const char delimiter);
     void Createbreaklocation(const std::unique_ptr<PtJson> json);
@@ -45,11 +45,11 @@ public:
     std::vector<Breaklocation> Getbreaklist() const;
 
 private:
-    static BreakPoint instance_;
+    static BreakPointManager instance_;
     std::vector<Breaklocation> breaklist_ {};
-    BreakPoint() = default;
-    BreakPoint(const BreakPoint&) = delete;
-    BreakPoint& operator=(const BreakPoint&) = delete;
+    BreakPointManager() = default;
+    BreakPointManager(const BreakPointManager&) = delete;
+    BreakPointManager& operator=(const BreakPointManager&) = delete;
 };
 }
 #endif

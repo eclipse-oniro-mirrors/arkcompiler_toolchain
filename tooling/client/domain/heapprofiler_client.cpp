@@ -214,10 +214,11 @@ void HeapProfilerClient::RecvReply(std::unique_ptr<PtJson> json)
         }
         if (isAllocationMsg_) {
             fileName_ = "Heap-" + std::string(date) + "T" + std::string(time) + ".heaptimeline";
+            std::cout << "heaptimeline file name is " << fileName_ << std::endl;
         } else {
             fileName_ = "Heap-" + std::string(date) + "T" + std::string(time) + ".heapsnapshot";
+            std::cout << "heapsnapshot file name is " << fileName_ << std::endl;
         }
-        std::cout << "file name is " << fileName_ << std::endl;
         std::cout << ">>> ";
         fflush(stdout);
     }

@@ -207,7 +207,7 @@ Local<JSValueRef> DebuggerExecutor::GetModuleValue(const EcmaVM *vm, const Frame
     std::string varName = name->ToString();
     Method *method = DebuggerApi::GetMethod(frameHandler);
     const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
-    if (jsPandaFile != nullptr && (!jsPandaFile->IsMergedPF() || !jsPandaFile->IsNewVersion())) {
+    if (jsPandaFile != nullptr && (jsPandaFile->IsBundlePack() || !jsPandaFile->IsNewVersion())) {
         return result;
     }
     JSThread *thread = vm->GetJSThread();
@@ -224,7 +224,7 @@ bool DebuggerExecutor::SetModuleValue(const EcmaVM *vm, const FrameHandler *fram
     std::string varName = name->ToString();
     Method *method = DebuggerApi::GetMethod(frameHandler);
     const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
-    if (jsPandaFile != nullptr && (!jsPandaFile->IsMergedPF() || !jsPandaFile->IsNewVersion())) {
+    if (jsPandaFile != nullptr && (jsPandaFile->IsBundlePack() || !jsPandaFile->IsNewVersion())) {
         return false;
     }
     JSThread *thread = vm->GetJSThread();

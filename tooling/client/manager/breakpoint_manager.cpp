@@ -14,23 +14,19 @@
  */
 
 #include "manager/breakpoint_manager.h"
-
-#include <cstring>
-#include <sstream>
-
 #include "ark_cli/cli_command.h"
 #include "log_wrapper.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;
 namespace OHOS::ArkCompiler::Toolchain {
-BreakPoint BreakPoint::instance_;
-BreakPoint& BreakPoint::GetInstance()
+BreakPointManager BreakPointManager::instance_;
+BreakPointManager& BreakPointManager::GetInstance()
 {
     return instance_;
 }
 
-void BreakPoint::Createbreaklocation(const std::unique_ptr<PtJson> json)
+void BreakPointManager::Createbreaklocation(const std::unique_ptr<PtJson> json)
 {
     if (json == nullptr) {
         LOGE("arkdb: json parse error");
@@ -66,13 +62,13 @@ void BreakPoint::Createbreaklocation(const std::unique_ptr<PtJson> json)
     }
 }
 
-std::vector<std::string> BreakPoint::SplitString(std::string &str, const char delimiter)
+std::vector<std::string> BreakPointManager::SplitString(std::string &str, const char delimiter)
 {
     int size = str.size();
     std::vector<std::string> value;
     for (int i = 0; i < size; i++) {
-        if(str[i] == delimiter) {
-           str[i] = ' ';
+        if (str[i] == delimiter) {
+            str[i] = ' ';
         }
     }
     std::istringstream out(str);
@@ -83,22 +79,23 @@ std::vector<std::string> BreakPoint::SplitString(std::string &str, const char de
     return value;
 }
 
-void BreakPoint::Show()
+void BreakPointManager::Show()
 {
     int size = breaklist_.size();
     for (int i = 0; i < size; i++) {
-        std::cout << i + 1 << ':' << " url:" << breaklist_[i].url;
-        std::cout << " lineNumber:" << breaklist_[i].lineNumber << " columnNumber:" << breaklist_[i].columnNumber << std::endl;
+        std::cout << (i + 1) << ':' << " url:" << breaklist_[i].url;
+        std::cout << " lineNumber:" << breaklist_[i].lineNumber
+            << " columnNumber:" << breaklist_[i].columnNumber << std::endl;
     }
 }
 
-void BreakPoint::Deletebreaklist(unsigned int num)
+void BreakPointManager::Deletebreaklist(unsigned int num)
 {
     std::vector<Breaklocation>::iterator it = breaklist_.begin() + num - 1;
     breaklist_.erase(it);
 }
 
-std::vector<Breaklocation> BreakPoint::Getbreaklist() const
+std::vector<Breaklocation> BreakPointManager::Getbreaklist() const
 {
     return breaklist_;
 }
