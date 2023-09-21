@@ -164,6 +164,7 @@ private:
     void GetLocalVariables(const FrameHandler *frameHandler, panda_file::File::EntityId methodId,
         const JSPandaFile *jsPandaFile, Local<JSValueRef> &thisVal, Local<ObjectRef> &localObj);
     void CleanUpOnPaused();
+    void CleanUpRuntimeProperties();
     void UpdateScopeObject(const FrameHandler *frameHandler, std::string_view varName, Local<JSValueRef> newVal);
     void ClearSingleStepper();
     Local<JSValueRef> ConvertToLocal(const std::string &varValue);
@@ -194,6 +195,7 @@ private:
         void Paused(const EcmaVM *vm, const tooling::Paused &paused);
         void Resumed(const EcmaVM *vm);
         void NativeCalling(const EcmaVM *vm, const tooling::NativeCalling &nativeCalling);
+        void MixedStack(const EcmaVM *vm, const tooling::MixedStack &mixedStack);
         void ScriptFailedToParse(const EcmaVM *vm);
         void ScriptParsed(const EcmaVM *vm, const PtScript &script);
         void WaitForDebugger(const EcmaVM *vm);
@@ -219,6 +221,7 @@ private:
     bool pauseOnNextByteCode_ {false};
     bool breakpointsState_ {true};
     bool skipAllPausess_ {false};
+    bool mixStackEnabled_ {false};
     std::unique_ptr<SingleStepper> singleStepper_ {nullptr};
     std::vector<void *>  nativePointer_;
 

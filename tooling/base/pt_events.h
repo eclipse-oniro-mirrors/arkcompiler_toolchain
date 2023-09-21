@@ -239,16 +239,6 @@ public:
         return isStepInto_.value_or(false);
     }
 
-    const std::vector<std::unique_ptr<CallFrame>> *GetCallFrames() const
-    {
-        return &callFrames_;
-    }
-
-    const std::vector<void *> *GetNativePointer() const
-    {
-        return &nativePointer_;
-    }
-
     NativeCalling &SetNativeAddress(const void *nativeAddress)
     {
         nativeAddress_ = nativeAddress;
@@ -261,25 +251,53 @@ public:
         return *this;
     }
 
-    NativeCalling &SetCallFrames(std::vector<std::unique_ptr<CallFrame>> callFrames)
+private:
+    NO_COPY_SEMANTIC(NativeCalling);
+    NO_MOVE_SEMANTIC(NativeCalling);
+
+    const void *nativeAddress_ {nullptr};
+    std::optional<bool> isStepInto_ {};
+};
+
+class MixedStack final : public PtBaseEvents {
+public:
+    MixedStack() = default;
+    ~MixedStack() override = default;
+    std::unique_ptr<PtJson> ToJson() const override;
+
+    std::string GetName() const override
+    {
+        return "Debugger.mixedStack";
+    }
+
+    const std::vector<std::unique_ptr<CallFrame>> *GetCallFrames() const
+    {
+        return &callFrames_;
+    }
+
+    const std::vector<void *> *GetNativePointers() const
+    {
+        return &nativePointer_;
+    }
+
+    MixedStack &SetCallFrames(std::vector<std::unique_ptr<CallFrame>> callFrames)
     {
         callFrames_ = std::move(callFrames);
         return *this;
     }
 
-    NativeCalling &SetNativePointer(std::vector<void *> nativePointer)
+    MixedStack &SetNativePointers(std::vector<void *> nativePointer)
     {
         nativePointer_ = std::move(nativePointer);
         return *this;
     }
-private:
-    NO_COPY_SEMANTIC(NativeCalling);
-    NO_MOVE_SEMANTIC(NativeCalling);
 
-    const void *nativeAddress_ { nullptr };
-    std::optional<bool> isStepInto_ {};
-    std::vector<std::unique_ptr<CallFrame>> callFrames_ {};
+private:
+    NO_COPY_SEMANTIC(MixedStack);
+    NO_MOVE_SEMANTIC(MixedStack);
+
     std::vector<void *> nativePointer_ {};
+    std::vector<std::unique_ptr<CallFrame>> callFrames_ {};
 };
 
 class ScriptFailedToParse final : public PtBaseEvents {

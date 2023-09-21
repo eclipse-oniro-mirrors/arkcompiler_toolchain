@@ -87,10 +87,15 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
     const std::string &source = extractor->GetSourceCode(mainMethodIndex);
     const std::string &url = extractor->GetSourceFile(mainMethodIndex);
     if (source.empty()) {
-        LOG_DEBUGGER(ERROR) << "NotifyScriptParsed: invalid file: " << fileName;
+        LOG_DEBUGGER(WARN) << "NotifyScriptParsed: invalid debugger file: " << fileName;
         return false;
     }
-    recordNames_[url] = recordName;
+
+    // multiple modules.abc share the same ets, only need to save the first recordName to set breakpoint
+    auto iter = recordNames_.find(url);
+    if (iter == recordNames_.end()) {
+        recordNames_[url] = recordName;
+    }
 
     auto scriptFunc = [this](PtScript *script) -> bool {
         frontend_.ScriptParsed(vm_, *script);
@@ -254,21 +259,26 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
 
 void DebuggerImpl::NotifyNativeCalling(const void *nativeAddress)
 {
-    tooling::NativeCalling nativeCalling;
-    if (singleStepper_ != nullptr &&
-        singleStepper_->GetStepperType() == StepperType::STEP_INTO) {
-        nativeCalling.SetNativeAddress(nativeAddress);
-        nativeCalling.SetIntoStatus(true);
+    if (mixStackEnabled_) {
+        tooling::MixedStack mixedStack;
+        nativePointer_ = DebuggerApi::GetNativePointer(vm_);
+        mixedStack.SetNativePointers(nativePointer_);
+        std::vector<std::unique_ptr<CallFrame>> callFrames;
+        if (GenerateCallFrames(&callFrames)) {
+            mixedStack.SetCallFrames(std::move(callFrames));
+        }
+        frontend_.MixedStack(vm_, mixedStack);
     }
 
-    nativePointer_ = DebuggerApi::GetNativePointer(vm_);
-    nativeCalling.SetNativePointer(nativePointer_);
-    std::vector<std::unique_ptr<CallFrame>> callFrames;
-    if (GenerateCallFrames(&callFrames)) {
-        nativeCalling.SetCallFrames(std::move(callFrames));
+    // native calling only after step into should be reported
+    if (singleStepper_ != nullptr &&
+        singleStepper_->GetStepperType() == StepperType::STEP_INTO) {
+        tooling::NativeCalling nativeCalling;
+        nativeCalling.SetIntoStatus(true);
+        nativeCalling.SetNativeAddress(nativeAddress);
+        frontend_.NativeCalling(vm_, nativeCalling);
+        frontend_.WaitForDebugger(vm_);
     }
-    frontend_.NativeCalling(vm_, nativeCalling);
-    frontend_.WaitForDebugger(vm_);
 }
 
 // only use for test case
@@ -584,6 +594,15 @@ void DebuggerImpl::Frontend::NativeCalling(const EcmaVM *vm, const tooling::Nati
     channel_->SendNotification(nativeCalling);
 }
 
+void DebuggerImpl::Frontend::MixedStack(const EcmaVM *vm, const tooling::MixedStack &mixedStack)
+{
+    if (!AllowNotify(vm)) {
+        return;
+    }
+
+    channel_->SendNotification(mixedStack);
+}
+
 void DebuggerImpl::Frontend::Resumed(const EcmaVM *vm)
 {
     if (!AllowNotify(vm)) {
@@ -809,7 +828,8 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
     }
     const std::string &url = params.GetUrl();
     int32_t lineNumber = params.GetLine();
-    int32_t columnNumber = params.GetColumn();
+    // it is not support column breakpoint now, so columnNumber is not useful
+    int32_t columnNumber = -1;
     auto condition = params.HasCondition() ? params.GetCondition() : std::optional<std::string> {};
 
     DebugInfoExtractor *extractor = GetExtractor(url);
@@ -898,7 +918,8 @@ bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
 {
     const std::string &url = breakpoint.GetUrl();
     int32_t lineNumber = breakpoint.GetLineNumber();
-    int32_t columnNumber = breakpoint.GetColumnNumber();
+    // it is not support column breakpoint now, so columnNumber is not useful
+    int32_t columnNumber = -1;
     auto condition = breakpoint.HasCondition() ? breakpoint.GetCondition() : std::optional<std::string> {};
 
     DebugInfoExtractor *extractor = GetExtractor(url);
@@ -1016,6 +1037,7 @@ DispatchResponse DebuggerImpl::SetBlackboxPatterns()
 DispatchResponse DebuggerImpl::SetMixedDebugEnabled([[maybe_unused]] const SetMixedDebugParams &params)
 {
     vm_->GetJsDebuggerManager()->SetMixedDebugEnabled(params.GetEnabled());
+    mixStackEnabled_ = params.GetMixedStackEnabled();
     return DispatchResponse::Ok();
 }
 
@@ -1054,6 +1076,9 @@ DispatchResponse DebuggerImpl::DropFrame(const DropFrameParams &params)
     if (droppedDepth >= stackDepthOverBuiltin) {
         return DispatchResponse::Fail("Frames to be dropped contain builtin frame");
     }
+    if (!DebuggerApi::CheckPromiseQueueSize(vm_)) {
+        return DispatchResponse::Fail("Detect promise enqueued in current frame");
+    }
     for (uint32_t i = 0; i < droppedDepth; i++) {
         DebuggerApi::DropLastFrame(vm_);
     }
@@ -1065,11 +1090,23 @@ DispatchResponse DebuggerImpl::DropFrame(const DropFrameParams &params)
 
 void DebuggerImpl::CleanUpOnPaused()
 {
-    runtime_->curObjectId_ = 0;
-    runtime_->properties_.clear();
-
+    CleanUpRuntimeProperties();
     callFrameHandlers_.clear();
     scopeObjects_.clear();
+}
+
+void DebuggerImpl::CleanUpRuntimeProperties()
+{
+    LOG_DEBUGGER(INFO) << "CleanUpRuntimeProperties OnPaused";
+    if (runtime_->properties_.empty()) {
+        return;
+    }
+    RemoteObjectId validObjId = runtime_->curObjectId_ - 1;
+    for (; validObjId >= 0; validObjId--) {
+        runtime_->properties_[validObjId].FreeGlobalHandleAddr();
+    }
+    runtime_->curObjectId_ = 0;
+    runtime_->properties_.clear();
 }
 
 std::string DebuggerImpl::Trim(const std::string &str)

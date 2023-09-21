@@ -44,6 +44,8 @@ void RemoveMessage(int32_t instanceId);
 
 bool WaitForConnection();
 
+void SetDebugModeCallBack(const std::function<void()>& setDebugMode);
+
 void SetSwitchCallBack(const std::function<void(bool)>& setSwitchStatus,
     const std::function<void(int32_t)>& createLayoutInfo, int32_t instanceId);
 
@@ -71,6 +73,7 @@ public:
     std::queue<std::string> ideMsgQueue_;
     std::function<void(bool)> setSwitchStatus_;
     std::function<void(int32_t)> createLayoutInfo_;
+    std::function<void()> setDebugMode_;
     int32_t instanceId_ = -1;
 };
 } // namespace OHOS::ArkCompiler::Toolchain

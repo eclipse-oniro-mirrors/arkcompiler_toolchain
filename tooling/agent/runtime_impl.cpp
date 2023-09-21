@@ -629,9 +629,7 @@ void RuntimeImpl::GetWeakMapValue(Local<JSValueRef> value,
     int32_t size = weakMapRef->GetSize();
     int32_t len = weakMapRef->GetTotalElements();
     int32_t index = 0;
-    Local<JSValueRef> jsValueRef = NumberRef::New(vm_, size);
-    SetKeyValue(jsValueRef, outPropertyDesc, "size");
-    jsValueRef = ArrayRef::New(vm_, size);
+    Local<JSValueRef> jsValueRef = ArrayRef::New(vm_, size);
     for (int32_t i = 0; i < len; i++) {
         Local<JSValueRef> jsKey = weakMapRef->GetKey(vm_, i);
         if (jsKey->IsHole() || !jsKey->IsObject()) {
@@ -682,21 +680,16 @@ void RuntimeImpl::GetWeakSetValue(Local<JSValueRef> value,
     int32_t size = weakSetRef->GetSize();
     int32_t len = weakSetRef->GetTotalElements();
     int32_t index = 0;
-    Local<JSValueRef> jsValueRef = NumberRef::New(vm_, size);
-    SetKeyValue(jsValueRef, outPropertyDesc, "size");
-    jsValueRef = ArrayRef::New(vm_, size);
+    Local<JSValueRef> jsValueRef = ArrayRef::New(vm_, size);
     for (int32_t i = 0; i < len; ++i) {
         Local<JSValueRef> elementRef = weakSetRef->GetValue(vm_, i);
         if (elementRef->IsHole()) {
             continue;
-        } else if (elementRef->IsObject()) {
-            Local<ObjectRef> objRef = ObjectRef::New(vm_);
-            objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), elementRef);
-            DebuggerApi::AddInternalProperties(vm_, objRef, ArkInternalValueType::Entry, internalObjects_);
-            ArrayRef::SetValueAt(vm_, jsValueRef, index++, objRef);
-        } else {
-            ArrayRef::SetValueAt(vm_, jsValueRef, index++, elementRef);
         }
+        Local<ObjectRef> objRef = ObjectRef::New(vm_);
+        objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), elementRef);
+        DebuggerApi::AddInternalProperties(vm_, objRef, ArkInternalValueType::Entry, internalObjects_);
+        ArrayRef::SetValueAt(vm_, jsValueRef, index++, objRef);
     }
     DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
     SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");

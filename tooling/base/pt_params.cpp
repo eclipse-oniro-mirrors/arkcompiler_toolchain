@@ -26,8 +26,8 @@ std::unique_ptr<EnableParams> EnableParams::Create(const PtJson &params)
     ret = params.GetDouble("maxScriptsCacheSize", &maxScriptsCacheSize);
     if (ret == Result::SUCCESS) {
         paramsObject->maxScriptsCacheSize_ = maxScriptsCacheSize;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'maxScriptsCacheSize';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'maxScriptsCacheSize';";
     }
 
     if (!error.empty()) {
@@ -49,56 +49,56 @@ std::unique_ptr<EvaluateOnCallFrameParams> EvaluateOnCallFrameParams::Create(con
     if (ret == Result::SUCCESS) {
         paramsObject->callFrameId_ = std::stoi(callFrameId);
     } else {
-        error += "Unknown 'callFrameId';";
+        error += "Unknown or wrong type of 'callFrameId';";
     }
     std::string expression;
     ret = params.GetString("expression", &expression);
     if (ret == Result::SUCCESS) {
         paramsObject->expression_ = std::move(expression);
     } else {
-        error += "Unknown 'expression';";
+        error += "Unknown or wrong type of 'expression';";
     }
     std::string objectGroup;
     ret = params.GetString("objectGroup", &objectGroup);
     if (ret == Result::SUCCESS) {
         paramsObject->objectGroup_ = std::move(objectGroup);
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'objectGroup';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'objectGroup';";
     }
     bool includeCommandLineAPI = false;
     ret = params.GetBool("includeCommandLineAPI", &includeCommandLineAPI);
     if (ret == Result::SUCCESS) {
         paramsObject->includeCommandLineAPI_ = includeCommandLineAPI;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'includeCommandLineAPI';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'includeCommandLineAPI';";
     }
     bool silent = false;
     ret = params.GetBool("silent", &silent);
     if (ret == Result::SUCCESS) {
         paramsObject->silent_ = silent;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'silent';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'silent';";
     }
     bool returnByValue = false;
     ret = params.GetBool("returnByValue", &returnByValue);
     if (ret == Result::SUCCESS) {
         paramsObject->returnByValue_ = returnByValue;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'returnByValue';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'returnByValue';";
     }
     bool generatePreview = false;
     ret = params.GetBool("generatePreview", &generatePreview);
     if (ret == Result::SUCCESS) {
         paramsObject->generatePreview_ = generatePreview;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'generatePreview';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'generatePreview';";
     }
     bool throwOnSideEffect = false;
     ret = params.GetBool("throwOnSideEffect", &throwOnSideEffect);
     if (ret == Result::SUCCESS) {
         paramsObject->throwOnSideEffect_ = throwOnSideEffect;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'throwOnSideEffect';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'throwOnSideEffect';";
     }
 
     if (!error.empty()) {
@@ -119,31 +119,31 @@ std::unique_ptr<GetPossibleBreakpointsParams> GetPossibleBreakpointsParams::Crea
     if (ret == Result::SUCCESS) {
         std::unique_ptr<Location> location = Location::Create(*start);
         if (location == nullptr) {
-            error += "Unknown 'start';";
+            error += "'start' is invalid;";
         } else {
             paramsObject->start_ = std::move(location);
         }
     } else {
-        error += "Unknown 'start';";
+        error += "Unknown or wrong type of 'start';";
     }
     std::unique_ptr<PtJson> end;
     ret = params.GetObject("end", &end);
     if (ret == Result::SUCCESS) {
         std::unique_ptr<Location> location = Location::Create(*end);
         if (location == nullptr) {
-            error += "Unknown 'end';";
+            error += "'end' is invalid;";
         } else {
             paramsObject->end_ = std::move(location);
         }
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'end';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'end';";
     }
     bool restrictToFunction = false;
     ret = params.GetBool("restrictToFunction", &restrictToFunction);
     if (ret == Result::SUCCESS) {
         paramsObject->restrictToFunction_ = restrictToFunction;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'restrictToFunction';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'restrictToFunction';";
     }
 
     if (!error.empty()) {
@@ -165,7 +165,7 @@ std::unique_ptr<GetScriptSourceParams> GetScriptSourceParams::Create(const PtJso
     if (ret == Result::SUCCESS) {
         paramsObject->scriptId_ = std::stoi(scriptId);
     } else {
-        error += "Unknown 'scriptId';";
+        error += "Unknown or wrong type of'scriptId';";
     }
 
     if (!error.empty()) {
@@ -187,7 +187,7 @@ std::unique_ptr<RemoveBreakpointParams> RemoveBreakpointParams::Create(const PtJ
     if (ret == Result::SUCCESS) {
         paramsObject->breakpointId_ = std::move(breakpointId);
     } else {
-        error += "Unknown 'breakpointId';";
+        error += "Unknown or wrong type of 'breakpointId';";
     }
 
     if (!error.empty()) {
@@ -208,8 +208,8 @@ std::unique_ptr<ResumeParams> ResumeParams::Create(const PtJson &params)
     ret = params.GetBool("terminateOnResume", &terminateOnResume);
     if (ret == Result::SUCCESS) {
         paramsObject->terminateOnResume_ = terminateOnResume;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'terminateOnResume';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'terminateOnResume';";
     }
 
     if (!error.empty()) {
@@ -231,7 +231,7 @@ std::unique_ptr<SetAsyncCallStackDepthParams> SetAsyncCallStackDepthParams::Crea
     if (ret == Result::SUCCESS) {
         paramsObject->maxDepth_ = maxDepth;
     } else {
-        error += "Unknown 'maxDepth';";
+        error += "Unknown or wrong type of 'maxDepth';";
     }
 
     if (!error.empty()) {
@@ -261,7 +261,7 @@ std::unique_ptr<SetBlackboxPatternsParams> SetBlackboxPatternsParams::Create(con
             }
         }
     } else {
-        error += "Unknown 'patterns';";
+        error += "Unknown or wrong type of 'patterns';";
     }
 
     if (!error.empty()) {
@@ -283,42 +283,42 @@ std::unique_ptr<SetBreakpointByUrlParams> SetBreakpointByUrlParams::Create(const
     if (ret == Result::SUCCESS) {
         paramsObject->lineNumber_ = lineNumber;
     } else {
-        error += "Unknown 'lineNumber';";
+        error += "Unknown or wrong type of 'lineNumber';";
     }
     std::string url;
     ret = params.GetString("url", &url);
     if (ret == Result::SUCCESS) {
         paramsObject->url_ = std::move(url);
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'url';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'url';";
     }
     std::string urlRegex;
     ret = params.GetString("urlRegex", &urlRegex);
     if (ret == Result::SUCCESS) {
         paramsObject->urlRegex_ = std::move(urlRegex);
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'urlRegex';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'urlRegex';";
     }
     std::string scriptHash;
     ret = params.GetString("scriptHash", &scriptHash);
     if (ret == Result::SUCCESS) {
         paramsObject->scriptHash_ = std::move(scriptHash);
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'scriptHash';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'scriptHash';";
     }
     int32_t columnNumber;
     ret = params.GetInt("columnNumber", &columnNumber);
     if (ret == Result::SUCCESS) {
         paramsObject->columnNumber_ = columnNumber;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'columnNumber';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'columnNumber';";
     }
     std::string condition;
     ret = params.GetString("condition", &condition);
     if (ret == Result::SUCCESS) {
         paramsObject->condition_ = std::move(condition);
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'condition';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'condition';";
     }
     if (!error.empty()) {
         LOG_DEBUGGER(ERROR) << "SetBreakpointByUrlParams::Create " << error;
@@ -338,8 +338,8 @@ std::unique_ptr<SetBreakpointsActiveParams> SetBreakpointsActiveParams::Create(c
     ret = params.GetBool("active", &breakpointsState);
     if (ret == Result::SUCCESS) {
         paramsObject->breakpointsState_ = std::move(breakpointsState);
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'active';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'active';";
     }
     if (!error.empty()) {
         LOG_DEBUGGER(ERROR) << "SetBreakpointsActiveParams::Create " << error;
@@ -359,8 +359,8 @@ std::unique_ptr<SetSkipAllPausesParams> SetSkipAllPausesParams::Create(const PtJ
     ret = params.GetBool("skip", &skipAllPausesState);
     if (ret == Result::SUCCESS) {
         paramsObject->skipAllPausesState_ = std::move(skipAllPausesState);
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'skip';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'skip';";
     }
     if (!error.empty()) {
         LOG_DEBUGGER(ERROR) << "SetSkipAllPausesParams::Create " << error;
@@ -394,7 +394,7 @@ std::unique_ptr<GetPossibleAndSetBreakpointParams> GetPossibleAndSetBreakpointPa
             paramsObject->breakpointsList_ = std::move(breakpointList);
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'breakpoints';";
+        error += "Wrong type of 'breakpoints';";
     }
 
     if (!error.empty()) {
@@ -416,7 +416,7 @@ std::unique_ptr<SetPauseOnExceptionsParams> SetPauseOnExceptionsParams::Create(c
     if (ret == Result::SUCCESS) {
         paramsObject->StoreState(state);
     } else {
-        error += "Unknown 'state';";
+        error += "Unknown or wrong type of'state';";
     }
 
     if (!error.empty()) {
@@ -437,8 +437,8 @@ std::unique_ptr<StepIntoParams> StepIntoParams::Create(const PtJson &params)
     ret = params.GetBool("breakOnAsyncCall", &breakOnAsyncCall);
     if (ret == Result::SUCCESS) {
         paramsObject->breakOnAsyncCall_ = breakOnAsyncCall;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'breakOnAsyncCall';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'breakOnAsyncCall';";
     }
     std::unique_ptr<PtJson> skipList;
     ret = params.GetArray("skipList", &skipList);
@@ -457,8 +457,8 @@ std::unique_ptr<StepIntoParams> StepIntoParams::Create(const PtJson &params)
         if (listLocation.size()) {
             paramsObject->skipList_ = std::move(listLocation);
         }
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'skipList';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'skipList';";
     }
 
     if (!error.empty()) {
@@ -492,8 +492,8 @@ std::unique_ptr<StepOverParams> StepOverParams::Create(const PtJson &params)
         if (listLocation.size()) {
             paramsObject->skipList_ = std::move(listLocation);
         }
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'skipList';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'skipList';";
     }
 
     if (!error.empty()) {
@@ -514,8 +514,8 @@ std::unique_ptr<DropFrameParams> DropFrameParams::Create(const PtJson &params)
     ret = params.GetUInt("droppedDepth", &droppedDepth);
     if (ret == Result::SUCCESS) {
         paramsObject->droppedDepth_ = droppedDepth;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'droppedDepth';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'droppedDepth';";
     }
 
     if (!error.empty()) {
@@ -536,8 +536,16 @@ std::unique_ptr<SetMixedDebugParams> SetMixedDebugParams::Create(const PtJson &p
     ret = params.GetBool("enabled", &enabled);
     if (ret == Result::SUCCESS) {
         paramsObject->enabled_ = enabled;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'enabled';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'enabled';";
+    }
+
+    bool mixedStackEnabled = false;
+    ret = params.GetBool("mixedStackEnabled", &mixedStackEnabled);
+    if (ret == Result::SUCCESS) {
+        paramsObject->mixedStackEnabled_ = mixedStackEnabled;
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'enabled';";
     }
 
     if (!error.empty()) {
@@ -558,8 +566,8 @@ std::unique_ptr<ReplyNativeCallingParams> ReplyNativeCallingParams::Create(const
     ret = params.GetBool("userCode", &userCode);
     if (ret == Result::SUCCESS) {
         paramsObject->userCode_ = userCode;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'userCode';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'userCode';";
     }
 
     if (!error.empty()) {
@@ -581,28 +589,28 @@ std::unique_ptr<GetPropertiesParams> GetPropertiesParams::Create(const PtJson &p
     if (ret == Result::SUCCESS) {
         paramsObject->objectId_ = std::stoi(objectId);
     } else {
-        error += "Unknown 'objectId';";
+        error += "Unknown or wrong type of 'objectId';";
     }
     bool ownProperties = false;
     ret = params.GetBool("ownProperties", &ownProperties);
     if (ret == Result::SUCCESS) {
         paramsObject->ownProperties_ = ownProperties;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'ownProperties';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'ownProperties';";
     }
     bool accessorPropertiesOnly = false;
     ret = params.GetBool("accessorPropertiesOnly", &accessorPropertiesOnly);
     if (ret == Result::SUCCESS) {
         paramsObject->accessorPropertiesOnly_ = accessorPropertiesOnly;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'accessorPropertiesOnly';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'accessorPropertiesOnly';";
     }
     bool generatePreview = false;
     ret = params.GetBool("generatePreview", &generatePreview);
     if (ret == Result::SUCCESS) {
         paramsObject->generatePreview_ = generatePreview;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'generatePreview';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'generatePreview';";
     }
     if (!error.empty()) {
         LOG_DEBUGGER(ERROR) << "GetPropertiesParams::Create " << error;
@@ -624,15 +632,15 @@ std::unique_ptr<CallFunctionOnParams> CallFunctionOnParams::Create(const PtJson 
     if (ret == Result::SUCCESS) {
         paramsObject->functionDeclaration_ = std::move(functionDeclaration);
     } else {
-        error += "Unknown 'functionDeclaration';";
+        error += "Unknown or wrong type of 'functionDeclaration';";
     }
     // paramsObject->objectId_
     std::string objectId;
     ret = params.GetString("objectId", &objectId);
     if (ret == Result::SUCCESS) {
         paramsObject->objectId_ = std::stoi(objectId);
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'objectId';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'objectId';";
     }
     // paramsObject->arguments_
     std::unique_ptr<PtJson> arguments;
@@ -652,72 +660,72 @@ std::unique_ptr<CallFunctionOnParams> CallFunctionOnParams::Create(const PtJson 
         if (callArgument.size()) {
             paramsObject->arguments_ = std::move(callArgument);
         }
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'arguments';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'arguments';";
     }
     // paramsObject->silent_
     bool silent = false;
     ret = params.GetBool("silent", &silent);
     if (ret == Result::SUCCESS) {
         paramsObject->silent_ = silent;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'silent';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'silent';";
     }
     // paramsObject->returnByValue_
     bool returnByValue = false;
     ret = params.GetBool("returnByValue", &returnByValue);
     if (ret == Result::SUCCESS) {
         paramsObject->returnByValue_ = returnByValue;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'returnByValue';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'returnByValue';";
     }
     // paramsObject->generatePreview_
     bool generatePreview = false;
     ret = params.GetBool("generatePreview", &generatePreview);
     if (ret == Result::SUCCESS) {
         paramsObject->generatePreview_ = generatePreview;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'generatePreview';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'generatePreview';";
     }
     // paramsObject->userGesture_
     bool userGesture = false;
     ret = params.GetBool("userGesture", &userGesture);
     if (ret == Result::SUCCESS) {
         paramsObject->userGesture_ = userGesture;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'userGesture';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'userGesture';";
     }
     // paramsObject->awaitPromise_
     bool awaitPromise = false;
     ret = params.GetBool("awaitPromise", &awaitPromise);
     if (ret == Result::SUCCESS) {
         paramsObject->awaitPromise_ = awaitPromise;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'awaitPromise';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'awaitPromise';";
     }
     // paramsObject->executionContextId_
     int32_t executionContextId;
     ret = params.GetInt("executionContextId", &executionContextId);
     if (ret == Result::SUCCESS) {
         paramsObject->executionContextId_ = executionContextId;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'executionContextId';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'executionContextId';";
     }
     // paramsObject->objectGroup_
     std::string objectGroup;
     ret = params.GetString("objectGroup", &objectGroup);
     if (ret == Result::SUCCESS) {
         paramsObject->objectGroup_ = std::move(objectGroup);
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'objectGroup';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'objectGroup';";
     }
     // paramsObject->throwOnSideEffect_
     bool throwOnSideEffect = false;
     ret = params.GetBool("throwOnSideEffect", &throwOnSideEffect);
     if (ret == Result::SUCCESS) {
         paramsObject->throwOnSideEffect_ = throwOnSideEffect;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'throwOnSideEffect';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'throwOnSideEffect';";
     }
 
     // Check whether the error is empty.
@@ -743,8 +751,8 @@ std::unique_ptr<StartSamplingParams> StartSamplingParams::Create(const PtJson &p
         } else {
             paramsObject->samplingInterval_ = samplingInterval;
         }
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'samplingInterval';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'samplingInterval';";
     }
 
     if (!error.empty()) {
@@ -764,8 +772,8 @@ std::unique_ptr<StartTrackingHeapObjectsParams> StartTrackingHeapObjectsParams::
     ret = params.GetBool("trackAllocations", &trackAllocations);
     if (ret == Result::SUCCESS) {
         paramsObject->trackAllocations_ = trackAllocations;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'trackAllocations';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'trackAllocations';";
     }
 
     if (!error.empty()) {
@@ -785,24 +793,24 @@ std::unique_ptr<StopTrackingHeapObjectsParams> StopTrackingHeapObjectsParams::Cr
     ret = params.GetBool("reportProgress", &reportProgress);
     if (ret == Result::SUCCESS) {
         paramsObject->reportProgress_ = reportProgress;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'reportProgress';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'reportProgress';";
     }
 
     bool treatGlobalObjectsAsRoots = false;
     ret = params.GetBool("treatGlobalObjectsAsRoots", &treatGlobalObjectsAsRoots);
     if (ret == Result::SUCCESS) {
         paramsObject->treatGlobalObjectsAsRoots_ = treatGlobalObjectsAsRoots;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'treatGlobalObjectsAsRoots';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'treatGlobalObjectsAsRoots';";
     }
 
     bool captureNumericValue = false;
     ret = params.GetBool("captureNumericValue", &captureNumericValue);
     if (ret == Result::SUCCESS) {
         paramsObject->captureNumericValue_ = captureNumericValue;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'captureNumericValue';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'captureNumericValue';";
     }
 
     if (!error.empty()) {
@@ -823,7 +831,7 @@ std::unique_ptr<AddInspectedHeapObjectParams> AddInspectedHeapObjectParams::Crea
     if (ret == Result::SUCCESS) {
         paramsObject->heapObjectId_ = std::stoi(heapObjectId);
     } else {
-        error += "Unknown 'heapObjectId';";
+        error += "Unknown or wrong type of 'heapObjectId';";
     }
 
     if (!error.empty()) {
@@ -843,8 +851,8 @@ std::unique_ptr<GetHeapObjectIdParams> GetHeapObjectIdParams::Create(const PtJso
     ret = params.GetString("objectId", &objectId);
     if (ret == Result::SUCCESS) {
         paramsObject->objectId_ = std::stoi(objectId);
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'objectId';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'objectId';";
     }
 
     if (!error.empty()) {
@@ -864,16 +872,16 @@ std::unique_ptr<GetObjectByHeapObjectIdParams> GetObjectByHeapObjectIdParams::Cr
     ret = params.GetString("objectId", &objectId);
     if (ret == Result::SUCCESS) {
         paramsObject->objectId_ = std::stoi(objectId);
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'objectId';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'objectId';";
     }
 
     std::string objectGroup;
     ret = params.GetString("objectGroup", &objectGroup);
     if (ret == Result::SUCCESS) {
         paramsObject->objectGroup_ = std::move(objectGroup);
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'objectGroup';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'objectGroup';";
     }
 
     if (!error.empty()) {
@@ -893,24 +901,24 @@ std::unique_ptr<StartPreciseCoverageParams> StartPreciseCoverageParams::Create(c
     ret = params.GetBool("callCount", &callCount);
     if (ret == Result::SUCCESS) {
         paramsObject->callCount_ = callCount;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'callCount';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'callCount';";
     }
 
     bool detailed = false;
     ret = params.GetBool("detailed", &detailed);
     if (ret == Result::SUCCESS) {
         paramsObject->detailed_ = detailed;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'detailed';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'detailed';";
     }
 
     bool allowTriggeredUpdates = false;
     ret = params.GetBool("allowTriggeredUpdates", &allowTriggeredUpdates);
     if (ret == Result::SUCCESS) {
         paramsObject->allowTriggeredUpdates_ = allowTriggeredUpdates;
-    } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'allowTriggeredUpdates';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'allowTriggeredUpdates';";
     }
 
     if (!error.empty()) {
@@ -931,7 +939,7 @@ std::unique_ptr<SetSamplingIntervalParams> SetSamplingIntervalParams::Create(con
     if (ret == Result::SUCCESS) {
         paramsObject->interval_ = interval;
     } else {
-        error += "Unknown 'interval';";
+        error += "Unknown or wrong type of 'interval';";
     }
 
     if (!error.empty()) {
@@ -952,7 +960,7 @@ std::unique_ptr<RecordClockSyncMarkerParams> RecordClockSyncMarkerParams::Create
     if (ret == Result::SUCCESS) {
         recordClockSyncMarkerParams->syncId_ = syncId;
     } else {
-        error += "Unknown 'syncId';";
+        error += "Unknown or wrong type of 'syncId';";
     }
     
     if (!error.empty()) {
@@ -974,7 +982,7 @@ std::unique_ptr<RequestMemoryDumpParams> RequestMemoryDumpParams::Create(const P
     if (ret == Result::SUCCESS) {
         requestMemoryDumpParams->deterministic_ = deterministic;
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'deterministic';";
+        error += "Wrong type of 'deterministic';";
     }
 
     std::string levelOfDetail;
@@ -986,7 +994,7 @@ std::unique_ptr<RequestMemoryDumpParams> RequestMemoryDumpParams::Create(const P
             error += "'levelOfDetail' is invalid;";
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'levelOfDetail';";
+        error += "Wrong type of 'levelOfDetail';";
     }
     
     if (!error.empty()) {
@@ -1008,7 +1016,7 @@ std::unique_ptr<StartParams> StartParams::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         startParams->categories_ = std::move(categories);
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'categories';";
+        error += "Wrong type of 'categories';";
     }
 
     std::string options;
@@ -1016,7 +1024,7 @@ std::unique_ptr<StartParams> StartParams::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         startParams->options_ = std::move(options);
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'options';";
+        error += "Wrong type of 'options';";
     }
 
     int32_t bufferUsageReportingInterval = 0;
@@ -1024,7 +1032,7 @@ std::unique_ptr<StartParams> StartParams::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         startParams->bufferUsageReportingInterval_ = bufferUsageReportingInterval;
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'bufferUsageReportingInterval';";
+        error += "Wrong type of 'bufferUsageReportingInterval';";
     }
 
     std::string transferMode;
@@ -1036,7 +1044,7 @@ std::unique_ptr<StartParams> StartParams::Create(const PtJson &params)
             error += "'transferMode' is invalid;";
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'transferMode';";
+        error += "Wrong type of 'transferMode';";
     }
 
     std::string streamFormat;
@@ -1048,7 +1056,7 @@ std::unique_ptr<StartParams> StartParams::Create(const PtJson &params)
             error += "'streamFormat' is invalid;";
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'streamFormat';";
+        error += "Wrong type of 'streamFormat';";
     }
 
     std::string streamCompression;
@@ -1060,7 +1068,7 @@ std::unique_ptr<StartParams> StartParams::Create(const PtJson &params)
             error += "'streamCompression' is invalid;";
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'streamCompression';";
+        error += "Wrong type of 'streamCompression';";
     }
 
     std::unique_ptr<PtJson> traceConfig;
@@ -1068,12 +1076,12 @@ std::unique_ptr<StartParams> StartParams::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         std::unique_ptr<TraceConfig> pTraceConfig = TraceConfig::Create(*traceConfig);
         if (pTraceConfig == nullptr) {
-            error += "'traceConfig' format invalid;";
+            error += "'traceConfig' format is invalid;";
         } else {
             startParams->traceConfig_ = std::move(pTraceConfig);
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'traceConfig';";
+        error += "Wrong type of 'traceConfig';";
     }
 
     std::string perfettoConfig;
@@ -1081,7 +1089,7 @@ std::unique_ptr<StartParams> StartParams::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         startParams->perfettoConfig_ = std::move(perfettoConfig);
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'perfettoConfig';";
+        error += "Wrong type of 'perfettoConfig';";
     }
 
     std::string tracingBackend;
@@ -1093,7 +1101,7 @@ std::unique_ptr<StartParams> StartParams::Create(const PtJson &params)
             error += "'tracingBackend' is invalid;";
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'tracingBackend';";
+        error += "Wrong type of 'tracingBackend';";
     }
 
     if (!error.empty()) {
