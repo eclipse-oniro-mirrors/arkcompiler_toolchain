@@ -18,26 +18,80 @@
 
 #include <iostream>
 #include <map>
+
+#include "manager/stack_manager.h"
 #include "pt_json.h"
+#include "pt_returns.h"
 #include "pt_types.h"
-namespace OHOS::ArkCompiler::Toolchain {
+
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;
-using panda::ecmascript::tooling::PropertyDescriptor;
+using PropertyDescriptor = panda::ecmascript::tooling::PropertyDescriptor;
+using GetHeapUsageReturns = panda::ecmascript::tooling::GetHeapUsageReturns;
+using PropertyDescriptor = panda::ecmascript::tooling::PropertyDescriptor;
+using DescriptorMap = std::map<int32_t, std::unique_ptr<PropertyDescriptor>>;
+using NodeData = std::variant<int32_t, std::map<int32_t, std::map<int32_t, std::string>>,
+                              std::unique_ptr<PropertyDescriptor>, DescriptorMap>;
+namespace OHOS::ArkCompiler::Toolchain {
+class TreeNode {
+public:
+    NodeData data;
+    std::vector<std::unique_ptr<TreeNode>> children;
+
+    TreeNode(int32_t CallFrameId) : data(CallFrameId) {}
+    TreeNode(const std::map<int32_t, std::map<int32_t, std::string>>& scopeInfo) : data(scopeInfo) {}
+    TreeNode(std::unique_ptr<PropertyDescriptor> descriptor) : data(std::move(descriptor)) {}
+    TreeNode(DescriptorMap&& descriptorMap) : data(std::move(descriptorMap)) {}
+
+    void AddChild(std::unique_ptr<PropertyDescriptor> descriptor);
+    void AddChild(DescriptorMap descriptorMap);
+    void AddChild(std::unique_ptr<TreeNode> child);
+    void Print(int depth = 0) const;
+};
+
+class Tree {
+public:
+    Tree(int32_t rootValue) : root_(std::make_unique<TreeNode>(rootValue)) {}
+    Tree(const std::map<int32_t, std::map<int32_t, std::string>>& dataMap, int32_t index);
+
+    void Clear();
+    void Print() const;
+    TreeNode* GetRoot() const;
+    TreeNode* FindNodeWithObjectId(int32_t objectId) const;
+    void AddVariableNode(TreeNode* parentNode, std::unique_ptr<PropertyDescriptor> descriptor);
+    void AddObjectNode(TreeNode* parentNode, std::unique_ptr<PropertyDescriptor> descriptor);
+    TreeNode* FindNodeWithCondition() const;
+    void PrintRootAndImmediateChildren() const;
+    int32_t FindObjectByIndex(int32_t index) const;
+
+private:
+    std::unique_ptr<TreeNode> root_ {};
+    int32_t index_ {1};
+    TreeNode* FindNodeWithObjectIdRecursive(TreeNode* node, int32_t objectId) const;
+    TreeNode* FindNodeWithInnerKeyZero(TreeNode* node) const;
+    int32_t FindObjectByIndexRecursive(const TreeNode* node, int32_t index) const;
+};
+
 class VariableManager final {
 public:
-    static VariableManager& getInstance();
-
-    void HandleMessage(const std::unique_ptr<PtJson> json);
-
-    void ShowVariableInfos();
-
-    std::string FindObjectIdByIndex(const int32_t index);
+    static VariableManager& GetInstance();
+    void SetHeapUsageInfo(std::unique_ptr<GetHeapUsageReturns> heapUsageReturns);
+    void ShowHeapUsageInfo() const;
+    void ShowVariableInfos() const;
+    void ClearVariableInfo();
+    void InitializeTree(std::map<int32_t, std::map<int32_t, std::string>> dataMap, int index = 0);
+    void PrintVariableInfo();
+    TreeNode* FindNodeWithObjectId(int32_t objectId);
+    int32_t FindObjectIdWithIndex(int index);
+    void AddVariableInfo(TreeNode *parentNode, std::unique_ptr<PropertyDescriptor> variableInfo);
+    TreeNode* FindNodeObjectZero();
+    void Printinfo() const;
 
 private:
     VariableManager() = default;
-    static VariableManager instance;
-    std::multimap<int32_t, std::unique_ptr<PropertyDescriptor>> variableInfos_ {};
+    static VariableManager instance_;
+    GetHeapUsageReturns heapUsageInfo_ {};
+    Tree variableInfo_ {0};
     VariableManager(const VariableManager&) = delete;
     VariableManager& operator=(const VariableManager&) = delete;
 };

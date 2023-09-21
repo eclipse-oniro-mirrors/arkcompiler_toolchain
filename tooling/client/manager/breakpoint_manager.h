@@ -15,14 +15,16 @@
 #ifndef ECMASCRIPT_TOOLING_CLIENT_MANAGER_BREAKPOINT_MANAGER_H
 #define ECMASCRIPT_TOOLING_CLIENT_MANAGER_BREAKPOINT_MANAGER_H
 
+#include <functional>
 #include <iostream>
 #include <map>
-#include <vector>
 #include <memory>
-#include <functional>
 #include <string>
+#include <vector>
+
 #include "pt_json.h"
 #include "pt_types.h"
+
 namespace OHOS::ArkCompiler::Toolchain {
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;
@@ -32,23 +34,22 @@ struct Breaklocation{
     std::string lineNumber;
     std::string columnNumber;
 };
-class BreakPoint{
+class BreakPoint {
 public:
-    BreakPoint(const BreakPoint&) = delete;
-    BreakPoint& operator=(const BreakPoint&) = delete;
+    static BreakPoint& GetInstance();
 
-    static BreakPoint& getInstance() {
-        static BreakPoint instance;
-        return instance;
-    }
-    std::vector<Breaklocation> breaklist_;
     std::vector<std::string> SplitString(std::string &str, const char delimiter);
     void Createbreaklocation(const std::unique_ptr<PtJson> json);
     void Show();
     void Deletebreaklist(unsigned int num);
+    std::vector<Breaklocation> Getbreaklist() const;
+
 private:
+    static BreakPoint instance_;
+    std::vector<Breaklocation> breaklist_ {};
     BreakPoint() = default;
-    ~BreakPoint() = default;
+    BreakPoint(const BreakPoint&) = delete;
+    BreakPoint& operator=(const BreakPoint&) = delete;
 };
 }
 #endif
