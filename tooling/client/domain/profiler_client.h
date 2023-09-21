@@ -27,7 +27,7 @@ namespace OHOS::ArkCompiler::Toolchain {
 using PtJson = panda::ecmascript::tooling::PtJson;
 class ProfilerSingleton {
 public:
-    static ProfilerSingleton& getInstance();
+    static ProfilerSingleton& GetInstance();
 
     void AddCpuName(const std::string &data)
     {
@@ -55,7 +55,7 @@ public:
 private:
     std::vector<std::string> cpulist_;
     std::string address_ = "";
-    static ProfilerSingleton instance;
+    static ProfilerSingleton instance_;
     ProfilerSingleton() = default;
     ProfilerSingleton(const ProfilerSingleton&) = delete;
     ProfilerSingleton& operator=(const ProfilerSingleton&) = delete;

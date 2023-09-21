@@ -12,14 +12,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include "manager/breakpoint_manager.h"
+
 #include <cstring>
 #include <sstream>
-#include "log_wrapper.h"
-#include "manager/breakpoint_manager.h"
+
 #include "ark_cli/cli_command.h"
+#include "log_wrapper.h"
+
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;
 namespace OHOS::ArkCompiler::Toolchain {
+BreakPoint BreakPoint::instance_;
+BreakPoint& BreakPoint::GetInstance()
+{
+    return instance_;
+}
 
 void BreakPoint::Createbreaklocation(const std::unique_ptr<PtJson> json)
 {
@@ -47,9 +56,9 @@ void BreakPoint::Createbreaklocation(const std::unique_ptr<PtJson> json)
         breaklocation.breakpointId = breakpointId;
         std::vector<std::string> breaksplitstring;
         breaksplitstring = SplitString(breakpointId, ':');
-        breaklocation.lineNumber = breaksplitstring[1]; //1:linenumber
-        breaklocation.columnNumber = breaksplitstring[2]; //2:columnnumber
-        breaklocation.url = breaksplitstring[3]; //3:url
+        breaklocation.lineNumber = breaksplitstring[1]; // 1: linenumber
+        breaklocation.columnNumber = breaksplitstring[2]; // 2: columnnumber
+        breaklocation.url = breaksplitstring[3]; // 3: url
         breaklist_.push_back(breaklocation);
     } else {
         LOGE("arkdb: find breakpointId error");
@@ -87,5 +96,10 @@ void BreakPoint::Deletebreaklist(unsigned int num)
 {
     std::vector<Breaklocation>::iterator it = breaklist_.begin() + num - 1;
     breaklist_.erase(it);
+}
+
+std::vector<Breaklocation> BreakPoint::Getbreaklist() const
+{
+    return breaklist_;
 }
 }

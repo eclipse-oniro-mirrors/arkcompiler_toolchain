@@ -236,7 +236,7 @@ bool HeapProfilerClient::WriteHeapProfilerForFile(const std::string &fileName, c
     std::string pathname = path_ + fileName;
     ofs.open(pathname.c_str(), std::ios::app);
     if (!ofs.is_open()) {
-        LOGE("toolchain_client: file open error!");
+        LOGE("arkdb: file open error!");
         return false;
     }
     int strSize = data.size();

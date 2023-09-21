@@ -14,12 +14,18 @@
  */
 
 #include "domain/runtime_client.h"
-#include "pt_json.h"
+
 #include "log_wrapper.h"
+#include "manager/variable_manager.h"
+#include "pt_json.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 namespace OHOS::ArkCompiler::Toolchain {
-RuntimeClient RuntimeClient::instance;
+RuntimeClient RuntimeClient::instance_;
+RuntimeClient& RuntimeClient::GetInstance()
+{
+    return instance_;
+}
 bool RuntimeClient::DispatcherCmd(int id, const std::string &cmd, std::string* reqStr)
 {
     std::map<std::string, std::function<std::string()>> dispatcherTable {
@@ -45,7 +51,7 @@ bool RuntimeClient::DispatcherCmd(int id, const std::string &cmd, std::string* r
 
 std::string RuntimeClient::HeapusageCommand(int id)
 {
-    idMethodMap_.emplace("getHeapUsage", id);
+    idMethodMap_[id] = std::make_tuple("getHeapUsage", "");
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
     request->Add("method", "Runtime.getHeapUsage");
@@ -57,7 +63,7 @@ std::string RuntimeClient::HeapusageCommand(int id)
 
 std::string RuntimeClient::RuntimeEnableCommand(int id)
 {
-    idMethodMap_.emplace("enable", id);
+    idMethodMap_[id] = std::make_tuple("enable", "");
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
     request->Add("method", "Runtime.enable");
@@ -69,7 +75,7 @@ std::string RuntimeClient::RuntimeEnableCommand(int id)
 
 std::string RuntimeClient::RuntimeDisableCommand(int id)
 {
-    idMethodMap_.emplace("disable", id);
+    idMethodMap_[id] = std::make_tuple("disable", "");
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
     request->Add("method", "Runtime.disable");
@@ -81,7 +87,7 @@ std::string RuntimeClient::RuntimeDisableCommand(int id)
 
 std::string RuntimeClient::RunIfWaitingForDebuggerCommand(int id)
 {
-    idMethodMap_.emplace("runIfWaitingForDebugger", id);
+    idMethodMap_[id] = std::make_tuple("runIfWaitingForDebugger", "");
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
     request->Add("method", "Runtime.runIfWaitingForDebugger");
@@ -93,7 +99,7 @@ std::string RuntimeClient::RunIfWaitingForDebuggerCommand(int id)
 
 std::string RuntimeClient::GetPropertiesCommand(int id)
 {
-    idMethodMap_.emplace("getProperties", id);
+    idMethodMap_[id] = std::make_tuple("getProperties", objectId_);
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
     request->Add("method", "Runtime.getProperties");
@@ -109,7 +115,7 @@ std::string RuntimeClient::GetPropertiesCommand(int id)
 
 std::string RuntimeClient::GetPropertiesCommand2(int id)
 {
-    idMethodMap_.emplace("getProperties", id);
+    idMethodMap_[id] = std::make_tuple("getProperties", objectId_);
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
     request->Add("method", "Runtime.getProperties");
@@ -123,17 +129,127 @@ std::string RuntimeClient::GetPropertiesCommand2(int id)
     return request->Stringify();
 }
 
-RuntimeClient& RuntimeClient::getInstance()
+void RuntimeClient::RecvReply(std::unique_ptr<PtJson> json)
 {
-    return instance;
+    if (json == nullptr) {
+        LOGE("arkdb: json parse error");
+        return;
+    }
+
+    if (!json->IsObject()) {
+        LOGE("arkdb: json parse format error");
+        json->ReleaseRoot();
+        return;
+    }
+
+    int replyId;
+    Result ret = json->GetInt("id", &replyId);
+    if (ret != Result::SUCCESS) {
+        LOGE("arkdb: find id error");
+        return;
+    }
+
+    if (GetMethodById(replyId) == "getHeapUsage") {
+        HandleHeapUsage(std::move(json));
+    } else if (GetMethodById(replyId) == "getProperties") {
+        HandleGetProperties(std::move(json), replyId);
+    } else {
+        LOGI("arkdb: Runtime replay message is %{public}s", json->Stringify().c_str());
+    }
 }
 
-int RuntimeClient::GetIdByMethod(const std::string method)
+std::string RuntimeClient::GetMethodById(const int &id)
 {
-    auto it = idMethodMap_.find(method);
+    auto it = idMethodMap_.find(id);
     if (it != idMethodMap_.end()) {
-        return it->second;
+        return std::get<0>(it->second);
     }
-    return 0;
+    return "";
+}
+
+std::string RuntimeClient::GetRequestObjectIdById(const int &id)
+{
+    auto it = idMethodMap_.find(id);
+    if (it != idMethodMap_.end()) {
+        return std::get<1>(it->second);
+    }
+    return "";
+}
+
+void RuntimeClient::HandleGetProperties(std::unique_ptr<PtJson> json, const int &id)
+{
+    if (json == nullptr) {
+        LOGE("arkdb: json parse error");
+        return;
+    }
+
+    if (!json->IsObject()) {
+        LOGE("arkdb: json parse format error");
+        json->ReleaseRoot();
+        return;
+    }
+
+    std::unique_ptr<PtJson> result;
+    Result ret = json->GetObject("result", &result);
+    if (ret != Result::SUCCESS) {
+        LOGE("arkdb: find result error");
+        return;
+    }
+
+    std::unique_ptr<PtJson> innerResult;
+    ret = result->GetArray("result", &innerResult);
+    if (ret != Result::SUCCESS) {
+        LOGE("arkdb: find innerResult error");
+        return;
+    }
+
+    StackManager &stackManager = StackManager::GetInstance();
+    VariableManager &variableManager = VariableManager::GetInstance();
+    std::map<int32_t, std::map<int32_t, std::string>> treeInfo = stackManager.GetScopeChainInfo();
+    if (isInitializeTree_) {
+        variableManager.ClearVariableInfo();
+        variableManager.InitializeTree(treeInfo);
+    }
+    std::string requestObjectId = GetRequestObjectIdById(id);
+    TreeNode *node = nullptr;
+    if (!isInitializeTree_) {
+        node = variableManager.FindNodeWithObjectId(std::stoi(requestObjectId));
+    } else {
+        node = variableManager.FindNodeObjectZero();
+    }
+
+    for (int32_t i = 0; i < innerResult->GetSize(); i++) {
+        std::unique_ptr<PropertyDescriptor> variableInfo = PropertyDescriptor::Create(*(innerResult->Get(i)));
+        variableManager.AddVariableInfo(node, std::move(variableInfo));
+    }
+
+    std::cout << std::endl;
+    variableManager.PrintVariableInfo();
+}
+
+void RuntimeClient::HandleHeapUsage(std::unique_ptr<PtJson> json)
+{
+    if (json == nullptr) {
+        LOGE("arkdb: json parse error");
+        return;
+    }
+
+    if (!json->IsObject()) {
+        LOGE("arkdb: json parse format error");
+        json->ReleaseRoot();
+        return;
+    }
+
+    std::unique_ptr<PtJson> result;
+    Result ret = json->GetObject("result", &result);
+    if (ret != Result::SUCCESS) {
+        LOGE("arkdb: find result error");
+        return;
+    }
+
+    VariableManager &variableManager = VariableManager::GetInstance();
+    std::unique_ptr<GetHeapUsageReturns> heapUsageReturns = GetHeapUsageReturns::Create(*result);
+    variableManager.SetHeapUsageInfo(std::move(heapUsageReturns));
+    variableManager.ShowHeapUsageInfo();
 }
 } // OHOS::ArkCompiler::Toolchain

@@ -14,11 +14,13 @@
  */
 
 #include "domain/debugger_client.h"
-#include "manager/breakpoint_manager.h"
-#include "log_wrapper.h"
-#include "pt_json.h"
 
 #include <map>
+
+#include "log_wrapper.h"
+#include "manager/breakpoint_manager.h"
+#include "manager/stack_manager.h"
+#include "pt_json.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 namespace OHOS::ArkCompiler::Toolchain {
@@ -38,16 +40,18 @@ bool DebuggerClient::DispatcherCmd(int id, const std::string &cmd, std::string* 
         { "ignore", std::bind(&DebuggerClient::IgnoreCommand, this, id)},
         { "infobreakpoints", std::bind(&DebuggerClient::InfobreakpointsCommand, this, id)},
         { "infosource", std::bind(&DebuggerClient::InfosourceCommand, this, id)},
-        { "list", std::bind(&DebuggerClient::NextCommand, this, id)},
-        { "next", std::bind(&DebuggerClient::ListCommand, this, id)},
-        { "print", std::bind(&DebuggerClient::PrintCommand, this, id)},
+        { "list", std::bind(&DebuggerClient::ListCommand, this, id)},
+        { "next", std::bind(&DebuggerClient::NextCommand, this, id)},
         { "ptype", std::bind(&DebuggerClient::PtypeCommand, this, id)},
         { "run", std::bind(&DebuggerClient::RunCommand, this, id)},
         { "setvar", std::bind(&DebuggerClient::SetvarCommand, this, id)},
         { "step", std::bind(&DebuggerClient::StepCommand, this, id)},
         { "undisplay", std::bind(&DebuggerClient::UndisplayCommand, this, id)},
         { "watch", std::bind(&DebuggerClient::WatchCommand, this, id)},
-        { "resume", std::bind(&DebuggerClient::ResumeCommand, this, id)}
+        { "resume", std::bind(&DebuggerClient::ResumeCommand, this, id)},
+        { "step-into", std::bind(&DebuggerClient::StepIntoCommand, this, id)},
+        { "step-out", std::bind(&DebuggerClient::StepOutCommand, this, id)},
+        { "step-over", std::bind(&DebuggerClient::StepOverCommand, this, id)},
     };
 
     auto entry = dispatcherTable.find(cmd);
@@ -167,11 +171,6 @@ std::string DebuggerClient::ListCommand([[maybe_unused]] int id)
     return "list";
 }
 
-std::string DebuggerClient::PrintCommand([[maybe_unused]] int id)
-{
-    return "print";
-}
-
 std::string DebuggerClient::PtypeCommand([[maybe_unused]] int id)
 {
     return "ptype";
@@ -213,6 +212,39 @@ std::string DebuggerClient::ResumeCommand(int id)
     return request->Stringify();
 }
 
+std::string DebuggerClient::StepIntoCommand(int id)
+{
+    std::unique_ptr<PtJson> request = PtJson::CreateObject();
+    request->Add("id", id);
+    request->Add("method", "Debugger.stepInto");
+
+    std::unique_ptr<PtJson> params = PtJson::CreateObject();
+    request->Add("params", params);
+    return request->Stringify();
+}
+
+std::string DebuggerClient::StepOutCommand(int id)
+{
+    std::unique_ptr<PtJson> request = PtJson::CreateObject();
+    request->Add("id", id);
+    request->Add("method", "Debugger.stepOut");
+
+    std::unique_ptr<PtJson> params = PtJson::CreateObject();
+    request->Add("params", params);
+    return request->Stringify();
+}
+
+std::string DebuggerClient::StepOverCommand(int id)
+{
+    std::unique_ptr<PtJson> request = PtJson::CreateObject();
+    request->Add("id", id);
+    request->Add("method", "Debugger.stepOver");
+
+    std::unique_ptr<PtJson> params = PtJson::CreateObject();
+    request->Add("params", params);
+    return request->Stringify();
+}
+
 void DebuggerClient::AddBreakPointInfo(const std::string& url, const int& lineNumber, const int& columnNumber)
 {
     BreakPointInfo breakPointInfo;
@@ -234,20 +266,81 @@ void DebuggerClient::RecvReply(std::unique_ptr<PtJson> json)
         json->ReleaseRoot();
         return;
     }
+
     Result ret;
+    std::string wholeMethod;
+    std::string method;
+    ret = json->GetString("method", &wholeMethod);
+    if (ret != Result::SUCCESS) {
+        LOGE("arkdb: find method error");
+        return;
+    }
+
+    std::string::size_type length = wholeMethod.length();
+    std::string::size_type indexPoint = 0;
+    indexPoint = wholeMethod.find_first_of('.', 0);
+    if (indexPoint == std::string::npos || indexPoint == 0 || indexPoint == length - 1) {
+        return;
+    }
+    method = wholeMethod.substr(indexPoint + 1, length);
+    if (method == "paused") {
+        PausedReply(std::move(json));
+        return;
+    } else {
+        LOGI("arkdb: Debugger reply is: %{public}s", json->Stringify().c_str());
+    }
+
     std::unique_ptr<PtJson> result;
     ret = json->GetObject("result", &result);
     if (ret != Result::SUCCESS) {
         LOGE("arkdb: find result error");
         return;
     }
+
     std::string breakpointId;
     ret = result->GetString("breakpointId", &breakpointId);
     if (ret == Result::SUCCESS) {
-        BreakPoint &breakpoint = BreakPoint::getInstance();
+        BreakPoint &breakpoint = BreakPoint::GetInstance();
         breakpoint.Createbreaklocation(std::move(json));
     }
 }
 
+void DebuggerClient::PausedReply(const std::unique_ptr<PtJson> json)
+{
+    if (json == nullptr) {
+        LOGE("arkdb: json parse error");
+        return;
+    }
+
+    if (!json->IsObject()) {
+        LOGE("arkdb: json parse format error");
+        json->ReleaseRoot();
+        return;
+    }
+
+    std::unique_ptr<PtJson> params;
+    Result ret = json->GetObject("params", &params);
+    if (ret != Result::SUCCESS) {
+        LOGE("arkdb: find params error");
+        return;
+    }
+
+    std::unique_ptr<PtJson> callFrames;
+    ret = params->GetArray("callFrames", &callFrames);
+    if (ret != Result::SUCCESS) {
+        LOGE("arkdb: find callFrames error");
+        return;
+    }
+
+    std::map<int32_t, std::unique_ptr<CallFrame>> data;
+    for (int32_t i = 0; i < callFrames->GetSize(); i++) {
+        std::unique_ptr<CallFrame> callFrameInfo = CallFrame::Create(*(callFrames->Get(i)));
+        data.emplace(i + 1, std::move(callFrameInfo));
+    }
+
+    StackManager &stackManager = StackManager::GetInstance();
+    stackManager.ClearCallFrame();
+    stackManager.SetCallFrames(std::move(data));
+}
 
 } // OHOS::ArkCompiler::Toolchain

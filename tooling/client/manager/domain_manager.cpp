@@ -13,12 +13,11 @@
  * limitations under the License.
  */
 
-#include "log_wrapper.h"
-#include "pt_json.h"
-#include "manager/variable_manager.h"
-#include "domain/runtime_client.h"
 #include "domain_manager.h"
+
+#include "log_wrapper.h"
 #include "manager/breakpoint_manager.h"
+#include "pt_json.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;
@@ -64,14 +63,7 @@ void DomainManager::DispatcherReply(char* msg)
     } else if (domain == "Profiler") {
         profilerClient_.RecvProfilerResult(std::move(json));
     } else if (domain == "Runtime") {
-        RuntimeClient &runtimeClient = RuntimeClient::getInstance();
-        if (id == static_cast<int32_t>(runtimeClient.GetIdByMethod("getProperties"))) {
-            VariableManager &variableManager = VariableManager::getInstance();
-            variableManager.HandleMessage(std::move(json));
-            variableManager.ShowVariableInfos();
-        } else {
-            LOGI("Runtime replay message is %{public}s", json->Stringify().c_str());
-        }
+        runtimeClient_.RecvReply(std::move(json));
     } else if (domain == "Debugger") {
         debuggerClient_.RecvReply(std::move(json));
     }

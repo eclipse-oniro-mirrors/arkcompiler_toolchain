@@ -26,7 +26,7 @@
 using Result = panda::ecmascript::tooling::Result;
 using Profile = panda::ecmascript::tooling::Profile;
 namespace OHOS::ArkCompiler::Toolchain {
-ProfilerSingleton ProfilerSingleton::instance;
+ProfilerSingleton ProfilerSingleton::instance_;
 bool ProfilerClient::DispatcherCmd(int id, const std::string &cmd, std::string* reqStr)
 {
     std::map<std::string, std::function<std::string()>> dispatcherTable {
@@ -109,20 +109,20 @@ std::string ProfilerClient::SetSamplingIntervalCommand(int id)
     return request->Stringify();
 }
 
-ProfilerSingleton& ProfilerSingleton::getInstance()
+ProfilerSingleton& ProfilerSingleton::GetInstance()
 {
-    return instance;
+    return instance_;
 }
 
 void ProfilerClient::RecvProfilerResult(std::unique_ptr<PtJson> json)
 {
     if (json == nullptr) {
-        LOGE("toolchain_client: json parse error");
+        LOGE("arkdb: json parse error");
         return;
     }
 
     if (!json->IsObject()) {
-        LOGE("toolchain_client: json parse format error");
+        LOGE("arkdb: json parse format error");
         json->ReleaseRoot();
         return;
     }
@@ -130,14 +130,14 @@ void ProfilerClient::RecvProfilerResult(std::unique_ptr<PtJson> json)
     std::unique_ptr<PtJson> result;
     Result ret = json->GetObject("result", &result);
     if (ret != Result::SUCCESS) {
-        LOGE("toolchain_client: find result error");
+        LOGE("arkdb: find result error");
         return;
     }
 
     std::unique_ptr<PtJson> profile;
     ret = result->GetObject("profile", &profile);
     if (ret != Result::SUCCESS) {
-        LOGE("toolchain_client: the cmd is not cp-stop!");
+        LOGE("arkdb: the cmd is not cp-stop!");
         return;
     }
 
@@ -149,10 +149,10 @@ void ProfilerClient::RecvProfilerResult(std::unique_ptr<PtJson> json)
         return;
     }
 
-    ProfilerSingleton& pro = ProfilerSingleton::getInstance();
+    ProfilerSingleton& pro = ProfilerSingleton::GetInstance();
     std::string fileName = "CPU-" + std::string(date) + "T" + std::string(time) + ".cpuprofile";
     std::string cpufile = pro.GetAddress() + fileName;
-    std::cout << "toolchain_client: cpuprofile file name is " << cpufile << std::endl;
+    std::cout << "arkdb: cpuprofile file name is " << cpufile << std::endl;
     std::cout << ">>> ";
     fflush(stdout);
     WriteCpuProfileForFile(cpufile, profile->Stringify());
@@ -164,14 +164,14 @@ bool ProfilerClient::WriteCpuProfileForFile(const std::string &fileName, const s
     std::ofstream ofs;
     ofs.open(fileName.c_str(), std::ios::out);
     if (!ofs.is_open()) {
-        LOGE("toolchain_client: file open error!");
+        LOGE("arkdb: file open error!");
         return false;
     }
     int strSize = data.size();
     ofs.write(data.c_str(), strSize);
     ofs.close();
     ofs.clear();
-    ProfilerSingleton& pro = ProfilerSingleton::getInstance();
+    ProfilerSingleton& pro = ProfilerSingleton::GetInstance();
     pro.SetAddress("");
     return true;
 }
