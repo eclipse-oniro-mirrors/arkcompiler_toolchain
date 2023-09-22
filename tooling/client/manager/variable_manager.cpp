@@ -39,7 +39,7 @@ void TreeNode::Print(int depth) const
 {
     int actualIndent = 0;
     if (depth > 1) {
-        actualIndent = (depth - 1) * 4;
+        actualIndent = (depth - 1) * 4; // 4: four spaces
     }
     std::string indent(actualIndent, ' ');
 
@@ -155,7 +155,8 @@ TreeNode* Tree::GetRoot() const
     return root_.get();
 }
 
-TreeNode* Tree::FindNodeWithObjectIdRecursive(TreeNode* node, int32_t objectId) const {
+TreeNode* Tree::FindNodeWithObjectIdRecursive(TreeNode* node, int32_t objectId) const
+{
     if (!node) {
         return nullptr;
     }
@@ -220,7 +221,8 @@ int32_t Tree::FindObjectByIndex(int32_t index) const
     return FindObjectByIndexRecursive(root_.get(), index);
 }
 
-int32_t Tree::FindObjectByIndexRecursive(const TreeNode* node, int32_t index) const {
+int32_t Tree::FindObjectByIndexRecursive(const TreeNode* node, int32_t index) const
+{
     if (!node) {
         return 0;
     }
@@ -310,7 +312,8 @@ int32_t VariableManager::FindObjectIdWithIndex(int index)
     return variableInfo_.FindObjectByIndex(index);
 }
 
-void VariableManager::Printinfo() const {
+void VariableManager::Printinfo() const
+{
     variableInfo_.PrintRootAndImmediateChildren();
 }
 }

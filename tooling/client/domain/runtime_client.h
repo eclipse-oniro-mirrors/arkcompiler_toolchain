@@ -51,7 +51,8 @@ public:
         isInitializeTree_ = isInitializeTree;
     }
 
-    bool GetIsInitializeTree() const {
+    bool GetIsInitializeTree() const
+    {
         return isInitializeTree_;
     }
 

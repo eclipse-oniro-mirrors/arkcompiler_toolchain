@@ -152,7 +152,7 @@ void ProfilerClient::RecvProfilerResult(std::unique_ptr<PtJson> json)
     ProfilerSingleton& pro = ProfilerSingleton::GetInstance();
     std::string fileName = "CPU-" + std::string(date) + "T" + std::string(time) + ".cpuprofile";
     std::string cpufile = pro.GetAddress() + fileName;
-    std::cout << "arkdb: cpuprofile file name is " << cpufile << std::endl;
+    std::cout << "cpuprofile file name is " << cpufile << std::endl;
     std::cout << ">>> ";
     fflush(stdout);
     WriteCpuProfileForFile(cpufile, profile->Stringify());
