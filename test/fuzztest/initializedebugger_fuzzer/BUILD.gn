@@ -19,7 +19,7 @@ import("//build/test.gni")
 
 ####################################fuzztest##################################
 ohos_fuzztest("InitializeDebuggerFuzzTest") {
-  module_out_path = fuzz_test_output_path
+  module_out_path = toolchain_output_path
 
   fuzz_config_file =
       "//arkcompiler/toolchain/test/fuzztest/initializedebugger_fuzzer"
