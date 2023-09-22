@@ -18,7 +18,7 @@ import("//build/test.gni")
 
 ####################################fuzztest##################################
 ohos_fuzztest("ConnectServerFuzzTest") {
-  module_out_path = fuzz_test_output_path
+  module_out_path = toolchain_output_path
 
   fuzz_config_file = "$toolchain_root/test/fuzztest/connectserver_fuzzer"
 
