@@ -763,6 +763,9 @@ DispatchResponse DebuggerImpl::GetScriptSource(const GetScriptSourceParams &para
 
 DispatchResponse DebuggerImpl::Pause()
 {
+    if (debuggerState_ == DebuggerState::PAUSED) {
+        return DispatchResponse::Fail("Can only perform operation while running");
+    }
     pauseOnNextByteCode_ = true;
     return DispatchResponse::Ok();
 }
