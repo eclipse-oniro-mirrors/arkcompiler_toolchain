@@ -34,7 +34,7 @@ void WsServer::RunServer()
             LOGE("WsServer has been terminated unexpectedly");
             return;
         }
-        webSocket_ = std::make_unique<WebSocket>();
+        webSocket_ = std::make_unique<WebSocketServer>();
 #if !defined(OHOS_PLATFORM)
         LOGI("WsSever Runsever: Init tcp websocket %{public}d", debugInfo_.port);
         if (!webSocket_->InitTcpWebSocket(debugInfo_.port)) {
@@ -66,13 +66,13 @@ void WsServer::RunServer()
     }
     while (!terminateExecution_) {
 #if !defined(OHOS_PLATFORM)
-        if (!webSocket_->ConnectTcpWebSocket()) {
+        if (!webSocket_->AcceptNewConnection()) {
             return;
         }
 #else
         int runSeverInOldProcess = -2;
         if (debugInfo_.socketfd == runSeverInOldProcess) {
-            if (!webSocket_->ConnectUnixWebSocket()) {
+            if (!webSocket_->AcceptNewConnection()) {
                 return;
             }
         } else {

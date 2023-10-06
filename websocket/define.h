@@ -16,12 +16,9 @@
 #ifndef ARKCOMPILER_TOOLCHAIN_WEBSOCKET_DEFINE_H
 #define ARKCOMPILER_TOOLCHAIN_WEBSOCKET_DEFINE_H
 
-#include <fstream>
 #include <openssl/sha.h>
 #include <openssl/evp.h>
 #include <securec.h>
-#include <sstream>
-#include <string>
 #if defined(WINDOWS_PLATFORM)
 #include <winsock2.h>
 #include <windows.h>
@@ -35,27 +32,5 @@
 #include <sys/un.h>
 #endif
 #include <unistd.h>
-#include <vector>
-
-namespace OHOS::ArkCompiler::Toolchain {
-std::vector<std::string> ProtocolSplit(const std::string& str, const std::string& input)
-{
-    std::vector<std::string> result;
-    size_t prev = 0;
-    size_t len = input.length();
-    size_t cur = str.find(input);
-    while (cur != std::string::npos) {
-        std::string tmp = str.substr(prev, cur - prev);
-        result.push_back(tmp);
-        prev = cur + len;
-        cur = str.find(input, prev);
-    }
-    if (prev < str.size()) {
-        std::string tmp = str.substr(prev);
-        result.push_back(tmp);
-    }
-    return result;
-}
-} // namespace OHOS::ArkCompiler::Toolchain
 
 #endif // ARKCOMPILER_TOOLCHAIN_WEBSOCKET_DEFINE_H

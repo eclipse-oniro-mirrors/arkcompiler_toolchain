@@ -26,7 +26,6 @@
 #include "tooling/client/domain/profiler_client.h"
 #include "tooling/client/manager/domain_manager.h"
 #include "tooling/client/utils/utils.h"
-#include "tooling/client/websocket/websocket_client.h"
 #include "tooling/client/session/session.h"
 
 namespace OHOS::ArkCompiler::Toolchain {

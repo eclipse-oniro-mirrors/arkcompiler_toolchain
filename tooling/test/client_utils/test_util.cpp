@@ -109,7 +109,7 @@ void TestUtil::ForkSocketClient([[maybe_unused]] int port, const std::string &na
         int ret = SessionManager::getInstance().CreateTestSession(sockInfo);
         LOG_ECMA_IF(ret, FATAL) << "CreateTestSession fail";
 
-        WebsocketClient &client = SessionManager::getInstance().GetCurrentSession()->GetWebsocketClient();
+        WebSocketClient &client = SessionManager::getInstance().GetCurrentSession()->GetWebSocketClient();
         auto &testAction = TestUtil::GetTest(name)->testAction;
         for (const auto &action: testAction) {
             LOG_DEBUGGER(INFO) << "message: " << action.message;
@@ -140,7 +140,7 @@ void TestUtil::ForkSocketClient([[maybe_unused]] int port, const std::string &na
     LOG_DEBUGGER(INFO) << "ForkSocketClient end";
 }
 
-void TestUtil::HandleAcceptanceMessages(ActionInfo action, WebsocketClient &client, std::string &recv, bool &success)
+void TestUtil::HandleAcceptanceMessages(ActionInfo action, WebSocketClient &client, std::string &recv, bool &success)
 {
     if (recv.empty()) {
         LOG_DEBUGGER(ERROR) << "Notify fail";

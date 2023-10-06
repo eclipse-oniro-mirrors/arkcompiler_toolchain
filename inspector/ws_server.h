@@ -18,12 +18,13 @@
 
 #include <functional>
 #include <iostream>
+#include <memory>
 #include <mutex>
 #ifdef WINDOWS_PLATFORM
 #include <pthread.h>
 #endif
 
-#include "websocket/websocket.h"
+#include "websocket/server/websocket_server.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 struct DebugInfo {
@@ -52,7 +53,7 @@ private:
     std::mutex wsMutex_;
     DebugInfo debugInfo_ {};
     std::function<void(std::string&&)> wsOnMessage_ {};
-    std::unique_ptr<WebSocket> webSocket_ { nullptr };
+    std::unique_ptr<WebSocketServer> webSocket_ { nullptr };
 };
 } // namespace OHOS::ArkCompiler::Toolchain
 
