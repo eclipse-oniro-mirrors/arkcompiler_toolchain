@@ -331,13 +331,35 @@ private:
 
 class GetHeapUsageReturns : public PtBaseReturns {
 public:
+    GetHeapUsageReturns() = default;
     explicit GetHeapUsageReturns(double usedSize, double totalSize)
         : usedSize_(usedSize), totalSize_(totalSize) {}
     ~GetHeapUsageReturns() override = default;
     std::unique_ptr<PtJson> ToJson() const override;
 
+    static std::unique_ptr<GetHeapUsageReturns> Create(const PtJson &params);
+
+    void SetUsedSize(const double &usedSize)
+    {
+        usedSize_ = usedSize;
+    }
+
+    double GetUsedSize() const
+    {
+        return usedSize_;
+    }
+
+    void SetTotalSize(const double &totalSize)
+    {
+        totalSize_ = totalSize;
+    }
+
+    double GetTotalSize() const
+    {
+        return totalSize_;
+    }
+
 private:
-    GetHeapUsageReturns() = default;
     NO_COPY_SEMANTIC(GetHeapUsageReturns);
     NO_MOVE_SEMANTIC(GetHeapUsageReturns);
 

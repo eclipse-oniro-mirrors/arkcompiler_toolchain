@@ -1,0 +1,72 @@
+/*
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef ECMASCRIPT_TOOLING_CLIENT_DOMAIN_DEBUGGER_CLIENT_H
+#define ECMASCRIPT_TOOLING_CLIENT_DOMAIN_DEBUGGER_CLIENT_H
+
+#include <iostream>
+#include <vector>
+
+#include "pt_json.h"
+
+using PtJson = panda::ecmascript::tooling::PtJson;
+using Result = panda::ecmascript::tooling::Result;
+namespace OHOS::ArkCompiler::Toolchain {
+struct BreakPointInfo {
+    int lineNumber;
+    int columnNumber;
+    std::string url;
+};
+class DebuggerClient final {
+public:
+    DebuggerClient() = default;
+    ~DebuggerClient() = default;
+
+    bool DispatcherCmd(int id, const std::string &cmd, std::string* reqStr);
+    std::string BreakCommand(int id);
+    std::string BacktrackCommand(int id);
+    std::string ContinueCommand(int id);
+    std::string DeleteCommand(int id);
+    std::string DisableCommand(int id);
+    std::string DisplayCommand(int id);
+    std::string EnableCommand(int id);
+    std::string FinishCommand(int id);
+    std::string FrameCommand(int id);
+    std::string IgnoreCommand(int id);
+    std::string InfobreakpointsCommand(int id);
+    std::string InfosourceCommand(int id);
+    std::string JumpCommand(int id);
+    std::string NextCommand(int id);
+    std::string ListCommand(int id);
+    std::string PtypeCommand(int id);
+    std::string RunCommand(int id);
+    std::string SetvarCommand(int id);
+    std::string StepCommand(int id);
+    std::string UndisplayCommand(int id);
+    std::string WatchCommand(int id);
+    std::string ResumeCommand(int id);
+    std::string StepIntoCommand(int id);
+    std::string StepOutCommand(int id);
+    std::string StepOverCommand(int id);
+
+    void AddBreakPointInfo(const std::string& url, const int& lineNumber, const int& columnNumber = 0);
+    void RecvReply(std::unique_ptr<PtJson> json);
+    void PausedReply(const std::unique_ptr<PtJson> json);
+
+private:
+    std::vector<BreakPointInfo> breakPointInfoList_ {};
+};
+} // OHOS::ArkCompiler::Toolchain
+#endif

@@ -1,0 +1,110 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//arkcompiler/toolchain/toolchain.gni")
+
+config("hiviewdfx_config") {
+  defines = []
+  if (enable_dump_in_faultlog) {
+    defines += [ "ENABLE_DUMP_IN_FAULTLOG" ]
+  }
+  if (enable_bytrace) {
+    defines += [ "ENABLE_BYTRACE" ]
+    cflags_cc = [ "-Wno-gnu-zero-variadic-macro-arguments" ]
+  }
+  if (enable_hitrace) {
+    defines += [ "ENABLE_HITRACE" ]
+  }
+  if (enable_hilog) {
+    defines += [ "ENABLE_HILOG" ]
+  }
+
+  include_dirs = [ "$hilog_root/include" ]
+
+  if (is_linux) {
+    defines += [
+      "PANDA_TARGET_UNIX",
+      "PANDA_TARGET_LINUX",
+      "PANDA_USE_FUTEX",
+    ]
+  } else if (is_mingw) {
+    cflags_cc += [
+      "-std=c++17",
+      "-Wno-ignored-attributes",
+    ]
+    defines += [
+      "PANDA_TARGET_WINDOWS",
+      "_CRTBLD",
+      "__LIBMSVCRT__",
+    ]
+  } else if (is_mac) {
+    defines += [
+      "PANDA_TARGET_UNIX",
+      "PANDA_TARGET_MACOS",
+    ]
+  } else if (target_os == "android") {
+    defines += [
+      "PANDA_TARGET_ANDROID",
+      "PANDA_TARGET_UNIX",
+      "PANDA_USE_FUTEX",
+    ]
+    if (!ark_standalone_build) {
+      defines += [ "ENABLE_ANLOG" ]
+    }
+  } else if (target_os == "ios") {
+    defines += [
+      "PANDA_TARGET_UNIX",
+      "PANDA_TARGET_IOS",
+    ]
+  } else {
+    defines += [
+      "PANDA_TARGET_UNIX",
+      "PANDA_USE_FUTEX",
+    ]
+    if (!is_standard_system && (current_cpu != "arm" || is_wearable_product)) {
+      defines += [ "PANDA_TARGET_MOBILE" ]
+    }
+  }
+}
+
+ohos_executable("arkdb") {
+  sources = [
+    "cli_command.cpp",
+    "main.cpp",
+  ]
+
+  include_dirs = [
+    "./",
+    "../",
+    "../../base",
+    "../../../inspector",
+    "../../../tooling",
+    "../../../websocket",
+    "//third_party/cJSON",
+    "//third_party/libuv/include",
+  ]
+
+  deps = [ "../:libark_client_set" ]
+
+  external_deps = [
+    "ets_runtime:libark_jsruntime",
+    "hitrace:hitrace_meter",
+  ]
+
+  configs = [ ":hiviewdfx_config" ]
+
+  install_enable = false
+
+  part_name = "toolchain"
+  subsystem_name = "arkcompiler"
+}
