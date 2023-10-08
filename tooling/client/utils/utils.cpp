@@ -14,7 +14,7 @@
  */
 
 #include "utils/utils.h"
-#include "log_wrapper.h"
+#include "common/log_wrapper.h"
 #include <ctime>
 
 namespace OHOS::ArkCompiler::Toolchain {

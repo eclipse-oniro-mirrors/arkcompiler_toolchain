@@ -17,7 +17,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <unistd.h>
-#include "log_wrapper.h"
+#include "common/log_wrapper.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 std::shared_mutex g_sendMutex;

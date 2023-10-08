@@ -14,7 +14,7 @@
  */
 
 #include "domain/heapprofiler_client.h"
-#include "log_wrapper.h"
+#include "common/log_wrapper.h"
 #include "utils/utils.h"
 
 #include <map>

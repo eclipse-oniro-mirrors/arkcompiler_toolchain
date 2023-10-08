@@ -23,7 +23,7 @@
 
 #include "domain/heapprofiler_client.h"
 #include "domain/profiler_client.h"
-#include "log_wrapper.h"
+#include "common/log_wrapper.h"
 #include "manager/domain_manager.h"
 #include "websocket/websocket_client.h"
 

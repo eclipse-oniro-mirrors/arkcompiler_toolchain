@@ -20,7 +20,7 @@
 #include <thread>
 #include <unordered_map>
 
-#include "log_wrapper.h"
+#include "common/log_wrapper.h"
 #include "library_loader.h"
 
 #if defined(IOS_PLATFORM)

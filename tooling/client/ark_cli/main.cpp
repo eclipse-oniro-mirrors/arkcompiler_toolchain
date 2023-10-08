@@ -63,7 +63,7 @@ std::vector<std::string> SplitString(const std::string &str, const std::string &
     return value;
 }
 
-void ReleaseHandle(uv_async_t *handle)
+void ReleaseHandle([[maybe_unused]] uv_async_t *releaseHandle)
 {
     uv_close(reinterpret_cast<uv_handle_t*>(g_inputSignal), [](uv_handle_t* handle) {
         if (handle != nullptr) {
@@ -108,7 +108,7 @@ void InputOnMessage(uv_async_t *handle)
     }
 }
 
-void GetInputCommand(void *arg)
+void GetInputCommand([[maybe_unused]] void *arg)
 {
     std::cout << ">>> ";
     std::string inputStr;
@@ -152,7 +152,7 @@ void SocketOnMessage(uv_async_t *handle)
     }
 }
 
-void GetSocketMessage(void *arg)
+void GetSocketMessage([[maybe_unused]] void *arg)
 {
     while (g_cliSocket.IsConnected()) {
         std::string decMessage = g_cliSocket.Decode();

@@ -15,7 +15,7 @@
 
 #include "domain/runtime_client.h"
 
-#include "log_wrapper.h"
+#include "common/log_wrapper.h"
 #include "manager/variable_manager.h"
 #include "pt_json.h"
 

@@ -16,7 +16,7 @@
 #include "websocket.h"
 
 #include "define.h"
-#include "log_wrapper.h"
+#include "common/log_wrapper.h"
 #include "securec.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
@@ -357,7 +357,7 @@ bool WebSocket::InitTcpWebSocket(int port, uint32_t timeoutLimit)
         return false;
     }
 
-    sockaddr_in addr_sin = {0};
+    sockaddr_in addr_sin = {};
     addr_sin.sin_family = AF_INET;
     addr_sin.sin_port = htons(port);
     addr_sin.sin_addr.s_addr = INADDR_ANY;
