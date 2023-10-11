@@ -14,7 +14,7 @@
  */
 
 #include "manager/stack_manager.h"
-#include "log_wrapper.h"
+#include "common/log_wrapper.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 StackManager StackManager::instance_;

@@ -13,7 +13,66 @@
 
 import("//arkcompiler/toolchain/toolchain.gni")
 
+config("hiviewdfx_config") {
+  defines = []
+  if (enable_dump_in_faultlog) {
+    defines += [ "ENABLE_DUMP_IN_FAULTLOG" ]
+  }
+  if (enable_bytrace) {
+    defines += [ "ENABLE_BYTRACE" ]
+    cflags_cc = [ "-Wno-gnu-zero-variadic-macro-arguments" ]
+  }
+  if (enable_hitrace) {
+    defines += [ "ENABLE_HITRACE" ]
+  }
+  if (enable_hilog) {
+    defines += [ "ENABLE_HILOG" ]
+  }
+
+  include_dirs = [ "$hilog_root/include" ]
+}
+
+config("ark_platform_config") {
+  configs = [ ":hiviewdfx_config" ]
+  defines = []
+  if (is_ohos) {
+    defines += [
+      "OHOS_PLATFORM",
+      "UNIX_PLATFORM",
+    ]
+  } else if (is_mingw) {
+    defines += [ "WINDOWS_PLATFORM" ]
+  } else if (target_os == "android") {
+    if (!ark_standalone_build) {
+      defines += [
+        "ANDROID_PLATFORM",
+        "UNIX_PLATFORM",
+      ]
+    } else {
+      defines += [ "UNIX_PLATFORM" ]
+    }
+  } else if (target_os == "ios") {
+    defines += [
+      "UNIX_PLATFORM",
+      "IOS_PLATFORM",
+    ]
+  } else if (is_mac) {
+    defines += [
+      "MAC_PLATFORM",
+      "UNIX_PLATFORM",
+    ]
+  } else {
+    defines += [ "UNIX_PLATFORM" ]
+  }
+}
+
 config("ark_toolchain_common_config") {
+  configs = [
+    ":ark_platform_config",
+    ":ark_toolchain_public_config",
+    ":hiviewdfx_config",
+  ]
+
   defines = [ "PANDA_ENABLE_LTO" ]
   cflags_cc = [
     "-Wall",
@@ -106,7 +165,7 @@ config("ark_toolchain_public_config") {
     # Dependent on runtime_core include
     "$ark_root",
     "$js_root",
-    "$toolchain_root",
+    ".",
   ]
 }
 
@@ -118,10 +177,7 @@ config("toolchain_test_config") {
     "./websocket/test/*",
   ]
 
-  configs = [
-    "$toolchain_root:ark_toolchain_public_config",
-    "$toolchain_root:ark_toolchain_common_config",
-  ]
+  configs = [ ":ark_toolchain_common_config" ]
 
   ldflags = [ "-Wl,-rpath=\$ORIGIN/" ]
 }
@@ -130,11 +186,11 @@ group("ark_toolchain_packages") {
   deps = []
   if (host_os != "mac") {
     deps += [
-      "$toolchain_root/inspector:ark_debugger",
-      "$toolchain_root/inspector:connectserver_debugger",
-      "$toolchain_root/tooling:libark_ecma_debugger",
-      "$toolchain_root/tooling/client:libark_client",
-      "$toolchain_root/tooling/client/ark_cli:arkdb",
+      "./inspector:ark_debugger",
+      "./inspector:connectserver_debugger",
+      "./tooling:libark_ecma_debugger",
+      "./tooling/client:libark_client",
+      "./tooling/client/ark_cli:arkdb",
     ]
   }
 }

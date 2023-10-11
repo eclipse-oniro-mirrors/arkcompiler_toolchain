@@ -23,14 +23,11 @@ host_unittest_action("WebSocketTest") {
 
   sources = [
     # test file
-    "../../inspector/log_wrapper.cpp",
+    "../../common/log_wrapper.cpp",
     "websocket_test.cpp",
   ]
 
-  configs = [
-    "//arkcompiler/toolchain:toolchain_test_config",
-    "$toolchain_root/websocket:websocket_platform_config",
-  ]
+  configs = [ "$toolchain_root:toolchain_test_config" ]
 
   deps = [
     "$toolchain_root/websocket:websocket",

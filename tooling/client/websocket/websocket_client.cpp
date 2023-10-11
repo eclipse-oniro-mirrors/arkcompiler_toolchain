@@ -19,7 +19,7 @@
 #include <unistd.h>
 #include <securec.h>
 
-#include "log_wrapper.h"
+#include "common/log_wrapper.h"
 #include "websocket_client.h"
 
 

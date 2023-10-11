@@ -13,25 +13,6 @@
 
 import("//arkcompiler/toolchain/toolchain.gni")
 
-config("hiviewdfx_config") {
-  defines = []
-  if (enable_dump_in_faultlog) {
-    defines += [ "ENABLE_DUMP_IN_FAULTLOG" ]
-  }
-  if (enable_bytrace) {
-    defines += [ "ENABLE_BYTRACE" ]
-    cflags_cc = [ "-Wno-gnu-zero-variadic-macro-arguments" ]
-  }
-  if (enable_hitrace) {
-    defines += [ "ENABLE_HITRACE" ]
-  }
-  if (enable_hilog) {
-    defines += [ "ENABLE_HILOG" ]
-  }
-
-  include_dirs = [ "$hilog_root/include" ]
-}
-
 ohos_source_set("libark_client_set") {
   stack_protector_ret = false
   defines = []
@@ -64,17 +45,17 @@ ohos_source_set("libark_client_set") {
   ]
 
   deps += [
+    "$ark_third_party_root/libuv:uv",
     "$ark_third_party_root/openssl:libcrypto_shared",
-    "../:libark_ecma_debugger_set",
-    "//third_party/libuv:uv",
+    "..:libark_ecma_debugger_set",
     sdk_libc_secshared_dep,
   ]
 
   external_deps += [ "ets_runtime:libark_jsruntime" ]
 
-  configs += [ ":hiviewdfx_config" ]
+  configs += [ "../..:ark_toolchain_common_config" ]
 
-  cflags_cc = [ "-Wno-error=vla-extension" ]
+  cflags_cc = [ "-Wno-vla-extension" ]
 
   subsystem_name = "arkcompiler"
   part_name = "toolchain"

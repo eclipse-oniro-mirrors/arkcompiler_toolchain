@@ -15,7 +15,7 @@
 
 #include "domain/profiler_client.h"
 #include "pt_types.h"
-#include "log_wrapper.h"
+#include "common/log_wrapper.h"
 #include "utils/utils.h"
 
 #include <map>

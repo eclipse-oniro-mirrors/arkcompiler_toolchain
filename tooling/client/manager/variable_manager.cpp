@@ -15,7 +15,9 @@
 
 #include "manager/variable_manager.h"
 
-#include "log_wrapper.h"
+#include <iomanip>
+
+#include "common/log_wrapper.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 namespace OHOS::ArkCompiler::Toolchain {

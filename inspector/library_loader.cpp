@@ -15,7 +15,7 @@
 
 #include "library_loader.h"
 
-#include "log_wrapper.h"
+#include "common/log_wrapper.h"
 
 #if defined(UNIX_PLATFORM)
 #include <dlfcn.h>

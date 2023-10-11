@@ -15,7 +15,7 @@
 
 #include "manager/breakpoint_manager.h"
 #include "ark_cli/cli_command.h"
-#include "log_wrapper.h"
+#include "common/log_wrapper.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;

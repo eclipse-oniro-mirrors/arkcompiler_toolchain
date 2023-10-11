@@ -17,7 +17,7 @@
 
 #include <map>
 
-#include "log_wrapper.h"
+#include "common/log_wrapper.h"
 #include "manager/breakpoint_manager.h"
 #include "manager/stack_manager.h"
 #include "pt_json.h"

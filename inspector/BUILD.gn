@@ -13,59 +13,6 @@
 
 import("//arkcompiler/toolchain/toolchain.gni")
 
-config("hiviewdfx_config") {
-  defines = []
-  if (enable_dump_in_faultlog) {
-    defines += [ "ENABLE_DUMP_IN_FAULTLOG" ]
-  }
-  if (enable_bytrace) {
-    defines += [ "ENABLE_BYTRACE" ]
-    cflags_cc = [ "-Wno-gnu-zero-variadic-macro-arguments" ]
-  }
-  if (enable_hitrace) {
-    defines += [ "ENABLE_HITRACE" ]
-  }
-  if (enable_hilog) {
-    defines += [ "ENABLE_HILOG" ]
-  }
-
-  include_dirs = [ "$hilog_root/include" ]
-}
-
-config("ark_platform_config") {
-  configs = [ ":hiviewdfx_config" ]
-  defines = []
-  if (is_ohos) {
-    defines += [
-      "OHOS_PLATFORM",
-      "UNIX_PLATFORM",
-    ]
-  } else if (is_mingw) {
-    defines += [ "WINDOWS_PLATFORM" ]
-  } else if (target_os == "android") {
-    if (!ark_standalone_build) {
-      defines += [
-        "ANDROID_PLATFORM",
-        "UNIX_PLATFORM",
-      ]
-    } else {
-      defines += [ "UNIX_PLATFORM" ]
-    }
-  } else if (target_os == "ios") {
-    defines += [
-      "UNIX_PLATFORM",
-      "IOS_PLATFORM",
-    ]
-  } else if (is_mac) {
-    defines += [
-      "MAC_PLATFORM",
-      "UNIX_PLATFORM",
-    ]
-  } else {
-    defines += [ "UNIX_PLATFORM" ]
-  }
-}
-
 ohos_source_set("ark_debugger_static") {
   stack_protector_ret = false
   deps = [ sdk_libc_secshared_dep ]
@@ -87,9 +34,9 @@ ohos_source_set("ark_debugger_static") {
 
   deps += [ "../websocket:websocket" ]
   sources = [
+    "../common/log_wrapper.cpp",
     "inspector.cpp",
     "library_loader.cpp",
-    "log_wrapper.cpp",
     "ws_server.cpp",
   ]
 
@@ -97,7 +44,7 @@ ohos_source_set("ark_debugger_static") {
   external_deps = hiviewdfx_ext_deps
   deps += hiviewdfx_deps
 
-  configs += [ ":ark_platform_config" ]
+  configs += [ "..:ark_toolchain_common_config" ]
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
 }
@@ -136,20 +83,20 @@ ohos_source_set("connectserver_debugger_static") {
 
   deps += [ "../websocket:websocket" ]
   sources = [
+    "../common/log_wrapper.cpp",
     "connect_inspector.cpp",
     "connect_server.cpp",
-    "log_wrapper.cpp",
   ]
 
   if (target_os == "ios") {
-    sources -= [ "log_wrapper.cpp" ]
+    sources -= [ "../common/log_wrapper.cpp" ]
   }
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
   deps += hiviewdfx_deps
 
-  configs += [ ":ark_platform_config" ]
+  configs += [ "..:ark_toolchain_common_config" ]
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
 }

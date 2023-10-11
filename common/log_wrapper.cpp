@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "log_wrapper.h"
+#include "common/log_wrapper.h"
 
 #include <string>
 #ifdef ANDROID_PLATFORM

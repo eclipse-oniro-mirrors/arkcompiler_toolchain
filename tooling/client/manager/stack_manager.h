@@ -19,7 +19,7 @@
 #include <map>
 #include <variant>
 
-#include "log_wrapper.h"
+#include "common/log_wrapper.h"
 #include "pt_json.h"
 #include "pt_types.h"
 

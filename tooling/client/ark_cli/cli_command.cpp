@@ -23,7 +23,7 @@
 
 #include "domain/debugger_client.h"
 #include "domain/runtime_client.h"
-#include "log_wrapper.h"
+#include "common/log_wrapper.h"
 #include "manager/breakpoint_manager.h"
 #include "manager/domain_manager.h"
 #include "manager/stack_manager.h"

@@ -15,7 +15,7 @@
 
 #include "connect_inspector.h"
 #include <mutex>
-#include "log_wrapper.h"
+#include "common/log_wrapper.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 std::mutex g_connectMutex;
