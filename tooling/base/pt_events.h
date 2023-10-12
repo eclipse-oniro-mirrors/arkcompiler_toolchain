@@ -150,6 +150,12 @@ public:
             case BREAK_ON_START: {
                 return "Break on start";
             }
+            case DEBUGGERSTMT: {
+                return "Debugger statement";
+            }
+            case STEP: {
+                return "Step";
+            }
             default: {
                 LOG_DEBUGGER(ERROR) << "Unknown paused reason: " << reason;
             }

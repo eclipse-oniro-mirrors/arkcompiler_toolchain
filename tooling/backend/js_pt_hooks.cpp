@@ -22,7 +22,7 @@ void JSPtHooks::DebuggerStmt([[maybe_unused]] const JSPtLocation &location)
 {
     LOG_DEBUGGER(VERBOSE) << "JSPHooks: Debugger Statement";
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
-    debugger_->NotifyPaused({}, OTHER);
+    debugger_->NotifyPaused({}, DEBUGGERSTMT);
 }
 
 void JSPtHooks::Breakpoint(const JSPtLocation &location)
