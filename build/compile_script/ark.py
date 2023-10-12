@@ -304,7 +304,7 @@ class ArkPy:
         # Command template
         help_msg += "\033[32mCommand template:\033[0m\n{}\n\n".format(
             "  python3 ark.py \033[92m[os_cpu].[mode] [gn_target] [option]\033[0m\n"
-            "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none, file or dir] [option]\033[0m\n"
+            "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --aot] [none, file or dir] [option]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [unittest] [option]\033[0m")
         # Command examples
         help_msg += "\033[32mCommand examples:\033[0m\n{}\n\n".format(
@@ -313,6 +313,7 @@ class ArkPy:
             "  python3 ark.py \033[92mx64.release ark_js_vm es2panda\033[0m\n"
             "  python3 ark.py \033[92mx64.release ark_js_vm es2panda --clean\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262\033[0m\n"
+            "  python3 ark.py \033[92mx64.release test262 --aot\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262 built-ins/Array\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262 built-ins/Array/name.js\033[0m\n"
             "  python3 ark.py \033[92mx64.release unittest\033[0m")
@@ -369,7 +370,7 @@ class ArkPy:
             print("=== ninja success! ===\n")
         return
 
-    def build_for_test262(self, out_path, gn_args: list, arg_list: list, log_file_name: str):
+    def build_for_test262(self, out_path, gn_args: list, arg_list: list, log_file_name: str, aotMode: bool):
         args_to_test262_cmd = ""
         if len(arg_list) == 0:
             args_to_test262_cmd = "--es2021 all"
@@ -384,12 +385,25 @@ class ArkPy:
         self.build_for_gn_target(
             out_path, gn_args, self.ARG_DICT["target"]["test262"]["gn_targets_depend_on"], log_file_name)
 
-        test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout 180000" \
+        if aotMode:
+            print("running test262 in AotMode\n")
+            test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout 180000" \
+                          " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu:../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                          " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
+                          " --ark-aot-tool=../../{1}/arkcompiler/ets_runtime/ark_aot_compiler" \
+                          " --ark-frontend-binary=../../{1}/arkcompiler/ets_frontend/es2abc" \
+                          " --merge-abc-binary=../../{1}/arkcompiler/ets_frontend/merge_abc" \
+                          " --ark-aot" \
+                          " --ark-frontend=es2panda".format(args_to_test262_cmd, out_path)
+        else:
+            print("running test262 in AsmMode\n")
+            test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout 180000" \
                       " --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
                       " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
                       " --ark-frontend-binary=../../{1}/arkcompiler/ets_frontend/es2abc" \
                       " --merge-abc-binary=../../{1}/arkcompiler/ets_frontend/merge_abc" \
                       " --ark-frontend=es2panda".format(args_to_test262_cmd, out_path)
+
         test262_log_path = os.path.join(out_path, log_file_name)
         str_to_test262_log = "================================\ntest262_time: {0}\ntest262_target: {1}\n\n".format(
             str_of_time_now(), args_to_test262_cmd)
@@ -415,7 +429,10 @@ class ArkPy:
         if len(arg_list) == 0:
             self.build_for_gn_target(out_path, gn_args, ["default"], self.GN_TARGET_LOG_FILE_NAME)
         elif self.is_dict_flags_match_arg(self.ARG_DICT["target"]["test262"], arg_list[0]):
-            self.build_for_test262(out_path, gn_args, arg_list[1:], self.TEST262_LOG_FILE_NAME)
+            if len(arg_list) >= 2 and arg_list[1] == "--aot":
+                self.build_for_test262(out_path, gn_args, arg_list[2:], self.TEST262_LOG_FILE_NAME, True)
+            else:
+                self.build_for_test262(out_path, gn_args, arg_list[1:], self.TEST262_LOG_FILE_NAME, False)
         elif self.is_dict_flags_match_arg(self.ARG_DICT["target"]["unittest"], arg_list[0]):
             if len(arg_list) > 1:
                 print("\033[92m\"unittest\" not support additional arguments.\033[0m\n".format())
