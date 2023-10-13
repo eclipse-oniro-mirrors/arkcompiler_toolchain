@@ -296,6 +296,7 @@ void DebuggerImpl::NotifyHandleProtocolCommand()
 void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
     static std::unordered_map<std::string, AgentHandler> dispatcherTable {
+        { "continueToLocation", &DebuggerImpl::DispatcherImpl::ContinueToLocation },
         { "enable", &DebuggerImpl::DispatcherImpl::Enable },
         { "disable", &DebuggerImpl::DispatcherImpl::Disable },
         { "evaluateOnCallFrame", &DebuggerImpl::DispatcherImpl::EvaluateOnCallFrame },
@@ -327,6 +328,18 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
     } else {
         SendResponse(request, DispatchResponse::Fail("Unknown method: " + method));
     }
+}
+
+void DebuggerImpl::DispatcherImpl::ContinueToLocation(const DispatchRequest &request)
+{
+    std::unique_ptr<ContinueToLocationParams> params = ContinueToLocationParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+    
+    DispatchResponse response = debugger_->ContinueToLocation(*params);
+    SendResponse(request, response);
 }
 
 void DebuggerImpl::DispatcherImpl::Enable(const DispatchRequest &request)
@@ -659,6 +672,12 @@ void DebuggerImpl::Frontend::RunIfWaitingForDebugger(const EcmaVM *vm)
     }
 
     channel_->RunIfWaitingForDebugger();
+}
+
+DispatchResponse DebuggerImpl::ContinueToLocation(const ContinueToLocationParams &params)
+{
+    location_ = *params.GetLocations();
+    return DispatchResponse::Ok();
 }
 
 DispatchResponse DebuggerImpl::Enable([[maybe_unused]] const EnableParams &params, UniqueDebuggerId *id)

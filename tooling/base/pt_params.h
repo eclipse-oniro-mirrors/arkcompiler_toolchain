@@ -33,6 +33,30 @@ private:
     NO_MOVE_SEMANTIC(PtBaseParams);
 };
 
+class ContinueToLocationParams : public PtBaseParams {
+public:
+    ContinueToLocationParams() = default;
+    ~ContinueToLocationParams() override = default;
+
+    static std::unique_ptr<ContinueToLocationParams> Create(const PtJson &params);
+    Location *GetLocations() const
+    {
+        return loca_.get();
+    }
+    
+    const std::string &GetTargetCallFrames() const
+    {
+        return targetCallFrames_;
+    }
+
+private:
+    NO_COPY_SEMANTIC(ContinueToLocationParams);
+    NO_MOVE_SEMANTIC(ContinueToLocationParams);
+
+    std::unique_ptr<Location> loca_ {nullptr};
+    std::string targetCallFrames_ {};
+};
+
 class EnableParams : public PtBaseParams {
 public:
     EnableParams() = default;
