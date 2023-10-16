@@ -249,7 +249,9 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
     if (reason == DEBUGGERSTMT) {
         BreakpointDetails detail;
         hitBreakpoints.emplace_back(BreakpointDetails::ToString(detail));
-        paused.SetCallFrames(std::move(callFrames)).SetReason(PauseReason::OTHER).SetHitBreakpoints(std::move(hitBreakpoints));
+        paused.SetCallFrames(std::move(callFrames))
+            .SetReason(PauseReason::OTHER)
+            .SetHitBreakpoints(std::move(hitBreakpoints));
     } else {
         paused.SetCallFrames(std::move(callFrames)).SetReason(reason).SetHitBreakpoints(std::move(hitBreakpoints));
     }
