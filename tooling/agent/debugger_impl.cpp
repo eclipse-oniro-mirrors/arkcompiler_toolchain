@@ -246,7 +246,13 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
         return;
     }
     tooling::Paused paused;
-    paused.SetCallFrames(std::move(callFrames)).SetReason(reason).SetHitBreakpoints(std::move(hitBreakpoints));
+    if (reason == DEBUGGERSTMT) {
+        BreakpointDetails detail;
+        hitBreakpoints.emplace_back(BreakpointDetails::ToString(detail));
+        paused.SetCallFrames(std::move(callFrames)).SetReason(PauseReason::OTHER).SetHitBreakpoints(std::move(hitBreakpoints));
+    } else {
+        paused.SetCallFrames(std::move(callFrames)).SetReason(reason).SetHitBreakpoints(std::move(hitBreakpoints));
+    }
     if (reason == EXCEPTION && exception->IsError()) {
         std::unique_ptr<RemoteObject> tmpException = RemoteObject::FromTagged(vm_, exception);
         paused.SetData(std::move(tmpException));
