@@ -370,7 +370,7 @@ class ArkPy:
             print("=== ninja success! ===\n")
         return
 
-    def build_for_test262(self, out_path, gn_args: list, arg_list: list, log_file_name: str, aotMode: bool):
+    def build_for_test262(self, out_path, gn_args: list, arg_list: list, log_file_name: str, aot_mode: bool):
         args_to_test262_cmd = ""
         if len(arg_list) == 0:
             args_to_test262_cmd = "--es2021 all"
@@ -385,7 +385,7 @@ class ArkPy:
         self.build_for_gn_target(
             out_path, gn_args, self.ARG_DICT["target"]["test262"]["gn_targets_depend_on"], log_file_name)
 
-        if aotMode:
+        if aot_mode:
             print("running test262 in AotMode\n")
             test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout 180000" \
                           " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu:../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
