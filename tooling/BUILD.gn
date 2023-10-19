@@ -125,6 +125,7 @@ ohos_shared_library("libark_ecma_debugger") {
 }
 
 ohos_shared_library("libark_ecma_debugger_test") {
+  testonly = true
   stack_protector_ret = false
   sources = debugger_sources
 
