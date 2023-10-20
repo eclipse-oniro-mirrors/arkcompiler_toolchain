@@ -46,6 +46,7 @@ public:
     void NotifyNativeCalling(const void *nativeAddress);
     void SetDebuggerState(DebuggerState debuggerState);
 
+    DispatchResponse ContinueToLocation(const ContinueToLocationParams &params);
     DispatchResponse Enable(const EnableParams &params, UniqueDebuggerId *id);
     DispatchResponse Disable();
     DispatchResponse EvaluateOnCallFrame(const EvaluateOnCallFrameParams &params,
@@ -134,6 +135,7 @@ public:
             : DispatcherBase(channel), debugger_(std::move(debugger)) {}
         ~DispatcherImpl() override = default;
 
+        void ContinueToLocation(const DispatchRequest &request);
         void Dispatch(const DispatchRequest &request) override;
         void Enable(const DispatchRequest &request);
         void Disable(const DispatchRequest &request);
@@ -244,6 +246,7 @@ private:
     bool skipAllPausess_ {false};
     bool mixStackEnabled_ {false};
     std::unique_ptr<SingleStepper> singleStepper_ {nullptr};
+    Location location_ {};
     std::vector<void *>  nativePointer_;
 
     std::unordered_map<JSTaggedType *, RemoteObjectId> scopeObjects_ {};

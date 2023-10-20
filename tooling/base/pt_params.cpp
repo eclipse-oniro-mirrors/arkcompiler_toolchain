@@ -108,6 +108,42 @@ std::unique_ptr<EvaluateOnCallFrameParams> EvaluateOnCallFrameParams::Create(con
     return paramsObject;
 }
 
+std::unique_ptr<ContinueToLocationParams> ContinueToLocationParams::Create(const PtJson &params)
+{
+    auto paramsObject = std::make_unique<ContinueToLocationParams>();
+    std::string error;
+    Result ret;
+
+    std::unique_ptr<PtJson> loca;
+    ret = params.GetObject("loca", &loca);
+    if (ret == Result::SUCCESS) {
+        std::unique_ptr<Location> location = Location::Create(*loca);
+        if (location == nullptr) {
+            error += "'loca' is invalid;";
+        } else {
+            paramsObject->loca_= std::move(location);
+        }
+    } else {
+        error += "Unknown or wrong type of 'loca';";
+    }
+
+    std::string targetCallFrames;
+    ret = params.GetString("targetCallFrames", &targetCallFrames);
+    if (ret == Result::SUCCESS) {
+        paramsObject->targetCallFrames_ = std::move(targetCallFrames);
+    } else {
+        error += "Unknown 'targetCallFrames';";
+    }
+
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "ContinueToLocationParams::Create " << error;
+        return nullptr;
+    }
+
+    return paramsObject;
+}
+
+
 std::unique_ptr<GetPossibleBreakpointsParams> GetPossibleBreakpointsParams::Create(const PtJson &params)
 {
     auto paramsObject = std::make_unique<GetPossibleBreakpointsParams>();

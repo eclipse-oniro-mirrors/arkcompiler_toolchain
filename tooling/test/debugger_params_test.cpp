@@ -66,6 +66,42 @@ protected:
     JSThread *thread {nullptr};
 };
 
+HWTEST_F_L0(DebuggerParamsTest, ContinueToLocationParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<ContinueToLocationParams> objectData;
+
+    // abnormal params of null msg
+    msg = std::string() + R"({})";
+    objectData = ContinueToLocationParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of unexist key params
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test"})";
+    objectData = ContinueToLocationParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of null params.sub-key
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    objectData = ContinueToLocationParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"loca":10,
+        "targetCallFrames":"testTargetCallFrames"}})";
+    objectData = ContinueToLocationParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"loca":{"scriptId":"2", "lineNumber":3,
+        "columnNumber":20}, "targetCallFrames":"testTargetCallFrames"}})";
+    objectData = ContinueToLocationParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    Location *locations = objectData->GetLocations();
+    EXPECT_EQ(locations->GetScriptId(), 2);
+    EXPECT_EQ(locations->GetLine(), 3);
+    EXPECT_EQ(locations->GetColumn(), 20);
+    EXPECT_EQ(objectData->GetTargetCallFrames(), "testTargetCallFrames");
+}
+
 HWTEST_F_L0(DebuggerParamsTest, EnableParamsCreateTest)
 {
     std::string msg;

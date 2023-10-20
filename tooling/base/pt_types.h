@@ -1121,13 +1121,10 @@ struct ScriptLanguage {
 };
 
 // Debugger.Location
-class Location : public PtBaseTypes {
+class Location  {
 public:
-    Location() = default;
-    ~Location() override = default;
-
     static std::unique_ptr<Location> Create(const PtJson &params);
-    std::unique_ptr<PtJson> ToJson() const override;
+    std::unique_ptr<PtJson> ToJson() const ;
 
     ScriptId GetScriptId() const
     {
@@ -1168,8 +1165,6 @@ public:
     }
 
 private:
-    NO_COPY_SEMANTIC(Location);
-    NO_MOVE_SEMANTIC(Location);
 
     ScriptId scriptId_ {0};
     int32_t lineNumber_ {0};
