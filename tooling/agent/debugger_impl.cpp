@@ -91,17 +91,9 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
         return false;
     }
 
-    // multiple modules.abc share the same ets, only need to save the first recordName to set breakpoint
-    auto iter = recordNames_.find(url);
-    if (iter == recordNames_.end()) {
-        recordNames_[url] = recordName;
-    }
+    recordNames_[url].insert(recordName);
 
-    auto scriptFunc = [this](PtScript *script) -> bool {
-        frontend_.ScriptParsed(vm_, *script);
-        return true;
-    };
-    if (MatchScripts(scriptFunc, url, ScriptMatchType::URL)) {
+    if (MatchUrlAndFileName(url, fileName)) {
         LOG_DEBUGGER(WARN) << "NotifyScriptParsed: already loaded: " << url;
         return false;
     }
@@ -729,21 +721,24 @@ DispatchResponse DebuggerImpl::GetPossibleBreakpoints(const GetPossibleBreakpoin
         return DispatchResponse::Fail("Unknown file name.");
     }
     const std::string &url = iter->second->GetUrl();
-    DebugInfoExtractor *extractor = GetExtractor(url);
-    if (extractor == nullptr) {
-        LOG_DEBUGGER(ERROR) << "GetPossibleBreakpoints: extractor is null";
-        return DispatchResponse::Fail("Unknown file name.");
-    }
+    std::vector<DebugInfoExtractor *> extractors = GetExtractors(url);
+    for (auto extractor : extractors) {
+        if (extractor == nullptr) {
+            LOG_DEBUGGER(ERROR) << "GetPossibleBreakpoints: extractor is null";
+            continue;
+        }
 
-    int32_t line = start->GetLine();
-    int32_t column = start->GetColumn();
-    auto callbackFunc = [](const JSPtLocation &) -> bool {
-        return true;
-    };
-    if (extractor->MatchWithLocation(callbackFunc, line, column, url, GetRecordName(url))) {
-        std::unique_ptr<BreakLocation> location = std::make_unique<BreakLocation>();
-        location->SetScriptId(start->GetScriptId()).SetLine(line).SetColumn(column);
-        locations->emplace_back(std::move(location));
+        int32_t line = start->GetLine();
+        int32_t column = start->GetColumn();
+        auto callbackFunc = [](const JSPtLocation &) -> bool {
+            return true;
+        };
+        if (extractor->MatchWithLocation(callbackFunc, line, column, url, GetRecordName(url))) {
+            std::unique_ptr<BreakLocation> location = std::make_unique<BreakLocation>();
+            location->SetScriptId(start->GetScriptId()).SetLine(line).SetColumn(column);
+            locations->emplace_back(std::move(location));
+            break;
+        }
     }
     return DispatchResponse::Ok();
 }
@@ -778,11 +773,6 @@ DispatchResponse DebuggerImpl::RemoveBreakpoint(const RemoveBreakpointParams &pa
     if (!BreakpointDetails::ParseBreakpointId(id, &metaData)) {
         return DispatchResponse::Fail("Parse breakpoint id failed");
     }
-    DebugInfoExtractor *extractor = GetExtractor(metaData.url_);
-    if (extractor == nullptr) {
-        LOG_DEBUGGER(ERROR) << "RemoveBreakpoint: extractor is null";
-        return DispatchResponse::Fail("Unknown file name.");
-    }
 
     auto scriptFunc = [](PtScript *) -> bool {
         return true;
@@ -792,15 +782,22 @@ DispatchResponse DebuggerImpl::RemoveBreakpoint(const RemoveBreakpointParams &pa
         return DispatchResponse::Fail("Unknown file name.");
     }
 
-    auto callbackFunc = [this](const JSPtLocation &location) -> bool {
-        LOG_DEBUGGER(INFO) << "remove breakpoint location: " << location.ToString();
-        return DebuggerApi::RemoveBreakpoint(jsDebugger_, location);
-    };
-    if (!extractor->MatchWithLocation(callbackFunc, metaData.line_, metaData.column_,
-        metaData.url_, GetRecordName(metaData.url_))) {
-        LOG_DEBUGGER(ERROR) << "failed to remove breakpoint location number: "
-            << metaData.line_ << ":" << metaData.column_;
-        return DispatchResponse::Fail("Breakpoint not found.");
+    std::vector<DebugInfoExtractor *> extractors = GetExtractors(metaData.url_);
+    for (auto extractor : extractors) {
+        if (extractor == nullptr) {
+            LOG_DEBUGGER(ERROR) << "RemoveBreakpoint: extractor is null";
+            continue;
+        }
+
+        auto callbackFunc = [this](const JSPtLocation &location) -> bool {
+            LOG_DEBUGGER(INFO) << "remove breakpoint location: " << location.ToString();
+            return DebuggerApi::RemoveBreakpoint(jsDebugger_, location);
+        };
+        if (!extractor->MatchWithLocation(callbackFunc, metaData.line_, metaData.column_,
+            metaData.url_, GetRecordName(metaData.url_))) {
+            LOG_DEBUGGER(ERROR) << "failed to remove breakpoint location number: "
+                << metaData.line_ << ":" << metaData.column_;
+        }
     }
 
     LOG_DEBUGGER(INFO) << "remove breakpoint line number:" << metaData.line_;
@@ -834,18 +831,9 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
     // it is not support column breakpoint now, so columnNumber is not useful
     int32_t columnNumber = -1;
     auto condition = params.HasCondition() ? params.GetCondition() : std::optional<std::string> {};
+    *outLocations = std::vector<std::unique_ptr<Location>>();
 
-    DebugInfoExtractor *extractor = GetExtractor(url);
-    if (extractor == nullptr) {
-        LOG_DEBUGGER(ERROR) << "SetBreakpointByUrl: extractor is null";
-        return DispatchResponse::Fail("Unknown file name.");
-    }
-
-    ScriptId scriptId;
-    std::string fileName;
-    auto scriptFunc = [&scriptId, &fileName](PtScript *script) -> bool {
-        scriptId = script->GetScriptId();
-        fileName = script->GetFileName();
+    auto scriptFunc = [](PtScript *) -> bool {
         return true;
     };
     if (!MatchScripts(scriptFunc, url, ScriptMatchType::URL)) {
@@ -853,36 +841,46 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
         return DispatchResponse::Fail("Unknown file name.");
     }
 
-    auto callbackFunc = [this, &condition](const JSPtLocation &location) -> bool {
-        LOG_DEBUGGER(INFO) << "set breakpoint location: " << location.ToString();
-        Local<FunctionRef> condFuncRef = FunctionRef::Undefined(vm_);
-        if (condition.has_value() && !condition.value().empty()) {
-            std::vector<uint8_t> dest;
-            if (!DecodeAndCheckBase64(condition.value(), dest)) {
-                LOG_DEBUGGER(ERROR) << "SetBreakpointByUrl: base64 decode failed";
-                return false;
-            }
-            condFuncRef = DebuggerApi::GenerateFuncFromBuffer(vm_, dest.data(), dest.size(),
-                JSPandaFile::ENTRY_FUNCTION_NAME);
-            if (condFuncRef->IsUndefined()) {
-                LOG_DEBUGGER(ERROR) << "SetBreakpointByUrl: generate function failed";
-                return false;
-            }
+    std::vector<DebugInfoExtractor *> extractors = GetExtractors(url);
+    for (auto extractor : extractors) {
+        if (extractor == nullptr) {
+            LOG_DEBUGGER(ERROR) << "SetBreakpointByUrl: extractor is null";
+            continue;
         }
-        return DebuggerApi::SetBreakpoint(jsDebugger_, location, condFuncRef);
-    };
-    if (!extractor->MatchWithLocation(callbackFunc, lineNumber, columnNumber, url, GetRecordName(url))) {
-        LOG_DEBUGGER(ERROR) << "failed to set breakpoint location number: " << lineNumber << ":" << columnNumber;
-        return DispatchResponse::Fail("Breakpoint not found.");
+
+        auto callbackFunc = [this, &condition](const JSPtLocation &location) -> bool {
+            LOG_DEBUGGER(INFO) << "set breakpoint location: " << location.ToString();
+            Local<FunctionRef> condFuncRef = FunctionRef::Undefined(vm_);
+            if (condition.has_value() && !condition.value().empty()) {
+                std::vector<uint8_t> dest;
+                if (!DecodeAndCheckBase64(condition.value(), dest)) {
+                    LOG_DEBUGGER(ERROR) << "SetBreakpointByUrl: base64 decode failed";
+                    return false;
+                }
+                condFuncRef = DebuggerApi::GenerateFuncFromBuffer(vm_, dest.data(), dest.size(),
+                    JSPandaFile::ENTRY_FUNCTION_NAME);
+                if (condFuncRef->IsUndefined()) {
+                    LOG_DEBUGGER(ERROR) << "SetBreakpointByUrl: generate function failed";
+                    return false;
+                }
+            }
+            return DebuggerApi::SetBreakpoint(jsDebugger_, location, condFuncRef);
+        };
+        if (!extractor->MatchWithLocation(callbackFunc, lineNumber, columnNumber, url, GetRecordName(url))) {
+            LOG_DEBUGGER(ERROR) << "failed to set breakpoint location number: "
+                << lineNumber << ":" << columnNumber;
+        }
     }
 
+    std::vector<PtScript *> ptScripts = MatchAllScripts(url);
+    for (auto ptScript : ptScripts) {
+        ScriptId scriptId = ptScript->GetScriptId();
+        std::unique_ptr<Location> location = std::make_unique<Location>();
+        location->SetScriptId(scriptId).SetLine(lineNumber).SetColumn(0);
+        outLocations->emplace_back(std::move(location));
+    }
     BreakpointDetails metaData{lineNumber, 0, url};
     *outId = BreakpointDetails::ToString(metaData);
-    *outLocations = std::vector<std::unique_ptr<Location>>();
-    std::unique_ptr<Location> location = std::make_unique<Location>();
-    location->SetScriptId(scriptId).SetLine(lineNumber).SetColumn(0);
-    outLocations->emplace_back(std::move(location));
-
     return DispatchResponse::Ok();
 }
 
@@ -925,52 +923,46 @@ bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
     int32_t columnNumber = -1;
     auto condition = breakpoint.HasCondition() ? breakpoint.GetCondition() : std::optional<std::string> {};
 
-    DebugInfoExtractor *extractor = GetExtractor(url);
-    if (extractor == nullptr) {
-        LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: extractor is null";
-        return false;
-    }
-
-    ScriptId scriptId;
-    std::string fileName;
-    auto matchScriptCbFunc = [&scriptId, &fileName](PtScript *script) -> bool {
-        scriptId = script->GetScriptId();
-        fileName = script->GetFileName();
-        return true;
-    };
-    if (!MatchScripts(matchScriptCbFunc, url, ScriptMatchType::URL)) {
-        LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: unknown Url: " << url;
-        return false;
-    }
-
-    // check breakpoint condition before doing matchWithLocation
-    Local<FunctionRef> funcRef = FunctionRef::Undefined(vm_);
-    if (condition.has_value() && !condition.value().empty()) {
-        std::vector<uint8_t> dest;
-        if (!DecodeAndCheckBase64(condition.value(), dest)) {
-            LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: base64 decode failed";
-            return false;
+    std::vector<DebugInfoExtractor *> extractors = GetExtractors(url);
+    for (auto extractor : extractors) {
+        if (extractor == nullptr) {
+            LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: extractor is null";
+            continue;
         }
-        funcRef = DebuggerApi::GenerateFuncFromBuffer(vm_, dest.data(), dest.size(), JSPandaFile::ENTRY_FUNCTION_NAME);
-        if (funcRef->IsUndefined()) {
-            LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: generate condition function failed";
-            return false;
-        }
-    }
 
-    auto matchLocationCbFunc = [this, &funcRef](const JSPtLocation &location) -> bool {
-        return DebuggerApi::SetBreakpoint(jsDebugger_, location, funcRef);
-    };
-    if (!extractor->MatchWithLocation(matchLocationCbFunc, lineNumber, columnNumber, url, GetRecordName(url))) {
-        LOG_DEBUGGER(ERROR) << "failed to set breakpoint location number: " << lineNumber << ":" << columnNumber;
-        return false;
+        // check breakpoint condition before doing matchWithLocation
+        Local<FunctionRef> funcRef = FunctionRef::Undefined(vm_);
+        if (condition.has_value() && !condition.value().empty()) {
+            std::vector<uint8_t> dest;
+            if (!DecodeAndCheckBase64(condition.value(), dest)) {
+                LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: base64 decode failed";
+                continue;
+            }
+            funcRef =
+                DebuggerApi::GenerateFuncFromBuffer(vm_, dest.data(), dest.size(), JSPandaFile::ENTRY_FUNCTION_NAME);
+            if (funcRef->IsUndefined()) {
+                LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: generate condition function failed";
+                continue;
+            }
+        }
+
+        auto matchLocationCbFunc = [this, &funcRef](const JSPtLocation &location) -> bool {
+            return DebuggerApi::SetBreakpoint(jsDebugger_, location, funcRef);
+        };
+        if (!extractor->MatchWithLocation(matchLocationCbFunc, lineNumber, columnNumber, url, GetRecordName(url))) {
+            LOG_DEBUGGER(ERROR) << "failed to set breakpoint location number: " << lineNumber << ":" << columnNumber;
+        }
     }
     
-    BreakpointDetails bpMetaData {lineNumber, columnNumber, url};
+    BreakpointDetails bpMetaData {lineNumber, 0, url};
     std::string outId = BreakpointDetails::ToString(bpMetaData);
-    std::unique_ptr<BreakpointReturnInfo> bpInfo = std::make_unique<BreakpointReturnInfo>();
-    bpInfo->SetScriptId(scriptId).SetLineNumber(lineNumber).SetColumnNumber(columnNumber).SetId(outId);
-    outLocations.emplace_back(std::move(bpInfo));
+    std::vector<PtScript *> ptScripts = MatchAllScripts(url);
+    for (auto ptScript : ptScripts) {
+        ScriptId scriptId = ptScript->GetScriptId();
+        std::unique_ptr<BreakpointReturnInfo> bpInfo = std::make_unique<BreakpointReturnInfo>();
+        bpInfo->SetScriptId(scriptId).SetLineNumber(lineNumber).SetColumnNumber(0).SetId(outId);
+        outLocations.emplace_back(std::move(bpInfo));
+    }
 
     return true;
 }
@@ -1128,29 +1120,31 @@ DebugInfoExtractor *DebuggerImpl::GetExtractor(const JSPandaFile *jsPandaFile)
 }
 
 // mainly used for breakpoints to match location
-DebugInfoExtractor *DebuggerImpl::GetExtractor(const std::string &url)
+std::vector<DebugInfoExtractor *> DebuggerImpl::GetExtractors(const std::string &url)
 {
+    std::vector<DebugInfoExtractor *> extractors;
     // match patch file first if it contains diff for the url, and currently only support the file
     // specified by the url change as a whole
-    auto *extractor = DebuggerApi::GetPatchExtractor(vm_, url);
-    if (extractor != nullptr) {
-        return extractor;
+    extractors = DebuggerApi::GetPatchExtractors(vm_, url);
+    if (!extractors.empty()) {
+        return extractors;
     }
 
-    std::string fileName;
-    auto scriptFunc = [&fileName](const PtScript *script) -> bool {
-        fileName = script->GetFileName();
-        return true;
-    };
-    if (!MatchScripts(scriptFunc, url, ScriptMatchType::URL)) {
-        return nullptr;
+    std::vector<PtScript *> ptScripts = MatchAllScripts(url);
+    for (auto ptScript : ptScripts) {
+        std::string fileName = ptScript->GetFileName();
+        const JSPandaFile *jsPandaFile = JSPandaFileManager::GetInstance()->FindJSPandaFile(fileName.c_str()).get();
+        if (jsPandaFile == nullptr) {
+            continue;
+        }
+        DebugInfoExtractor *extractor = JSPandaFileManager::GetInstance()->GetJSPtExtractor(jsPandaFile);
+        if (extractor == nullptr) {
+            LOG_DEBUGGER(ERROR) << "GetPossibleBreakpoints: extractor is null";
+            continue;
+        }
+        extractors.emplace_back(extractor);
     }
-
-    const JSPandaFile *jsPandaFile = JSPandaFileManager::GetInstance()->FindJSPandaFile(fileName.c_str()).get();
-    if (jsPandaFile == nullptr) {
-        return nullptr;
-    }
-    return JSPandaFileManager::GetInstance()->GetJSPtExtractor(jsPandaFile);
+    return extractors;
 }
 
 bool DebuggerImpl::GenerateCallFrames(std::vector<std::unique_ptr<CallFrame>> *callFrames)

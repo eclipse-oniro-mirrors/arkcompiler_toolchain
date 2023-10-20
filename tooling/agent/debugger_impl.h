@@ -105,6 +105,27 @@ public:
         }
         return false;
     }
+
+    bool MatchUrlAndFileName(const std::string &url, const std::string &fileName) const
+    {
+        for (const auto &script : scripts_) {
+            if (url == script.second->GetUrl() && fileName == script.second->GetFileName()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    std::vector<PtScript *> MatchAllScripts(const std::string url) const
+    {
+        std::vector<PtScript *> result;
+        for (const auto &script : scripts_) {
+            if (url == script.second->GetUrl()) {
+                result.push_back(script.second.get());
+            }
+        }
+        return result;
+    }
     bool GenerateCallFrames(std::vector<std::unique_ptr<CallFrame>> *callFrames);
 
     class DispatcherImpl final : public DispatcherBase {
@@ -150,7 +171,7 @@ private:
 
     std::string Trim(const std::string &str);
     DebugInfoExtractor *GetExtractor(const JSPandaFile *jsPandaFile);
-    DebugInfoExtractor *GetExtractor(const std::string &url);
+    std::vector<DebugInfoExtractor *> GetExtractors(const std::string &url);
     std::optional<std::string> CmptEvaluateValue(CallFrameId callFrameId, const std::string &expression,
         std::unique_ptr<RemoteObject> *result);
     bool GenerateCallFrame(CallFrame *callFrame, const FrameHandler *frameHandler, CallFrameId frameId);
@@ -176,9 +197,9 @@ private:
         std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
     bool IsVariableSkipped(const std::string &varName);
 
-    const std::string &GetRecordName(const std::string &url)
+    const std::unordered_set<std::string> &GetRecordName(const std::string &url)
     {
-        static const std::string recordName = "";
+        static const std::unordered_set<std::string> recordName;
         auto iter = recordNames_.find(url);
         if (iter != recordNames_.end()) {
             return iter->second;
@@ -214,7 +235,7 @@ private:
     std::unique_ptr<JSPtHooks> hooks_ {nullptr};
     JSDebugger *jsDebugger_ {nullptr};
 
-    std::unordered_map<std::string, std::string> recordNames_ {};
+    std::unordered_map<std::string, std::unordered_set<std::string>> recordNames_ {};
     std::unordered_map<ScriptId, std::unique_ptr<PtScript>> scripts_ {};
     PauseOnExceptionsState pauseOnException_ {PauseOnExceptionsState::NONE};
     DebuggerState debuggerState_ {DebuggerState::ENABLED};

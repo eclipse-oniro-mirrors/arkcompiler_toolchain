@@ -35,7 +35,8 @@ std::pair<EntityId, uint32_t> TestExtractor::GetBreakpointAddress(const SourceLo
         retOffset = jsLocation.GetBytecodeOffset();
         return true;
     };
-    MatchWithLocation(callbackFunc, sourceLocation.line, sourceLocation.column, "", "");
+    std::unordered_set<std::string> recordName {};
+    MatchWithLocation(callbackFunc, sourceLocation.line, sourceLocation.column, "", recordName);
     return {retId, retOffset};
 }
 
