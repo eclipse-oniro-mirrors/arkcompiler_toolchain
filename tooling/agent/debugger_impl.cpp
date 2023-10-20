@@ -143,9 +143,6 @@ bool DebuggerImpl::NotifySingleStep(const JSPtLocation &location)
 
     singleStepper_.reset();
     LOG_DEBUGGER(INFO) << "StepComplete: pause on current byte_code";
-    if (!DebuggerApi::GetSingleStepStatusOnDebugger(jsDebugger_)) {
-        DebuggerApi::SetSingleStepStatusOnDebugger(jsDebugger_, true);
-    }
     return true;
 }
 
@@ -825,7 +822,6 @@ DispatchResponse DebuggerImpl::Resume([[maybe_unused]] const ResumeParams &param
     }
     frontend_.Resumed(vm_);
     debuggerState_ = DebuggerState::ENABLED;
-    DebuggerApi::SetSingleStepStatusOnDebugger(jsDebugger_, false);
     return DispatchResponse::Ok();
 }
 
