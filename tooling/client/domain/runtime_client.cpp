@@ -13,19 +13,14 @@
  * limitations under the License.
  */
 
-#include "domain/runtime_client.h"
+#include "tooling/client/domain/runtime_client.h"
 
 #include "common/log_wrapper.h"
-#include "manager/variable_manager.h"
-#include "pt_json.h"
+#include "tooling/client/manager/variable_manager.h"
+#include "tooling/base/pt_json.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 namespace OHOS::ArkCompiler::Toolchain {
-RuntimeClient RuntimeClient::instance_;
-RuntimeClient& RuntimeClient::GetInstance()
-{
-    return instance_;
-}
 bool RuntimeClient::DispatcherCmd(int id, const std::string &cmd, std::string* reqStr)
 {
     std::map<std::string, std::function<std::string()>> dispatcherTable {
@@ -40,11 +35,11 @@ bool RuntimeClient::DispatcherCmd(int id, const std::string &cmd, std::string* r
     auto entry = dispatcherTable.find(cmd);
     if (entry != dispatcherTable.end()) {
         *reqStr = entry->second();
-        LOGE("RuntimeClient DispatcherCmd reqStr1: %{public}s", reqStr->c_str());
+        LOGI("RuntimeClient DispatcherCmd reqStr1: %{public}s", reqStr->c_str());
         return true;
     } else {
         *reqStr = "Unknown commond: " + cmd;
-        LOGE("RuntimeClient DispatcherCmd reqStr2: %{public}s", reqStr->c_str());
+        LOGI("RuntimeClient DispatcherCmd reqStr2: %{public}s", reqStr->c_str());
         return false;
     }
 }

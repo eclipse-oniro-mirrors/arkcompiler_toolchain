@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
-#ifndef ARKCOMPILER_TOOLCHAIN_INSPECTOR_LOG_WRAPPER_H
-#define ARKCOMPILER_TOOLCHAIN_INSPECTOR_LOG_WRAPPER_H
+#ifndef ARKCOMPILER_TOOLCHAIN_COMMON_LOG_WRAPPER_H
+#define ARKCOMPILER_TOOLCHAIN_COMMON_LOG_WRAPPER_H
+
+#include "common/macros.h"
 
 #if defined(ENABLE_HILOG)
 #include "hilog/log.h"
@@ -48,7 +50,7 @@ enum class LogLevel {
     ERROR,
     FATAL
 };
-class StdLog {
+class TOOLCHAIN_EXPORT StdLog {
 public:
     StdLog() = default;
     ~StdLog() = default;
@@ -80,4 +82,4 @@ static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {
 #endif
 #pragma clang diagnostic pop
 } // namespace OHOS::ArkCompiler::Toolchain
-#endif // ARKCOMPILER_TOOLCHAIN_INSPECTOR_LOG_WRAPPER_H
+#endif // ARKCOMPILER_TOOLCHAIN_COMMON_LOG_WRAPPER_H

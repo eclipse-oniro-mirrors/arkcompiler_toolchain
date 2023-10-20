@@ -17,7 +17,7 @@
 #include <sys/un.h>
 
 #include "gtest/gtest.h"
-#include "websocket.h"
+#include "websocket/websocket.h"
 #include "securec.h"
 
 using namespace OHOS::ArkCompiler::Toolchain;

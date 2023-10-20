@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "base/pt_params.h"
+#include "tooling/base/pt_params.h"
 
 namespace panda::ecmascript::tooling {
 std::unique_ptr<EnableParams> EnableParams::Create(const PtJson &params)

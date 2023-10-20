@@ -20,8 +20,8 @@
 #include <variant>
 
 #include "common/log_wrapper.h"
-#include "pt_json.h"
-#include "pt_types.h"
+#include "tooling/base/pt_json.h"
+#include "tooling/base/pt_types.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;

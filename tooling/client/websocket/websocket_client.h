@@ -21,7 +21,8 @@
 #include <memory>
 #include <map>
 
-#include "websocket.h"
+#include "ecmascript/log_wrapper.h"
+#include "websocket/websocket.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 struct ToolchainWebSocketFrame {

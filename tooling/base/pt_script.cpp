@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "base/pt_script.h"
+#include "tooling/base/pt_script.h"
 
 #include "ecmascript/debugger/debugger_api.h"
 

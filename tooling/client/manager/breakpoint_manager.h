@@ -22,8 +22,8 @@
 #include <string>
 #include <vector>
 
-#include "pt_json.h"
-#include "pt_types.h"
+#include "tooling/base/pt_json.h"
+#include "tooling/base/pt_types.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 using PtJson = panda::ecmascript::tooling::PtJson;
@@ -38,7 +38,6 @@ class BreakPointManager {
 public:
     static BreakPointManager& GetInstance();
 
-    std::vector<std::string> SplitString(std::string &str, const char delimiter);
     void Createbreaklocation(const std::unique_ptr<PtJson> json);
     void Show();
     void Deletebreaklist(unsigned int num);

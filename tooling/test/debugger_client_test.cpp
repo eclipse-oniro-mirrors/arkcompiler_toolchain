@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,12 +16,13 @@
 #include "ecmascript/ecma_vm.h"
 #include "ecmascript/napi/include/jsnapi.h"
 #include "ecmascript/tests/test_helper.h"
-#include "tooling/test/utils/test_list.h"
+#include "tooling/test/client_utils/test_list.h"
+#include "tooling/test/client_utils/test_util.h"
 
 namespace panda::ecmascript::tooling::test {
 using panda::test::TestHelper;
 
-class DebuggerCInterpTest : public testing::TestWithParam<const char *> {
+class DebuggerClientTest : public testing::TestWithParam<const char *> {
 public:
     static void SetUpTestCase()
     {
@@ -35,9 +36,11 @@ public:
 
     void SetUp() override
     {
+        static int port = 9002;  // 9002: socket port
         SetCurrentTestName(GetParam());
-        TestHelper::CreateEcmaVMWithScope(instance, thread, scope, false, true);
-        JSNApi::DebugOption debugOption = {DEBUGGER_TEST_LIBRARY, true};
+        TestHelper::CreateEcmaVMWithScope(instance, thread, scope);
+        TestUtil::ForkSocketClient(port, GetParam());
+        JSNApi::DebugOption debugOption = {DEBUGGER_LIBRARY, true, port};
         JSNApi::StartDebugger(instance, debugOption);
     }
 
@@ -52,7 +55,7 @@ public:
     JSThread *thread {nullptr};
 };
 
-HWTEST_P_L0(DebuggerCInterpTest, DebuggerSuite)
+HWTEST_P_L0(DebuggerClientTest, DebuggerSuite)
 {
     std::string testName = GetCurrentTestName();
     std::cout << "Running " << testName << std::endl;
@@ -62,5 +65,5 @@ HWTEST_P_L0(DebuggerCInterpTest, DebuggerSuite)
     ASSERT_TRUE(res);
 }
 
-INSTANTIATE_TEST_SUITE_P(DebugAbcTest, DebuggerCInterpTest, testing::ValuesIn(GetTestList()));
+INSTANTIATE_TEST_SUITE_P(DebugClientAbcTest, DebuggerClientTest, testing::ValuesIn(GetTestList()));
 }  // namespace panda::ecmascript::tooling::test

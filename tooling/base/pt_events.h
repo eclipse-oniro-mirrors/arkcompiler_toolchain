@@ -19,8 +19,8 @@
 #include <memory>
 #include <optional>
 
-#include "base/pt_script.h"
-#include "base/pt_types.h"
+#include "tooling/base/pt_script.h"
+#include "tooling/base/pt_types.h"
 #include "dispatcher.h"
 
 #include "libpandabase/macros.h"

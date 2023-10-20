@@ -14,10 +14,7 @@
 import("//arkcompiler/toolchain/toolchain.gni")
 
 ohos_executable("arkdb") {
-  sources = [
-    "cli_command.cpp",
-    "main.cpp",
-  ]
+  sources = [ "main.cpp" ]
 
   include_dirs = [
     "./",

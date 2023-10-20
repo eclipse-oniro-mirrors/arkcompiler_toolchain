@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "base/pt_params.h"
+#include "tooling/base/pt_params.h"
 #include "ecmascript/tests/test_helper.h"
 #include "protocol_handler.h"
 

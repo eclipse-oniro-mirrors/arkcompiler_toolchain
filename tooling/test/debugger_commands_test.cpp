@@ -19,8 +19,8 @@
 #include "ecmascript/debugger/js_debugger.h"
 #include "ecmascript/tests/test_helper.h"
 
-#include "base/pt_params.h"
-#include "base/pt_returns.h"
+#include "tooling/base/pt_params.h"
+#include "tooling/base/pt_returns.h"
 #include "debugger_service.h"
 #include "dispatcher.h"
 

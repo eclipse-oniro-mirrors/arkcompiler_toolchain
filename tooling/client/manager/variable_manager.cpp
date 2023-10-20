@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "manager/variable_manager.h"
+#include "tooling/client/manager/variable_manager.h"
 
 #include <iomanip>
 

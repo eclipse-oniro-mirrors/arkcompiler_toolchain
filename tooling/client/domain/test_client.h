@@ -13,17 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef ECMASCRIPT_TOOLING_CLIENT_UTILS_UTILS_H
-#define ECMASCRIPT_TOOLING_CLIENT_UTILS_UTILS_H
+#ifndef ECMASCRIPT_TOOLING_CLIENT_DOMAIN_TEST_CLIENT_H
+#define ECMASCRIPT_TOOLING_CLIENT_DOMAIN_TEST_CLIENT_H
 
-#include <string>
-#include <vector>
+#include <iostream>
+#include <map>
 
+#include "tooling/base/pt_types.h"
+
+using PtJson = panda::ecmascript::tooling::PtJson;
+using Result = panda::ecmascript::tooling::Result;
 namespace OHOS::ArkCompiler::Toolchain {
-class Utils {
+class TestClient final {
 public:
-    static bool GetCurrentTime(char *date, char *tim, size_t size);
-    static std::vector<std::string> SplitString(const std::string &str, const std::string &delimiter);
+    TestClient() = default;
+    ~TestClient() = default;
+
+    bool DispatcherCmd(int id, const std::string &cmd, std::string *reqStr);
+    std::string SuccessCommand(int id);
+    std::string FailCommand(int id);
 };
 } // OHOS::ArkCompiler::Toolchain
-#endif
+#endif  // ECMASCRIPT_TOOLING_CLIENT_DOMAIN_TEST_CLIENT_H

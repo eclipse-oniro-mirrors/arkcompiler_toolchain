@@ -19,7 +19,9 @@
 #include <memory>
 #include <optional>
 
-#include "base/pt_json.h"
+#include "common/macros.h"
+
+#include "tooling/base/pt_json.h"
 
 #include "ecmascript/debugger/debugger_api.h"
 #include "ecmascript/dfx/cpu_profiler/samples_record.h"
@@ -853,7 +855,7 @@ private:
 };
 
 // Runtime.PropertyDescriptor
-class PropertyDescriptor final : public PtBaseTypes {
+class TOOLCHAIN_EXPORT PropertyDescriptor final : public PtBaseTypes {
 public:
     PropertyDescriptor() = default;
     ~PropertyDescriptor() override = default;
@@ -1559,7 +1561,7 @@ private:
 };
 
 // Debugger.CallFrame
-class CallFrame final : public PtBaseTypes {
+class TOOLCHAIN_EXPORT CallFrame final : public PtBaseTypes {
 public:
     CallFrame() = default;
     ~CallFrame() override = default;

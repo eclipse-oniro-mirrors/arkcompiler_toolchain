@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,17 +13,20 @@
  * limitations under the License.
  */
 
-#ifndef ECMASCRIPT_TOOLING_CLIENT_UTILS_UTILS_H
-#define ECMASCRIPT_TOOLING_CLIENT_UTILS_UTILS_H
+#ifndef ECMASCRIPT_TOOLING_TEST_UTILS_TEST_LIST_H
+#define ECMASCRIPT_TOOLING_TEST_UTILS_TEST_LIST_H
 
-#include <string>
+#include <utility>
 #include <vector>
+#include <string>
 
-namespace OHOS::ArkCompiler::Toolchain {
-class Utils {
-public:
-    static bool GetCurrentTime(char *date, char *tim, size_t size);
-    static std::vector<std::string> SplitString(const std::string &str, const std::string &delimiter);
-};
-} // OHOS::ArkCompiler::Toolchain
-#endif
+namespace panda::ecmascript::tooling::test {
+std::vector<const char *> GetTestList();
+
+void SetCurrentTestName(const std::string &testName);
+std::string GetCurrentTestName();
+
+std::pair<std::string, std::string> GetTestEntryPoint(const std::string &testName);
+}  // namespace panda::ecmascript::tooling::test
+
+#endif  // ECMASCRIPT_TOOLING_TEST_UTILS_TEST_LIST_H

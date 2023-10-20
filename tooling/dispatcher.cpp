@@ -166,7 +166,15 @@ void Dispatcher::Dispatch(const DispatchRequest &request)
     if (dispatcher != dispatchers_.end()) {
         dispatcher->second->Dispatch(request);
     } else {
-        LOG_DEBUGGER(ERROR) << "unknown domain: " << domain;
+        if (domain == "Test") {
+            if (request.GetMethod() == "fail") {
+                LOG_DEBUGGER(FATAL) << "Test fail";
+                UNREACHABLE();
+            }
+            LOG_DEBUGGER(INFO) << "Test success";
+        } else {
+            LOG_DEBUGGER(ERROR) << "unknown domain: " << domain;
+        }
     }
 }
 }  // namespace panda::ecmascript::tooling

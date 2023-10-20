@@ -16,7 +16,7 @@
 #ifndef ECMASCRIPT_TOOLING_BASE_PT_RETURNS_H
 #define ECMASCRIPT_TOOLING_BASE_PT_RETURNS_H
 
-#include "base/pt_types.h"
+#include "tooling/base/pt_types.h"
 
 namespace panda::ecmascript::tooling {
 class PtBaseReturns : public PtBaseTypes {
@@ -329,7 +329,7 @@ private:
     std::unique_ptr<Profile> profile_ {};
 };
 
-class GetHeapUsageReturns : public PtBaseReturns {
+class TOOLCHAIN_EXPORT GetHeapUsageReturns : public PtBaseReturns {
 public:
     GetHeapUsageReturns() = default;
     explicit GetHeapUsageReturns(double usedSize, double totalSize)

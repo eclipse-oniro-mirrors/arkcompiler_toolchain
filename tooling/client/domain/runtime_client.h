@@ -19,14 +19,15 @@
 #include <iostream>
 #include <map>
 
-#include "pt_types.h"
+#include "tooling/base/pt_types.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;
 namespace OHOS::ArkCompiler::Toolchain {
 class RuntimeClient final {
 public:
-    static RuntimeClient& GetInstance();
+    RuntimeClient() = default;
+    ~RuntimeClient() = default;
 
     bool DispatcherCmd(int id, const std::string &cmd, std::string *reqStr);
     std::string HeapusageCommand(int id);
@@ -57,13 +58,9 @@ public:
     }
 
 private:
-    RuntimeClient() = default;
-    static RuntimeClient instance_;
     std::map<int, std::tuple<std::string, std::string>> idMethodMap_ {};
     std::string objectId_ {"0"};
     bool isInitializeTree_ {true};
-    RuntimeClient(const RuntimeClient&) = delete;
-    RuntimeClient& operator=(const RuntimeClient&) = delete;
 };
 } // OHOS::ArkCompiler::Toolchain
 #endif

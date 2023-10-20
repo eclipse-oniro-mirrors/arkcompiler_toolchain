@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-#include "domain/profiler_client.h"
-#include "pt_types.h"
+#include "tooling/client/domain/profiler_client.h"
+#include "tooling/base/pt_types.h"
 #include "common/log_wrapper.h"
-#include "utils/utils.h"
+#include "tooling/client/utils/utils.h"
 
 #include <map>
 #include <functional>
@@ -40,11 +40,11 @@ bool ProfilerClient::DispatcherCmd(int id, const std::string &cmd, std::string* 
     auto entry = dispatcherTable.find(cmd);
     if (entry == dispatcherTable.end()) {
         *reqStr = "Unknown commond: " + cmd;
-        LOGE("DispatcherCmd reqStr2: %{public}s", reqStr->c_str());
+        LOGI("DispatcherCmd reqStr2: %{public}s", reqStr->c_str());
         return false;
     }
     *reqStr = entry->second();
-    LOGE("DispatcherCmd reqStr1: %{public}s", reqStr->c_str());
+    LOGI("DispatcherCmd reqStr1: %{public}s", reqStr->c_str());
     return true;
 }
 

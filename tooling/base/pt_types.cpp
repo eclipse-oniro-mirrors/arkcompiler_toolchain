@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "pt_types.h"
+#include "tooling/base/pt_types.h"
 
 namespace panda::ecmascript::tooling {
 using ObjectType = RemoteObject::TypeName;

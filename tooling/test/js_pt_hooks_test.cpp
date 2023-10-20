@@ -15,8 +15,8 @@
 
 #include "agent/debugger_impl.h"
 #include "backend/js_pt_hooks.h"
-#include "base/pt_types.h"
-#include "base/pt_events.h"
+#include "tooling/base/pt_types.h"
+#include "tooling/base/pt_events.h"
 #include "dispatcher.h"
 
 #include "ecmascript/debugger/js_debugger.h"

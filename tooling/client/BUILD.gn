@@ -24,10 +24,7 @@ ohos_source_set("libark_client_set") {
   deps += hiviewdfx_deps
 
   include_dirs = [
-    "./",
-    "../base",
-    "../../inspector",
-    "../../websocket",
+    "..",
     "//third_party/cJSON",
   ]
 
@@ -36,10 +33,12 @@ ohos_source_set("libark_client_set") {
     "domain/heapprofiler_client.cpp",
     "domain/profiler_client.cpp",
     "domain/runtime_client.cpp",
+    "domain/test_client.cpp",
     "manager/breakpoint_manager.cpp",
     "manager/domain_manager.cpp",
     "manager/stack_manager.cpp",
     "manager/variable_manager.cpp",
+    "utils/cli_command.cpp",
     "utils/utils.cpp",
     "websocket/websocket_client.cpp",
   ]
@@ -47,7 +46,7 @@ ohos_source_set("libark_client_set") {
   deps += [
     "$ark_third_party_root/libuv:uv",
     "$ark_third_party_root/openssl:libcrypto_shared",
-    "..:libark_ecma_debugger_set",
+    "..:libark_ecma_debugger",
     sdk_libc_secshared_dep,
   ]
 

@@ -14,7 +14,7 @@
  */
 
 #include "ecmascript/tests/test_helper.h"
-#include "base/pt_base64.h"
+#include "tooling/base/pt_base64.h"
 
 using namespace panda::ecmascript::tooling;
 

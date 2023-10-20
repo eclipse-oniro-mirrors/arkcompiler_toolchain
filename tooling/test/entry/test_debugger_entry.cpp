@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "test/utils/test_entry.h"
+#include "tooling/test/utils/test_entry.h"
 
 namespace panda::ecmascript::tooling::test {
 extern "C" bool StartDebug(const std::string &name, EcmaVM *vm, bool isDebugMode)
