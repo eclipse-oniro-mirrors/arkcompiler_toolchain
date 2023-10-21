@@ -888,6 +888,7 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
         if (!extractor->MatchWithLocation(callbackFunc, lineNumber, columnNumber, url, GetRecordName(url))) {
             LOG_DEBUGGER(ERROR) << "failed to set breakpoint location number: "
                 << lineNumber << ":" << columnNumber;
+            return DispatchResponse::Fail("Breakpoint not found.");
         }
     }
 
