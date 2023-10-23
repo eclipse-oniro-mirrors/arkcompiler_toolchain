@@ -19,7 +19,7 @@
 #include <iostream>
 #include <vector>
 
-#include "pt_json.h"
+#include "tooling/base/pt_json.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;
@@ -37,7 +37,6 @@ public:
     bool DispatcherCmd(int id, const std::string &cmd, std::string* reqStr);
     std::string BreakCommand(int id);
     std::string BacktrackCommand(int id);
-    std::string ContinueCommand(int id);
     std::string DeleteCommand(int id);
     std::string DisableCommand(int id);
     std::string DisplayCommand(int id);

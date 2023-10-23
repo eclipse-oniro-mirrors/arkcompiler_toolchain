@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "base/pt_params.h"
-#include "base/pt_returns.h"
-#include "base/pt_script.h"
+#include "tooling/base/pt_params.h"
+#include "tooling/base/pt_returns.h"
+#include "tooling/base/pt_script.h"
 #include "debugger_service.h"
 #include "dispatcher.h"
 

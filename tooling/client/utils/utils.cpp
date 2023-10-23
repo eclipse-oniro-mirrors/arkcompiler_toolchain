@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "utils/utils.h"
+#include "tooling/client/utils/utils.h"
 #include "common/log_wrapper.h"
 #include <ctime>
 
@@ -51,5 +51,26 @@ bool Utils::GetCurrentTime(char *date, char *tim, size_t size)
         return false;
     }
     return true;
+}
+
+std::vector<std::string> Utils::SplitString(const std::string &str, const std::string &delimiter)
+{
+    std::size_t strIndex = 0;
+    std::vector<std::string> value;
+    std::size_t pos = str.find_first_of(delimiter, strIndex);
+    while ((pos < str.size()) && (pos > strIndex)) {
+        std::string subStr = str.substr(strIndex, pos - strIndex);
+        value.push_back(std::move(subStr));
+        strIndex = pos;
+        strIndex = str.find_first_not_of(delimiter, strIndex);
+        pos = str.find_first_of(delimiter, strIndex);
+    }
+    if (pos > strIndex) {
+        std::string subStr = str.substr(strIndex, pos - strIndex);
+        if (!subStr.empty()) {
+            value.push_back(std::move(subStr));
+        }
+    }
+    return value;
 }
 } // OHOS::ArkCompiler::Toolchain

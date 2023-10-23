@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "domain/heapprofiler_client.h"
+#include "tooling/client/domain/heapprofiler_client.h"
 #include "common/log_wrapper.h"
-#include "utils/utils.h"
+#include "tooling/client/utils/utils.h"
 
 #include <map>
 #include <functional>
@@ -45,12 +45,12 @@ bool HeapProfilerClient::DispatcherCmd(int id, const std::string &cmd, const std
     auto entry = dispatcherTable.find(cmd);
     if (entry != dispatcherTable.end() && entry->second != nullptr) {
         *reqStr = entry->second();
-        LOGE("DispatcherCmd reqStr1: %{public}s", reqStr->c_str());
+        LOGI("DispatcherCmd reqStr1: %{public}s", reqStr->c_str());
         return true;
     }
 
     *reqStr = "Unknown commond: " + cmd;
-    LOGE("DispatcherCmd reqStr2: %{public}s", reqStr->c_str());
+    LOGI("DispatcherCmd reqStr2: %{public}s", reqStr->c_str());
     return false;
 }
 

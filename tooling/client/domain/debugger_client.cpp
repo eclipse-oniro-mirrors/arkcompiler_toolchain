@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-#include "domain/debugger_client.h"
+#include "tooling/client/domain/debugger_client.h"
 
 #include <map>
 
 #include "common/log_wrapper.h"
-#include "manager/breakpoint_manager.h"
-#include "manager/stack_manager.h"
-#include "pt_json.h"
+#include "tooling/client/manager/breakpoint_manager.h"
+#include "tooling/client/manager/stack_manager.h"
+#include "tooling/base/pt_json.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 namespace OHOS::ArkCompiler::Toolchain {
@@ -29,7 +29,7 @@ bool DebuggerClient::DispatcherCmd(int id, const std::string &cmd, std::string* 
     std::map<std::string, std::function<std::string()>> dispatcherTable {
         { "break", std::bind(&DebuggerClient::BreakCommand, this, id)},
         { "backtrack", std::bind(&DebuggerClient::BacktrackCommand, this, id)},
-        { "continue", std::bind(&DebuggerClient::ContinueCommand, this, id)},
+        { "continue", std::bind(&DebuggerClient::ResumeCommand, this, id)},
         { "delete", std::bind(&DebuggerClient::DeleteCommand, this, id)},
         { "jump", std::bind(&DebuggerClient::JumpCommand, this, id)},
         { "disable", std::bind(&DebuggerClient::DisableCommand, this, id)},
@@ -57,12 +57,12 @@ bool DebuggerClient::DispatcherCmd(int id, const std::string &cmd, std::string* 
     auto entry = dispatcherTable.find(cmd);
     if (entry != dispatcherTable.end()) {
         *reqStr = entry->second();
-        LOGE("DebuggerClient DispatcherCmd reqStr1: %{public}s", reqStr->c_str());
+        LOGI("DebuggerClient DispatcherCmd reqStr1: %{public}s", reqStr->c_str());
         return true;
     }
 
     *reqStr = "Unknown commond: " + cmd;
-    LOGE("DebuggerClient DispatcherCmd reqStr2: %{public}s", reqStr->c_str());
+    LOGI("DebuggerClient DispatcherCmd reqStr2: %{public}s", reqStr->c_str());
     return false;
 }
 
@@ -83,11 +83,6 @@ std::string DebuggerClient::BreakCommand(int id)
 std::string DebuggerClient::BacktrackCommand([[maybe_unused]] int id)
 {
     return "backtrack";
-}
-
-std::string DebuggerClient::ContinueCommand([[maybe_unused]] int id)
-{
-    return "continue";
 }
 
 std::string DebuggerClient::DeleteCommand(int id)

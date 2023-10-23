@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "websocket.h"
+#include "websocket/websocket.h"
 
 #include "define.h"
 #include "common/log_wrapper.h"
@@ -308,7 +308,7 @@ bool WebSocket::HttpHandShake()
             return false;
         } else if (req.connection.find("Upgrade") != std::string::npos &&
             req.upgrade.find("websocket") != std::string::npos && req.version.compare("HTTP/1.1") == 0) {
-            ProtocolUpgrade(req);
+            return ProtocolUpgrade(req);
         }
     }
     return true;

@@ -17,8 +17,8 @@
 #include "ecmascript/js_tagged_value-inl.h"
 #include "ecmascript/object_factory.h"
 #include "ecmascript/tests/test_helper.h"
-#include "base/pt_events.h"
-#include "base/pt_types.h"
+#include "tooling/base/pt_events.h"
+#include "tooling/base/pt_types.h"
 #include "dispatcher.h"
 
 using namespace panda::ecmascript;

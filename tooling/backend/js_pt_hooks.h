@@ -16,8 +16,8 @@
 #ifndef ECMASCRIPT_TOOLING_BACKEND_JS_PT_HOOKS_H
 #define ECMASCRIPT_TOOLING_BACKEND_JS_PT_HOOKS_H
 
-#include "base/pt_events.h"
-#include "base/pt_script.h"
+#include "tooling/base/pt_events.h"
+#include "tooling/base/pt_script.h"
 
 #include "ecmascript/debugger/js_debugger_interface.h"
 #include "libpandabase/macros.h"

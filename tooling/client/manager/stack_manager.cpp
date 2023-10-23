@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "manager/stack_manager.h"
+#include "tooling/client/manager/stack_manager.h"
 #include "common/log_wrapper.h"
 
 namespace OHOS::ArkCompiler::Toolchain {

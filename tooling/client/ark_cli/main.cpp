@@ -21,7 +21,7 @@
 #include <uv.h>
 #include <securec.h>
 
-#include "cli_command.h"
+#include "tooling/client/utils/cli_command.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 uint32_t g_messageId = 0;
@@ -30,6 +30,8 @@ uv_async_t* g_inputSignal;
 uv_async_t* g_releaseHandle;
 uv_loop_t* g_loop;
 
+DomainManager g_domainManager;
+WebsocketClient g_cliSocket;
 
 bool StrToUInt(const char *content, uint32_t *result)
 {
@@ -40,27 +42,6 @@ bool StrToUInt(const char *content, uint32_t *result)
         return false;
     }
     return true;
-}
-
-std::vector<std::string> SplitString(const std::string &str, const std::string &delimiter)
-{
-    std::size_t strIndex = 0;
-    std::vector<std::string> value;
-    std::size_t pos = str.find_first_of(delimiter, strIndex);
-    while ((pos < str.size()) && (pos > strIndex)) {
-        std::string subStr = str.substr(strIndex, pos - strIndex);
-        value.push_back(std::move(subStr));
-        strIndex = pos;
-        strIndex = str.find_first_not_of(delimiter, strIndex);
-        pos = str.find_first_of(delimiter, strIndex);
-    }
-    if (pos > strIndex) {
-        std::string subStr = str.substr(strIndex, pos - strIndex);
-        if (!subStr.empty()) {
-            value.push_back(std::move(subStr));
-        }
-    }
-    return value;
 }
 
 void ReleaseHandle([[maybe_unused]] uv_async_t *releaseHandle)
@@ -95,9 +76,9 @@ void InputOnMessage(uv_async_t *handle)
 {
     char* msg = static_cast<char*>(handle->data);
     std::string inputStr = std::string(msg);
-    std::vector<std::string> cliCmdStr = SplitString(inputStr, " ");
+    std::vector<std::string> cliCmdStr = Utils::SplitString(inputStr, " ");
     g_messageId += 1;
-    CliCommand cmd(cliCmdStr, g_messageId);
+    CliCommand cmd(cliCmdStr, g_messageId, g_domainManager, g_cliSocket);
     if (cmd.ExecCommand() == ErrCode::ERR_FAIL) {
         g_messageId -= 1;
     }

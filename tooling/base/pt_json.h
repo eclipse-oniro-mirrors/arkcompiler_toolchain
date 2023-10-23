@@ -20,6 +20,7 @@
 #include <string>
 
 #include "cJSON.h"
+#include "common/macros.h"
 
 namespace panda::ecmascript::tooling {
 enum class Result : uint8_t {
@@ -28,7 +29,7 @@ enum class Result : uint8_t {
     TYPE_ERROR,
 };
 
-class PtJson {
+class TOOLCHAIN_EXPORT PtJson {
 public:
     PtJson() = default;
     explicit PtJson(cJSON *object) : object_(object) {}

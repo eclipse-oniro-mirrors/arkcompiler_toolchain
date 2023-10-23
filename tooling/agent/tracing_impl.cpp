@@ -15,7 +15,7 @@
 
 #include "agent/tracing_impl.h"
 
-#include "base/pt_events.h"
+#include "tooling/base/pt_events.h"
 #include "protocol_channel.h"
 
 #include "ecmascript/napi/include/dfx_jsnapi.h"

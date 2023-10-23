@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "base/pt_returns.h"
+#include "tooling/base/pt_returns.h"
 
 namespace panda::ecmascript::tooling {
 std::unique_ptr<PtJson> EnableReturns::ToJson() const

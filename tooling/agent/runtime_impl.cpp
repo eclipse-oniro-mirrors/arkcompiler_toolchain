@@ -17,7 +17,7 @@
 
 #include <iomanip>
 
-#include "base/pt_returns.h"
+#include "tooling/base/pt_returns.h"
 #include "protocol_channel.h"
 
 #include "ecmascript/napi/include/dfx_jsnapi.h"

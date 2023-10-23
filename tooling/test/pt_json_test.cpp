@@ -14,7 +14,7 @@
  */
 
 #include "ecmascript/tests/test_helper.h"
-#include "base/pt_json.h"
+#include "tooling/base/pt_json.h"
 
 using namespace panda::ecmascript::tooling;
 

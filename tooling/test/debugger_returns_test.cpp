@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include "base/pt_types.h"
-#include "base/pt_returns.h"
+#include "tooling/base/pt_types.h"
+#include "tooling/base/pt_returns.h"
 #include "dispatcher.h"
 
 #include "ecmascript/js_array.h"

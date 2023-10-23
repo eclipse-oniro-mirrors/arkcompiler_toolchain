@@ -22,4 +22,5 @@ if (QEMU_INSTALLATION_PATH == "") {
         " differently. Get set-up steps from" +
         " https://gitee.com/ark_standalone_build/docs if you need to run" +
         " executables of non-host type.")
+  QEMU_INSTALLATION_PATH = "/"
 }

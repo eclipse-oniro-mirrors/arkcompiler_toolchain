@@ -18,7 +18,7 @@
 
 #include "agent/runtime_impl.h"
 #include "backend/js_pt_hooks.h"
-#include "base/pt_params.h"
+#include "tooling/base/pt_params.h"
 #include "backend/js_single_stepper.h"
 #include "dispatcher.h"
 
@@ -117,7 +117,7 @@ public:
         return false;
     }
 
-    std::vector<PtScript *> MatchAllScripts(const std::string url) const
+    std::vector<PtScript *> MatchAllScripts(const std::string &url) const
     {
         std::vector<PtScript *> result;
         for (const auto &script : scripts_) {

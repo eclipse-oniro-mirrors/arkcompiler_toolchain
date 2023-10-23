@@ -13,25 +13,20 @@
  * limitations under the License.
  */
 
-#include "cli_command.h"
+#include "tooling/client/utils/cli_command.h"
 
-#include <cstdlib>
-#include <cstring>
 #include <functional>
 #include <iostream>
-#include <mutex>
 
-#include "domain/debugger_client.h"
-#include "domain/runtime_client.h"
+#include "tooling/client/domain/debugger_client.h"
+#include "tooling/client/domain/runtime_client.h"
 #include "common/log_wrapper.h"
-#include "manager/breakpoint_manager.h"
-#include "manager/domain_manager.h"
-#include "manager/stack_manager.h"
-#include "manager/variable_manager.h"
+#include "tooling/client/manager/breakpoint_manager.h"
+#include "tooling/client/manager/domain_manager.h"
+#include "tooling/client/manager/stack_manager.h"
+#include "tooling/client/manager/variable_manager.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
-DomainManager g_domainManager;
-WebsocketClient g_cliSocket;
 const std::string HELP_MSG = "usage: <command> <options>\n"
     " These are common commands list:\n"
     "  allocationtrack(at)                           allocation-track-start with options\n"
@@ -79,7 +74,9 @@ const std::string HELP_MSG = "usage: <command> <options>\n"
     "  step-into(si)                                 step-into\n"
     "  step-out(so)                                  step-out\n"
     "  step-over(sov)                                step-over\n"
-    "  runtime-disable                               rt-disable\n";
+    "  runtime-disable                               rt-disable\n"
+    "  success                                       test success\n"
+    "  fail                                          test fail\n";
 
 const std::vector<std::string> cmdList = {
     "allocationtrack",
@@ -125,8 +122,11 @@ const std::vector<std::string> cmdList = {
     "step-into",
     "step-out",
     "step-over",
-    "runtime-disable"
+    "runtime-disable",
+    "success",
+    "fail"
 };
+
 ErrCode CliCommand::ExecCommand()
 {
     CreateCommandMap();
@@ -193,7 +193,11 @@ void CliCommand::CreateCommandMap()
         {std::make_pair("step-out", "so"), std::bind(&CliCommand::DebuggerCommand, this, "step-out")},
         {std::make_pair("step-over", "sov"), std::bind(&CliCommand::DebuggerCommand, this, "step-over")},
         {std::make_pair("runtime-disable", "rt-disable"),
-            std::bind(&CliCommand::RuntimeCommand, this, "runtime-disable")}
+            std::bind(&CliCommand::RuntimeCommand, this, "runtime-disable")},
+        {std::make_pair("success", "success"),
+            std::bind(&CliCommand::TestCommand, this, "success")},
+        {std::make_pair("fail", "fail"),
+            std::bind(&CliCommand::TestCommand, this, "fail")}
     };
 }
 
@@ -202,16 +206,16 @@ ErrCode CliCommand::HeapProfilerCommand(const std::string &cmd)
     std::cout << "exe success, cmd is " << cmd << std::endl;
     std::string request;
     bool result = false;
-    HeapProfilerClient* heapProfilerClient = g_domainManager.GetHeapProfilerClient();
+    HeapProfilerClient &heapProfilerClient = domainManager_.GetHeapProfilerClient();
     VecStr argList = GetArgList();
     if (argList.empty()) {
         argList.push_back("/data/");
     }
-    result = heapProfilerClient->DispatcherCmd(id_, cmd, argList[0], &request);
+    result = heapProfilerClient.DispatcherCmd(id_, cmd, argList[0], &request);
     if (result) {
-        g_cliSocket.ClientSendReq(request);
-        if (g_domainManager.GetDomainById(id_).empty()) {
-            g_domainManager.SetDomainById(id_, "HeapProfiler");
+        cliSocket_.ClientSendReq(request);
+        if (domainManager_.GetDomainById(id_).empty()) {
+            domainManager_.SetDomainById(id_, "HeapProfiler");
         }
     } else {
         return ErrCode::ERR_FAIL;
@@ -224,23 +228,23 @@ ErrCode CliCommand::CpuProfileCommand(const std::string &cmd)
     std::cout << "exe success, cmd is " << cmd << std::endl;
     std::string request;
     bool result = false;
-    ProfilerClient* profilerClient = g_domainManager.GetProfilerClient();
+    ProfilerClient &profilerClient = domainManager_.GetProfilerClient();
     ProfilerSingleton& pro = ProfilerSingleton::GetInstance();
     if (cmd == "cpuprofile-show") {
         pro.ShowCpuFile();
         return ErrCode::ERR_OK;
     }
     if (cmd == "cpuprofile-setSamplingInterval") {
-        profilerClient->SetSamplingInterval(std::atoi(GetArgList()[0].c_str()));
+        profilerClient.SetSamplingInterval(std::atoi(GetArgList()[0].c_str()));
     }
     if (cmd == "cpuprofile-stop" && GetArgList().size() == 1) {
         pro.SetAddress(GetArgList()[0]);
     }
-    result = profilerClient->DispatcherCmd(id_, cmd, &request);
+    result = profilerClient.DispatcherCmd(id_, cmd, &request);
     if (result) {
-        g_cliSocket.ClientSendReq(request);
-        if (g_domainManager.GetDomainById(id_).empty()) {
-            g_domainManager.SetDomainById(id_, "Profiler");
+        cliSocket_.ClientSendReq(request);
+        if (domainManager_.GetDomainById(id_).empty()) {
+            domainManager_.SetDomainById(id_, "Profiler");
         }
     } else {
         return ErrCode::ERR_FAIL;
@@ -253,7 +257,7 @@ ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
     std::cout << "exe success, cmd is " << cmd << std::endl;
     std::string request;
     bool result = false;
-    DebuggerClient debuggerCli;
+    DebuggerClient &debuggerCli = domainManager_.GetDebuggerClient();
     BreakPointManager &breakpoint = BreakPointManager::GetInstance();
     if (cmd == "display") {
         breakpoint.Show();
@@ -272,7 +276,7 @@ ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
     }
 
     if (cmd == "step-into" || cmd == "step-out" || cmd == "step-over") {
-        RuntimeClient &runtimeClient = RuntimeClient::GetInstance();
+        RuntimeClient &runtimeClient = domainManager_.GetRuntimeClient();
         runtimeClient.SetIsInitializeTree(true);
     }
 
@@ -287,9 +291,9 @@ ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
 
     result = debuggerCli.DispatcherCmd(id_, cmd, &request);
     if (result) {
-        g_cliSocket.ClientSendReq(request);
-        if (g_domainManager.GetDomainById(id_).empty()) {
-            g_domainManager.SetDomainById(id_, "Debugger");
+        cliSocket_.ClientSendReq(request);
+        if (domainManager_.GetDomainById(id_).empty()) {
+            domainManager_.SetDomainById(id_, "Debugger");
         }
     } else {
         return ErrCode::ERR_FAIL;
@@ -302,7 +306,7 @@ ErrCode CliCommand::RuntimeCommand(const std::string &cmd)
     std::cout << "exe success, cmd is " << cmd << std::endl;
     std::string request;
     bool result = false;
-    RuntimeClient &runtimeClient = RuntimeClient::GetInstance();
+    RuntimeClient &runtimeClient = domainManager_.GetRuntimeClient();
 
     if (cmd == "print" && GetArgList().size() == 1) {
         runtimeClient.SetIsInitializeTree(false);
@@ -313,10 +317,29 @@ ErrCode CliCommand::RuntimeCommand(const std::string &cmd)
 
     result = runtimeClient.DispatcherCmd(id_, cmd, &request);
     if (result) {
-        g_cliSocket.ClientSendReq(request);
+        cliSocket_.ClientSendReq(request);
         runtimeClient.SetObjectId("0");
-        if (g_domainManager.GetDomainById(id_).empty()) {
-            g_domainManager.SetDomainById(id_, "Runtime");
+        if (domainManager_.GetDomainById(id_).empty()) {
+            domainManager_.SetDomainById(id_, "Runtime");
+        }
+    } else {
+        return ErrCode::ERR_FAIL;
+    }
+    return ErrCode::ERR_OK;
+}
+
+ErrCode CliCommand::TestCommand(const std::string &cmd)
+{
+    std::string request;
+    bool result = false;
+    if (cmd == "success" || cmd == "fail") {
+        TestClient &testClient = domainManager_.GetTestClient();
+        result = testClient.DispatcherCmd(id_, cmd, &request);
+        if (result) {
+            cliSocket_.ClientSendReq(request);
+            if (domainManager_.GetDomainById(id_).empty()) {
+                domainManager_.SetDomainById(id_, "Test");
+            }
         }
     } else {
         return ErrCode::ERR_FAIL;

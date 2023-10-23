@@ -21,7 +21,7 @@
 
 #include <vector>
 
-#include "pt_json.h"
+#include "tooling/base/pt_json.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 using PtJson = panda::ecmascript::tooling::PtJson;

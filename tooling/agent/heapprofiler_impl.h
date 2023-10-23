@@ -18,9 +18,9 @@
 
 #include <uv.h>
 
-#include "base/pt_params.h"
-#include "base/pt_events.h"
-#include "base/pt_returns.h"
+#include "tooling/base/pt_params.h"
+#include "tooling/base/pt_events.h"
+#include "tooling/base/pt_returns.h"
 #include "dispatcher.h"
 #include "protocol_handler.h"
 #include "protocol_channel.h"

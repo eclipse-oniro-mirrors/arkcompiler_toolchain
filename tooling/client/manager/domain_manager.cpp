@@ -16,8 +16,8 @@
 #include "domain_manager.h"
 
 #include "common/log_wrapper.h"
-#include "manager/breakpoint_manager.h"
-#include "pt_json.h"
+#include "tooling/client/manager/breakpoint_manager.h"
+#include "tooling/base/pt_json.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;

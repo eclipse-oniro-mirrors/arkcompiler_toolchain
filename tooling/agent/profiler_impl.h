@@ -16,8 +16,8 @@
 #ifndef ECMASCRIPT_TOOLING_AGENT_PROFILER_IMPL_H
 #define ECMASCRIPT_TOOLING_AGENT_PROFILER_IMPL_H
 
-#include "base/pt_params.h"
-#include "base/pt_returns.h"
+#include "tooling/base/pt_params.h"
+#include "tooling/base/pt_returns.h"
 #include "dispatcher.h"
 
 #include "ecmascript/dfx/cpu_profiler/samples_record.h"

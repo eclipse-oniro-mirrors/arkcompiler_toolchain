@@ -16,7 +16,7 @@
 #ifndef ECMASCRIPT_TOOLING_BASE_PT_PARAMS_H
 #define ECMASCRIPT_TOOLING_BASE_PT_PARAMS_H
 
-#include "base/pt_types.h"
+#include "tooling/base/pt_types.h"
 
 namespace panda::ecmascript::tooling {
 class PtBaseParams : public PtBaseTypes {

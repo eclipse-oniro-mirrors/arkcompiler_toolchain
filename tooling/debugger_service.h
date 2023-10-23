@@ -19,11 +19,7 @@
 #include <functional>
 #include <string>
 
-#ifndef PANDA_TARGET_WINDOWS
-#define TOOLCHAIN_EXPORT __attribute__((visibility ("default")))
-#else
-#define TOOLCHAIN_EXPORT __declspec(dllexport)
-#endif
+#include "common/macros.h"
 
 namespace panda::ecmascript {
 class EcmaVM;

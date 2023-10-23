@@ -18,10 +18,11 @@
 
 #include <iostream>
 
-#include "domain/debugger_client.h"
-#include "domain/heapprofiler_client.h"
-#include "domain/profiler_client.h"
-#include "domain/runtime_client.h"
+#include "tooling/client/domain/debugger_client.h"
+#include "tooling/client/domain/heapprofiler_client.h"
+#include "tooling/client/domain/profiler_client.h"
+#include "tooling/client/domain/runtime_client.h"
+#include "tooling/client/domain/test_client.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 class DomainManager {
@@ -53,21 +54,37 @@ public:
         }
     }
 
-    HeapProfilerClient* GetHeapProfilerClient()
+    HeapProfilerClient &GetHeapProfilerClient()
     {
-        return &heapProfilerClient_;
+        return heapProfilerClient_;
     }
 
-    ProfilerClient* GetProfilerClient()
+    ProfilerClient &GetProfilerClient()
     {
-        return &profilerClient_;
+        return profilerClient_;
+    }
+
+    DebuggerClient &GetDebuggerClient()
+    {
+        return debuggerClient_;
+    }
+
+    RuntimeClient &GetRuntimeClient()
+    {
+        return runtimeClient_;
+    }
+
+    TestClient &GetTestClient()
+    {
+        return testClient_;
     }
 
 private:
     HeapProfilerClient heapProfilerClient_ {};
     ProfilerClient profilerClient_ {};
     DebuggerClient debuggerClient_ {};
-    RuntimeClient &runtimeClient_ = RuntimeClient::GetInstance();
+    RuntimeClient runtimeClient_ {};
+    TestClient testClient_ {};
     std::map<uint32_t, std::string> idDomainMap_ {};
 };
 } // OHOS::ArkCompiler::Toolchain

@@ -18,7 +18,6 @@
 #include "test/utils/test_util.h"
 
 // testcase list
-#include "test/testcases/js_breakpoint_test.h"
 #include "test/testcases/js_breakpoint_arrow_test.h"
 #include "test/testcases/js_breakpoint_async_test.h"
 #include "test/testcases/js_exception_test.h"
@@ -45,7 +44,6 @@ static void RegisterTests()
     // Register testcases
     TestUtil::RegisterTest("JsExceptionTest", GetJsExceptionTest());
     TestUtil::RegisterTest("JsSingleStepTest", GetJsSingleStepTest());
-    TestUtil::RegisterTest("JsBreakpointTest", GetJsBreakpointTest());
     TestUtil::RegisterTest("JsBreakpointAsyncTest", GetJsBreakpointAsyncTest());
     TestUtil::RegisterTest("JsBreakpointArrowTest", GetJsBreakpointArrowTest());
     TestUtil::RegisterTest("JsRangeErrorTest", GetJsRangeErrorTest());
@@ -63,26 +61,9 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsClosureScopeTest", GetJsClosureScopeTest());
 }
 
-static void RegisterCInterpTests()
-{
-    TestUtil::RegisterTest("JSDropFrameTest", GetJsDropFrameTest());
-}
-
 std::vector<const char *> GetTestList()
 {
     RegisterTests();
-    std::vector<const char *> res;
-
-    auto &tests = TestUtil::GetTests();
-    for (const auto &entry : tests) {
-        res.push_back(entry.first.c_str());
-    }
-    return res;
-}
-
-std::vector<const char *> GetCInterpTestList()
-{
-    RegisterCInterpTests();
     std::vector<const char *> res;
 
     auto &tests = TestUtil::GetTests();

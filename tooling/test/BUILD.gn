@@ -26,7 +26,8 @@ config("debug_api_test") {
 
   include_dirs = [
     "//arkcompiler/ets_runtime",
-    "//arkcompiler/toolchain/tooling",
+    "../..",
+    "//third_party/cJSON",
   ]
 }
 
@@ -108,9 +109,9 @@ ohos_shared_library("jsdebugtest") {
   ]
 
   test_abc_dir = "/data/test/"
-  target_label = get_label_info(":${target_name}", "label_with_toolchain")
-  target_toolchain = get_label_info(target_label, "toolchain")
-  if (target_toolchain == host_toolchain || ark_standalone_build) {
+  test_label = get_label_info(":${target_name}", "label_with_toolchain")
+  test_toolchain = get_label_info(test_label, "toolchain")
+  if (test_toolchain == host_toolchain || ark_standalone_build) {
     test_abc_dir = rebase_path(target_out_dir)
   }
   test_js_dir = rebase_path(test_js_path)
@@ -236,10 +237,106 @@ host_unittest_action("DebuggerCInterpTest") {
   external_deps += [ "ets_runtime:libark_jsruntime_test" ]
 }
 
+host_unittest_action("DebuggerClientTest") {
+  module_out_path = module_output_path
+
+  sources = [
+    # test file
+    "client_utils/test_list.cpp",
+    "client_utils/test_util.cpp",
+    "debugger_client_test.cpp",
+  ]
+
+  test_abc_dir = "/data/test/"
+  test_label = get_label_info(":${target_name}", "label_with_toolchain")
+  test_toolchain = get_label_info(test_label, "toolchain")
+  if (test_toolchain == host_toolchain || ark_standalone_build) {
+    test_abc_dir = rebase_path(target_out_dir)
+  }
+  test_js_dir = rebase_path(test_js_path)
+
+  defines = [
+    "DEBUGGER_ABC_DIR=\"${test_abc_dir}/\"",
+    "DEBUGGER_JS_DIR=\"${test_js_dir}\"",
+  ]
+
+  cflags_cc = [ "-Wno-gnu-zero-variadic-macro-arguments" ]
+
+  configs = [ ":debug_api_test" ]
+
+  deps = [
+    ":debugger_client_resource",
+    "$ark_third_party_root/icu/icu4c:shared_icui18n",
+    "$ark_third_party_root/icu/icu4c:shared_icuuc",
+    "$toolchain_root/tooling:libark_ecma_debugger",
+    "../client:libark_client",
+  ]
+
+  # hiviewdfx libraries
+  external_deps = hiviewdfx_ext_deps
+  deps += hiviewdfx_deps
+
+  external_deps += [ "ets_runtime:libark_jsruntime" ]
+}
+
+host_unittest_action("DebuggerCIntClientTest") {
+  module_out_path = module_output_path
+
+  sources = [
+    # test file
+    "client_utils/test_list.cpp",
+    "client_utils/test_util.cpp",
+    "debugger_cint_client_test.cpp",
+  ]
+
+  cflags_cc = [ "-Wno-gnu-zero-variadic-macro-arguments" ]
+
+  test_abc_dir = "/data/test/"
+  test_label = get_label_info(":${target_name}", "label_with_toolchain")
+  test_toolchain = get_label_info(test_label, "toolchain")
+  if (test_toolchain == host_toolchain || ark_standalone_build) {
+    test_abc_dir = rebase_path(target_out_dir)
+  }
+  test_js_dir = rebase_path(test_js_path)
+
+  defines = [
+    "DEBUGGER_ABC_DIR=\"${test_abc_dir}/\"",
+    "DEBUGGER_JS_DIR=\"${test_js_dir}\"",
+  ]
+
+  configs = [ ":debug_api_test" ]
+
+  deps = [
+    ":debugger_client_resource",
+    "$ark_third_party_root/icu/icu4c:shared_icui18n",
+    "$ark_third_party_root/icu/icu4c:shared_icuuc",
+    "$toolchain_root/tooling:libark_ecma_debugger",
+    "../client:libark_client",
+  ]
+
+  # hiviewdfx libraries
+  external_deps = hiviewdfx_ext_deps
+  deps += hiviewdfx_deps
+
+  external_deps += [ "ets_runtime:libark_jsruntime" ]
+}
+
 group("debugger_entry_resource") {
   testonly = true
 
   deps = [ ":debugger_entry" ]
+  foreach(file, test_js_files) {
+    deps += [ ":gen_${file}_abc" ]
+  }
+}
+
+group("debugger_client_resource") {
+  testonly = true
+
+  deps = [ "../../inspector:ark_debugger" ]
+  foreach(file, test_js_files) {
+    deps += [ ":gen_${file}_abc" ]
+  }
 }
 
 group("unittest") {
@@ -247,7 +344,9 @@ group("unittest") {
 
   # deps file
   deps = [
+    ":DebuggerCIntClientTest",
     ":DebuggerCInterpTest",
+    ":DebuggerClientTest",
     ":DebuggerEntryTest",
     ":DebuggerTest",
   ]
@@ -258,7 +357,9 @@ group("host_unittest") {
 
   # deps file
   deps = [
+    ":DebuggerCIntClientTestAction",
     ":DebuggerCInterpTestAction",
+    ":DebuggerClientTestAction",
     ":DebuggerEntryTestAction",
     ":DebuggerTestAction",
   ]

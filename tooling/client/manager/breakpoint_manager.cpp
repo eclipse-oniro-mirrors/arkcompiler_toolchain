@@ -13,9 +13,10 @@
  * limitations under the License.
  */
 
-#include "manager/breakpoint_manager.h"
-#include "ark_cli/cli_command.h"
+#include "tooling/client/manager/breakpoint_manager.h"
+
 #include "common/log_wrapper.h"
+#include "tooling/client/utils/utils.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;
@@ -51,7 +52,7 @@ void BreakPointManager::Createbreaklocation(const std::unique_ptr<PtJson> json)
         Breaklocation breaklocation;
         breaklocation.breakpointId = breakpointId;
         std::vector<std::string> breaksplitstring;
-        breaksplitstring = SplitString(breakpointId, ':');
+        breaksplitstring = Utils::SplitString(breakpointId, ":");
         breaklocation.lineNumber = breaksplitstring[1]; // 1: linenumber
         breaklocation.columnNumber = breaksplitstring[2]; // 2: columnnumber
         breaklocation.url = breaksplitstring[3]; // 3: url
@@ -60,23 +61,6 @@ void BreakPointManager::Createbreaklocation(const std::unique_ptr<PtJson> json)
         LOGE("arkdb: find breakpointId error");
         return;
     }
-}
-
-std::vector<std::string> BreakPointManager::SplitString(std::string &str, const char delimiter)
-{
-    int size = str.size();
-    std::vector<std::string> value;
-    for (int i = 0; i < size; i++) {
-        if (str[i] == delimiter) {
-            str[i] = ' ';
-        }
-    }
-    std::istringstream out(str);
-    std::string sstr;
-    while (out >> sstr) {
-        value.push_back(sstr);
-    }
-    return value;
 }
 
 void BreakPointManager::Show()

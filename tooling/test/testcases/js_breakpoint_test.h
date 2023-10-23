@@ -13,54 +13,73 @@
  * limitations under the License.
  */
 
-#ifndef ECMASCRIPT_TOOLING_TEST_UTILS_TESTCASES_JS_BREAKPOINT_TEST_H
-#define ECMASCRIPT_TOOLING_TEST_UTILS_TESTCASES_JS_BREAKPOINT_TEST_H
+#ifndef ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_BREAKPOINT_TEST_H
+#define ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_BREAKPOINT_TEST_H
 
-#include "test/utils/test_util.h"
+#include "tooling/test/client_utils/test_util.h"
 
 namespace panda::ecmascript::tooling::test {
-class JsBreakpointTest : public TestEvents {
+class JsBreakpointTest : public TestActions {
 public:
     JsBreakpointTest()
     {
-        breakpoint = [this](const JSPtLocation &location) {
-            ASSERT_TRUE(location.GetMethodId().IsValid());
-            ASSERT_LOCATION_EQ(location, location_);
-            ++breakpointCounter_;
-            TestUtil::SuspendUntilContinue(DebugEvent::BREAKPOINT, location);
-            return true;
-        };
+        testAction = {
+            {SocketAction::SEND, "enable"},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::SEND, "runtime-enable"},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::SEND, "run"},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            // load sample.js
+            {SocketAction::RECV, "Debugger.scriptParsed", ActionRule::STRING_CONTAIN},
+            // break on start
+            {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
+            // set breakpoint
+            {SocketAction::SEND, "b " DEBUGGER_JS_DIR "sample.js 21"},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            // hit breakpoint after resume first time
+            {SocketAction::SEND, "resume"},
+            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
+            // hit breakpoint after resume second time
+            {SocketAction::SEND, "resume"},
+            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::RECV, "Debugger.paused", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+                std::unique_ptr<PtJson> json = PtJson::Parse(recv);
+                Result ret;
+                std::string method;
+                ret = json->GetString("method", &method);
+                if (ret != Result::SUCCESS || method != "Debugger.paused") {
+                    return false;
+                }
 
-        loadModule = [this](std::string_view moduleName) {
-            runtime_->Enable();
-            // 22: breakpointer line
-            location_ = TestUtil::GetLocation(sourceFile_.c_str(), 22, 0, pandaFile_.c_str());
-            ASSERT_TRUE(location_.GetMethodId().IsValid());
-            TestUtil::SuspendUntilContinue(DebugEvent::LOAD_MODULE);
-            ASSERT_EQ(moduleName, pandaFile_);
-            ASSERT_TRUE(debugger_->NotifyScriptParsed(0, pandaFile_));
-            auto condFuncRef = FunctionRef::Undefined(vm_);
-            auto ret = debugInterface_->SetBreakpoint(location_, condFuncRef);
-            ASSERT_TRUE(ret);
-            return true;
-        };
+                std::unique_ptr<PtJson> params = nullptr;
+                ret = json->GetObject("params", &params);
+                if (ret != Result::SUCCESS) {
+                    return false;
+                }
 
-        scenario = [this]() {
-            TestUtil::WaitForLoadModule();
-            TestUtil::Continue();
-            TestUtil::WaitForBreakpoint(location_);
-            TestUtil::Continue();
-            TestUtil::WaitForBreakpoint(location_);
-            TestUtil::Continue();
-            auto ret = debugInterface_->RemoveBreakpoint(location_);
-            ASSERT_TRUE(ret);
-            ASSERT_EXITED();
-            return true;
-        };
+                std::unique_ptr<PtJson> hitBreakpoints = nullptr;
+                ret = params->GetArray("hitBreakpoints", &hitBreakpoints);
+                if (ret != Result::SUCCESS) {
+                    return false;
+                }
 
-        vmDeath = [this]() {
-            ASSERT_EQ(breakpointCounter_, 2U);  // 2: break point counter
-            return true;
+                std::string breakpoint;
+                breakpoint = hitBreakpoints->Get(0)->GetString();
+                if (ret != Result::SUCCESS || breakpoint.find(sourceFile_) == std::string::npos ||
+                    breakpoint.find("21") == std::string::npos) {
+                    return false;
+                }
+                return true;
+            }},
+            // reply success and run
+            {SocketAction::SEND, "success"},
+            {SocketAction::SEND, "resume"},
+            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
         };
     }
 
@@ -74,14 +93,12 @@ private:
     std::string pandaFile_ = DEBUGGER_ABC_DIR "sample.abc";
     std::string sourceFile_ = DEBUGGER_JS_DIR "sample.js";
     std::string entryPoint_ = "_GLOBAL::func_main_0";
-    JSPtLocation location_ {nullptr, JSPtLocation::EntityId(0), 0};
-    size_t breakpointCounter_ = 0;
 };
 
-std::unique_ptr<TestEvents> GetJsBreakpointTest()
+std::unique_ptr<TestActions> GetJsBreakpointTest()
 {
     return std::make_unique<JsBreakpointTest>();
 }
 }  // namespace panda::ecmascript::tooling::test
 
-#endif  // ECMASCRIPT_TOOLING_TEST_UTILS_TESTCASES_JS_BREAKPOINT_TEST_H
+#endif  // ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_BREAKPOINT_TEST_H

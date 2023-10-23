@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "base/pt_events.h"
+#include "tooling/base/pt_events.h"
 
 namespace panda::ecmascript::tooling {
 std::unique_ptr<PtJson> BreakpointResolved::ToJson() const

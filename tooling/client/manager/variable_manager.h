@@ -19,10 +19,10 @@
 #include <iostream>
 #include <map>
 
-#include "manager/stack_manager.h"
-#include "pt_json.h"
-#include "pt_returns.h"
-#include "pt_types.h"
+#include "tooling/client/manager/stack_manager.h"
+#include "tooling/base/pt_json.h"
+#include "tooling/base/pt_returns.h"
+#include "tooling/base/pt_types.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;

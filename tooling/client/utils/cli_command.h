@@ -21,17 +21,16 @@
 #include <map>
 #include <vector>
 
-#include "domain/heapprofiler_client.h"
-#include "domain/profiler_client.h"
 #include "common/log_wrapper.h"
-#include "manager/domain_manager.h"
-#include "websocket/websocket_client.h"
+#include "tooling/client/domain/heapprofiler_client.h"
+#include "tooling/client/domain/profiler_client.h"
+#include "tooling/client/manager/domain_manager.h"
+#include "tooling/client/utils/utils.h"
+#include "tooling/client/websocket/websocket_client.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 using StrPair = std::pair<std::string, std::string>;
 using VecStr = std::vector<std::string>;
-extern DomainManager g_domainManager;
-extern WebsocketClient g_cliSocket;
 
 enum class ErrCode : uint8_t {
     ERR_OK   = 0,
@@ -40,11 +39,10 @@ enum class ErrCode : uint8_t {
 
 class CliCommand {
 public:
-    CliCommand(std::vector<std::string> cliCmdStr, int cmdId)
+    CliCommand(std::vector<std::string> cliCmdStr, int cmdId, DomainManager &domainManager, WebsocketClient &cliSocket)
+        : cmd_(cliCmdStr[0]), id_(cmdId), domainManager_(domainManager), cliSocket_(cliSocket)
     {
-        id_ = cmdId;
-        cmd_ = cliCmdStr[0];
-        for (unsigned int i = 1; i < cliCmdStr.size(); i++) {
+        for (size_t i = 1; i < cliCmdStr.size(); i++) {
             argList_.push_back(cliCmdStr[i]);
         }
     }
@@ -58,6 +56,7 @@ public:
     ErrCode DebuggerCommand(const std::string &cmd);
     ErrCode CpuProfileCommand(const std::string &cmd);
     ErrCode RuntimeCommand(const std::string &cmd);
+    ErrCode TestCommand(const std::string &cmd);
     ErrCode ExecHelpCommand();
 
     uint32_t GetId() const
@@ -76,6 +75,8 @@ private:
     std::map<StrPair, std::function<ErrCode()>> commandMap_;
     std::string resultReceiver_ = "";
     uint32_t id_ = 0;
+    DomainManager &domainManager_;
+    WebsocketClient &cliSocket_;
 };
 } // namespace OHOS::ArkCompiler::Toolchain
 

@@ -15,11 +15,11 @@
 
 #include "agent/debugger_impl.h"
 
-#include "base/pt_base64.h"
-#include "base/pt_events.h"
-#include "base/pt_params.h"
-#include "base/pt_returns.h"
-#include "base/pt_types.h"
+#include "tooling/base/pt_base64.h"
+#include "tooling/base/pt_events.h"
+#include "tooling/base/pt_params.h"
+#include "tooling/base/pt_returns.h"
+#include "tooling/base/pt_types.h"
 #include "backend/debugger_executor.h"
 #include "dispatcher.h"
 #include "protocol_handler.h"
@@ -63,7 +63,8 @@ DebuggerImpl::~DebuggerImpl()
 bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &fileName, std::string_view entryPoint)
 {
 #if !defined(PANDA_TARGET_WINDOWS) && !defined(PANDA_TARGET_MACOS) \
-    && !defined(PANDA_TARGET_ANDROID) && !defined(PANDA_TARGET_IOS)
+    && !defined(PANDA_TARGET_ANDROID) && !defined(PANDA_TARGET_IOS) \
+    && !defined(PANDA_TARGET_LINUX)
     if (fileName.substr(0, DATA_APP_PATH.length()) != DATA_APP_PATH) {
         LOG_DEBUGGER(DEBUG) << "NotifyScriptParsed: unsupport file: " << fileName;
         return false;
@@ -971,6 +972,7 @@ bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
         };
         if (!extractor->MatchWithLocation(matchLocationCbFunc, lineNumber, columnNumber, url, GetRecordName(url))) {
             LOG_DEBUGGER(ERROR) << "failed to set breakpoint location number: " << lineNumber << ":" << columnNumber;
+            return false;
         }
     }
     
