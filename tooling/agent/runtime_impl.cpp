@@ -322,7 +322,6 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
     if (!skipProto) {
         GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
     }
-    GetAdditionalProperties(value, outPropertyDesc);
 
     return DispatchResponse::Ok();
 }
