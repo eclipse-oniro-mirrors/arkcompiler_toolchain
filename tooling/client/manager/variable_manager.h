@@ -74,7 +74,7 @@ private:
 
 class VariableManager final {
 public:
-    static VariableManager& GetInstance();
+    VariableManager(int32_t sessionId) : sessionId_(sessionId) {}
     void SetHeapUsageInfo(std::unique_ptr<GetHeapUsageReturns> heapUsageReturns);
     void ShowHeapUsageInfo() const;
     void ShowVariableInfos() const;
@@ -88,8 +88,7 @@ public:
     void Printinfo() const;
 
 private:
-    VariableManager() = default;
-    static VariableManager instance_;
+    [[maybe_unused]] int32_t sessionId_;
     GetHeapUsageReturns heapUsageInfo_ {};
     Tree variableInfo_ {0};
     VariableManager(const VariableManager&) = delete;

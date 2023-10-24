@@ -254,11 +254,14 @@ std::string WebsocketClient::Decode()
         return "";
     }
     char recvbuf[SOCKET_HEADER_LEN + 1];
+    errno = 0;
     if (!Recv(client_, recvbuf, SOCKET_HEADER_LEN, 0)) {
-        LOGE("WebsocketClient:Decode failed, client websocket disconnect");
-        socketState_ = ToolchainSocketState::INITED;
-        close(client_);
-        client_ = -1;
+        if (errno != EAGAIN) {
+            LOGE("WebsocketClient:Decode failed, client websocket disconnect");
+            socketState_ = ToolchainSocketState::INITED;
+            close(client_);
+            client_ = -1;
+        }
         return "";
     }
     ToolchainWebSocketFrame wsFrame;
@@ -424,5 +427,16 @@ bool WebsocketClient::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
 bool WebsocketClient::IsConnected()
 {
     return socketState_ == ToolchainSocketState::CONNECTED;
+}
+
+std::string WebsocketClient::GetSocketStateString()
+{
+    std::vector<std::string> stateStr = {
+        "uninited",
+        "inited",
+        "connected"
+    };
+
+    return stateStr[socketState_];
 }
 }  // namespace OHOS::ArkCompiler::Toolchain

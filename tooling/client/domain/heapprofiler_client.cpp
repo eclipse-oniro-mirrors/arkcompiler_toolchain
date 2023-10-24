@@ -16,6 +16,7 @@
 #include "tooling/client/domain/heapprofiler_client.h"
 #include "common/log_wrapper.h"
 #include "tooling/client/utils/utils.h"
+#include "tooling/client/session/session.h"
 
 #include <map>
 #include <functional>
@@ -24,38 +25,37 @@
 using Result = panda::ecmascript::tooling::Result;
 namespace OHOS::ArkCompiler::Toolchain {
 static constexpr int32_t SAMPLING_INTERVAL = 16384;
-bool HeapProfilerClient::DispatcherCmd(int id, const std::string &cmd, const std::string &arg, std::string* reqStr)
+bool HeapProfilerClient::DispatcherCmd(const std::string &cmd, const std::string &arg)
 {
-    if (reqStr == nullptr) {
-        return false;
-    }
     path_ = arg;
 
-    std::map<std::string, std::function<std::string()>> dispatcherTable {
-        { "allocationtrack", std::bind(&HeapProfilerClient::AllocationTrackCommand, this, id)},
-        { "allocationtrack-stop", std::bind(&HeapProfilerClient::AllocationTrackStopCommand, this, id)},
-        { "heapdump", std::bind(&HeapProfilerClient::HeapDumpCommand, this, id)},
-        { "heapprofiler-enable", std::bind(&HeapProfilerClient::Enable, this, id)},
-        { "heapprofiler-disable", std::bind(&HeapProfilerClient::Disable, this, id)},
-        { "sampling", std::bind(&HeapProfilerClient::Samping, this, id)},
-        { "sampling-stop", std::bind(&HeapProfilerClient::SampingStop, this, id)},
-        { "collectgarbage", std::bind(&HeapProfilerClient::CollectGarbage, this, id)}
+    std::map<std::string, std::function<int()>> dispatcherTable {
+        { "allocationtrack", std::bind(&HeapProfilerClient::AllocationTrackCommand, this)},
+        { "allocationtrack-stop", std::bind(&HeapProfilerClient::AllocationTrackStopCommand, this)},
+        { "heapdump", std::bind(&HeapProfilerClient::HeapDumpCommand, this)},
+        { "heapprofiler-enable", std::bind(&HeapProfilerClient::Enable, this)},
+        { "heapprofiler-disable", std::bind(&HeapProfilerClient::Disable, this)},
+        { "sampling", std::bind(&HeapProfilerClient::Samping, this)},
+        { "sampling-stop", std::bind(&HeapProfilerClient::SampingStop, this)},
+        { "collectgarbage", std::bind(&HeapProfilerClient::CollectGarbage, this)}
     };
 
     auto entry = dispatcherTable.find(cmd);
     if (entry != dispatcherTable.end() && entry->second != nullptr) {
-        *reqStr = entry->second();
-        LOGI("DispatcherCmd reqStr1: %{public}s", reqStr->c_str());
+        entry->second();
+        LOGI("DispatcherCmd reqStr1: %{public}s", cmd.c_str());
         return true;
     }
 
-    *reqStr = "Unknown commond: " + cmd;
-    LOGI("DispatcherCmd reqStr2: %{public}s", reqStr->c_str());
+    LOGI("unknown command: %{public}s", cmd.c_str());
     return false;
 }
 
-std::string HeapProfilerClient::HeapDumpCommand(int id)
+int HeapProfilerClient::HeapDumpCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idEventMap_.emplace(id, HEAPDUMP);
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -66,11 +66,19 @@ std::string HeapProfilerClient::HeapDumpCommand(int id)
     params->Add("captureNumericValue", true);
     params->Add("exposeInternals", false);
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "HeapProfiler");
+    }
+    return 0;
 }
 
-std::string HeapProfilerClient::AllocationTrackCommand(int id)
+int HeapProfilerClient::AllocationTrackCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idEventMap_.emplace(id, ALLOCATION);
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -79,11 +87,19 @@ std::string HeapProfilerClient::AllocationTrackCommand(int id)
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     params->Add("trackAllocations", true);
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "HeapProfiler");
+    }
+    return 0;
 }
 
-std::string HeapProfilerClient::AllocationTrackStopCommand(int id)
+int HeapProfilerClient::AllocationTrackStopCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idEventMap_.emplace(id, ALLOCATION_STOP);
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -92,11 +108,19 @@ std::string HeapProfilerClient::AllocationTrackStopCommand(int id)
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     params->Add("reportProgress", true);
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "HeapProfiler");
+    }
+    return 0;
 }
 
-std::string HeapProfilerClient::Enable(int id)
+int HeapProfilerClient::Enable()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idEventMap_.emplace(id, ENABLE);
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -104,11 +128,19 @@ std::string HeapProfilerClient::Enable(int id)
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "HeapProfiler");
+    }
+    return 0;
 }
 
-std::string HeapProfilerClient::Disable(int id)
+int HeapProfilerClient::Disable()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idEventMap_.emplace(id, DISABLE);
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -116,11 +148,19 @@ std::string HeapProfilerClient::Disable(int id)
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "HeapProfiler");
+    }
+    return 0;
 }
 
-std::string HeapProfilerClient::Samping(int id)
+int HeapProfilerClient::Samping()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idEventMap_.emplace(id, SAMPLING);
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -129,11 +169,19 @@ std::string HeapProfilerClient::Samping(int id)
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     params->Add("samplingInterval", SAMPLING_INTERVAL);
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "HeapProfiler");
+    }
+    return 0;
 }
 
-std::string HeapProfilerClient::SampingStop(int id)
+int HeapProfilerClient::SampingStop()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idEventMap_.emplace(id, SAMPLING_STOP);
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -141,11 +189,19 @@ std::string HeapProfilerClient::SampingStop(int id)
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "HeapProfiler");
+    }
+    return 0;
 }
 
-std::string HeapProfilerClient::CollectGarbage(int id)
+int HeapProfilerClient::CollectGarbage()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idEventMap_.emplace(id, COLLECT_GARBAGE);
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -153,7 +209,12 @@ std::string HeapProfilerClient::CollectGarbage(int id)
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "HeapProfiler");
+    }
+    return 0;
 }
 
 void HeapProfilerClient::RecvReply(std::unique_ptr<PtJson> json)
@@ -213,10 +274,12 @@ void HeapProfilerClient::RecvReply(std::unique_ptr<PtJson> json)
             return;
         }
         if (isAllocationMsg_) {
-            fileName_ = "Heap-" + std::string(date) + "T" + std::string(time) + ".heaptimeline";
+            fileName_ = "Heap-" + std::to_string(sessionId_) + "-" + std::string(date) + "T" + std::string(time) +
+                        ".heaptimeline";
             std::cout << "heaptimeline file name is " << fileName_ << std::endl;
         } else {
-            fileName_ = "Heap-" + std::string(date) + "T" + std::string(time) + ".heapsnapshot";
+            fileName_ = "Heap-"+ std::to_string(sessionId_) + "-"  + std::string(date) + "T" + std::string(time) +
+                        ".heapsnapshot";
             std::cout << "heapsnapshot file name is " << fileName_ << std::endl;
         }
         std::cout << ">>> ";

@@ -38,18 +38,18 @@ enum HeapProfilerEvent {
 };
 class HeapProfilerClient final {
 public:
-    HeapProfilerClient() = default;
+    HeapProfilerClient(uint32_t sessionId) : sessionId_(sessionId) {}
     ~HeapProfilerClient() = default;
 
-    bool DispatcherCmd(int id, const std::string &cmd, const std::string &arg, std::string* reqStr);
-    std::string HeapDumpCommand(int id);
-    std::string AllocationTrackCommand(int id);
-    std::string AllocationTrackStopCommand(int id);
-    std::string Enable(int id);
-    std::string Disable(int id);
-    std::string Samping(int id);
-    std::string SampingStop(int id);
-    std::string CollectGarbage(int id);
+    bool DispatcherCmd(const std::string &cmd, const std::string &arg);
+    int HeapDumpCommand();
+    int AllocationTrackCommand();
+    int AllocationTrackStopCommand();
+    int Enable();
+    int Disable();
+    int Samping();
+    int SampingStop();
+    int CollectGarbage();
     void RecvReply(std::unique_ptr<PtJson> json);
     bool WriteHeapProfilerForFile(const std::string &fileName, const std::string &data);
 
@@ -58,6 +58,7 @@ private:
     std::map<uint32_t, HeapProfilerEvent> idEventMap_;
     std::string path_;
     bool isAllocationMsg_ {false};
+    uint32_t sessionId_;
 };
 } // OHOS::ArkCompiler::Toolchain
 #endif

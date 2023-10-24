@@ -18,6 +18,7 @@
 #include "tooling/client/domain/debugger_client.h"
 #include "tooling/client/domain/runtime_client.h"
 #include "tooling/client/utils/cli_command.h"
+#include "tooling/client/session/session.h"
 
 namespace panda::ecmascript::tooling::test {
 TestMap TestUtil::testMap_;
@@ -67,19 +68,19 @@ std::ostream &operator<<(std::ostream &out, ActionRule value)
     return out << s;
 }
 
-void TestUtil::NotifySuccess(int cmdId, DomainManager &domainManager, WebsocketClient &client)
+void TestUtil::NotifySuccess()
 {
     std::vector<std::string> cliCmdStr = { "success" };
-    CliCommand cmd(cliCmdStr, cmdId, domainManager, client);
+    CliCommand cmd(cliCmdStr, 0);
     if (cmd.ExecCommand() == ErrCode::ERR_FAIL) {
         LOG_DEBUGGER(ERROR) << "ExecCommand Test.success fail";
     }
 }
 
-void TestUtil::NotifyFail(int cmdId, DomainManager &domainManager, WebsocketClient &client)
+void TestUtil::NotifyFail()
 {
     std::vector<std::string> cliCmdStr = { "fail" };
-    CliCommand cmd(cliCmdStr, cmdId, domainManager, client);
+    CliCommand cmd(cliCmdStr, 0);
     if (cmd.ExecCommand() == ErrCode::ERR_FAIL) {
         LOG_DEBUGGER(ERROR) << "ExecCommand Test.fail fail";
     }
@@ -87,7 +88,6 @@ void TestUtil::NotifyFail(int cmdId, DomainManager &domainManager, WebsocketClie
 
 void TestUtil::ForkSocketClient([[maybe_unused]] int port, const std::string &name)
 {
-    int cmdId = 0;
 #ifdef OHOS_PLATFORM
     auto correntPid = getpid();
 #endif
@@ -98,28 +98,23 @@ void TestUtil::ForkSocketClient([[maybe_unused]] int port, const std::string &na
     } else if (pid == 0) {
         LOG_DEBUGGER(INFO) << "fork son pid: " << getpid();
         std::this_thread::sleep_for(std::chrono::microseconds(500000));  // 500000: 500ms for wait debugger
-        DomainManager domainManager;
-        WebsocketClient client;
 #ifdef OHOS_PLATFORM
         std::string pidStr = std::to_string(correntPid);
-        std::string sockName = pidStr + "PandaDebugger";
-        bool ret = client.InitToolchainWebSocketForSockName(sockName, 120);
+        std::string sockInfo = pidStr + "PandaDebugger";
 #else
-        bool ret = client.InitToolchainWebSocketForPort(port, 120);
+        std::string sockInfo = std::to_string(port);
 #endif
-        LOG_ECMA_IF(!ret, FATAL) << "InitToolchainWebSocketForPort fail";
-        ret = client.ClientSendWSUpgradeReq();
-        LOG_ECMA_IF(!ret, FATAL) << "ClientSendWSUpgradeReq fail";
-        ret = client.ClientRecvWSUpgradeRsp();
-        LOG_ECMA_IF(!ret, FATAL) << "ClientRecvWSUpgradeRsp fail";
+        int ret = SessionManager::getInstance().CreateTestSession(sockInfo);
+        LOG_ECMA_IF(ret, FATAL) << "CreateTestSession fail";
 
+        WebsocketClient &client = SessionManager::getInstance().GetCurrentSession()->GetWebsocketClient();
         auto &testAction = TestUtil::GetTest(name)->testAction;
         for (const auto &action: testAction) {
             LOG_DEBUGGER(INFO) << "message: " << action.message;
             bool success = true;
             if (action.action == SocketAction::SEND) {
                 std::vector<std::string> cliCmdStr = Utils::SplitString(action.message, " ");
-                CliCommand cmd(cliCmdStr, cmdId++, domainManager, client);
+                CliCommand cmd(cliCmdStr, 0);
                 success = (cmd.ExecCommand() == ErrCode::ERR_OK);
             } else {
                 ASSERT(action.action == SocketAction::RECV);
@@ -143,14 +138,14 @@ void TestUtil::ForkSocketClient([[maybe_unused]] int port, const std::string &na
             }
             if (!success) {
                 LOG_DEBUGGER(ERROR) << "Notify fail";
-                NotifyFail(cmdId++, domainManager, client);
-                client.Close();
+                NotifyFail();
+                SessionManager::getInstance().DelSessionById(0);
                 exit(-1);
             }
         }
 
-        NotifySuccess(cmdId++, domainManager, client);
-        client.Close();
+        NotifySuccess();
+        SessionManager::getInstance().DelSessionById(0);
         exit(0);
     }
     LOG_DEBUGGER(INFO) << "ForkSocketClient end";

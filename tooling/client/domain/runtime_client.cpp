@@ -18,34 +18,37 @@
 #include "common/log_wrapper.h"
 #include "tooling/client/manager/variable_manager.h"
 #include "tooling/base/pt_json.h"
+#include "tooling/client/session/session.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 namespace OHOS::ArkCompiler::Toolchain {
-bool RuntimeClient::DispatcherCmd(int id, const std::string &cmd, std::string* reqStr)
+bool RuntimeClient::DispatcherCmd(const std::string &cmd)
 {
-    std::map<std::string, std::function<std::string()>> dispatcherTable {
-        { "heapusage", std::bind(&RuntimeClient::HeapusageCommand, this, id)},
-        { "runtime-enable", std::bind(&RuntimeClient::RuntimeEnableCommand, this, id)},
-        { "runtime-disable", std::bind(&RuntimeClient::RuntimeDisableCommand, this, id)},
-        { "print", std::bind(&RuntimeClient::GetPropertiesCommand, this, id)},
-        { "print2", std::bind(&RuntimeClient::GetPropertiesCommand2, this, id)},
-        { "run", std::bind(&RuntimeClient::RunIfWaitingForDebuggerCommand, this, id)},
+    std::map<std::string, std::function<int()>> dispatcherTable {
+        { "heapusage", std::bind(&RuntimeClient::HeapusageCommand, this)},
+        { "runtime-enable", std::bind(&RuntimeClient::RuntimeEnableCommand, this)},
+        { "runtime-disable", std::bind(&RuntimeClient::RuntimeDisableCommand, this)},
+        { "print", std::bind(&RuntimeClient::GetPropertiesCommand, this)},
+        { "print2", std::bind(&RuntimeClient::GetPropertiesCommand2, this)},
+        { "run", std::bind(&RuntimeClient::RunIfWaitingForDebuggerCommand, this)},
     };
 
     auto entry = dispatcherTable.find(cmd);
     if (entry != dispatcherTable.end()) {
-        *reqStr = entry->second();
-        LOGI("RuntimeClient DispatcherCmd reqStr1: %{public}s", reqStr->c_str());
+        entry->second();
+        LOGI("RuntimeClient DispatcherCmd reqStr1: %{public}s", cmd.c_str());
         return true;
     } else {
-        *reqStr = "Unknown commond: " + cmd;
-        LOGI("RuntimeClient DispatcherCmd reqStr2: %{public}s", reqStr->c_str());
+        LOGI("Unknown commond: %{public}s", cmd.c_str());
         return false;
     }
 }
 
-std::string RuntimeClient::HeapusageCommand(int id)
+int RuntimeClient::HeapusageCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idMethodMap_[id] = std::make_tuple("getHeapUsage", "");
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -53,11 +56,19 @@ std::string RuntimeClient::HeapusageCommand(int id)
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Runtime");
+    }
+    return 0;
 }
 
-std::string RuntimeClient::RuntimeEnableCommand(int id)
+int RuntimeClient::RuntimeEnableCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idMethodMap_[id] = std::make_tuple("enable", "");
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -65,11 +76,19 @@ std::string RuntimeClient::RuntimeEnableCommand(int id)
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Runtime");
+    }
+    return 0;
 }
 
-std::string RuntimeClient::RuntimeDisableCommand(int id)
+int RuntimeClient::RuntimeDisableCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idMethodMap_[id] = std::make_tuple("disable", "");
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -77,11 +96,19 @@ std::string RuntimeClient::RuntimeDisableCommand(int id)
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Runtime");
+    }
+    return 0;
 }
 
-std::string RuntimeClient::RunIfWaitingForDebuggerCommand(int id)
+int RuntimeClient::RunIfWaitingForDebuggerCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idMethodMap_[id] = std::make_tuple("runIfWaitingForDebugger", "");
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -89,11 +116,19 @@ std::string RuntimeClient::RunIfWaitingForDebuggerCommand(int id)
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Runtime");
+    }
+    return 0;
 }
 
-std::string RuntimeClient::GetPropertiesCommand(int id)
+int RuntimeClient::GetPropertiesCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idMethodMap_[id] = std::make_tuple("getProperties", objectId_);
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -105,11 +140,19 @@ std::string RuntimeClient::GetPropertiesCommand(int id)
     params->Add("objectId", objectId_.c_str());
     params->Add("ownProperties", true);
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Runtime");
+    }
+    return 0;
 }
 
-std::string RuntimeClient::GetPropertiesCommand2(int id)
+int RuntimeClient::GetPropertiesCommand2()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idMethodMap_[id] = std::make_tuple("getProperties", objectId_);
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -121,7 +164,12 @@ std::string RuntimeClient::GetPropertiesCommand2(int id)
     params->Add("objectId", "0");
     params->Add("ownProperties", false);
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Runtime");
+    }
+    return 0;
 }
 
 void RuntimeClient::RecvReply(std::unique_ptr<PtJson> json)
@@ -198,8 +246,9 @@ void RuntimeClient::HandleGetProperties(std::unique_ptr<PtJson> json, const int 
         return;
     }
 
-    StackManager &stackManager = StackManager::GetInstance();
-    VariableManager &variableManager = VariableManager::GetInstance();
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    StackManager &stackManager = session->GetStackManager();
+    VariableManager &variableManager = session->GetVariableManager();
     std::map<int32_t, std::map<int32_t, std::string>> treeInfo = stackManager.GetScopeChainInfo();
     if (isInitializeTree_) {
         variableManager.ClearVariableInfo();
@@ -242,7 +291,8 @@ void RuntimeClient::HandleHeapUsage(std::unique_ptr<PtJson> json)
         return;
     }
 
-    VariableManager &variableManager = VariableManager::GetInstance();
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    VariableManager &variableManager = session->GetVariableManager();
     std::unique_ptr<GetHeapUsageReturns> heapUsageReturns = GetHeapUsageReturns::Create(*result);
     variableManager.SetHeapUsageInfo(std::move(heapUsageReturns));
     variableManager.ShowHeapUsageInfo();

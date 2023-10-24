@@ -17,16 +17,11 @@
 
 #include "common/log_wrapper.h"
 #include "tooling/client/utils/utils.h"
+#include "tooling/client/session/session.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;
 namespace OHOS::ArkCompiler::Toolchain {
-BreakPointManager BreakPointManager::instance_;
-BreakPointManager& BreakPointManager::GetInstance()
-{
-    return instance_;
-}
-
 void BreakPointManager::Createbreaklocation(const std::unique_ptr<PtJson> json)
 {
     if (json == nullptr) {

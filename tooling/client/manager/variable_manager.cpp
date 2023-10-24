@@ -21,7 +21,6 @@
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 namespace OHOS::ArkCompiler::Toolchain {
-VariableManager VariableManager::instance_;
 void TreeNode::AddChild(std::unique_ptr<PropertyDescriptor> descriptor)
 {
     children.push_back(std::make_unique<TreeNode>(std::move(descriptor)));
@@ -251,11 +250,6 @@ int32_t Tree::FindObjectByIndexRecursive(const TreeNode* node, int32_t index) co
     }
 
     return 0;
-}
-
-VariableManager& VariableManager::GetInstance()
-{
-    return instance_;
 }
 
 void VariableManager::SetHeapUsageInfo(std::unique_ptr<GetHeapUsageReturns> heapUsageReturns)

@@ -30,7 +30,7 @@ using Scope = panda::ecmascript::tooling::Scope;
 namespace OHOS::ArkCompiler::Toolchain {
 class StackManager final {
 public:
-    static StackManager& GetInstance();
+    StackManager(int32_t sessionId) : sessionId_(sessionId) {}
 
     std::map<int32_t, std::map<int32_t, std::string>> GetScopeChainInfo();
     void SetCallFrames(std::map<int32_t, std::unique_ptr<CallFrame>> callFrames);
@@ -39,9 +39,8 @@ public:
     void PrintScopeChainInfo(const std::map<int32_t, std::map<int32_t, std::string>>& scopeInfos);
 
 private:
-    static StackManager instance_;
+    [[maybe_unused]] int32_t sessionId_;
     std::map<int32_t, std::unique_ptr<CallFrame>> callFrames_ {};
-    StackManager() = default;
     StackManager(const StackManager&) = delete;
     StackManager& operator=(const StackManager&) = delete;
 };

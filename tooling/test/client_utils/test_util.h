@@ -63,8 +63,8 @@ public:
     static void ForkSocketClient(int port, const std::string &name);
 
 private:
-    static void NotifyFail(int cmdId, DomainManager &domainManager, WebsocketClient &client);
-    static void NotifySuccess(int cmdId, DomainManager &domainManager, WebsocketClient &client);
+    static void NotifyFail();
+    static void NotifySuccess();
 
     static TestMap testMap_;
 };

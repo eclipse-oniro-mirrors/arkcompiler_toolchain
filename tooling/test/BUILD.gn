@@ -28,6 +28,7 @@ config("debug_api_test") {
     "//arkcompiler/ets_runtime",
     "../..",
     "//third_party/cJSON",
+    "//third_party/libuv/include",
   ]
 }
 

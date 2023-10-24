@@ -27,7 +27,7 @@
 namespace OHOS::ArkCompiler::Toolchain {
 class DomainManager {
 public:
-    DomainManager() = default;
+    explicit DomainManager(uint32_t sessionId);
     ~DomainManager() = default;
 
     void DispatcherReply(char* msg);
@@ -80,11 +80,12 @@ public:
     }
 
 private:
-    HeapProfilerClient heapProfilerClient_ {};
-    ProfilerClient profilerClient_ {};
-    DebuggerClient debuggerClient_ {};
-    RuntimeClient runtimeClient_ {};
-    TestClient testClient_ {};
+    [[maybe_unused]] uint32_t sessionId_;
+    HeapProfilerClient heapProfilerClient_;
+    ProfilerClient profilerClient_;
+    DebuggerClient debuggerClient_;
+    RuntimeClient runtimeClient_;
+    TestClient testClient_;
     std::map<uint32_t, std::string> idDomainMap_ {};
 };
 } // OHOS::ArkCompiler::Toolchain

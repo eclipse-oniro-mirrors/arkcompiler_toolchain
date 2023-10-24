@@ -36,7 +36,7 @@ struct Breaklocation {
 };
 class BreakPointManager {
 public:
-    static BreakPointManager& GetInstance();
+    BreakPointManager(int32_t sessionId) : sessionId_(sessionId) {}
 
     void Createbreaklocation(const std::unique_ptr<PtJson> json);
     void Show();
@@ -44,9 +44,8 @@ public:
     std::vector<Breaklocation> Getbreaklist() const;
 
 private:
-    static BreakPointManager instance_;
+    [[maybe_unused]] int32_t sessionId_;
     std::vector<Breaklocation> breaklist_ {};
-    BreakPointManager() = default;
     BreakPointManager(const BreakPointManager&) = delete;
     BreakPointManager& operator=(const BreakPointManager&) = delete;
 };

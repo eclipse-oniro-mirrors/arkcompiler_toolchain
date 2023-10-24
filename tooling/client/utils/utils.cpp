@@ -53,6 +53,17 @@ bool Utils::GetCurrentTime(char *date, char *tim, size_t size)
     return true;
 }
 
+bool Utils::StrToUInt(const char *content, uint32_t *result)
+{
+    const int dec = 10;
+    char *endPtr = nullptr;
+    *result = std::strtoul(content, &endPtr, dec);
+    if (endPtr == content || *endPtr != '\0') {
+        return false;
+    }
+    return true;
+}
+
 std::vector<std::string> Utils::SplitString(const std::string &str, const std::string &delimiter)
 {
     std::size_t strIndex = 0;

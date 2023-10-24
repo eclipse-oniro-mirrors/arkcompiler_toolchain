@@ -27,6 +27,7 @@
 #include "tooling/client/manager/domain_manager.h"
 #include "tooling/client/utils/utils.h"
 #include "tooling/client/websocket/websocket_client.h"
+#include "tooling/client/session/session.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 using StrPair = std::pair<std::string, std::string>;
@@ -39,8 +40,8 @@ enum class ErrCode : uint8_t {
 
 class CliCommand {
 public:
-    CliCommand(std::vector<std::string> cliCmdStr, int cmdId, DomainManager &domainManager, WebsocketClient &cliSocket)
-        : cmd_(cliCmdStr[0]), id_(cmdId), domainManager_(domainManager), cliSocket_(cliSocket)
+    CliCommand(std::vector<std::string> cliCmdStr, uint32_t sessionId)
+        : cmd_(cliCmdStr[0]), sessionId_(sessionId)
     {
         for (size_t i = 1; i < cliCmdStr.size(); i++) {
             argList_.push_back(cliCmdStr[i]);
@@ -56,13 +57,12 @@ public:
     ErrCode DebuggerCommand(const std::string &cmd);
     ErrCode CpuProfileCommand(const std::string &cmd);
     ErrCode RuntimeCommand(const std::string &cmd);
+    ErrCode SessionAddCommand(const std::string &cmd);
+    ErrCode SessionDelCommand(const std::string &cmd);
+    ErrCode SessionListCommand(const std::string &cmd);
+    ErrCode SessionSwitchCommand(const std::string &cmd);
     ErrCode TestCommand(const std::string &cmd);
     ErrCode ExecHelpCommand();
-
-    uint32_t GetId() const
-    {
-        return id_;
-    }
 
     VecStr GetArgList()
     {
@@ -74,9 +74,7 @@ private:
     VecStr argList_ {};
     std::map<StrPair, std::function<ErrCode()>> commandMap_;
     std::string resultReceiver_ = "";
-    uint32_t id_ = 0;
-    DomainManager &domainManager_;
-    WebsocketClient &cliSocket_;
+    uint32_t sessionId_;
 };
 } // namespace OHOS::ArkCompiler::Toolchain
 

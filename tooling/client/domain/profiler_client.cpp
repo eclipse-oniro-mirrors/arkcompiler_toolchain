@@ -17,6 +17,7 @@
 #include "tooling/base/pt_types.h"
 #include "common/log_wrapper.h"
 #include "tooling/client/utils/utils.h"
+#include "tooling/client/session/session.h"
 
 #include <map>
 #include <functional>
@@ -26,30 +27,31 @@
 using Result = panda::ecmascript::tooling::Result;
 using Profile = panda::ecmascript::tooling::Profile;
 namespace OHOS::ArkCompiler::Toolchain {
-ProfilerSingleton ProfilerSingleton::instance_;
-bool ProfilerClient::DispatcherCmd(int id, const std::string &cmd, std::string* reqStr)
+bool ProfilerClient::DispatcherCmd(const std::string &cmd)
 {
-    std::map<std::string, std::function<std::string()>> dispatcherTable {
-        { "cpuprofile", std::bind(&ProfilerClient::CpuprofileCommand, this, id)},
-        { "cpuprofile-stop", std::bind(&ProfilerClient::CpuprofileStopCommand, this, id)},
-        { "cpuprofile-setSamplingInterval", std::bind(&ProfilerClient::SetSamplingIntervalCommand, this, id)},
-        { "cpuprofile-enable", std::bind(&ProfilerClient::CpuprofileEnableCommand, this, id)},
-        { "cpuprofile-disable", std::bind(&ProfilerClient::CpuprofileDisableCommand, this, id)},
+    std::map<std::string, std::function<int()>> dispatcherTable {
+        { "cpuprofile", std::bind(&ProfilerClient::CpuprofileCommand, this)},
+        { "cpuprofile-stop", std::bind(&ProfilerClient::CpuprofileStopCommand, this)},
+        { "cpuprofile-setSamplingInterval", std::bind(&ProfilerClient::SetSamplingIntervalCommand, this)},
+        { "cpuprofile-enable", std::bind(&ProfilerClient::CpuprofileEnableCommand, this)},
+        { "cpuprofile-disable", std::bind(&ProfilerClient::CpuprofileDisableCommand, this)},
     };
 
     auto entry = dispatcherTable.find(cmd);
     if (entry == dispatcherTable.end()) {
-        *reqStr = "Unknown commond: " + cmd;
-        LOGI("DispatcherCmd reqStr2: %{public}s", reqStr->c_str());
+        LOGI("Unknown commond: %{public}s", cmd.c_str());
         return false;
     }
-    *reqStr = entry->second();
-    LOGI("DispatcherCmd reqStr1: %{public}s", reqStr->c_str());
+    entry->second();
+    LOGI("DispatcherCmd cmd: %{public}s", cmd.c_str());
     return true;
 }
 
-std::string ProfilerClient::CpuprofileEnableCommand(int id)
+int ProfilerClient::CpuprofileEnableCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idEventMap_.emplace(id, "cpuprofileenable");
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -57,11 +59,19 @@ std::string ProfilerClient::CpuprofileEnableCommand(int id)
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Profiler");
+    }
+    return 0;
 }
 
-std::string ProfilerClient::CpuprofileDisableCommand(int id)
+int ProfilerClient::CpuprofileDisableCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idEventMap_.emplace(id, "cpuprofiledisable");
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -69,11 +79,19 @@ std::string ProfilerClient::CpuprofileDisableCommand(int id)
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Profiler");
+    }
+    return 0;
 }
 
-std::string ProfilerClient::CpuprofileCommand(int id)
+int ProfilerClient::CpuprofileCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idEventMap_.emplace(id, "cpuprofile");
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -81,11 +99,19 @@ std::string ProfilerClient::CpuprofileCommand(int id)
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Profiler");
+    }
+    return 0;
 }
 
-std::string ProfilerClient::CpuprofileStopCommand(int id)
+int ProfilerClient::CpuprofileStopCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idEventMap_.emplace(id, "cpuprofilestop");
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -93,11 +119,19 @@ std::string ProfilerClient::CpuprofileStopCommand(int id)
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Profiler");
+    }
+    return 0;
 }
 
-std::string ProfilerClient::SetSamplingIntervalCommand(int id)
+int ProfilerClient::SetSamplingIntervalCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     idEventMap_.emplace(id, "setsamplinginterval");
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
@@ -106,12 +140,12 @@ std::string ProfilerClient::SetSamplingIntervalCommand(int id)
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     params->Add("interval", interval_);
     request->Add("params", params);
-    return request->Stringify();
-}
 
-ProfilerSingleton& ProfilerSingleton::GetInstance()
-{
-    return instance_;
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Profiler");
+    }
+    return 0;
 }
 
 void ProfilerClient::RecvProfilerResult(std::unique_ptr<PtJson> json)
@@ -149,10 +183,12 @@ void ProfilerClient::RecvProfilerResult(std::unique_ptr<PtJson> json)
         return;
     }
 
-    ProfilerSingleton& pro = ProfilerSingleton::GetInstance();
-    std::string fileName = "CPU-" + std::string(date) + "T" + std::string(time) + ".cpuprofile";
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    ProfilerSingleton &pro = session->GetProfilerSingleton();
+    std::string fileName = "CPU-" + std::to_string(sessionId_) + "-" + std::string(date) + "T" + std::string(time) +
+                           ".cpuprofile";
     std::string cpufile = pro.GetAddress() + fileName;
-    std::cout << "cpuprofile file name is " << cpufile << std::endl;
+    std::cout << "session " << sessionId_ << " cpuprofile file name is " << cpufile << std::endl;
     std::cout << ">>> ";
     fflush(stdout);
     WriteCpuProfileForFile(cpufile, profile->Stringify());
@@ -171,7 +207,8 @@ bool ProfilerClient::WriteCpuProfileForFile(const std::string &fileName, const s
     ofs.write(data.c_str(), strSize);
     ofs.close();
     ofs.clear();
-    ProfilerSingleton& pro = ProfilerSingleton::GetInstance();
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    ProfilerSingleton &pro = session->GetProfilerSingleton();
     pro.SetAddress("");
     return true;
 }

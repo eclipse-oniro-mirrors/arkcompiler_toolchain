@@ -27,7 +27,7 @@ namespace OHOS::ArkCompiler::Toolchain {
 using PtJson = panda::ecmascript::tooling::PtJson;
 class ProfilerSingleton {
 public:
-    static ProfilerSingleton& GetInstance();
+    ProfilerSingleton() = default;
 
     void AddCpuName(const std::string &data)
     {
@@ -55,29 +55,28 @@ public:
 private:
     std::vector<std::string> cpulist_;
     std::string address_ = "";
-    static ProfilerSingleton instance_;
-    ProfilerSingleton() = default;
     ProfilerSingleton(const ProfilerSingleton&) = delete;
     ProfilerSingleton& operator=(const ProfilerSingleton&) = delete;
 };
 
 class ProfilerClient final {
 public:
-    ProfilerClient() = default;
+    ProfilerClient(uint32_t sessionId) : sessionId_(sessionId) {}
     ~ProfilerClient() = default;
 
-    bool DispatcherCmd(int id, const std::string &cmd, std::string* reqStr);
-    std::string CpuprofileCommand(int id);
-    std::string CpuprofileStopCommand(int id);
-    std::string SetSamplingIntervalCommand(int id);
-    std::string CpuprofileEnableCommand(int id);
-    std::string CpuprofileDisableCommand(int id);
+    bool DispatcherCmd(const std::string &cmd);
+    int CpuprofileCommand();
+    int CpuprofileStopCommand();
+    int SetSamplingIntervalCommand();
+    int CpuprofileEnableCommand();
+    int CpuprofileDisableCommand();
     bool WriteCpuProfileForFile(const std::string &fileName, const std::string &data);
     void RecvProfilerResult(std::unique_ptr<PtJson> json);
     void SetSamplingInterval(int interval);
 
 private:
     int32_t interval_ = 0;
+    int32_t sessionId_;
     std::map<uint32_t, std::string> idEventMap_ {};
 };
 } // OHOS::ArkCompiler::Toolchain

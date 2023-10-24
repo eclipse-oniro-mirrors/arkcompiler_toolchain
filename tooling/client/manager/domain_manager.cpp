@@ -18,10 +18,17 @@
 #include "common/log_wrapper.h"
 #include "tooling/client/manager/breakpoint_manager.h"
 #include "tooling/base/pt_json.h"
+#include "tooling/client/session/session.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;
 namespace OHOS::ArkCompiler::Toolchain {
+DomainManager::DomainManager(uint32_t sessionId)
+    : sessionId_(sessionId), heapProfilerClient_(sessionId), profilerClient_(sessionId),
+      debuggerClient_(sessionId), runtimeClient_(sessionId), testClient_(sessionId)
+{
+}
+
 void DomainManager::DispatcherReply(char* msg)
 {
     std::string decMessage = std::string(msg);
