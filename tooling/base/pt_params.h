@@ -1254,7 +1254,7 @@ private:
 
     std::optional<std::string> categories_ {};
     std::optional<std::string> options_ {};
-    std::optional<int32_t> bufferUsageReportingInterval_ {0};
+    std::optional<int32_t> bufferUsageReportingInterval_ {};
     std::optional<std::string> transferMode_ {};
     std::optional<StreamFormat> streamFormat_ {};
     std::optional<StreamCompression> streamCompression_ {};

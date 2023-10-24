@@ -24,6 +24,11 @@
 #include "agent/profiler_impl.h"
 #endif
 #include "agent/tracing_impl.h"
+#include "agent/css_impl.h"
+#include "agent/dom_impl.h"
+#include "agent/overlay_impl.h"
+#include "agent/page_impl.h"
+#include "agent/target_impl.h"
 #include "protocol_channel.h"
 
 namespace panda::ecmascript::tooling {
@@ -153,6 +158,26 @@ Dispatcher::Dispatcher(const EcmaVM *vm, ProtocolChannel *channel)
         std::make_unique<RuntimeImpl::DispatcherImpl>(channel, std::move(runtime));
     dispatchers_["Debugger"] =
         std::make_unique<DebuggerImpl::DispatcherImpl>(channel, std::move(debugger));
+
+    auto dom = std::make_unique<DomImpl>();
+    dispatchers_["DOM"] =
+        std::make_unique<DomImpl::DispatcherImpl>(channel, std::move(dom));
+
+    auto css = std::make_unique<CssImpl>();
+    dispatchers_["CSS"] =
+        std::make_unique<CssImpl::DispatcherImpl>(channel, std::move(css));
+
+    auto overlay = std::make_unique<OverlayImpl>();
+    dispatchers_["Overlay"] =
+        std::make_unique<OverlayImpl::DispatcherImpl>(channel, std::move(overlay));
+
+    auto target = std::make_unique<TargetImpl>();
+    dispatchers_["Target"] =
+        std::make_unique<TargetImpl::DispatcherImpl>(channel, std::move(target));
+
+    auto page = std::make_unique<PageImpl>();
+    dispatchers_["Page"] =
+        std::make_unique<PageImpl::DispatcherImpl>(channel, std::move(page));
 }
 
 void Dispatcher::Dispatch(const DispatchRequest &request)

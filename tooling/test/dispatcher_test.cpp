@@ -143,7 +143,7 @@ HWTEST_F_L0(DispatcherTest, DispatcherDispatchTest)
     ASSERT_TRUE(result == "");
     result = "";
     dispatcher->Dispatch(dispatchRequest1);
-    ASSERT_TRUE(result.find("End not support now.") != std::string::npos);
+    ASSERT_TRUE(result.find("\"id\":0,") != std::string::npos);
     result = "";
     dispatcher->Dispatch(dispatchRequest2);
     ASSERT_TRUE(result == "");

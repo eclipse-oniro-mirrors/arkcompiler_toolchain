@@ -478,10 +478,9 @@ HWTEST_F_L0(DebuggerEventsTest, BufferUsageToJsonTest)
 HWTEST_F_L0(DebuggerEventsTest, DataCollectedToJsonTest)
 {
     DataCollected dataCollected;
-    std::unique_ptr<PtJson> jsonV = PtJson::CreateObject();
-    std::vector<std::unique_ptr<PtJson>> v;
-    v.push_back(std::move(jsonV));
-    dataCollected.SetValue(std::move(v));
+    std::unique_ptr<ProfileInfo> profileInfo = std::make_unique<ProfileInfo>();
+    std::unique_ptr<Profile> profile = Profile::FromProfileInfo(*profileInfo);
+    dataCollected.SetCpuProfile(std::move(profile));
 
     std::unique_ptr<PtJson> json = dataCollected.ToJson();
     std::string method;

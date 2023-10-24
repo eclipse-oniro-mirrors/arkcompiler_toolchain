@@ -43,8 +43,16 @@ void TracingImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 
 void TracingImpl::DispatcherImpl::End(const DispatchRequest &request)
 {
-    DispatchResponse response = tracing_->End();
-    SendResponse(request, response);
+    auto profileInfo = tracing_->End();
+    if (profileInfo == nullptr) {
+        LOG_DEBUGGER(ERROR) << "Transfer DFXJSNApi::StopCpuProfilerImpl is failure";
+        SendResponse(request, DispatchResponse::Fail("Stop is failure"));
+        return;
+    }
+    SendResponse(request, DispatchResponse::Ok());
+
+    tracing_->frontend_.DataCollected(std::move(profileInfo));
+    tracing_->frontend_.TracingComplete();
 }
 
 void TracingImpl::DispatcherImpl::GetCategories(const DispatchRequest &request)
@@ -84,23 +92,27 @@ bool TracingImpl::Frontend::AllowNotify() const
     return channel_ != nullptr;
 }
 
-void TracingImpl::Frontend::BufferUsage()
+void TracingImpl::Frontend::BufferUsage(double percentFull, int32_t eventCount, double value)
 {
     if (!AllowNotify()) {
         return;
     }
 
     tooling::BufferUsage bufferUsage;
+    bufferUsage.SetPercentFull(percentFull).SetEventCount(eventCount).SetValue(value);
     channel_->SendNotification(bufferUsage);
 }
 
-void TracingImpl::Frontend::DataCollected()
+void TracingImpl::Frontend::DataCollected(std::unique_ptr<ProfileInfo> cpuProfileInfo)
 {
     if (!AllowNotify()) {
         return;
     }
 
     tooling::DataCollected dataCollected;
+    std::unique_ptr<Profile> profile = Profile::FromProfileInfo(*cpuProfileInfo);
+    dataCollected.SetCpuProfile(std::move(profile));
+
     channel_->SendNotification(dataCollected);
 }
 
@@ -114,9 +126,12 @@ void TracingImpl::Frontend::TracingComplete()
     channel_->SendNotification(tracingComplete);
 }
 
-DispatchResponse TracingImpl::End()
+std::unique_ptr<ProfileInfo> TracingImpl::End()
 {
-    return DispatchResponse::Fail("End not support now.");
+    uv_timer_stop(&handle_);
+    auto pprofiler = panda::DFXJSNApi::StopCpuProfilerForInfo(vm_);
+    panda::JSNApi::SetProfilerState(vm_, false);
+    return pprofiler;
 }
 
 DispatchResponse TracingImpl::GetCategories([[maybe_unused]] std::vector<std::string> categories)
@@ -135,8 +150,48 @@ DispatchResponse TracingImpl::RequestMemoryDump([[maybe_unused]] std::unique_ptr
     return DispatchResponse::Fail("RequestMemoryDump not support now.");
 }
 
-DispatchResponse TracingImpl::Start([[maybe_unused]] std::unique_ptr<StartParams> params)
+DispatchResponse TracingImpl::Start(std::unique_ptr<StartParams> params)
 {
-    return DispatchResponse::Fail("Start not support now.");
+    panda::JSNApi::SetProfilerState(vm_, true);
+
+    if (params->HasBufferUsageReportingInterval()) {
+        LOG_DEBUGGER(ERROR) << "HasBufferUsageReportingInterval " << params->GetBufferUsageReportingInterval();
+        if (uv_is_active(reinterpret_cast<uv_handle_t*>(&handle_))) {
+            LOG_DEBUGGER(ERROR) << "uv_is_active!!!";
+            return DispatchResponse::Ok();
+        }
+
+        uv_loop_t *loop = reinterpret_cast<uv_loop_t *>(vm_->GetLoop());
+        if (loop == nullptr) {
+            return DispatchResponse::Fail("Loop is nullptr");
+        }
+        uv_timer_init(loop, &handle_);
+        handle_.data = this;
+        uv_timer_start(&handle_, TracingBufferUsageReport, 0, params->GetBufferUsageReportingInterval());
+
+        uv_work_t *work = new uv_work_t;
+        uv_queue_work(loop, work, [](uv_work_t *) { }, [](uv_work_t *work, int32_t) { delete work; });
+    }
+
+    panda::DFXJSNApi::StartCpuProfilerForInfo(vm_);
+    return DispatchResponse::Ok();
+}
+
+void TracingImpl::TracingBufferUsageReport(uv_timer_t* handle)
+{
+    LOG_DEBUGGER(ERROR) << "TracingBufferUsageReport";
+    TracingImpl *tracing = static_cast<TracingImpl *>(handle->data);
+    if (tracing == nullptr) {
+        LOG_DEBUGGER(ERROR) << "tracing == nullptr";
+        return;
+    }
+
+    uint64_t cpuProfileBufferSize = panda::DFXJSNApi::GetProfileInfoBufferSize(tracing->vm_);
+    double percentFull = (cpuProfileBufferSize >= tracing->maxBufferSize_) ?
+                         1.0 :
+                         static_cast<double>(cpuProfileBufferSize) / tracing->maxBufferSize_;
+    uint32_t eventCount = 0;
+    double value = percentFull;
+    tracing->frontend_.BufferUsage(percentFull, eventCount, value);
 }
 }  // namespace panda::ecmascript::tooling
