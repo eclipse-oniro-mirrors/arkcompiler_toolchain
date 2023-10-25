@@ -30,4 +30,5 @@ if (is_ohos) {
   }
   libclang_rt_file = "${clang_base_path}/lib/clang/15.0.4/lib/${abi_target}/libclang_rt.builtins.a"
   libcxxabi_file = "${clang_base_path}/lib/${abi_target}/libc++abi.a"
+  libcxxso_file = "${clang_base_path}/lib/${abi_target}/libc++.so"
 }
