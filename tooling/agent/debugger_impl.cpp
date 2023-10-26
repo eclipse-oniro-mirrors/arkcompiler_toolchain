@@ -669,7 +669,7 @@ void DebuggerImpl::Frontend::RunIfWaitingForDebugger(const EcmaVM *vm)
 
 DispatchResponse DebuggerImpl::ContinueToLocation(const ContinueToLocationParams &params)
 {
-    location_ = *params.GetLocations();
+    location_ = *params.GetLocation();
     return DispatchResponse::Ok();
 }
 

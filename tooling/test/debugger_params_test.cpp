@@ -86,20 +86,124 @@ HWTEST_F_L0(DebuggerParamsTest, ContinueToLocationParamsCreateTest)
     objectData = ContinueToLocationParams::Create(DispatchRequest(msg).GetParams());
     EXPECT_EQ(objectData, nullptr);
 
-    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"loca":10,
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"location":10,
         "targetCallFrames":"testTargetCallFrames"}})";
     objectData = ContinueToLocationParams::Create(DispatchRequest(msg).GetParams());
     EXPECT_EQ(objectData, nullptr);
 
-    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"loca":{"scriptId":"2", "lineNumber":3,
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"location":{"scriptId":"2", "lineNumber":3,
         "columnNumber":20}, "targetCallFrames":"testTargetCallFrames"}})";
     objectData = ContinueToLocationParams::Create(DispatchRequest(msg).GetParams());
     ASSERT_NE(objectData, nullptr);
-    Location *locations = objectData->GetLocations();
-    EXPECT_EQ(locations->GetScriptId(), 2);
-    EXPECT_EQ(locations->GetLine(), 3);
-    EXPECT_EQ(locations->GetColumn(), 20);
+    Location *location = objectData->GetLocation();
+    EXPECT_EQ(location->GetScriptId(), 2);
+    EXPECT_EQ(location->GetLine(), 3);
+    EXPECT_EQ(location->GetColumn(), 20);
     EXPECT_EQ(objectData->GetTargetCallFrames(), "testTargetCallFrames");
+}
+
+HWTEST_F_L0(DebuggerParamsTest, SetBreakpointsActiveParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<SetBreakpointsActiveParams> objectData;
+
+    // abnormal params of null msg
+    msg = std::string() + R"({})";
+    objectData = SetBreakpointsActiveParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of unexist key params
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test"})";
+    objectData = SetBreakpointsActiveParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of null params.sub-key
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    objectData = SetBreakpointsActiveParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"active":true}})";
+    objectData = SetBreakpointsActiveParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    EXPECT_TRUE(objectData->GetBreakpointsState());
+}
+
+HWTEST_F_L0(DebuggerParamsTest, SetSkipAllPausesParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<SetSkipAllPausesParams> objectData;
+
+    // abnormal params of null msg
+    msg = std::string() + R"({})";
+    objectData = SetSkipAllPausesParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of unexist key params
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test"})";
+    objectData = SetSkipAllPausesParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of null params.sub-key
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    objectData = SetSkipAllPausesParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"skip":true}})";
+    objectData = SetSkipAllPausesParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    EXPECT_TRUE(objectData->GetSkipAllPausesState());
+}
+
+HWTEST_F_L0(DebuggerParamsTest, SetMixedDebugParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<SetMixedDebugParams> objectData;
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"enabled":"test", "mixedStackEnabled":true}})";
+    objectData = SetMixedDebugParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"enabled":true, "mixedStackEnabled":true}})";
+    objectData = SetMixedDebugParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    EXPECT_TRUE(objectData->GetEnabled());
+    EXPECT_TRUE(objectData->GetMixedStackEnabled());
+}
+
+HWTEST_F_L0(DebuggerParamsTest, GetPossibleAndSetBreakpointParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<GetPossibleAndSetBreakpointParams> objectData;
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"locations":10}})";
+    objectData = GetPossibleAndSetBreakpointParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"locations":[{"lineNumber":3,
+        "columnNumber":20, "url":"Index.ets"}]}})";
+    objectData = GetPossibleAndSetBreakpointParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    auto breakpointsList = objectData->GetBreakpointsList();
+    EXPECT_EQ((*breakpointsList).size(), 1);
+    EXPECT_EQ((*breakpointsList)[0]->GetLineNumber(), 3);
+    EXPECT_EQ((*breakpointsList)[0]->GetColumnNumber(), 20);
+    EXPECT_EQ((*breakpointsList)[0]->GetUrl(), "Index.ets");
+}
+
+HWTEST_F_L0(DebuggerParamsTest, DropFrameParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<DropFrameParams> objectData;
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"droppedDepth":true}})";
+    objectData = DropFrameParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"droppedDepth":3}})";
+    objectData = DropFrameParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    EXPECT_EQ(objectData->GetDroppedDepth(), 3);
 }
 
 HWTEST_F_L0(DebuggerParamsTest, EnableParamsCreateTest)
@@ -824,21 +928,6 @@ HWTEST_F_L0(DebuggerParamsTest, StepOverParamsCreateTest)
     ASSERT_NE(objectData, nullptr);
     const std::list<std::unique_ptr<LocationRange>> *locationRangeList = objectData->GetSkipList();
     EXPECT_EQ(locationRangeList->size(), 2U);
-}
-
-HWTEST_F_L0(DebuggerParamsTest, SetMixedDebugParamsCreateTest)
-{
-    std::string msg;
-    std::unique_ptr<SetMixedDebugParams> objectData;
-
-    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"enabled":"test"}})";
-    objectData = SetMixedDebugParams::Create(DispatchRequest(msg).GetParams());
-    EXPECT_EQ(objectData, nullptr);
-
-    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"enabled":true}})";
-    objectData = SetMixedDebugParams::Create(DispatchRequest(msg).GetParams());
-    ASSERT_NE(objectData, nullptr);
-    ASSERT_TRUE(objectData->GetEnabled());
 }
 
 HWTEST_F_L0(DebuggerParamsTest, ReplyNativeCallingParamsCreateTest)

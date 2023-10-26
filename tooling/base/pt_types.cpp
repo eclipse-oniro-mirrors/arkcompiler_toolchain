@@ -943,7 +943,7 @@ std::unique_ptr<RemoteObject> RemoteObject::Create(const PtJson &params)
             error += "'type' is invalid;";
         }
     } else {
-        error += "Unknown 'type';";
+        error += "Unknown or wrong type of 'type';";
     }
 
     std::string subType;
@@ -955,7 +955,7 @@ std::unique_ptr<RemoteObject> RemoteObject::Create(const PtJson &params)
             error += "'subtype' is invalid;";
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'subtype';";
+        error += "Wrong type of 'subtype';";
     }
 
     std::string className;
@@ -963,7 +963,7 @@ std::unique_ptr<RemoteObject> RemoteObject::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         remoteObject->className_ = std::move(className);
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'className';";
+        error += "Wrong type of 'className';";
     }
 
     std::string unserializableValue;
@@ -971,7 +971,7 @@ std::unique_ptr<RemoteObject> RemoteObject::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         remoteObject->unserializableValue_ = std::move(unserializableValue);
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'unserializableValue';";
+        error += "Wrong type of 'unserializableValue';";
     }
 
     std::string description;
@@ -979,7 +979,7 @@ std::unique_ptr<RemoteObject> RemoteObject::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         remoteObject->description_ = std::move(description);
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'description';";
+        error += "Wrong type of 'description';";
     }
 
     std::string objectId;
@@ -987,7 +987,7 @@ std::unique_ptr<RemoteObject> RemoteObject::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         remoteObject->objectId_ = std::stoi(objectId);
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'objectId';";
+        error += "Wrong type of 'objectId';";
     }
 
     if (!error.empty()) {
@@ -1033,7 +1033,7 @@ std::unique_ptr<ExceptionDetails> ExceptionDetails::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         exceptionDetails->exceptionId_ = exceptionId;
     } else {
-        error += "Unknown 'exceptionId';";
+        error += "Unknown or wrong type of 'exceptionId';";
     }
 
     std::string text;
@@ -1041,7 +1041,7 @@ std::unique_ptr<ExceptionDetails> ExceptionDetails::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         exceptionDetails->text_ = std::move(text);
     } else {
-        error += "Unknown 'text';";
+        error += "Unknown or wrong type of 'text';";
     }
 
     int32_t lineNumber;
@@ -1049,7 +1049,7 @@ std::unique_ptr<ExceptionDetails> ExceptionDetails::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         exceptionDetails->lineNumber_ = lineNumber;
     } else {
-        error += "Unknown 'lineNumber';";
+        error += "Unknown or wrong type of 'lineNumber';";
     }
 
     int32_t columnNumber;
@@ -1057,7 +1057,7 @@ std::unique_ptr<ExceptionDetails> ExceptionDetails::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         exceptionDetails->columnNumber_ = columnNumber;
     } else {
-        error += "Unknown 'columnNumber';";
+        error += "Unknown or wrong type of 'columnNumber';";
     }
 
     std::string scriptId;
@@ -1065,7 +1065,7 @@ std::unique_ptr<ExceptionDetails> ExceptionDetails::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         exceptionDetails->scriptId_ = std::stoi(scriptId);
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'scriptId';";
+        error += "Wrong type of 'scriptId';";
     }
 
     std::string url;
@@ -1073,7 +1073,7 @@ std::unique_ptr<ExceptionDetails> ExceptionDetails::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         exceptionDetails->url_ = std::move(url);
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'url';";
+        error += "Wrong type of 'url';";
     }
 
     std::unique_ptr<PtJson> exception;
@@ -1086,7 +1086,7 @@ std::unique_ptr<ExceptionDetails> ExceptionDetails::Create(const PtJson &params)
             exceptionDetails->exception_ = std::move(obj);
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'exception';";
+        error += "Wrong type of 'exception';";
     }
 
     int32_t executionContextId;
@@ -1094,7 +1094,7 @@ std::unique_ptr<ExceptionDetails> ExceptionDetails::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         exceptionDetails->executionContextId_ = executionContextId;
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'executionContextId';";
+        error += "Wrong type of 'executionContextId';";
     }
 
     if (!error.empty()) {
@@ -1142,7 +1142,7 @@ std::unique_ptr<InternalPropertyDescriptor> InternalPropertyDescriptor::Create(c
     if (ret == Result::SUCCESS) {
         internalPropertyDescriptor->name_ = std::move(name);
     } else {
-        error += "Unknown 'name';";
+        error += "Unknown or wrong type of 'name';";
     }
 
     std::unique_ptr<PtJson> value;
@@ -1155,7 +1155,7 @@ std::unique_ptr<InternalPropertyDescriptor> InternalPropertyDescriptor::Create(c
             internalPropertyDescriptor->value_ = std::move(obj);
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'value';";
+        error += "Wrong type of 'value';";
     }
 
     if (!error.empty()) {
@@ -1190,7 +1190,7 @@ std::unique_ptr<PrivatePropertyDescriptor> PrivatePropertyDescriptor::Create(con
     if (ret == Result::SUCCESS) {
         privatePropertyDescriptor->name_ = std::move(name);
     } else {
-        error += "Unknown 'name';";
+        error += "Unknown or wrong type of 'name';";
     }
 
     std::unique_ptr<PtJson> value;
@@ -1204,7 +1204,7 @@ std::unique_ptr<PrivatePropertyDescriptor> PrivatePropertyDescriptor::Create(con
             privatePropertyDescriptor->value_ = std::move(obj);
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'value';";
+        error += "Wrong type of 'value';";
     }
 
     std::unique_ptr<PtJson> get;
@@ -1217,7 +1217,7 @@ std::unique_ptr<PrivatePropertyDescriptor> PrivatePropertyDescriptor::Create(con
             privatePropertyDescriptor->get_ = std::move(obj);
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'get';";
+        error += "Wrong type of 'get';";
     }
 
     std::unique_ptr<PtJson> set;
@@ -1230,7 +1230,7 @@ std::unique_ptr<PrivatePropertyDescriptor> PrivatePropertyDescriptor::Create(con
             privatePropertyDescriptor->set_ = std::move(obj);
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'set';";
+        error += "Wrong type of 'set';";
     }
 
     if (!error.empty()) {
@@ -1307,7 +1307,7 @@ std::unique_ptr<PropertyDescriptor> PropertyDescriptor::Create(const PtJson &par
     if (ret == Result::SUCCESS) {
         propertyDescriptor->name_ = std::move(name);
     } else {
-        error += "Unknown 'name';";
+        error += "Unknown or wrong type of 'name';";
     }
 
     std::unique_ptr<PtJson> value;
@@ -1321,7 +1321,7 @@ std::unique_ptr<PropertyDescriptor> PropertyDescriptor::Create(const PtJson &par
             propertyDescriptor->value_ = std::move(obj);
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'value';";
+        error += "Wrong type of 'value';";
     }
 
     bool writable = false;
@@ -1329,7 +1329,7 @@ std::unique_ptr<PropertyDescriptor> PropertyDescriptor::Create(const PtJson &par
     if (ret == Result::SUCCESS) {
         propertyDescriptor->writable_ = writable;
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'writable';";
+        error += "Wrong type of 'writable';";
     }
 
     std::unique_ptr<PtJson> get;
@@ -1342,7 +1342,7 @@ std::unique_ptr<PropertyDescriptor> PropertyDescriptor::Create(const PtJson &par
             propertyDescriptor->get_ = std::move(obj);
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'get';";
+        error += "Wrong type of 'get';";
     }
 
     std::unique_ptr<PtJson> set;
@@ -1355,7 +1355,7 @@ std::unique_ptr<PropertyDescriptor> PropertyDescriptor::Create(const PtJson &par
             propertyDescriptor->set_ = std::move(obj);
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'set';";
+        error += "Wrong type of 'set';";
     }
 
     bool configurable = false;
@@ -1363,7 +1363,7 @@ std::unique_ptr<PropertyDescriptor> PropertyDescriptor::Create(const PtJson &par
     if (ret == Result::SUCCESS) {
         propertyDescriptor->configurable_ = configurable;
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'configurable';";
+        error += "Wrong type of 'configurable';";
     }
 
     bool enumerable = false;
@@ -1371,7 +1371,7 @@ std::unique_ptr<PropertyDescriptor> PropertyDescriptor::Create(const PtJson &par
     if (ret == Result::SUCCESS) {
         propertyDescriptor->enumerable_ = enumerable;
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'enumerable';";
+        error += "Wrong type of 'enumerable';";
     }
 
     bool wasThrown = false;
@@ -1379,7 +1379,7 @@ std::unique_ptr<PropertyDescriptor> PropertyDescriptor::Create(const PtJson &par
     if (ret == Result::SUCCESS) {
         propertyDescriptor->wasThrown_ = wasThrown;
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'wasThrown';";
+        error += "Wrong type of 'wasThrown';";
     }
 
     bool isOwn = false;
@@ -1387,7 +1387,7 @@ std::unique_ptr<PropertyDescriptor> PropertyDescriptor::Create(const PtJson &par
     if (ret == Result::SUCCESS) {
         propertyDescriptor->isOwn_ = isOwn;
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'isOwn';";
+        error += "Wrong type of 'isOwn';";
     }
 
     std::unique_ptr<PtJson> symbol;
@@ -1400,7 +1400,7 @@ std::unique_ptr<PropertyDescriptor> PropertyDescriptor::Create(const PtJson &par
             propertyDescriptor->symbol_ = std::move(obj);
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'symbol';";
+        error += "Wrong type of 'symbol';";
     }
 
     if (!error.empty()) {
@@ -1458,14 +1458,14 @@ std::unique_ptr<CallArgument> CallArgument::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         callArgument->unserializableValue_ = std::move(unserializableValue);
     } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'unserializableValue';";
+        error += "Wrong type of 'unserializableValue';";
     }
     std::string objectId;
     ret = params.GetString("objectId", &objectId);
     if (ret == Result::SUCCESS) {
         callArgument->objectId_ = std::stoi(objectId);
     } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'objectId';";
+        error += "Wrong type of 'objectId';";
     }
 
     if (!error.empty()) {
@@ -1501,21 +1501,21 @@ std::unique_ptr<Location> Location::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         location->scriptId_ = std::stoi(scriptId);
     } else {
-        error += "Unknown 'scriptId';";
+        error += "Unknown or wrong type of 'scriptId';";
     }
     int32_t lineNumber;
     ret = params.GetInt("lineNumber", &lineNumber);
     if (ret == Result::SUCCESS) {
         location->lineNumber_ = lineNumber;
     } else {
-        error += "Unknown 'lineNumber';";
+        error += "Unknown or wrong type of 'lineNumber';";
     }
     int32_t columnNumber;
     ret = params.GetInt("columnNumber", &columnNumber);
     if (ret == Result::SUCCESS) {
         location->columnNumber_ = columnNumber;
     } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'columnNumber';";
+        error += "Wrong type of 'columnNumber';";
     }
 
     if (!error.empty()) {
@@ -1550,14 +1550,14 @@ std::unique_ptr<ScriptPosition> ScriptPosition::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         scriptPosition->lineNumber_ = lineNumber;
     } else {
-        error += "Unknown 'lineNumber';";
+        error += "Unknown or wrong type of 'lineNumber';";
     }
     int32_t columnNumber;
     ret = params.GetInt("columnNumber", &columnNumber);
     if (ret == Result::SUCCESS) {
         scriptPosition->columnNumber_ = columnNumber;
     } else {
-        error += "Unknown 'columnNumber';";
+        error += "Unknown or wrong type of 'columnNumber';";
     }
 
     if (!error.empty()) {
@@ -1589,7 +1589,7 @@ std::unique_ptr<SearchMatch> SearchMatch::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         locationSearch->lineNumber_ = lineNumber;
     } else {
-        error += "Unknown 'lineNumber';";
+        error += "Unknown or wrong type of 'lineNumber';";
     }
 
     std::string lineContent;
@@ -1597,7 +1597,7 @@ std::unique_ptr<SearchMatch> SearchMatch::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         locationSearch->lineContent_ = std::move(lineContent);
     } else {
-        error += "Unknown 'lineContent';";
+        error += "Unknown or wrong type of 'lineContent';";
     }
 
     if (!error.empty()) {
@@ -1629,7 +1629,7 @@ std::unique_ptr<LocationRange> LocationRange::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         locationRange->scriptId_ = std::stoi(scriptId);
     } else {
-        error += "Unknown 'scriptId';";
+        error += "Unknown or wrong type of 'scriptId';";
     }
 
     std::unique_ptr<PtJson> start;
@@ -1643,7 +1643,7 @@ std::unique_ptr<LocationRange> LocationRange::Create(const PtJson &params)
             locationRange->start_ = std::move(obj);
         }
     } else {
-        error += "Unknown 'start';";
+        error += "Unknown or wrong type of 'start';";
     }
 
     std::unique_ptr<PtJson> end;
@@ -1656,7 +1656,7 @@ std::unique_ptr<LocationRange> LocationRange::Create(const PtJson &params)
             locationRange->end_ = std::move(obj);
         }
     } else {
-        error += "Unknown 'end';";
+        error += "Unknown or wrong type of 'end';";
     }
 
     if (!error.empty()) {
@@ -1691,7 +1691,7 @@ std::unique_ptr<BreakLocation> BreakLocation::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         breakLocation->scriptId_ = std::stoi(scriptId);
     } else {
-        error += "Unknown 'scriptId';";
+        error += "Unknown or wrong type of 'scriptId';";
     }
 
     int32_t lineNumber;
@@ -1699,7 +1699,7 @@ std::unique_ptr<BreakLocation> BreakLocation::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         breakLocation->lineNumber_ = lineNumber;
     } else {
-        error += "Unknown 'lineNumber';";
+        error += "Unknown or wrong type of 'lineNumber';";
     }
 
     int32_t columnNumber;
@@ -1707,7 +1707,7 @@ std::unique_ptr<BreakLocation> BreakLocation::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         breakLocation->columnNumber_ = columnNumber;
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'columnNumber';";
+        error += "Wrong type of 'columnNumber';";
     }
 
     std::string type;
@@ -1761,7 +1761,7 @@ std::unique_ptr<Scope> Scope::Create(const PtJson &params)
             error += "'type' is invalid;";
         }
     } else {
-        error += "Unknown 'type';";
+        error += "Unknown or wrong type of 'type';";
     }
 
     std::unique_ptr<PtJson> object;
@@ -1775,7 +1775,7 @@ std::unique_ptr<Scope> Scope::Create(const PtJson &params)
             scope->object_ = std::move(remoteObject);
         }
     } else {
-        error += "Unknown 'object';";
+        error += "Unknown or wrong type of 'object';";
     }
 
     std::string name;
@@ -1783,7 +1783,7 @@ std::unique_ptr<Scope> Scope::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         scope->name_ = std::move(name);
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'name';";
+        error += "Wrong type of 'name';";
     }
 
     std::unique_ptr<PtJson> startLocation;
@@ -1797,7 +1797,7 @@ std::unique_ptr<Scope> Scope::Create(const PtJson &params)
             scope->startLocation_ = std::move(obj);
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'startLocation';";
+        error += "Wrong type of 'startLocation';";
     }
 
     std::unique_ptr<PtJson> endLocation;
@@ -1810,7 +1810,7 @@ std::unique_ptr<Scope> Scope::Create(const PtJson &params)
             scope->endLocation_ = std::move(obj);
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'endLocation';";
+        error += "Wrong type of 'endLocation';";
     }
 
     if (!error.empty()) {
@@ -1854,7 +1854,7 @@ std::unique_ptr<CallFrame> CallFrame::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         callFrame->callFrameId_ = std::stoi(callFrameId);
     } else {
-        error += "Unknown 'callFrameId';";
+        error += "Unknown or wrong type of 'callFrameId';";
     }
 
     std::string functionName;
@@ -1862,7 +1862,7 @@ std::unique_ptr<CallFrame> CallFrame::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         callFrame->functionName_ = std::move(functionName);
     } else {
-        error += "Unknown 'functionName';";
+        error += "Unknown or wrong type of 'functionName';";
     }
 
     std::unique_ptr<PtJson> functionLocation;
@@ -1876,7 +1876,7 @@ std::unique_ptr<CallFrame> CallFrame::Create(const PtJson &params)
             callFrame->functionLocation_ = std::move(obj);
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'functionLocation';";
+        error += "Wrong type of 'functionLocation';";
     }
 
     std::unique_ptr<PtJson> location;
@@ -1889,7 +1889,7 @@ std::unique_ptr<CallFrame> CallFrame::Create(const PtJson &params)
             callFrame->location_ = std::move(obj);
         }
     } else {
-        error += "Unknown 'location';";
+        error += "Unknown or wrong type of 'location';";
     }
 
     std::string url;
@@ -1897,7 +1897,7 @@ std::unique_ptr<CallFrame> CallFrame::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         callFrame->url_ = std::move(url);
     } else {
-        error += "Unknown 'url';";
+        error += "Unknown or wrong type of 'url';";
     }
 
     std::unique_ptr<PtJson> scopeChain;
@@ -1915,7 +1915,7 @@ std::unique_ptr<CallFrame> CallFrame::Create(const PtJson &params)
             }
         }
     } else {
-        error += "Unknown 'scopeChain';";
+        error += "Unknown or wrong type of 'scopeChain';";
     }
 
     std::unique_ptr<PtJson> thisObj;
@@ -1929,7 +1929,7 @@ std::unique_ptr<CallFrame> CallFrame::Create(const PtJson &params)
             callFrame->this_ = std::move(remoteObject);
         }
     } else {
-        error += "Unknown 'this';";
+        error += "Unknown or wrong type of 'this';";
     }
 
     std::unique_ptr<PtJson> returnValue;
@@ -1942,7 +1942,7 @@ std::unique_ptr<CallFrame> CallFrame::Create(const PtJson &params)
             callFrame->returnValue_ = std::move(remoteObject);
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'returnValue';";
+        error += "Wrong type of 'returnValue';";
     }
     
     if (!error.empty()) {
@@ -1998,21 +1998,21 @@ std::unique_ptr<SamplingHeapProfileSample> SamplingHeapProfileSample::Create(con
     if (ret == Result::SUCCESS) {
         samplingHeapProfileSample->size_ = size;
     } else {
-        error += "Unknown 'size';";
+        error += "Unknown or wrong type of 'size';";
     }
     int32_t nodeId;
     ret = params.GetInt("nodeId", &nodeId);
     if (ret == Result::SUCCESS) {
         samplingHeapProfileSample->nodeId_ = nodeId;
     } else {
-        error += "Unknown 'nodeId';";
+        error += "Unknown or wrong type of 'nodeId';";
     }
     int32_t ordinal;
     ret = params.GetInt("ordinal", &ordinal);
     if (ret == Result::SUCCESS) {
         samplingHeapProfileSample->ordinal_ = ordinal;
     } else {
-        error += "Unknown 'ordinal';";
+        error += "Unknown or wrong type of 'ordinal';";
     }
     if (!error.empty()) {
         LOG_DEBUGGER(ERROR) << "SamplingHeapProfileSample::Create " << error;
@@ -2044,7 +2044,7 @@ std::unique_ptr<RuntimeCallFrame> RuntimeCallFrame::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         runtimeCallFrame->functionName_ = std::move(functionName);
     } else {
-        error += "Unknown 'functionName';";
+        error += "Unknown or wrong type of 'functionName';";
     }
 
     std::string moduleName;
@@ -2052,7 +2052,7 @@ std::unique_ptr<RuntimeCallFrame> RuntimeCallFrame::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         runtimeCallFrame->moduleName_ = std::move(moduleName);
     } else {
-        error += "Unknown 'moduleName';";
+        error += "Unknown or wrong type of 'moduleName';";
     }
 
     std::string scriptId;
@@ -2060,7 +2060,7 @@ std::unique_ptr<RuntimeCallFrame> RuntimeCallFrame::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         runtimeCallFrame->scriptId_ = std::move(scriptId);
     } else {
-        error += "Unknown 'scriptId';";
+        error += "Unknown or wrong type of 'scriptId';";
     }
 
     std::string url;
@@ -2068,7 +2068,7 @@ std::unique_ptr<RuntimeCallFrame> RuntimeCallFrame::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         runtimeCallFrame->url_ = std::move(url);
     } else {
-        error += "Unknown 'url';";
+        error += "Unknown or wrong type of 'url';";
     }
     
     int32_t lineNumber;
@@ -2076,7 +2076,7 @@ std::unique_ptr<RuntimeCallFrame> RuntimeCallFrame::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         runtimeCallFrame->lineNumber_ = lineNumber;
     } else {
-        error += "Unknown 'lineNumber';";
+        error += "Unknown or wrong type of 'lineNumber';";
     }
 
     int32_t columnNumber;
@@ -2084,7 +2084,7 @@ std::unique_ptr<RuntimeCallFrame> RuntimeCallFrame::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         runtimeCallFrame->columnNumber_ = columnNumber;
     } else {
-        error += "Unknown 'columnNumber';";
+        error += "Unknown or wrong type of 'columnNumber';";
     }
     if (!error.empty()) {
         LOG_DEBUGGER(ERROR) << "RuntimeCallFrame::Create " << error;
@@ -2136,7 +2136,7 @@ std::unique_ptr<SamplingHeapProfileNode> SamplingHeapProfileNode::Create(const P
             samplingHeapProfileNode->callFrame_ = std::move(runtimeCallFrame);
         }
     } else {
-        error += "Unknown 'callFrame';";
+        error += "Unknown or wrong type of 'callFrame';";
     }
     
     int32_t selfSize;
@@ -2144,7 +2144,7 @@ std::unique_ptr<SamplingHeapProfileNode> SamplingHeapProfileNode::Create(const P
     if (ret == Result::SUCCESS) {
         samplingHeapProfileNode->selfSize_ = selfSize;
     } else {
-        error += "Unknown 'selfSize';";
+        error += "Unknown or wrong type of 'selfSize';";
     }
 
     int32_t id;
@@ -2152,7 +2152,7 @@ std::unique_ptr<SamplingHeapProfileNode> SamplingHeapProfileNode::Create(const P
     if (ret == Result::SUCCESS) {
         samplingHeapProfileNode->id_ = id;
     } else {
-        error += "Unknown 'id';";
+        error += "Unknown or wrong type of 'id';";
     }
 
     std::unique_ptr<PtJson> children;
@@ -2170,7 +2170,7 @@ std::unique_ptr<SamplingHeapProfileNode> SamplingHeapProfileNode::Create(const P
             }
         }
     } else {
-        error += "Unknown 'children';";
+        error += "Unknown or wrong type of 'children';";
     }
     
     if (!error.empty()) {
@@ -2216,7 +2216,7 @@ std::unique_ptr<SamplingHeapProfile> SamplingHeapProfile::Create(const PtJson &p
             samplingHeapProfile->head_ = std::move(pHead);
         }
     } else {
-        error += "Unknown 'head';";
+        error += "Unknown or wrong type of 'head';";
     }
 
     std::unique_ptr<PtJson> samples;
@@ -2234,7 +2234,7 @@ std::unique_ptr<SamplingHeapProfile> SamplingHeapProfile::Create(const PtJson &p
             }
         }
     } else {
-        error += "Unknown 'samples';";
+        error += "Unknown or wrong type of 'samples';";
     }
     
     if (!error.empty()) {
@@ -2311,7 +2311,7 @@ std::unique_ptr<PositionTickInfo> PositionTickInfo::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         positionTickInfo->line_ = line;
     } else {
-        error += "Unknown 'line';";
+        error += "Unknown or wrong type of 'line';";
     }
 
     int32_t ticks;
@@ -2319,7 +2319,7 @@ std::unique_ptr<PositionTickInfo> PositionTickInfo::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         positionTickInfo->ticks_ = ticks;
     } else {
-        error += "Unknown 'ticks';";
+        error += "Unknown or wrong type of 'ticks';";
     }
     
     if (!error.empty()) {
@@ -2351,7 +2351,7 @@ std::unique_ptr<ProfileNode> ProfileNode::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         profileNode->id_ = id;
     } else {
-        error += "Unknown 'id';";
+        error += "Unknown or wrong type of 'id';";
     }
 
     std::unique_ptr<PtJson> callFrame;
@@ -2364,7 +2364,7 @@ std::unique_ptr<ProfileNode> ProfileNode::Create(const PtJson &params)
             profileNode->callFrame_ = std::move(runtimeCallFrame);
         }
     } else {
-        error += "Unknown 'callFrame';";
+        error += "Unknown or wrong type of 'callFrame';";
     }
 
     int32_t hitCount;
@@ -2372,7 +2372,7 @@ std::unique_ptr<ProfileNode> ProfileNode::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         profileNode->hitCount_ = hitCount;
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'hitCount';";
+        error += "Wrong type of 'hitCount';";
     }
 
     std::unique_ptr<PtJson> children;
@@ -2383,8 +2383,8 @@ std::unique_ptr<ProfileNode> ProfileNode::Create(const PtJson &params)
             int32_t pChildren = children->Get(i)->GetInt();
             profileNode->children_.value().emplace_back(pChildren);
         }
-    }  else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'children';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'children';";
     }
 
     std::unique_ptr<PtJson> positionTicks;
@@ -2402,7 +2402,7 @@ std::unique_ptr<ProfileNode> ProfileNode::Create(const PtJson &params)
             }
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'positionTicks';";
+        error += "Wrong type of 'positionTicks';";
     }
 
     std::string deoptReason;
@@ -2410,7 +2410,7 @@ std::unique_ptr<ProfileNode> ProfileNode::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         profileNode->deoptReason_ = std::move(deoptReason);
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'deoptReason';";
+        error += "Wrong type of 'deoptReason';";
     }
     
     if (!error.empty()) {
@@ -2494,7 +2494,7 @@ std::unique_ptr<Profile> Profile::Create(const PtJson &params)
             }
         }
     } else {
-        error += "Unknown 'nodes';";
+        error += "Unknown or wrong type of 'nodes';";
     }
 
     int64_t tid;
@@ -2502,7 +2502,7 @@ std::unique_ptr<Profile> Profile::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         profile->tid_ = tid;
     } else {
-        error += "Unknown 'tid';";
+        error += "Unknown or wrong type of 'tid';";
     }
 
     int64_t startTime;
@@ -2510,7 +2510,7 @@ std::unique_ptr<Profile> Profile::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         profile->startTime_ = startTime;
     } else {
-        error += "Unknown 'startTime';";
+        error += "Unknown or wrong type of 'startTime';";
     }
 
     int64_t endTime;
@@ -2518,7 +2518,7 @@ std::unique_ptr<Profile> Profile::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         profile->endTime_ = endTime;
     } else {
-        error += "Unknown 'endTime';";
+        error += "Unknown or wrong type of 'endTime';";
     }
 
     int64_t gcTime;
@@ -2526,7 +2526,7 @@ std::unique_ptr<Profile> Profile::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         profile->gcTime_ = gcTime;
     } else {
-        error += "Unknown 'gcTime';";
+        error += "Unknown or wrong type of 'gcTime';";
     }
 
     int64_t cInterpreterTime;
@@ -2534,7 +2534,7 @@ std::unique_ptr<Profile> Profile::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         profile->cInterpreterTime_ = cInterpreterTime;
     } else {
-        error += "Unknown 'cInterpreterTime';";
+        error += "Unknown or wrong type of 'cInterpreterTime';";
     }
 
     int64_t asmInterpreterTime;
@@ -2542,7 +2542,7 @@ std::unique_ptr<Profile> Profile::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         profile->asmInterpreterTime_ = asmInterpreterTime;
     } else {
-        error += "Unknown 'asmInterpreterTime';";
+        error += "Unknown or wrong type of 'asmInterpreterTime';";
     }
 
     int64_t aotTime;
@@ -2550,7 +2550,7 @@ std::unique_ptr<Profile> Profile::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         profile->aotTime_ = aotTime;
     } else {
-        error += "Unknown 'aotTime';";
+        error += "Unknown or wrong type of 'aotTime';";
     }
 
     int64_t builtinTime;
@@ -2558,7 +2558,7 @@ std::unique_ptr<Profile> Profile::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         profile->builtinTime_ = builtinTime;
     } else {
-        error += "Unknown 'builtinTime';";
+        error += "Unknown or wrong type of 'builtinTime';";
     }
 
     int64_t napiTime;
@@ -2566,7 +2566,7 @@ std::unique_ptr<Profile> Profile::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         profile->napiTime_ = napiTime;
     } else {
-        error += "Unknown 'napiTime';";
+        error += "Unknown or wrong type of 'napiTime';";
     }
 
     int64_t arkuiEngineTime;
@@ -2574,7 +2574,7 @@ std::unique_ptr<Profile> Profile::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         profile->arkuiEngineTime_ = arkuiEngineTime;
     } else {
-        error += "Unknown 'arkuiEngineTime';";
+        error += "Unknown or wrong type of 'arkuiEngineTime';";
     }
 
     int64_t runtimeTime;
@@ -2582,7 +2582,7 @@ std::unique_ptr<Profile> Profile::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         profile->runtimeTime_ = runtimeTime;
     } else {
-        error += "Unknown 'runtimeTime';";
+        error += "Unknown or wrong type of 'runtimeTime';";
     }
 
     int64_t otherTime;
@@ -2590,7 +2590,7 @@ std::unique_ptr<Profile> Profile::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         profile->otherTime_ = otherTime;
     } else {
-        error += "Unknown 'otherTime';";
+        error += "Unknown or wrong type of 'otherTime';";
     }
 
     std::unique_ptr<PtJson> samples;
@@ -2601,8 +2601,8 @@ std::unique_ptr<Profile> Profile::Create(const PtJson &params)
             int32_t pSamples = samples->Get(i)->GetInt();
             profile->samples_.value().emplace_back(pSamples);
         }
-    }  else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'samples';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'samples';";
     }
 
     std::unique_ptr<PtJson> timeDeltas;
@@ -2613,8 +2613,8 @@ std::unique_ptr<Profile> Profile::Create(const PtJson &params)
             int32_t pTimeDeltas = timeDeltas->Get(i)->GetInt();
             profile->timeDeltas_.value().emplace_back(pTimeDeltas);
         }
-    }  else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'timeDeltas';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'timeDeltas';";
     }
     
     if (!error.empty()) {
@@ -2723,7 +2723,7 @@ std::unique_ptr<Coverage> Coverage::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         coverage->startOffset_ = startOffset;
     } else {
-        error += "Unknown 'startOffset';";
+        error += "Unknown or wrong type of 'startOffset';";
     }
 
     int32_t endOffset;
@@ -2731,7 +2731,7 @@ std::unique_ptr<Coverage> Coverage::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         coverage->endOffset_ = endOffset;
     } else {
-        error += "Unknown 'endOffset';";
+        error += "Unknown or wrong type of 'endOffset';";
     }
 
     int32_t count;
@@ -2739,7 +2739,7 @@ std::unique_ptr<Coverage> Coverage::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         coverage->count_ = count;
     } else {
-        error += "Unknown 'count';";
+        error += "Unknown or wrong type of 'count';";
     }
     
     if (!error.empty()) {
@@ -2772,7 +2772,7 @@ std::unique_ptr<FunctionCoverage> FunctionCoverage::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         functionCoverage->functionName_ = std::move(functionName);
     } else {
-        error += "Unknown 'functionName';";
+        error += "Unknown or wrong type of 'functionName';";
     }
 
     std::unique_ptr<PtJson> ranges;
@@ -2790,7 +2790,7 @@ std::unique_ptr<FunctionCoverage> FunctionCoverage::Create(const PtJson &params)
             }
         }
     } else {
-        error += "Unknown 'ranges';";
+        error += "Unknown or wrong type of 'ranges';";
     }
 
     bool isBlockCoverage = false;
@@ -2798,7 +2798,7 @@ std::unique_ptr<FunctionCoverage> FunctionCoverage::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         functionCoverage->isBlockCoverage_ = isBlockCoverage;
     } else {
-        error += "Unknown 'isBlockCoverage';";
+        error += "Unknown or wrong type of 'isBlockCoverage';";
     }
     
     if (!error.empty()) {
@@ -2839,7 +2839,7 @@ std::unique_ptr<ScriptCoverage> ScriptCoverage::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         scriptCoverage->scriptId_ = std::move(scriptId);
     } else {
-        error += "Unknown 'scriptId';";
+        error += "Unknown or wrong type of 'scriptId';";
     }
 
     std::string url;
@@ -2847,7 +2847,7 @@ std::unique_ptr<ScriptCoverage> ScriptCoverage::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         scriptCoverage->url_ = std::move(url);
     } else {
-        error += "Unknown 'url';";
+        error += "Unknown or wrong type of 'url';";
     }
 
     std::unique_ptr<PtJson> functions;
@@ -2865,7 +2865,7 @@ std::unique_ptr<ScriptCoverage> ScriptCoverage::Create(const PtJson &params)
             }
         }
     } else {
-        error += "Unknown 'functions';";
+        error += "Unknown or wrong type of 'functions';";
     }
     
     if (!error.empty()) {
@@ -2905,7 +2905,7 @@ std::unique_ptr<TypeObject> TypeObject::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         typeObject->name_ = std::move(name);
     } else {
-        error += "Unknown 'name';";
+        error += "Unknown or wrong type of 'name';";
     }
 
     if (!error.empty()) {
@@ -2936,7 +2936,7 @@ std::unique_ptr<TypeProfileEntry> TypeProfileEntry::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         typeProfileEntry->offset_ = offset;
     } else {
-        error += "Unknown 'offset';";
+        error += "Unknown or wrong type of 'offset';";
     }
 
     std::unique_ptr<PtJson> types;
@@ -2954,7 +2954,7 @@ std::unique_ptr<TypeProfileEntry> TypeProfileEntry::Create(const PtJson &params)
             }
         }
     } else {
-        error += "Unknown 'types';";
+        error += "Unknown or wrong type of 'types';";
     }
     
     if (!error.empty()) {
@@ -2993,7 +2993,7 @@ std::unique_ptr<ScriptTypeProfile> ScriptTypeProfile::Create(const PtJson &param
     if (ret == Result::SUCCESS) {
         scriptTypeProfile->scriptId_ = std::move(scriptId);
     } else {
-        error += "Unknown 'scriptId';";
+        error += "Unknown or wrong type of 'scriptId';";
     }
 
     std::string url;
@@ -3001,7 +3001,7 @@ std::unique_ptr<ScriptTypeProfile> ScriptTypeProfile::Create(const PtJson &param
     if (ret == Result::SUCCESS) {
         scriptTypeProfile->url_ = std::move(url);
     } else {
-        error += "Unknown 'url';";
+        error += "Unknown or wrong type of 'url';";
     }
 
     std::unique_ptr<PtJson> entries;
@@ -3019,7 +3019,7 @@ std::unique_ptr<ScriptTypeProfile> ScriptTypeProfile::Create(const PtJson &param
             }
         }
     } else {
-        error += "Unknown 'entries';";
+        error += "Unknown or wrong type of 'entries';";
     }
     
     if (!error.empty()) {
@@ -3063,7 +3063,7 @@ std::unique_ptr<TraceConfig> TraceConfig::Create(const PtJson &params)
             error += "'recordMode' is invalid;";
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'recordMode';";
+        error += "Wrong type of 'recordMode';";
     }
 
     bool enableSampling = false;
@@ -3071,7 +3071,7 @@ std::unique_ptr<TraceConfig> TraceConfig::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         traceConfig->enableSampling_ = enableSampling;
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'enableSampling';";
+        error += "Wrong type of 'enableSampling';";
     }
 
     bool enableSystrace = false;
@@ -3079,7 +3079,7 @@ std::unique_ptr<TraceConfig> TraceConfig::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         traceConfig->enableSystrace_ = enableSystrace;
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'enableSystrace';";
+        error += "Wrong type of 'enableSystrace';";
     }
 
     bool enableArgumentFilter = false;
@@ -3087,7 +3087,7 @@ std::unique_ptr<TraceConfig> TraceConfig::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         traceConfig->enableArgumentFilter_ = enableArgumentFilter;
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'enableArgumentFilter';";
+        error += "Wrong type of 'enableArgumentFilter';";
     }
 
     std::unique_ptr<PtJson> includedCategories;
@@ -3098,8 +3098,8 @@ std::unique_ptr<TraceConfig> TraceConfig::Create(const PtJson &params)
             std::string pIncludedCategories = includedCategories->Get(i)->GetString();
             traceConfig->includedCategories_.value().emplace_back(pIncludedCategories);
         }
-    }  else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'includedCategories';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'includedCategories';";
     }
 
     std::unique_ptr<PtJson> excludedCategories;
@@ -3110,8 +3110,8 @@ std::unique_ptr<TraceConfig> TraceConfig::Create(const PtJson &params)
             std::string pExcludedCategories = excludedCategories->Get(i)->GetString();
             traceConfig->excludedCategories_.value().emplace_back(pExcludedCategories);
         }
-    }  else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'excludedCategories';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'excludedCategories';";
     }
 
     std::unique_ptr<PtJson> syntheticDelays;
@@ -3122,8 +3122,8 @@ std::unique_ptr<TraceConfig> TraceConfig::Create(const PtJson &params)
             std::string pSyntheticDelays = syntheticDelays->Get(i)->GetString();
             traceConfig->syntheticDelays_.value().emplace_back(pSyntheticDelays);
         }
-    }  else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'syntheticDelays';";
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'syntheticDelays';";
     }
 
     std::unique_ptr<PtJson> memoryDumpConfig;
@@ -3136,7 +3136,7 @@ std::unique_ptr<TraceConfig> TraceConfig::Create(const PtJson &params)
             traceConfig->memoryDumpConfig_ = std::move(tmpMemory);
         }
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'memoryDumpConfig';";
+        error += "Wrong type of 'memoryDumpConfig';";
     }
 
     if (!error.empty()) {
@@ -3212,23 +3212,23 @@ std::unique_ptr<BreakpointInfo> BreakpointInfo::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         paramsObject->lineNumber_ = lineNumber;
     } else {
-        error += "Unknown 'lineNumber';";
-    }
-    // url
-    std::string url;
-    ret = params.GetString("url", &url);
-    if (ret == Result::SUCCESS) {
-        paramsObject->url_ = std::move(url);
-    } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'url';";
+        error += "Unknown or wrong type of 'lineNumber';";
     }
     // columnNumber
     int32_t columnNumber;
     ret = params.GetInt("columnNumber", &columnNumber);
     if (ret == Result::SUCCESS) {
         paramsObject->columnNumber_ = columnNumber;
-    } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'columnNumber';";
+    } else {
+        error += "Unknown or wrong type of 'columnNumber';";
+    }
+    // url
+    std::string url;
+    ret = params.GetString("url", &url);
+    if (ret == Result::SUCCESS) {
+        paramsObject->url_ = std::move(url);
+    } else {
+        error += "Unknown or wrong type of 'url';";
     }
     // condition
     std::string condition;
@@ -3236,7 +3236,7 @@ std::unique_ptr<BreakpointInfo> BreakpointInfo::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         paramsObject->condition_ = std::move(condition);
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'condition';";
+        error += "Wrong type of 'condition';";
     }
     // urlRegex
     std::string urlRegex;
@@ -3244,7 +3244,7 @@ std::unique_ptr<BreakpointInfo> BreakpointInfo::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         paramsObject->urlRegex_ = std::move(urlRegex);
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'urlRegex';";
+        error += "Wrong type of 'urlRegex';";
     }
     // scriptHash
     std::string scriptHash;
@@ -3252,7 +3252,7 @@ std::unique_ptr<BreakpointInfo> BreakpointInfo::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         paramsObject->scriptHash_ = std::move(scriptHash);
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'scriptHash';";
+        error += "Wrong type of 'scriptHash';";
     }
     // restrictToFunction
     bool restrictToFunction = false;
@@ -3260,7 +3260,7 @@ std::unique_ptr<BreakpointInfo> BreakpointInfo::Create(const PtJson &params)
     if (ret == Result::SUCCESS) {
         paramsObject->restrictToFunction_ = restrictToFunction;
     } else if (ret == Result::TYPE_ERROR) {  // optional value
-        error += "Unknown 'restrictToFunction';";
+        error += "Wrong type of 'restrictToFunction';";
     }
 
     if (!error.empty()) {
@@ -3303,7 +3303,7 @@ std::unique_ptr<BreakpointReturnInfo> BreakpointReturnInfo::Create(const PtJson 
     if (ret == Result::SUCCESS) {
         paramsObject->lineNumber_ = lineNumber;
     } else {
-        error += "Unknown 'lineNumber';";
+        error += "Wrong type of 'lineNumber';";
     }
     // columnNumber
     int32_t columnNumber;
@@ -3311,7 +3311,7 @@ std::unique_ptr<BreakpointReturnInfo> BreakpointReturnInfo::Create(const PtJson 
     if (ret == Result::SUCCESS) {
         paramsObject->columnNumber_ = columnNumber;
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'columnNumber';";
+        error += "Wrong type of 'columnNumber';";
     }
     // id
     std::string id;
@@ -3319,7 +3319,7 @@ std::unique_ptr<BreakpointReturnInfo> BreakpointReturnInfo::Create(const PtJson 
     if (ret == Result::SUCCESS) {
         paramsObject->id_ = std::move(id);
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'id';";
+        error += "Wrong type of 'id';";
     }
     // scriptId
     int32_t scriptId;
@@ -3327,7 +3327,7 @@ std::unique_ptr<BreakpointReturnInfo> BreakpointReturnInfo::Create(const PtJson 
     if (ret == Result::SUCCESS) {
         paramsObject->scriptId_ = scriptId;
     } else if (ret == Result::TYPE_ERROR) {
-        error += "Unknown 'scriptId';";
+        error += "Wrong type of 'scriptId';";
     }
 
     if (!error.empty()) {

@@ -39,9 +39,9 @@ public:
     ~ContinueToLocationParams() override = default;
 
     static std::unique_ptr<ContinueToLocationParams> Create(const PtJson &params);
-    Location *GetLocations() const
+    Location *GetLocation() const
     {
-        return loca_.get();
+        return location_.get();
     }
     
     const std::string &GetTargetCallFrames() const
@@ -53,7 +53,7 @@ private:
     NO_COPY_SEMANTIC(ContinueToLocationParams);
     NO_MOVE_SEMANTIC(ContinueToLocationParams);
 
-    std::unique_ptr<Location> loca_ {nullptr};
+    std::unique_ptr<Location> location_ {nullptr};
     std::string targetCallFrames_ {};
 };
 
