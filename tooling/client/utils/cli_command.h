@@ -42,7 +42,7 @@ public:
     CliCommand(std::vector<std::string> cliCmdStr, int cmdId, DomainManager &domainManager, WebsocketClient &cliSocket)
         : cmd_(cliCmdStr[0]), id_(cmdId), domainManager_(domainManager), cliSocket_(cliSocket)
     {
-        for (size_t i = 1; i < cliCmdStr.size(); i++) {
+        for (size_t i = 1u; i < cliCmdStr.size(); i++) {
             argList_.push_back(cliCmdStr[i]);
         }
     }

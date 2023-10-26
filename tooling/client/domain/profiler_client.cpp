@@ -150,7 +150,7 @@ void ProfilerClient::RecvProfilerResult(std::unique_ptr<PtJson> json)
     }
 
     ProfilerSingleton& pro = ProfilerSingleton::GetInstance();
-    std::string fileName = "CPU-" + std::string(date) + "T" + std::string(time) + ".cpuprofile";
+    std::string fileName = "/data/CPU-" + std::string(date) + "T" + std::string(time) + ".cpuprofile";
     std::string cpufile = pro.GetAddress() + fileName;
     std::cout << "cpuprofile file name is " << cpufile << std::endl;
     std::cout << ">>> ";
@@ -162,12 +162,18 @@ void ProfilerClient::RecvProfilerResult(std::unique_ptr<PtJson> json)
 bool ProfilerClient::WriteCpuProfileForFile(const std::string &fileName, const std::string &data)
 {
     std::ofstream ofs;
+    std::string realPath;
+    bool res = Utils::RealPath(fileName, realPath, false);
+    if (!res) {
+        LOGE("arkdb: path is not realpath!");
+        return false;
+    }
     ofs.open(fileName.c_str(), std::ios::out);
     if (!ofs.is_open()) {
         LOGE("arkdb: file open error!");
         return false;
     }
-    int strSize = data.size();
+    size_t strSize = data.size();
     ofs.write(data.c_str(), strSize);
     ofs.close();
     ofs.clear();
