@@ -136,6 +136,9 @@ bool DebuggerImpl::NotifySingleStep(const JSPtLocation &location)
 
     singleStepper_.reset();
     LOG_DEBUGGER(INFO) << "StepComplete: pause on current byte_code";
+    if (!DebuggerApi::GetSingleStepStatus(jsDebugger_)) {
+        DebuggerApi::SetSingleStepStatus(jsDebugger_, true);
+    }
     return true;
 }
 
@@ -236,7 +239,15 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
         return;
     }
     tooling::Paused paused;
-    paused.SetCallFrames(std::move(callFrames)).SetReason(reason).SetHitBreakpoints(std::move(hitBreakpoints));
+    if (reason == DEBUGGERSTMT) {
+        BreakpointDetails detail;
+        hitBreakpoints.emplace_back(BreakpointDetails::ToString(detail));
+        paused.SetCallFrames(std::move(callFrames))
+            .SetReason(PauseReason::OTHER)
+            .SetHitBreakpoints(std::move(hitBreakpoints));
+    } else {
+        paused.SetCallFrames(std::move(callFrames)).SetReason(reason).SetHitBreakpoints(std::move(hitBreakpoints));
+    }
     if (reason == EXCEPTION && exception->IsError()) {
         std::unique_ptr<RemoteObject> tmpException = RemoteObject::FromTagged(vm_, exception);
         paused.SetData(std::move(tmpException));
@@ -831,6 +842,7 @@ DispatchResponse DebuggerImpl::Resume([[maybe_unused]] const ResumeParams &param
     }
     frontend_.Resumed(vm_);
     debuggerState_ = DebuggerState::ENABLED;
+    DebuggerApi::SetSingleStepStatus(jsDebugger_, false);
     return DispatchResponse::Ok();
 }
 
