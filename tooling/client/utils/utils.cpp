@@ -16,6 +16,7 @@
 #include "tooling/client/utils/utils.h"
 #include "common/log_wrapper.h"
 #include <ctime>
+#include <climits>
 
 namespace OHOS::ArkCompiler::Toolchain {
 bool Utils::GetCurrentTime(char *date, char *tim, size_t size)
@@ -72,5 +73,34 @@ std::vector<std::string> Utils::SplitString(const std::string &str, const std::s
         }
     }
     return value;
+}
+
+bool Utils::RealPath(const std::string &path, std::string &realPath, [[maybe_unused]] bool readOnly)
+{
+    realPath = "";
+    if (path.empty() || path.size() > PATH_MAX) {
+        LOGE("arkdb: File path is illeage");
+        return false;
+    }
+    char buffer[PATH_MAX] = { '\0' };
+#if defined(PANDA_TARGET_WINDOWS)
+    if (!_fullpath(buffer, path.c_str(), sizeof(buffer) - 1)) {
+        LOGE("arkdb: full path failure");
+        return false;
+    }
+#endif
+#if defined(PANDA_TARGET_UNIX)
+    if (!realpath(path.c_str(), buffer)) {
+        // Maybe file does not exist.
+        if (!readOnly && errno == ENOENT) {
+            realPath = path;
+            return true;
+        }
+        LOGE("arkdb: realpath failure");
+        return false;
+    }
+#endif
+    realPath = std::string(buffer);
+    return true;
 }
 } // OHOS::ArkCompiler::Toolchain

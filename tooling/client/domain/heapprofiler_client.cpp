@@ -213,10 +213,10 @@ void HeapProfilerClient::RecvReply(std::unique_ptr<PtJson> json)
             return;
         }
         if (isAllocationMsg_) {
-            fileName_ = "Heap-" + std::string(date) + "T" + std::string(time) + ".heaptimeline";
+            fileName_ = "/data/Heap-" + std::string(date) + "T" + std::string(time) + ".heaptimeline";
             std::cout << "heaptimeline file name is " << fileName_ << std::endl;
         } else {
-            fileName_ = "Heap-" + std::string(date) + "T" + std::string(time) + ".heapsnapshot";
+            fileName_ = "/data/Heap-" + std::string(date) + "T" + std::string(time) + ".heapsnapshot";
             std::cout << "heapsnapshot file name is " << fileName_ << std::endl;
         }
         std::cout << ">>> ";
@@ -235,12 +235,18 @@ bool HeapProfilerClient::WriteHeapProfilerForFile(const std::string &fileName, c
 {
     std::ofstream ofs;
     std::string pathname = path_ + fileName;
+    std::string realPath;
+    bool res = Utils::RealPath(pathname, realPath, false);
+    if (!res) {
+        LOGE("arkdb: path is not realpath!");
+        return false;
+    }
     ofs.open(pathname.c_str(), std::ios::app);
     if (!ofs.is_open()) {
         LOGE("arkdb: file open error!");
         return false;
     }
-    int strSize = data.size();
+    size_t strSize = data.size();
     ofs.write(data.c_str(), strSize);
     ofs.close();
     ofs.clear();

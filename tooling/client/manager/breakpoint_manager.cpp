@@ -65,8 +65,8 @@ void BreakPointManager::Createbreaklocation(const std::unique_ptr<PtJson> json)
 
 void BreakPointManager::Show()
 {
-    int size = breaklist_.size();
-    for (int i = 0; i < size; i++) {
+    size_t size = breaklist_.size();
+    for (size_t i = 0; i < size; i++) {
         std::cout << (i + 1) << ':' << " url:" << breaklist_[i].url;
         std::cout << " lineNumber:" << breaklist_[i].lineNumber
             << " columnNumber:" << breaklist_[i].columnNumber << std::endl;
