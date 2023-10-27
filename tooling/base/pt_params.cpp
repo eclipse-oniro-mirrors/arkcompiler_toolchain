@@ -114,17 +114,17 @@ std::unique_ptr<ContinueToLocationParams> ContinueToLocationParams::Create(const
     std::string error;
     Result ret;
 
-    std::unique_ptr<PtJson> loca;
-    ret = params.GetObject("loca", &loca);
+    std::unique_ptr<PtJson> position;
+    ret = params.GetObject("location", &position);
     if (ret == Result::SUCCESS) {
-        std::unique_ptr<Location> location = Location::Create(*loca);
+        std::unique_ptr<Location> location = Location::Create(*position);
         if (location == nullptr) {
-            error += "'loca' is invalid;";
+            error += "'location' is invalid;";
         } else {
-            paramsObject->loca_= std::move(location);
+            paramsObject->location_= std::move(location);
         }
     } else {
-        error += "Unknown or wrong type of 'loca';";
+        error += "Unknown or wrong type of 'location';";
     }
 
     std::string targetCallFrames;
@@ -374,8 +374,8 @@ std::unique_ptr<SetBreakpointsActiveParams> SetBreakpointsActiveParams::Create(c
     ret = params.GetBool("active", &breakpointsState);
     if (ret == Result::SUCCESS) {
         paramsObject->breakpointsState_ = std::move(breakpointsState);
-    } else if (ret == Result::TYPE_ERROR) {
-        error += "Wrong type of 'active';";
+    } else {
+        error += "Unknown or wrong type of 'active';";
     }
     if (!error.empty()) {
         LOG_DEBUGGER(ERROR) << "SetBreakpointsActiveParams::Create " << error;
@@ -395,8 +395,8 @@ std::unique_ptr<SetSkipAllPausesParams> SetSkipAllPausesParams::Create(const PtJ
     ret = params.GetBool("skip", &skipAllPausesState);
     if (ret == Result::SUCCESS) {
         paramsObject->skipAllPausesState_ = std::move(skipAllPausesState);
-    } else if (ret == Result::TYPE_ERROR) {
-        error += "Wrong type of 'skip';";
+    } else {
+        error += "Unknown or wrong type of 'skip';";
     }
     if (!error.empty()) {
         LOG_DEBUGGER(ERROR) << "SetSkipAllPausesParams::Create " << error;

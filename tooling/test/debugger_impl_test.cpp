@@ -786,7 +786,8 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetMixedDebugEnabled__002)
             "id":0,
             "method":"Debugger.setMixedDebugEnabled",
             "params":{
-                "enabled":true
+                "enabled":true,
+                "mixedStackEnabled":true
             }
         })";
     DispatchRequest request(msg);
@@ -880,6 +881,274 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_ReplyNativeCalling__002)
 
     dispatcherImpl->Dispatch(request);
     EXPECT_STREQ(outStrForCallbackCheck.c_str(), R"({"id":0,"result":{}})");
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_ContinueToLocation__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+
+    std::string msg = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.continueToLocation",
+            "params":{}
+        })";
+    DispatchRequest request(msg);
+
+    dispatcherImpl->Dispatch(request);
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(), R"({"id":0,"result":{"code":1,"message":"wrong params"}})");
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_ContinueToLocation__002)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+
+    std::string msg = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.continueToLocation",
+            "params":{
+                "location":{
+                    "scriptId":"2",
+                    "lineNumber":3,
+                    "columnNumber":20
+                },
+                "targetCallFrames":"testTargetCallFrames"
+            }
+        })";
+    DispatchRequest request(msg);
+
+    dispatcherImpl->Dispatch(request);
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(), R"({"id":0,"result":{}})");
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetBreakpointsActive__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+
+    std::string msg = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.setBreakpointsActive",
+            "params":{}
+        })";
+    DispatchRequest request(msg);
+
+    dispatcherImpl->Dispatch(request);
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(), R"({"id":0,"result":{"code":1,"message":"wrong params"}})");
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetBreakpointsActive__002)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+
+    std::string msg = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.setBreakpointsActive",
+            "params":{
+                "active":true
+            }
+        })";
+    DispatchRequest request(msg);
+
+    dispatcherImpl->Dispatch(request);
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(), R"({"id":0,"result":{}})");
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetSkipAllPauses__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+
+    std::string msg = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.setSkipAllPauses",
+            "params":{}
+        })";
+    DispatchRequest request(msg);
+
+    dispatcherImpl->Dispatch(request);
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(), R"({"id":0,"result":{"code":1,"message":"wrong params"}})");
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetSkipAllPauses__002)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+
+    std::string msg = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.setSkipAllPauses",
+            "params":{
+                "skip":true
+            }
+        })";
+    DispatchRequest request(msg);
+
+    dispatcherImpl->Dispatch(request);
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(), R"({"id":0,"result":{}})");
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpoint__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+
+    std::string msg = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.getPossibleAndSetBreakpointByUrl",
+            "params":{}
+        })";
+    DispatchRequest request(msg);
+
+    dispatcherImpl->Dispatch(request);
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(),
+        R"({"id":0,"result":{"code":1,"message":"GetPossibleAndSetBreakpointByUrl: no pennding breakpoint exists"}})");
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpoint__002)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+
+    std::string msg = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.getPossibleAndSetBreakpointByUrl",
+            "params":{
+                "locations":[
+                    {
+                        "lineNumber":3,
+                        "columnNumber":20,
+                        "url":"Index.ets"
+                    }]
+            }
+        })";
+    DispatchRequest request(msg);
+
+    dispatcherImpl->Dispatch(request);
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(), R"({"id":0,"result":{"locations":[]}})");
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_DropFrame__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    debuggerImpl->SetDebuggerState(DebuggerState::PAUSED);
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+
+    std::string msg = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.dropFrame",
+            "params":{
+                "droppedDepth":3
+            }
+        })";
+    DispatchRequest request(msg);
+
+    dispatcherImpl->Dispatch(request);
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(),
+        R"({"id":0,"result":{"code":1,"message":"Not yet support dropping multiple frames"}})");
     if (protocolChannel) {
         delete protocolChannel;
         protocolChannel = nullptr;
