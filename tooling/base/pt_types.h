@@ -178,12 +178,12 @@ public:
     static std::unique_ptr<BreakpointReturnInfo> Create(const PtJson &params);
     std::unique_ptr<PtJson> ToJson() const override;
 
-    int32_t GetLineNumber()
+    int32_t GetLineNumber() const
     {
         return lineNumber_;
     }
 
-    int32_t GetColumnNumber()
+    int32_t GetColumnNumber() const
     {
         return columnNumber_;
     }
@@ -200,7 +200,7 @@ public:
         return *this;
     }
 
-    std::string GetId()
+    std::string GetId() const
     {
         return id_;
     }

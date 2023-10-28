@@ -474,15 +474,15 @@ void DebuggerImpl::DispatcherImpl::SetBreakpointsActive(const DispatchRequest &r
 
 void DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(const DispatchRequest &request)
 {
-    std::unique_ptr<GetPossibleAndSetBreakpointParams> params;
-    params = GetPossibleAndSetBreakpointParams::Create(request.GetParams());
+    std::unique_ptr<GetPossibleAndSetBreakpointParams> params = 
+        GetPossibleAndSetBreakpointParams::Create(request.GetParams());
     if (params == nullptr) {
         SendResponse(request, DispatchResponse::Fail("wrong params"));
         return;
     }
 
-    std::vector<std::unique_ptr<BreakpointReturnInfo>> outLoc;
-    DispatchResponse response = debugger_->GetPossibleAndSetBreakpointByUrl(*params, outLoc);
+    std::vector<std::unique_ptr<BreakpointReturnInfo>> outLocation;
+    DispatchResponse response = debugger_->GetPossibleAndSetBreakpointByUrl(*params, outLocation);
     GetPossibleAndSetBreakpointByUrlReturns result(std::move(outLoc));
     SendResponse(request, response, result);
 }
@@ -884,13 +884,7 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
             LOG_DEBUGGER(INFO) << "set breakpoint location: " << location.ToString();
             Local<FunctionRef> condFuncRef = FunctionRef::Undefined(vm_);
             if (condition.has_value() && !condition.value().empty()) {
-                std::vector<uint8_t> dest;
-                if (!DecodeAndCheckBase64(condition.value(), dest)) {
-                    LOG_DEBUGGER(ERROR) << "SetBreakpointByUrl: base64 decode failed";
-                    return false;
-                }
-                condFuncRef = DebuggerApi::GenerateFuncFromBuffer(vm_, dest.data(), dest.size(),
-                    JSPandaFile::ENTRY_FUNCTION_NAME);
+                condFuncRef = CheckAndGenerateCondFunc(condition);
                 if (condFuncRef->IsUndefined()) {
                     LOG_DEBUGGER(ERROR) << "SetBreakpointByUrl: generate function failed";
                     return false;
@@ -934,8 +928,7 @@ DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const GetPossibl
     }
     auto breakpointList = params.GetBreakpointsList();
     for (const auto &breakpoint : *breakpointList) {
-        bool isProcessSucceed = ProcessSingleBreakpoint(*breakpoint, outLocations);
-        if (!isProcessSucceed) {
+        if (!ProcessSingleBreakpoint(*breakpoint, outLocations)) {
             std::string invalidBpId = "invalid";
             std::unique_ptr<BreakpointReturnInfo> bpInfo = std::make_unique<BreakpointReturnInfo>();
             bpInfo->SetId(invalidBpId)
@@ -962,23 +955,15 @@ bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
             LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: extractor is null";
             continue;
         }
-
-        // check breakpoint condition before doing matchWithLocation
+        // decode and convert condition to function before doing matchWithLocation
         Local<FunctionRef> funcRef = FunctionRef::Undefined(vm_);
         if (condition.has_value() && !condition.value().empty()) {
-            std::vector<uint8_t> dest;
-            if (!DecodeAndCheckBase64(condition.value(), dest)) {
-                LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: base64 decode failed";
-                continue;
-            }
-            funcRef =
-                DebuggerApi::GenerateFuncFromBuffer(vm_, dest.data(), dest.size(), JSPandaFile::ENTRY_FUNCTION_NAME);
+            funcRef = CheckAndGenerateCondFunc(condition);
             if (funcRef->IsUndefined()) {
-                LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: generate condition function failed";
-                continue;
+                LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: generate function failed";
+                return false;
             }
         }
-
         auto matchLocationCbFunc = [this, &funcRef](const JSPtLocation &location) -> bool {
             return DebuggerApi::SetBreakpoint(jsDebugger_, location, funcRef);
         };
@@ -1632,5 +1617,18 @@ bool DebuggerImpl::DecodeAndCheckBase64(const std::string &src, std::vector<uint
         return true;
     }
     return false;
+}
+
+Local<FunctionRef> DebuggerImpl::CheckAndGenerateCondFunc(const std::optional<std::string> &condition)
+{
+    std::vector<uint8_t> dest;
+    if (DecodeAndCheckBase64(condition.value(), dest)) {
+        Local<FunctionRef> funcRef = 
+            DebuggerApi::GenerateFuncFromBuffer(vm_, dest.data(), dest.size(), JSPandaFile::ENTRY_FUNCTION_NAME);
+        if (!funcRef->IsUndefined()) {
+            return funcRef;
+        }
+    }
+    return FunctionRef::Undefined(vm_);
 }
 }  // namespace panda::ecmascript::tooling
