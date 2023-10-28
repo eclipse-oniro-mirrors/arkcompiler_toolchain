@@ -185,8 +185,8 @@ void ProfilerClient::RecvProfilerResult(std::unique_ptr<PtJson> json)
 
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
     ProfilerSingleton &pro = session->GetProfilerSingleton();
-    std::string fileName = "CPU-" + std::to_string(sessionId_) + "-" + std::string(date) + "T" + std::string(time) +
-                           ".cpuprofile";
+    std::string fileName = "/data/CPU-" + std::to_string(sessionId_) + "-" + std::string(date) + "T" +
+                           std::string(time) + ".cpuprofile";
     std::string cpufile = pro.GetAddress() + fileName;
     std::cout << "session " << sessionId_ << " cpuprofile file name is " << cpufile << std::endl;
     std::cout << ">>> ";
@@ -198,12 +198,18 @@ void ProfilerClient::RecvProfilerResult(std::unique_ptr<PtJson> json)
 bool ProfilerClient::WriteCpuProfileForFile(const std::string &fileName, const std::string &data)
 {
     std::ofstream ofs;
+    std::string realPath;
+    bool res = Utils::RealPath(fileName, realPath, false);
+    if (!res) {
+        LOGE("arkdb: path is not realpath!");
+        return false;
+    }
     ofs.open(fileName.c_str(), std::ios::out);
     if (!ofs.is_open()) {
         LOGE("arkdb: file open error!");
         return false;
     }
-    int strSize = data.size();
+    size_t strSize = data.size();
     ofs.write(data.c_str(), strSize);
     ofs.close();
     ofs.clear();

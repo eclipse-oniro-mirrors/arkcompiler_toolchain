@@ -16,7 +16,9 @@
 #ifndef ECMASCRIPT_TOOLING_AGENT_HEAPPROFILER_IMPL_H
 #define ECMASCRIPT_TOOLING_AGENT_HEAPPROFILER_IMPL_H
 
+#if defined(ECMASCRIPT_SUPPORT_HEAPPROFILER)
 #include <uv.h>
+#endif
 
 #include "tooling/base/pt_params.h"
 #include "tooling/base/pt_events.h"
@@ -49,7 +51,9 @@ public:
     DispatchResponse GetSamplingProfile(std::unique_ptr<SamplingHeapProfile> *profile);
     DispatchResponse StartSampling(const StartSamplingParams &params);
     DispatchResponse StartTrackingHeapObjects(const StartTrackingHeapObjectsParams &params);
+#if defined(ECMASCRIPT_SUPPORT_HEAPPROFILER)
     static void HeapTrackingCallback(uv_timer_t* handle);
+#endif
     DispatchResponse StopSampling(std::unique_ptr<SamplingHeapProfile> *profile);
     DispatchResponse StopTrackingHeapObjects(const StopTrackingHeapObjectsParams &params);
     // The params type of TakeHeapSnapshot is the same as of StopTrackingHeapObjects.
@@ -171,7 +175,9 @@ private:
     const EcmaVM *vm_ {nullptr};
     Frontend frontend_;
     HeapProfilerStream stream_;
+#if defined(ECMASCRIPT_SUPPORT_HEAPPROFILER)
     uv_timer_t handle_ {};
+#endif
 };
 }  // namespace panda::ecmascript::tooling
 #endif

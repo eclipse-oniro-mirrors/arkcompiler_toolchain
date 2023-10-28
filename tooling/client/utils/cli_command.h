@@ -43,7 +43,7 @@ public:
     CliCommand(std::vector<std::string> cliCmdStr, uint32_t sessionId)
         : cmd_(cliCmdStr[0]), sessionId_(sessionId)
     {
-        for (size_t i = 1; i < cliCmdStr.size(); i++) {
+        for (size_t i = 1u; i < cliCmdStr.size(); i++) {
             argList_.push_back(cliCmdStr[i]);
         }
     }

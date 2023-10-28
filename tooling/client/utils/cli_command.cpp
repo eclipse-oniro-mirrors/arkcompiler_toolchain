@@ -269,7 +269,12 @@ ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
 
     if (cmd == "delete") {
         std::string bnumber = GetArgList()[0];
-        unsigned int num = std::stoi(bnumber);
+        int tmpNum = std::stoi(bnumber);
+        if (tmpNum < 0) {
+            LOGE("ardb: the entered sequence number cannot be negativ!");
+            return ErrCode::ERR_FAIL;
+        }
+        size_t num = static_cast<size_t>(tmpNum);
         if (breakpoint.Getbreaklist().size() >= num && num > 0) {
             debuggerCli.AddBreakPointInfo(breakpoint.Getbreaklist()[num - 1].breakpointId, 0); // 1: breakpoinId
             breakpoint.Deletebreaklist(num);
