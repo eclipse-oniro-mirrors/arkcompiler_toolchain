@@ -330,7 +330,11 @@ class ArkPy:
             "  python3 ark.py \033[92mx64.release test262 built-ins/Array\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262 built-ins/Array/name.js\033[0m\n"
             "  python3 ark.py \033[92mx64.release unittest\033[0m\n"
-            "  python3 ark.py \033[92mx64.release regresstest\033[0m\n")
+            "  python3 ark.py \033[92mx64.release regresstest\033[0m\n"
+            "  python3 ark.py \033[92mx64.release workload\033[0m\n"
+            "  python3 ark.py \033[92mx64.release workload report\033[0m\n"
+            "  python3 ark.py \033[92mx64.release workload report dev\033[0m\n"
+            "  python3 ark.py \033[92mx64.release workload report dev -20\033[0m\n")
         # Arguments
         help_msg += "\033[32mArguments:\033[0m\n{}".format(
             self.get_help_msg_of_dict(
@@ -540,6 +544,8 @@ class ArkPy:
             os.makedirs(out_path)
         if len(arg_list) == 0:
             self.build_for_gn_target(out_path, gn_args, ["default"], self.GN_TARGET_LOG_FILE_NAME)
+        elif self.is_dict_flags_match_arg(self.ARG_DICT["target"]["workload"], arg_list[0]):
+            self.build_for_workload(arg_list, out_path, gn_args, 'workload.log')
         elif self.is_dict_flags_match_arg(self.ARG_DICT["target"]["test262"], arg_list[0]):
             if len(arg_list) >= 2 and arg_list[1] == "--aot":
                 if len(arg_list) >= 3 and arg_list[2] == "--pgo":
@@ -587,6 +593,36 @@ class ArkPy:
             else:
                 arg_list_ret.append(arg)
         return [arg_list_ret, gn_args_ret]
+
+    def build_for_workload(self, arg_list, out_path, gn_args, log_file_name):
+        root_dir = os.path.dirname(os.path.abspath(__file__))
+        report = False
+        tools = 'dev'
+        boundary_value = '-10'
+        if len(arg_list) >= 2 and arg_list[1] == 'report':
+            report = True
+        if len(arg_list) >= 3 and arg_list[2]:
+            tools = arg_list[2]
+        if len(arg_list) >= 4 and arg_list[3]:
+            boundary_value = arg_list[3]
+        self.build_for_gn_target(out_path, gn_args, ["default"], self.GN_TARGET_LOG_FILE_NAME)
+        workload_cmd = "cd arkcompiler/ets_runtime/test/workloadtest/ && python3 work_load.py" \
+          " --code-path {0}" \
+          " --report {1}" \
+          " --tools-type {2}" \
+          " --boundary-value {3}" \
+          .format(root_dir, report, tools, boundary_value)
+        workload_log_path = os.path.join(out_path, log_file_name)
+        str_to_workload_log = "================================\nwokload_time: {0}\nwokload_target: {1}\n\n".format(
+            str_of_time_now(), 'file')
+        _write(workload_log_path, str_to_workload_log, "a")
+        print("=== workload start ===")
+        code = call_with_output(workload_cmd, workload_log_path)
+        if code != 0:
+            print("=== workload fail! ===\n")
+            sys.exit(code)
+        print("=== workload success! ===\n")
+        return
 
     def start_for_matched_os_cpu_mode(self, os_cpu_key: str, mode_key: str, arg_list: list):
         # get binary gn and ninja 
