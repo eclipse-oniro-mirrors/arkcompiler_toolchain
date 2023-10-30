@@ -71,6 +71,7 @@ class ArkPy:
     GN_TARGET_LOG_FILE_NAME = "build.log"
     UNITTEST_LOG_FILE_NAME = "unittest.log"
     TEST262_LOG_FILE_NAME = "test262.log"
+    REGRESS_TEST_LOG_FILE_NAME = "regresstest.log"
     PREBUILTS_DOWNLOAD_CONFIG_FILE_PATH = \
         "./arkcompiler/toolchain/build/prebuilts_download/prebuilts_download_config.json"
     INDENTATION_STRING_PER_LEVEL = "  " # for help message
@@ -165,6 +166,11 @@ class ArkPy:
             "workload": {
                 "flags": ["workload", "work-load", "work_load"],
                 "description": "Compile arkcompiler target and run workload with arkcompiler target.",
+                "gn_targets_depend_on": ["default"],
+            },
+            "regresstest": {
+                "flags": ["regresstest", "regress_test", "regress", "testregress", "test_regress"],
+                "description": "Compile arkcompiler target and run regresstest with arkcompiler target.",
                 "gn_targets_depend_on": ["default"],
             },
             "gn_target": {
@@ -311,7 +317,8 @@ class ArkPy:
             "  python3 ark.py \033[92m[os_cpu].[mode] [gn_target] [option]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --aot] " \
               "[none or --pgo] [none, file or dir] [option]\033[0m\n"
-            "  python3 ark.py \033[92m[os_cpu].[mode] [unittest] [option]\033[0m")
+            "  python3 ark.py \033[92m[os_cpu].[mode] [unittest] [option]\033[0m\n"
+            "  python3 ark.py \033[92m[os_cpu].[mode] [regresstest] [none, file or dir] [option]\033[0m\n")
         # Command examples
         help_msg += "\033[32mCommand examples:\033[0m\n{}\n\n".format(
             "  python3 ark.py \033[92mx64.release\033[0m\n"
@@ -322,7 +329,8 @@ class ArkPy:
             "  python3 ark.py \033[92mx64.release test262 --aot --pgo\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262 built-ins/Array\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262 built-ins/Array/name.js\033[0m\n"
-            "  python3 ark.py \033[92mx64.release unittest\033[0m")
+            "  python3 ark.py \033[92mx64.release unittest\033[0m\n"
+            "  python3 ark.py \033[92mx64.release regresstest\033[0m\n")
         # Arguments
         help_msg += "\033[32mArguments:\033[0m\n{}".format(
             self.get_help_msg_of_dict(
@@ -495,6 +503,37 @@ class ArkPy:
             log_file_name)
         return
 
+    def build_for_regress_test(self, out_path, gn_args: list, arg_list: list, log_file_name: str):
+        args_to_regress_test_cmd = ""
+        if len(arg_list) == 0:
+            args_to_regress_test_cmd = ""
+        elif len(arg_list) == 1:
+            if ".js" in arg_list[0]:
+                args_to_regress_test_cmd = "--test-file {}".format(arg_list[0])
+            else:
+                args_to_regress_test_cmd = "--test-dir {}".format(arg_list[0])
+        else:
+            print("\033[92m\"regresstest\" not support multiple additional arguments.\033[0m\n".format())
+            sys.exit(0)
+        self.build_for_gn_target(
+            out_path, gn_args, self.ARG_DICT["target"]["regresstest"]["gn_targets_depend_on"], log_file_name)
+        regress_test_cmd = "python3 arkcompiler/ets_runtime/test/regresstest/run_regress_test.py" \
+                      " --ark-tool ./{0}/arkcompiler/ets_runtime/ark_js_vm" \
+                      " --ark-frontend-binary ./{0}/arkcompiler/ets_frontend/es2abc" \
+                      " --LD_LIBRARY_PATH ./{0}/arkcompiler/ets_runtime:./{0}/thirdparty/icu:./prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                      " --out-dir ./{0}/ {1}".format(out_path, args_to_regress_test_cmd)
+        regress_test_log_path = os.path.join(out_path, log_file_name)
+        str_to_test_log = "============\n regresstest_time: {0}\nregresstest_target: {1}\n\n".format(
+            str_of_time_now(), regress_test_cmd)
+        _write(regress_test_log_path, str_to_test_log, "a")
+        print("=== regresstest start ===")
+        code = call_with_output(regress_test_cmd, regress_test_log_path)
+        if code != 0:
+            print("=== regresstest fail! ===\n")
+            sys.exit(code)
+        print("=== regresstest success! ===\n")
+        return
+
     def build(self, out_path: str, gn_args: list, arg_list: list):
         if not os.path.exists(out_path):
             print("# mkdir -p {}".format(out_path))
@@ -514,6 +553,8 @@ class ArkPy:
                 print("\033[92m\"unittest\" not support additional arguments.\033[0m\n".format())
                 sys.exit(0)
             self.build_for_unittest(out_path, gn_args, self.UNITTEST_LOG_FILE_NAME)
+        elif self.is_dict_flags_match_arg(self.ARG_DICT["target"]["regresstest"], arg_list[0]):
+            self.build_for_regress_test(out_path, gn_args, arg_list[1:], self.REGRESS_TEST_LOG_FILE_NAME)
         else:
             self.build_for_gn_target(out_path, gn_args, arg_list, self.GN_TARGET_LOG_FILE_NAME)
         return
