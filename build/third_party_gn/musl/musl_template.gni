@@ -27,7 +27,7 @@ musl_linker_so_out_dir =
     "${root_out_dir}/common/common/libc/${_libs_path_prefix}"
 musl_linker_so_out_path =
     "${musl_linker_so_out_dir}/ld-musl-${musl_arch}${asan}.so.1"
-musl_linker_so_out_dir_for_qemu = "${musl_linker_so_out_dir}/lib"
+musl_linker_so_out_dir_for_qemu = "${root_out_dir}/${so_dir_for_qemu}/lib"
 musl_linker_so_out_path_for_qemu =
     "${musl_linker_so_out_dir_for_qemu}/ld-musl-${musl_arch}${asan}.so.1"
 

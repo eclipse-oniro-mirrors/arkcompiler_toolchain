@@ -33,6 +33,9 @@ ohos_static_library("libsec_static") {
   ]
 }
 
+SEC_SHARED_SUBSYS_NAME = "thirdparty"
+SEC_SHARED_PART_NAME = "bounds_checking_function"
+
 ohos_shared_library("libsec_shared") {
   stack_protector_ret = false
   sources = libsec_sources
@@ -46,10 +49,19 @@ ohos_shared_library("libsec_shared") {
     "-D_INC_STDLIB_S",
     "-D_INC_MEMORY_S",
   ]
-  part_name = "bounds_checking_function"
-  subsystem_name = "thirdparty"
+
+  part_name = "${SEC_SHARED_PART_NAME}"
+  subsystem_name = "${SEC_SHARED_SUBSYS_NAME}"
   install_images = [
     "system",
     "updater",
   ]
+}
+if (is_ohos && run_with_qemu) {
+  copy("libsec_shared_for_qemu") {
+    deps = [ ":libsec_shared" ]
+
+    sources = [ "${root_out_dir}/${SEC_SHARED_SUBSYS_NAME}/${SEC_SHARED_PART_NAME}/libsec_shared.so" ]
+    outputs = [ "${root_out_dir}/${so_dir_for_qemu}/lib/libsec_shared.so" ]
+  }
 }
