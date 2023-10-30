@@ -42,8 +42,11 @@ public:
                             std::string_view entryPoint = "func_main_0");
     bool NotifySingleStep(const JSPtLocation &location);
     void NotifyPaused(std::optional<JSPtLocation> location, PauseReason reason);
+    bool NotifyNativeOut();
     void NotifyHandleProtocolCommand();
     void NotifyNativeCalling(const void *nativeAddress);
+    void NotifyNativeReturnJS();
+    void NotifyReturnNative();
     void SetDebuggerState(DebuggerState debuggerState);
 
     DispatchResponse ContinueToLocation(const ContinueToLocationParams &params);
@@ -65,6 +68,8 @@ public:
         std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
     DispatchResponse SetPauseOnExceptions(const SetPauseOnExceptionsParams &params);
     DispatchResponse SetSkipAllPauses(const SetSkipAllPausesParams &params);
+    DispatchResponse SetNativeRange(const SetNativeRangeParams &params);
+    DispatchResponse ResetSingleStepper(const ResetSingleStepperParams &params);
     DispatchResponse StepInto(const StepIntoParams &params);
     DispatchResponse StepOut();
     DispatchResponse StepOver(const StepOverParams &params);
@@ -150,6 +155,8 @@ public:
         void SetBreakpointsActive(const DispatchRequest &request);
         void SetPauseOnExceptions(const DispatchRequest &request);
         void SetSkipAllPauses(const DispatchRequest &request);
+        void SetNativeRange(const DispatchRequest &request);
+        void ResetSingleStepper(const DispatchRequest &request);
         void StepInto(const DispatchRequest &request);
         void StepOut(const DispatchRequest &request);
         void StepOver(const DispatchRequest &request);
@@ -248,12 +255,18 @@ private:
     bool mixStackEnabled_ {false};
     std::unique_ptr<SingleStepper> singleStepper_ {nullptr};
     Location location_ {};
+
+    std::unique_ptr<SingleStepper> nativeOut_ {nullptr};
     std::vector<void *>  nativePointer_;
 
+    bool nativeOutPause_ {false};
+    bool checkNeedPause_ {false};
+    std::vector<NativeRange> nativeRanges_ {};
     std::unordered_map<JSTaggedType *, RemoteObjectId> scopeObjects_ {};
     std::vector<std::shared_ptr<FrameHandler>> callFrameHandlers_;
     JsDebuggerManager::ObjectUpdaterFunc updaterFunc_ {nullptr};
     JsDebuggerManager::SingleStepperFunc stepperFunc_ {nullptr};
+    JsDebuggerManager::ReturnNativeFunc returnNative_ {nullptr};
 
     friend class JSPtHooks;
     friend class test::TestHooks;

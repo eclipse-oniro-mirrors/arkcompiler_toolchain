@@ -1680,6 +1680,36 @@ std::unique_ptr<PtJson> LocationRange::ToJson() const
     return result;
 }
 
+std::unique_ptr<NativeRange> NativeRange::Create(const PtJson &params)
+{
+    std::string error;
+    auto nativeRange = std::make_unique<NativeRange>();
+    Result ret;
+
+    uint32_t start;
+    ret = params.GetUInt("start", &start);
+    if (ret == Result::SUCCESS) {
+        nativeRange->start_ = std::move(start);
+    } else {
+        error += "Unknown 'start';";
+    }
+
+    uint32_t end;
+    ret = params.GetUInt("end", &end);
+    if (ret == Result::SUCCESS) {
+        nativeRange->end_ = std::move(end);
+    } else {
+        error += "Unknown 'end';";
+    }
+
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "NativeRange::Create " << error;
+        return nullptr;
+    }
+
+    return nativeRange;
+}
+
 std::unique_ptr<BreakLocation> BreakLocation::Create(const PtJson &params)
 {
     std::string error;

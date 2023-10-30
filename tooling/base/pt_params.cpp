@@ -562,6 +562,41 @@ std::unique_ptr<DropFrameParams> DropFrameParams::Create(const PtJson &params)
     return paramsObject;
 }
 
+std::unique_ptr<SetNativeRangeParams> SetNativeRangeParams::Create(const PtJson &params)
+{
+    auto paramsObject = std::make_unique<SetNativeRangeParams>();
+    std::string error;
+    Result ret;
+
+    std::unique_ptr<PtJson> nativeRange;
+    ret = params.GetArray("nativeRange", &nativeRange);
+    if (ret == Result::SUCCESS) {
+        int32_t len = nativeRange->GetSize();
+        std::vector<NativeRange> vectorNativeRange;
+        for (int32_t i = 0; i < len; ++i) {
+            std::unique_ptr<NativeRange> obj = NativeRange::Create(*nativeRange->Get(i));
+            if (obj == nullptr) {
+                error += "'nativeRange' is invalid;";
+                break;
+            } else {
+                vectorNativeRange.emplace_back(std::move(*obj));
+            }
+        }
+        if (vectorNativeRange.size()) {
+            paramsObject->nativeRange_ = std::move(vectorNativeRange);
+        }
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Unknown 'nativeRange';";
+    }
+
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "SetNativeRangeParams::Create " << error;
+        return nullptr;
+    }
+
+    return paramsObject;
+}
+
 std::unique_ptr<SetMixedDebugParams> SetMixedDebugParams::Create(const PtJson &params)
 {
     auto paramsObject = std::make_unique<SetMixedDebugParams>();
@@ -586,6 +621,28 @@ std::unique_ptr<SetMixedDebugParams> SetMixedDebugParams::Create(const PtJson &p
 
     if (!error.empty()) {
         LOG_DEBUGGER(ERROR) << "SetMixedDebugParams::Create " << error;
+        return nullptr;
+    }
+
+    return paramsObject;
+}
+
+std::unique_ptr<ResetSingleStepperParams> ResetSingleStepperParams::Create(const PtJson &params)
+{
+    auto paramsObject = std::make_unique<ResetSingleStepperParams>();
+    std::string error;
+    Result ret;
+
+    bool resetSingleStepper = false;
+    ret = params.GetBool("resetSingleStepper", &resetSingleStepper);
+    if (ret == Result::SUCCESS) {
+        paramsObject->resetSingleStepper_ = resetSingleStepper;
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'resetSingleStepper';";
+    }
+
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "ResetSingleStepperParams::Create " << error;
         return nullptr;
     }
 

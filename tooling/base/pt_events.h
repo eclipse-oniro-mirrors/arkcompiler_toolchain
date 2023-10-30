@@ -156,6 +156,9 @@ public:
             case STEP: {
                 return "Step";
             }
+            case NATIVE_OUT: {
+                return "Native out";
+            }
             default: {
                 LOG_DEBUGGER(ERROR) << "Unknown paused reason: " << reason;
             }
