@@ -26,8 +26,10 @@
 
 #include "tooling/client/manager/domain_manager.h"
 #include "tooling/client/manager/breakpoint_manager.h"
+#include "tooling/client/manager/source_manager.h"
 #include "tooling/client/manager/stack_manager.h"
 #include "tooling/client/manager/variable_manager.h"
+#include "tooling/client/manager/watch_manager.h"
 #include "tooling/client/websocket/websocket_client.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
@@ -102,6 +104,16 @@ public:
         domainManager_.DispatcherReply(msg);
     }
 
+    SourceManager& GetSourceManager()
+    {
+        return sourceManager_;
+    }
+
+    WatchManager& GetWatchManager()
+    {
+        return watchManager_;
+    }
+
 private:
     uint32_t sessionId_;
     std::string sockInfo_;
@@ -113,6 +125,8 @@ private:
     StackManager stackManager_;
     VariableManager variableManager_;
     ProfilerSingleton profiler_;
+    SourceManager sourceManager_;
+    WatchManager watchManager_;
 };
 
 constexpr uint32_t MAX_SESSION_NUM = 8;

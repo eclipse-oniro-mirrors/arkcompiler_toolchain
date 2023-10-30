@@ -63,6 +63,7 @@ public:
     void AddBreakPointInfo(const std::string& url, const int& lineNumber, const int& columnNumber = 0);
     void RecvReply(std::unique_ptr<PtJson> json);
     void PausedReply(const std::unique_ptr<PtJson> json);
+    void handleResponse(std::unique_ptr<PtJson> json);
 
 private:
     std::vector<BreakPointInfo> breakPointInfoList_ {};

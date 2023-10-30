@@ -36,7 +36,7 @@ void SocketMessageThread(void *arg)
 
 Session::Session(uint32_t sessionId, std::string& sockInfo)
     : sessionId_(sessionId), sockInfo_(sockInfo), domainManager_(sessionId), breakpoint_(sessionId),
-      stackManager_(sessionId), variableManager_(sessionId)
+      stackManager_(sessionId), variableManager_(sessionId), sourceManager_(sessionId), watchManager_(sessionId)
 {
 }
 

@@ -35,7 +35,7 @@ public:
             // break on start
             {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
             // set breakpoint
-            {SocketAction::SEND, "b " DEBUGGER_JS_DIR "sample.js 21"},
+            {SocketAction::SEND, "b " DEBUGGER_JS_DIR "sample.js 22"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
             // hit breakpoint after resume first time
             {SocketAction::SEND, "resume"},

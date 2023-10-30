@@ -19,6 +19,7 @@
 
 #include "common/log_wrapper.h"
 #include "tooling/client/manager/breakpoint_manager.h"
+#include "tooling/client/manager/source_manager.h"
 #include "tooling/client/manager/stack_manager.h"
 #include "tooling/base/pt_json.h"
 #include "tooling/client/session/session.h"
@@ -307,7 +308,7 @@ void DebuggerClient::AddBreakPointInfo(const std::string& url, const int& lineNu
 {
     BreakPointInfo breakPointInfo;
     breakPointInfo.url = url;
-    breakPointInfo.lineNumber = lineNumber;
+    breakPointInfo.lineNumber = lineNumber - 1;
     breakPointInfo.columnNumber = columnNumber;
     breakPointInfoList_.emplace_back(breakPointInfo);
 }
@@ -325,13 +326,15 @@ void DebuggerClient::RecvReply(std::unique_ptr<PtJson> json)
         return;
     }
 
-    Result ret;
     std::string wholeMethod;
     std::string method;
-    ret = json->GetString("method", &wholeMethod);
+    Result ret = json->GetString("method", &wholeMethod);
     if (ret != Result::SUCCESS) {
         LOGE("arkdb: find method error");
     }
+
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    SourceManager &sourceManager = session->GetSourceManager();
 
     std::string::size_type length = wholeMethod.length();
     std::string::size_type indexPoint = 0;
@@ -340,24 +343,13 @@ void DebuggerClient::RecvReply(std::unique_ptr<PtJson> json)
     if (method == "paused") {
         PausedReply(std::move(json));
         return;
+    } else if (method == "scriptParsed") {
+        sourceManager.EnableReply(std::move(json));
+        return;
     } else {
         LOGI("arkdb: Debugger reply is: %{public}s", json->Stringify().c_str());
     }
-
-    std::unique_ptr<PtJson> result;
-    ret = json->GetObject("result", &result);
-    if (ret != Result::SUCCESS) {
-        LOGE("arkdb: find result error");
-        return;
-    }
-
-    std::string breakpointId;
-    ret = result->GetString("breakpointId", &breakpointId);
-    if (ret == Result::SUCCESS) {
-        Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
-        BreakPointManager& breakpoint = session->GetBreakPointManager();
-        breakpoint.Createbreaklocation(std::move(json));
-    }
+    handleResponse(std::move(json));
 }
 
 void DebuggerClient::PausedReply(const std::unique_ptr<PtJson> json)
@@ -395,7 +387,47 @@ void DebuggerClient::PausedReply(const std::unique_ptr<PtJson> json)
 
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
     StackManager& stackManager = session->GetStackManager();
+    SourceManager &sourceManager = session->GetSourceManager();
+    WatchManager &watchManager = session->GetWatchManager();
     stackManager.ClearCallFrame();
     stackManager.SetCallFrames(std::move(data));
+    sourceManager.GetDebugSources(callFrames->Get(0));
+    watchManager.RequestWatchInfo(callFrames->Get(0));
+    watchManager.DebugTrueState();
+}
+
+void DebuggerClient::handleResponse(std::unique_ptr<PtJson> json)
+{
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    SourceManager &sourceManager = session->GetSourceManager();
+    WatchManager &watchManager = session->GetWatchManager();
+    BreakPointManager& breakpoint = session->GetBreakPointManager();
+    std::unique_ptr<PtJson> result;
+    Result ret = json->GetObject("result", &result);
+    if (ret != Result::SUCCESS) {
+        LOGE("arkdb: find result error");
+        return;
+    }
+    int32_t id;
+    ret = json->GetInt("id", &id);
+    if (ret == Result::SUCCESS) {
+        std::string scriptSource;
+        ret = result->GetString("scriptSource", &scriptSource);
+        if (ret == Result::SUCCESS) {
+            sourceManager.SetFileSource(id, scriptSource);
+            return;
+        }
+    }
+    std::string breakpointId;
+    ret = result->GetString("breakpointId", &breakpointId);
+    if (ret == Result::SUCCESS) {
+        breakpoint.Createbreaklocation(std::move(json));
+        sourceManager.GetDebugInfo(std::move(result));
+        return;
+    }
+    if (watchManager.HandleWatchResult(std::move(json), id)) {
+        return;
+    }
+    return;
 }
 } // OHOS::ArkCompiler::Toolchain

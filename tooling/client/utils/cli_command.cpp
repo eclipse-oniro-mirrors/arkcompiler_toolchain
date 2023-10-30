@@ -255,6 +255,45 @@ ErrCode CliCommand::CpuProfileCommand(const std::string &cmd)
     return result ? ErrCode::ERR_OK : ErrCode::ERR_FAIL;
 }
 
+ErrCode CliCommand::HandleDebuggerCommand(const std::string &cmd)
+{
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    BreakPointManager &breakpoint = session->GetBreakPointManager();
+    SourceManager &sourceManager = session->GetSourceManager();
+    WatchManager &watchManager = session->GetWatchManager();
+    if (cmd == "display") {
+        breakpoint.Show();
+        return ErrCode::ERR_OK;
+    }
+
+    if (cmd == "infosource") {
+        if (GetArgList().size() == 1) {
+            sourceManager.GetFileSource(std::atoi(GetArgList()[0].c_str()));
+        } else {
+            sourceManager.GetFileName();
+        }
+        return ErrCode::ERR_OK;
+    }
+
+    if (cmd == "list" && watchManager.GetDebugState()) {
+        if (GetArgList().size() == 1) {
+            sourceManager.GetListSource(GetArgList()[0]);
+        } else {
+            sourceManager.GetListSource("");
+        }
+        return ErrCode::ERR_OK;
+    }
+
+    if (cmd == "watch" && GetArgList().size() == 1) {
+        watchManager.AddWatchInfo(GetArgList()[0]);
+        if (watchManager.GetDebugState()) {
+            watchManager.SendRequestWatch(watchManager.GetWatchInfoSize() - 1, watchManager.GetCallFrameId());
+        }
+        return ErrCode::ERR_OK;
+    }
+    return ErrCode::ERR_FAIL;
+}
+
 ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
 {
     std::cout << "exe success, cmd is " << cmd << std::endl;
@@ -262,10 +301,6 @@ ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
     DebuggerClient &debuggerCli = session->GetDomainManager().GetDebuggerClient();
     BreakPointManager &breakpoint = session->GetBreakPointManager();
-    if (cmd == "display") {
-        breakpoint.Show();
-        return ErrCode::ERR_OK;
-    }
 
     if (cmd == "delete") {
         std::string bnumber = GetArgList()[0];
@@ -295,6 +330,10 @@ ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
 
     if (cmd == "break" && GetArgList().size() == 2) { // 2: two parameters
         debuggerCli.AddBreakPointInfo(GetArgList()[0], std::stoi(GetArgList()[1]));
+    }
+
+    if (HandleDebuggerCommand(cmd) == ErrCode::ERR_OK) {
+        return ErrCode::ERR_OK;
     }
 
     result = debuggerCli.DispatcherCmd(cmd);

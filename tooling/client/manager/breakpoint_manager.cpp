@@ -63,7 +63,7 @@ void BreakPointManager::Show()
     size_t size = breaklist_.size();
     for (size_t i = 0; i < size; i++) {
         std::cout << (i + 1) << ':' << " url:" << breaklist_[i].url;
-        std::cout << " lineNumber:" << breaklist_[i].lineNumber
+        std::cout << " lineNumber:" << (std::atoi(breaklist_[i].lineNumber.c_str()) + 1)
             << " columnNumber:" << breaklist_[i].columnNumber << std::endl;
     }
 }

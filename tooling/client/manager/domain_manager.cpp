@@ -52,6 +52,9 @@ void DomainManager::DispatcherReply(char* msg)
         domain = GetDomainById(id);
         RemoveDomainById(id);
     }
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    WatchManager &watchManager = session->GetWatchManager();
+    watchManager.DebugFalseState();
 
     std::string wholeMethod;
     ret = json->GetString("method", &wholeMethod);
