@@ -483,7 +483,7 @@ void DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(const Dispat
 
     std::vector<std::unique_ptr<BreakpointReturnInfo>> outLocation;
     DispatchResponse response = debugger_->GetPossibleAndSetBreakpointByUrl(*params, outLocation);
-    GetPossibleAndSetBreakpointByUrlReturns result(std::move(outLoc));
+    GetPossibleAndSetBreakpointByUrlReturns result(std::move(outLocation));
     SendResponse(request, response, result);
 }
 
