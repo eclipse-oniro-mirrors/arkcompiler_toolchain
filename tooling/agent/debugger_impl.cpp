@@ -474,7 +474,7 @@ void DebuggerImpl::DispatcherImpl::SetBreakpointsActive(const DispatchRequest &r
 
 void DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(const DispatchRequest &request)
 {
-    std::unique_ptr<GetPossibleAndSetBreakpointParams> params = 
+    std::unique_ptr<GetPossibleAndSetBreakpointParams> params =
         GetPossibleAndSetBreakpointParams::Create(request.GetParams());
     if (params == nullptr) {
         SendResponse(request, DispatchResponse::Fail("wrong params"));
@@ -1623,7 +1623,7 @@ Local<FunctionRef> DebuggerImpl::CheckAndGenerateCondFunc(const std::optional<st
 {
     std::vector<uint8_t> dest;
     if (DecodeAndCheckBase64(condition.value(), dest)) {
-        Local<FunctionRef> funcRef = 
+        Local<FunctionRef> funcRef =
             DebuggerApi::GenerateFuncFromBuffer(vm_, dest.data(), dest.size(), JSPandaFile::ENTRY_FUNCTION_NAME);
         if (!funcRef->IsUndefined()) {
             return funcRef;
