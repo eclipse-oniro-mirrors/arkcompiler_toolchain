@@ -16,6 +16,20 @@
 #ifndef ECMASCRIPT_TOOLING_AGENT_TRACING_IMPL_H
 #define ECMASCRIPT_TOOLING_AGENT_TRACING_IMPL_H
 
+#include <uv.h>
+#ifdef ERROR
+#undef ERROR
+#endif
+#ifdef CONST
+#undef CONST
+#endif
+#ifdef VOID
+#undef VOID
+#endif
+#ifdef GetObject
+#undef GetObject
+#endif
+
 #include "tooling/base/pt_params.h"
 #include "tooling/base/pt_returns.h"
 #include "dispatcher.h"
@@ -29,12 +43,13 @@ public:
     explicit TracingImpl(const EcmaVM *vm, ProtocolChannel *channel) : vm_(vm), frontend_(channel) {}
     ~TracingImpl() = default;
 
-    DispatchResponse End();
+    std::unique_ptr<ProfileInfo> End();
     DispatchResponse GetCategories(std::vector<std::string> categories);
     DispatchResponse RecordClockSyncMarker(std::string syncId);
     DispatchResponse RequestMemoryDump(std::unique_ptr<RequestMemoryDumpParams> params,
                                        std::string dumpGuid,  bool success);
     DispatchResponse Start(std::unique_ptr<StartParams> params);
+    static void TracingBufferUsageReport(uv_timer_t* handle);
 
     class DispatcherImpl final : public DispatcherBase {
     public:
@@ -61,8 +76,8 @@ public:
         explicit Frontend(ProtocolChannel *channel) : channel_(channel) {}
         ~Frontend() = default;
 
-        void BufferUsage();
-        void DataCollected();
+        void BufferUsage(double percentFull, int32_t eventCount, double value);
+        void DataCollected(std::unique_ptr<ProfileInfo> cpuProfileInfo);
         void TracingComplete();
 
     private:
@@ -74,8 +89,11 @@ private:
     NO_COPY_SEMANTIC(TracingImpl);
     NO_MOVE_SEMANTIC(TracingImpl);
 
-    [[maybe_unused]] const EcmaVM *vm_ {nullptr};
-    [[maybe_unused]] Frontend frontend_;
+    static constexpr uint64_t MAX_BUFFER_SIZE_DEFAULT = 200 * 1024 * 1024;
+    const EcmaVM *vm_ {nullptr};
+    Frontend frontend_;
+    uv_timer_t handle_ {};
+    uint64_t maxBufferSize_ {MAX_BUFFER_SIZE_DEFAULT};
 };
 }  // namespace panda::ecmascript::tooling
 #endif

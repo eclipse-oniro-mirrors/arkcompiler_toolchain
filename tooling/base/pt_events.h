@@ -1161,15 +1161,15 @@ public:
 
     std::string GetName() const override
     {
-        return "Tracing.BufferUsage";
+        return "Tracing.bufferUsage";
     }
 
-    int32_t GetPercentFull() const
+    double GetPercentFull() const
     {
         return percentFull_.value();
     }
 
-    BufferUsage &SetPercentFull(int32_t percentFull)
+    BufferUsage &SetPercentFull(double percentFull)
     {
         percentFull_ = percentFull;
         return *this;
@@ -1196,12 +1196,12 @@ public:
         return eventCount_.has_value();
     }
 
-    int32_t GetValue() const
+    double GetValue() const
     {
         return value_.value();
     }
 
-    BufferUsage &SetValue(int32_t value)
+    BufferUsage &SetValue(double value)
     {
         value_ = value;
         return *this;
@@ -1216,9 +1216,9 @@ private:
     NO_COPY_SEMANTIC(BufferUsage);
     NO_MOVE_SEMANTIC(BufferUsage);
 
-    std::optional<int32_t> percentFull_ {0};
+    std::optional<double> percentFull_ {0};
     std::optional<int32_t> eventCount_ {0};
-    std::optional<int32_t> value_ {0};
+    std::optional<double> value_ {0};
 };
 
 class DataCollected final : public PtBaseEvents {
@@ -1229,7 +1229,7 @@ public:
 
     std::string GetName() const override
     {
-        return "Tracing.DataCollected";
+        return "Tracing.dataCollected";
     }
 
     const std::vector<std::unique_ptr<PtJson>> *GetValue() const
@@ -1243,11 +1243,59 @@ public:
         return *this;
     }
 
+    DataCollected &SetCpuProfile(std::unique_ptr<Profile> cpuProfile)
+    {
+        cpuProfile_ = std::move(cpuProfile);
+        return *this;
+    }
+
 private:
     NO_COPY_SEMANTIC(DataCollected);
     NO_MOVE_SEMANTIC(DataCollected);
 
+    void CpuProfileToJson(PtJson *traceEvents, PtJson *metadata) const;
+
     std::vector<std::unique_ptr<PtJson>> value_ {};
+    std::unique_ptr<Profile> cpuProfile_;
+};
+
+class TraceEvent {
+public:
+    TraceEvent(std::string cat, std::string name, std::string ph, int64_t pid, int64_t tid)
+        : cat_(cat), name_(name), ph_(ph), pid_(pid), tid_(tid)
+    {
+    }
+
+    void SetTs(int64_t ts)
+    {
+        ts_ = ts;
+    }
+
+    void SetDur(int64_t dur)
+    {
+        dur_ = dur;
+    }
+
+    void SetArgs(std::unique_ptr<PtJson> args)
+    {
+        args_ = std::move(args);
+    }
+
+    ~TraceEvent() = default;
+    std::unique_ptr<PtJson> ToJson() const;
+
+private:
+    NO_COPY_SEMANTIC(TraceEvent);
+    NO_MOVE_SEMANTIC(TraceEvent);
+
+    std::string cat_;
+    std::string name_;
+    std::string ph_;
+    int64_t pid_ {0};
+    int64_t tid_ {0};
+    int64_t ts_ {0};
+    std::optional<int64_t> dur_;
+    std::unique_ptr<PtJson> args_;
 };
 
 class TracingComplete final : public PtBaseEvents {
@@ -1258,7 +1306,7 @@ public:
 
     std::string GetName() const override
     {
-        return "Tracing.TracingComplete";
+        return "Tracing.tracingComplete";
     }
 
     bool GetDataLossOccurred() const

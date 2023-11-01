@@ -49,12 +49,16 @@ protected:
     JSThread *thread {nullptr};
 };
 
-HWTEST_F_L0(TracingImplTest, EndTest)
+HWTEST_F_L0(TracingImplTest, StartAndEndTest)
 {
     ProtocolChannel *channel = nullptr;
     auto tracing = std::make_unique<TracingImpl>(ecmaVm, channel);
-    DispatchResponse response = tracing->End();
-    ASSERT_TRUE(response.GetMessage() == "End not support now.");
+    auto params = std::make_unique<StartParams>();
+    DispatchResponse response = tracing->Start(std::move(params));
+    ASSERT_TRUE(response.IsOk());
+
+    auto profileInfo = tracing->End();
+    ASSERT_TRUE(profileInfo != nullptr);
 }
 
 HWTEST_F_L0(TracingImplTest, GetCategoriesTest)
@@ -86,15 +90,6 @@ HWTEST_F_L0(TracingImplTest, RequestMemoryDumpTest)
     ASSERT_TRUE(response.GetMessage() == "RequestMemoryDump not support now.");
 }
 
-HWTEST_F_L0(TracingImplTest, StartTest)
-{
-    ProtocolChannel *channel = nullptr;
-    auto tracing = std::make_unique<TracingImpl>(ecmaVm, channel);
-    auto params = std::make_unique<StartParams>();
-    DispatchResponse response = tracing->Start(std::move(params));
-    ASSERT_TRUE(response.GetMessage() == "Start not support now.");
-}
-
 HWTEST_F_L0(TracingImplTest, DispatcherImplDispatchTest)
 {
     std::string result = "";
@@ -103,7 +98,7 @@ HWTEST_F_L0(TracingImplTest, DispatcherImplDispatchTest)
     ProtocolChannel *channel =  new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<TracingImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<TracingImpl::DispatcherImpl>(channel, std::move(tracing));
-    std::string msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";;
+    std::string msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
     DispatchRequest request(msg);
     dispatcherImpl->Dispatch(request);
     ASSERT_TRUE(result.find("Unknown method: Test") != std::string::npos);
@@ -114,7 +109,7 @@ HWTEST_F_L0(TracingImplTest, DispatcherImplDispatchTest)
         delete channel;
         channel = nullptr;
     }
-    ASSERT_TRUE(result.find("End not support now.") != std::string::npos);
+    ASSERT_TRUE(result.find("\"id\":0,") != std::string::npos);
 }
 
 HWTEST_F_L0(TracingImplTest, DispatcherImplEndTest)
@@ -132,7 +127,7 @@ HWTEST_F_L0(TracingImplTest, DispatcherImplEndTest)
         delete channel;
         channel = nullptr;
     }
-    ASSERT_TRUE(result.find("End not support now.") != std::string::npos);
+    ASSERT_TRUE(result.find("\"id\":0,") != std::string::npos);
 }
 
 HWTEST_F_L0(TracingImplTest, DispatcherImplGetCategoriesTest)
@@ -204,7 +199,7 @@ HWTEST_F_L0(TracingImplTest, DispatcherImplStartDumpTest)
         delete channel;
         channel = nullptr;
     }
-    ASSERT_TRUE(result.find("Start not support now.") != std::string::npos);
+    ASSERT_TRUE(result.find("\"id\":0,") != std::string::npos);
 }
 
 HWTEST_F_L0(TracingImplTest, FrontendBufferUsageTest)
@@ -214,20 +209,19 @@ HWTEST_F_L0(TracingImplTest, FrontendBufferUsageTest)
         [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = nullptr;
     auto frontend = std::make_unique<TracingImpl::Frontend>(channel);
-    frontend->BufferUsage();
+    frontend->BufferUsage(0, 0, 0);
     ASSERT_TRUE(result == "");
     if (!channel) {
         channel =  new ProtocolHandler(callback, ecmaVm);
     }
     auto frontend1 = std::make_unique<TracingImpl::Frontend>(channel);
-    frontend1->BufferUsage();
+    frontend1->BufferUsage(0, 0, 0);
     if (channel) {
         delete channel;
         channel = nullptr;
     }
-    ASSERT_TRUE(result.find("Tracing.BufferUsage") != std::string::npos);
+    ASSERT_TRUE(result.find("Tracing.bufferUsage") != std::string::npos);
 }
-
 
 HWTEST_F_L0(TracingImplTest, FrontendDataCollectedTest)
 {
@@ -236,18 +230,20 @@ HWTEST_F_L0(TracingImplTest, FrontendDataCollectedTest)
         [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = nullptr;
     auto frontend = std::make_unique<TracingImpl::Frontend>(channel);
-    frontend->DataCollected();
+    std::unique_ptr<ProfileInfo> profileInfo = std::make_unique<ProfileInfo>();
+    frontend->DataCollected(std::move(profileInfo));
     ASSERT_TRUE(result == "");
     if (!channel) {
         channel =  new ProtocolHandler(callback, ecmaVm);
     }
     auto frontend1 = std::make_unique<TracingImpl::Frontend>(channel);
-    frontend1->DataCollected();
+    profileInfo = std::make_unique<ProfileInfo>();
+    frontend1->DataCollected(std::move(profileInfo));
     if (channel) {
         delete channel;
         channel = nullptr;
     }
-    ASSERT_TRUE(result.find("Tracing.DataCollected") != std::string::npos);
+    ASSERT_TRUE(result.find("Tracing.dataCollected") != std::string::npos);
 }
 
 HWTEST_F_L0(TracingImplTest, FrontendTracingCompleteTest)
@@ -268,6 +264,6 @@ HWTEST_F_L0(TracingImplTest, FrontendTracingCompleteTest)
         delete channel;
         channel = nullptr;
     }
-    ASSERT_TRUE(result.find("Tracing.TracingComplete") != std::string::npos);
+    ASSERT_TRUE(result.find("Tracing.tracingComplete") != std::string::npos);
 }
 }  // namespace panda::test

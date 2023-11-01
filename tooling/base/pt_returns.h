@@ -462,5 +462,16 @@ private:
     std::string dumpGuid_ {};
     bool success_ {};
 };
+
+class GetNavigationHistoryReturns : public PtBaseReturns {
+public:
+    GetNavigationHistoryReturns() = default;
+    ~GetNavigationHistoryReturns() override = default;
+    std::unique_ptr<PtJson> ToJson() const override;
+
+private:
+    NO_COPY_SEMANTIC(GetNavigationHistoryReturns);
+    NO_MOVE_SEMANTIC(GetNavigationHistoryReturns);
+};
 }  // namespace panda::ecmascript::tooling
 #endif

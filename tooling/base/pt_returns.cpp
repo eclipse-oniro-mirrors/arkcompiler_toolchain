@@ -391,4 +391,16 @@ std::unique_ptr<PtJson> RequestMemoryDumpReturns::ToJson() const
 
     return result;
 }
+
+std::unique_ptr<PtJson> GetNavigationHistoryReturns::ToJson() const
+{
+    std::unique_ptr<PtJson> result = PtJson::CreateObject();
+    std::unique_ptr<PtJson> array = PtJson::CreateArray();
+
+    result->Add("currentIndex", 0);
+    array->Push(PtJson::CreateObject());
+    result->Add("entries", array);
+
+    return result;
+}
 }  // namespace panda::ecmascript::tooling

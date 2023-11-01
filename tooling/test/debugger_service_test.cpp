@@ -106,7 +106,7 @@ HWTEST_F_L0(DebuggerServiceTest, ProcessMessageTest)
     std::string msg = std::string() + R"({"id":0,"method":"Tracing.end","params":{}})";
     OnMessage(ecmaVm, msg + "");
     ProcessMessage(ecmaVm);
-    ASSERT_TRUE(result.find("End not support now.") != std::string::npos);
+    ASSERT_TRUE(result.find("\"id\":0,") != std::string::npos);
 }
 
 HWTEST_F_L0(DebuggerServiceTest, GetDispatchStatusTest)
