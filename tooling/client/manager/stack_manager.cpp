@@ -15,14 +15,9 @@
 
 #include "tooling/client/manager/stack_manager.h"
 #include "common/log_wrapper.h"
+#include "tooling/client/session/session.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
-StackManager StackManager::instance_;
-StackManager& StackManager::GetInstance()
-{
-    return instance_;
-}
-
 void StackManager::SetCallFrames(std::map<int32_t, std::unique_ptr<CallFrame>> callFrames)
 {
     for (auto &callFrame : callFrames) {

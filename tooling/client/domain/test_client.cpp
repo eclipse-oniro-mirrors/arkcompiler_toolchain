@@ -18,47 +18,63 @@
 #include "common/log_wrapper.h"
 #include "tooling/client/manager/variable_manager.h"
 #include "tooling/base/pt_json.h"
+#include "tooling/client/session/session.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 namespace OHOS::ArkCompiler::Toolchain {
-bool TestClient::DispatcherCmd(int id, const std::string &cmd, std::string* reqStr)
+bool TestClient::DispatcherCmd(const std::string &cmd)
 {
-    std::map<std::string, std::function<std::string()>> dispatcherTable {
-        { "success", std::bind(&TestClient::SuccessCommand, this, id)},
-        { "fail", std::bind(&TestClient::FailCommand, this, id)},
+    std::map<std::string, std::function<int()>> dispatcherTable {
+        { "success", std::bind(&TestClient::SuccessCommand, this)},
+        { "fail", std::bind(&TestClient::FailCommand, this)},
     };
 
     auto entry = dispatcherTable.find(cmd);
     if (entry != dispatcherTable.end()) {
-        *reqStr = entry->second();
-        LOGI("TestClient DispatcherCmd reqStr1: %{public}s", reqStr->c_str());
+        entry->second();
+        LOGI("TestClient DispatcherCmd cmd: %{public}s", cmd.c_str());
         return true;
     } else {
-        *reqStr = "Unknown commond: " + cmd;
-        LOGI("TestClient DispatcherCmd reqStr2: %{public}s", reqStr->c_str());
+        LOGI("Unknown commond: %{public}s", cmd.c_str());
         return false;
     }
 }
 
-std::string TestClient::SuccessCommand(int id)
+int TestClient::SuccessCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
     request->Add("method", "Test.success");
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Test");
+    }
+    return 0;
 }
 
-std::string TestClient::FailCommand(int id)
+int TestClient::FailCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
     request->Add("method", "Test.fail");
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Test");
+    }
+    return 0;
 }
 } // OHOS::ArkCompiler::Toolchain

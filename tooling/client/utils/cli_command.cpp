@@ -25,6 +25,7 @@
 #include "tooling/client/manager/domain_manager.h"
 #include "tooling/client/manager/stack_manager.h"
 #include "tooling/client/manager/variable_manager.h"
+#include "tooling/client/session/session.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 const std::string HELP_MSG = "usage: <command> <options>\n"
@@ -75,6 +76,11 @@ const std::string HELP_MSG = "usage: <command> <options>\n"
     "  step-out(so)                                  step-out\n"
     "  step-over(sov)                                step-over\n"
     "  runtime-disable                               rt-disable\n"
+    "  session-new                                   add new session\n"
+    "  session-remove                                del a session\n"
+    "  session-list                                  list all sessions\n"
+    "  session                                       switch session\n"
+    "  forall                                        command for all sessions\n"
     "  success                                       test success\n"
     "  fail                                          test fail\n";
 
@@ -123,6 +129,10 @@ const std::vector<std::string> cmdList = {
     "step-out",
     "step-over",
     "runtime-disable",
+    "session-new",
+    "session-remove",
+    "session-list",
+    "session",
     "success",
     "fail"
 };
@@ -194,6 +204,14 @@ void CliCommand::CreateCommandMap()
         {std::make_pair("step-over", "sov"), std::bind(&CliCommand::DebuggerCommand, this, "step-over")},
         {std::make_pair("runtime-disable", "rt-disable"),
             std::bind(&CliCommand::RuntimeCommand, this, "runtime-disable")},
+        {std::make_pair("session-new", "session-new"),
+            std::bind(&CliCommand::SessionAddCommand, this, "session-new")},
+        {std::make_pair("session-remove", "session-remove"),
+            std::bind(&CliCommand::SessionDelCommand, this, "session-remove")},
+        {std::make_pair("session-list", "session-list"),
+            std::bind(&CliCommand::SessionListCommand, this, "session-list")},
+        {std::make_pair("session", "session"),
+            std::bind(&CliCommand::SessionSwitchCommand, this, "session")},
         {std::make_pair("success", "success"),
             std::bind(&CliCommand::TestCommand, this, "success")},
         {std::make_pair("fail", "fail"),
@@ -204,32 +222,25 @@ void CliCommand::CreateCommandMap()
 ErrCode CliCommand::HeapProfilerCommand(const std::string &cmd)
 {
     std::cout << "exe success, cmd is " << cmd << std::endl;
-    std::string request;
-    bool result = false;
-    HeapProfilerClient &heapProfilerClient = domainManager_.GetHeapProfilerClient();
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    DomainManager &domainManager = session->GetDomainManager();
+    HeapProfilerClient &heapProfilerClient = domainManager.GetHeapProfilerClient();
     VecStr argList = GetArgList();
     if (argList.empty()) {
         argList.push_back("/data/");
     }
-    result = heapProfilerClient.DispatcherCmd(id_, cmd, argList[0], &request);
-    if (result) {
-        cliSocket_.ClientSendReq(request);
-        if (domainManager_.GetDomainById(id_).empty()) {
-            domainManager_.SetDomainById(id_, "HeapProfiler");
-        }
-    } else {
-        return ErrCode::ERR_FAIL;
-    }
-    return ErrCode::ERR_OK;
+
+    bool result = heapProfilerClient.DispatcherCmd(cmd, argList[0]);
+    return result ? ErrCode::ERR_OK : ErrCode::ERR_FAIL;
 }
 
 ErrCode CliCommand::CpuProfileCommand(const std::string &cmd)
 {
     std::cout << "exe success, cmd is " << cmd << std::endl;
-    std::string request;
-    bool result = false;
-    ProfilerClient &profilerClient = domainManager_.GetProfilerClient();
-    ProfilerSingleton& pro = ProfilerSingleton::GetInstance();
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    DomainManager &domainManager = session->GetDomainManager();
+    ProfilerClient &profilerClient = domainManager.GetProfilerClient();
+    ProfilerSingleton &pro = session->GetProfilerSingleton();
     if (cmd == "cpuprofile-show") {
         pro.ShowCpuFile();
         return ErrCode::ERR_OK;
@@ -240,29 +251,56 @@ ErrCode CliCommand::CpuProfileCommand(const std::string &cmd)
     if (cmd == "cpuprofile-stop" && GetArgList().size() == 1) {
         pro.SetAddress(GetArgList()[0]);
     }
-    result = profilerClient.DispatcherCmd(id_, cmd, &request);
-    if (result) {
-        cliSocket_.ClientSendReq(request);
-        if (domainManager_.GetDomainById(id_).empty()) {
-            domainManager_.SetDomainById(id_, "Profiler");
-        }
-    } else {
-        return ErrCode::ERR_FAIL;
+    bool result = profilerClient.DispatcherCmd(cmd);
+    return result ? ErrCode::ERR_OK : ErrCode::ERR_FAIL;
+}
+
+ErrCode CliCommand::HandleDebuggerCommand(const std::string &cmd)
+{
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    BreakPointManager &breakpoint = session->GetBreakPointManager();
+    SourceManager &sourceManager = session->GetSourceManager();
+    WatchManager &watchManager = session->GetWatchManager();
+    if (cmd == "display") {
+        breakpoint.Show();
+        return ErrCode::ERR_OK;
     }
-    return ErrCode::ERR_OK;
+
+    if (cmd == "infosource") {
+        if (GetArgList().size() == 1) {
+            sourceManager.GetFileSource(std::atoi(GetArgList()[0].c_str()));
+        } else {
+            sourceManager.GetFileName();
+        }
+        return ErrCode::ERR_OK;
+    }
+
+    if (cmd == "list" && watchManager.GetDebugState()) {
+        if (GetArgList().size() == 1) {
+            sourceManager.GetListSource(GetArgList()[0]);
+        } else {
+            sourceManager.GetListSource("");
+        }
+        return ErrCode::ERR_OK;
+    }
+
+    if (cmd == "watch" && GetArgList().size() == 1) {
+        watchManager.AddWatchInfo(GetArgList()[0]);
+        if (watchManager.GetDebugState()) {
+            watchManager.SendRequestWatch(watchManager.GetWatchInfoSize() - 1, watchManager.GetCallFrameId());
+        }
+        return ErrCode::ERR_OK;
+    }
+    return ErrCode::ERR_FAIL;
 }
 
 ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
 {
     std::cout << "exe success, cmd is " << cmd << std::endl;
-    std::string request;
     bool result = false;
-    DebuggerClient &debuggerCli = domainManager_.GetDebuggerClient();
-    BreakPointManager &breakpoint = BreakPointManager::GetInstance();
-    if (cmd == "display") {
-        breakpoint.Show();
-        return ErrCode::ERR_OK;
-    }
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    DebuggerClient &debuggerCli = session->GetDomainManager().GetDebuggerClient();
+    BreakPointManager &breakpoint = session->GetBreakPointManager();
 
     if (cmd == "delete") {
         std::string bnumber = GetArgList()[0];
@@ -281,12 +319,12 @@ ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
     }
 
     if (cmd == "step-into" || cmd == "step-out" || cmd == "step-over") {
-        RuntimeClient &runtimeClient = domainManager_.GetRuntimeClient();
+        RuntimeClient &runtimeClient = session->GetDomainManager().GetRuntimeClient();
         runtimeClient.SetIsInitializeTree(true);
     }
 
     if (cmd == "showstack") {
-        StackManager &stackManager = StackManager::GetInstance();
+        StackManager &stackManager = session->GetStackManager();
         stackManager.ShowCallFrames();
     }
 
@@ -294,58 +332,98 @@ ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
         debuggerCli.AddBreakPointInfo(GetArgList()[0], std::stoi(GetArgList()[1]));
     }
 
-    result = debuggerCli.DispatcherCmd(id_, cmd, &request);
+    if (HandleDebuggerCommand(cmd) == ErrCode::ERR_OK) {
+        return ErrCode::ERR_OK;
+    }
+
+    result = debuggerCli.DispatcherCmd(cmd);
+    return result ? ErrCode::ERR_OK : ErrCode::ERR_FAIL;
+}
+
+ErrCode CliCommand::RuntimeCommand(const std::string &cmd)
+{
+    std::cout << "exe success, cmd is " << cmd << std::endl;
+    bool result = false;
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    RuntimeClient &runtimeClient = session->GetDomainManager().GetRuntimeClient();
+
+    if (cmd == "print" && GetArgList().size() == 1) {
+        runtimeClient.SetIsInitializeTree(false);
+        VariableManager &variableManager = session->GetVariableManager();
+        int32_t objectId = variableManager.FindObjectIdWithIndex(std::stoi(GetArgList()[0]));
+        runtimeClient.SetObjectId(std::to_string(objectId));
+    }
+
+    result = runtimeClient.DispatcherCmd(cmd);
     if (result) {
-        cliSocket_.ClientSendReq(request);
-        if (domainManager_.GetDomainById(id_).empty()) {
-            domainManager_.SetDomainById(id_, "Debugger");
-        }
+        runtimeClient.SetObjectId("0");
     } else {
         return ErrCode::ERR_FAIL;
     }
     return ErrCode::ERR_OK;
 }
 
-ErrCode CliCommand::RuntimeCommand(const std::string &cmd)
+ErrCode CliCommand::SessionAddCommand([[maybe_unused]] const std::string &cmd)
 {
-    std::cout << "exe success, cmd is " << cmd << std::endl;
-    std::string request;
-    bool result = false;
-    RuntimeClient &runtimeClient = domainManager_.GetRuntimeClient();
-
-    if (cmd == "print" && GetArgList().size() == 1) {
-        runtimeClient.SetIsInitializeTree(false);
-        VariableManager &variableManager = VariableManager::GetInstance();
-        int32_t objectId = variableManager.FindObjectIdWithIndex(std::stoi(GetArgList()[0]));
-        runtimeClient.SetObjectId(std::to_string(objectId));
+    VecStr argList = GetArgList();
+    if (argList.size() >= 1) {
+        if (!SessionManager::getInstance().CreateNewSession(argList[0])) {
+            std::cout << "session create success" << std::endl;
+            return ErrCode::ERR_OK;
+        }
     }
 
-    result = runtimeClient.DispatcherCmd(id_, cmd, &request);
-    if (result) {
-        cliSocket_.ClientSendReq(request);
-        runtimeClient.SetObjectId("0");
-        if (domainManager_.GetDomainById(id_).empty()) {
-            domainManager_.SetDomainById(id_, "Runtime");
+    std::cout << "session add failed" << std::endl;
+    return ErrCode::ERR_FAIL;
+}
+
+ErrCode CliCommand::SessionDelCommand([[maybe_unused]] const std::string &cmd)
+{
+    VecStr argList = GetArgList();
+    if (argList.size() >= 1) {
+        uint32_t sessionId = 0;
+        if (Utils::StrToUInt(argList[0].c_str(), &sessionId)) {
+            if (sessionId == 0) {
+                std::cout << "cannot remove default session 0" << std::endl;
+                return ErrCode::ERR_OK;
+            }
+            if (SessionManager::getInstance().DelSessionById(sessionId) == 0) {
+                std::cout << "session remove success" << std::endl;
+                return ErrCode::ERR_OK;
+            }
         }
-    } else {
-        return ErrCode::ERR_FAIL;
+    }
+
+    return ErrCode::ERR_FAIL;
+}
+
+ErrCode CliCommand::SessionListCommand([[maybe_unused]] const std::string &cmd)
+{
+    SessionManager::getInstance().SessionList();
+    return ErrCode::ERR_OK;
+}
+
+ErrCode CliCommand::SessionSwitchCommand([[maybe_unused]] const std::string &cmd)
+{
+    VecStr argList = GetArgList();
+    if (argList.size() >= 1) {
+        uint32_t sessionId = 0;
+        if (Utils::StrToUInt(argList[0].c_str(), &sessionId)) {
+            if (SessionManager::getInstance().SessionSwitch(sessionId) == 0) {
+                std::cout << "session switch success" << std::endl;
+                return ErrCode::ERR_OK;
+            }
+        }
     }
     return ErrCode::ERR_OK;
 }
 
 ErrCode CliCommand::TestCommand(const std::string &cmd)
 {
-    std::string request;
-    bool result = false;
     if (cmd == "success" || cmd == "fail") {
-        TestClient &testClient = domainManager_.GetTestClient();
-        result = testClient.DispatcherCmd(id_, cmd, &request);
-        if (result) {
-            cliSocket_.ClientSendReq(request);
-            if (domainManager_.GetDomainById(id_).empty()) {
-                domainManager_.SetDomainById(id_, "Test");
-            }
-        }
+        Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+        TestClient &testClient = session->GetDomainManager().GetTestClient();
+        testClient.DispatcherCmd(cmd);
     } else {
         return ErrCode::ERR_FAIL;
     }

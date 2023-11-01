@@ -26,16 +26,16 @@ using Result = panda::ecmascript::tooling::Result;
 namespace OHOS::ArkCompiler::Toolchain {
 class RuntimeClient final {
 public:
-    RuntimeClient() = default;
+    RuntimeClient(int32_t sessionId) : sessionId_(sessionId) {}
     ~RuntimeClient() = default;
 
-    bool DispatcherCmd(int id, const std::string &cmd, std::string *reqStr);
-    std::string HeapusageCommand(int id);
-    std::string RuntimeEnableCommand(int id);
-    std::string RuntimeDisableCommand(int id);
-    std::string RunIfWaitingForDebuggerCommand(int id);
-    std::string GetPropertiesCommand(int id);
-    std::string GetPropertiesCommand2(int id);
+    bool DispatcherCmd(const std::string &cmd);
+    int HeapusageCommand();
+    int RuntimeEnableCommand();
+    int RuntimeDisableCommand();
+    int RunIfWaitingForDebuggerCommand();
+    int GetPropertiesCommand();
+    int GetPropertiesCommand2();
     std::string GetMethodById(const int &id);
     std::string GetRequestObjectIdById(const int &id);
     void RecvReply(std::unique_ptr<PtJson> json);
@@ -61,6 +61,7 @@ private:
     std::map<int, std::tuple<std::string, std::string>> idMethodMap_ {};
     std::string objectId_ {"0"};
     bool isInitializeTree_ {true};
+    int32_t sessionId_;
 };
 } // OHOS::ArkCompiler::Toolchain
 #endif

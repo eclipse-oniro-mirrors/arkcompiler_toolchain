@@ -31,41 +31,43 @@ struct BreakPointInfo {
 };
 class DebuggerClient final {
 public:
-    DebuggerClient() = default;
+    DebuggerClient(int32_t sessionId) : sessionId_(sessionId) {}
     ~DebuggerClient() = default;
 
-    bool DispatcherCmd(int id, const std::string &cmd, std::string* reqStr);
-    std::string BreakCommand(int id);
-    std::string BacktrackCommand(int id);
-    std::string DeleteCommand(int id);
-    std::string DisableCommand(int id);
-    std::string DisplayCommand(int id);
-    std::string EnableCommand(int id);
-    std::string FinishCommand(int id);
-    std::string FrameCommand(int id);
-    std::string IgnoreCommand(int id);
-    std::string InfobreakpointsCommand(int id);
-    std::string InfosourceCommand(int id);
-    std::string JumpCommand(int id);
-    std::string NextCommand(int id);
-    std::string ListCommand(int id);
-    std::string PtypeCommand(int id);
-    std::string RunCommand(int id);
-    std::string SetvarCommand(int id);
-    std::string StepCommand(int id);
-    std::string UndisplayCommand(int id);
-    std::string WatchCommand(int id);
-    std::string ResumeCommand(int id);
-    std::string StepIntoCommand(int id);
-    std::string StepOutCommand(int id);
-    std::string StepOverCommand(int id);
+    bool DispatcherCmd(const std::string &cmd);
+    int BreakCommand();
+    int BacktrackCommand();
+    int DeleteCommand();
+    int DisableCommand();
+    int DisplayCommand();
+    int EnableCommand();
+    int FinishCommand();
+    int FrameCommand();
+    int IgnoreCommand();
+    int InfobreakpointsCommand();
+    int InfosourceCommand();
+    int JumpCommand();
+    int NextCommand();
+    int ListCommand();
+    int PtypeCommand();
+    int RunCommand();
+    int SetvarCommand();
+    int StepCommand();
+    int UndisplayCommand();
+    int WatchCommand();
+    int ResumeCommand();
+    int StepIntoCommand();
+    int StepOutCommand();
+    int StepOverCommand();
 
     void AddBreakPointInfo(const std::string& url, const int& lineNumber, const int& columnNumber = 0);
     void RecvReply(std::unique_ptr<PtJson> json);
     void PausedReply(const std::unique_ptr<PtJson> json);
+    void handleResponse(std::unique_ptr<PtJson> json);
 
 private:
     std::vector<BreakPointInfo> breakPointInfoList_ {};
+    int32_t sessionId_;
 };
 } // OHOS::ArkCompiler::Toolchain
 #endif

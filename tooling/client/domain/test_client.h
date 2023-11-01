@@ -26,12 +26,15 @@ using Result = panda::ecmascript::tooling::Result;
 namespace OHOS::ArkCompiler::Toolchain {
 class TestClient final {
 public:
-    TestClient() = default;
+    TestClient(uint32_t sessionId) : sessionId_(sessionId) {}
     ~TestClient() = default;
 
-    bool DispatcherCmd(int id, const std::string &cmd, std::string *reqStr);
-    std::string SuccessCommand(int id);
-    std::string FailCommand(int id);
+    bool DispatcherCmd(const std::string &cmd);
+    int SuccessCommand();
+    int FailCommand();
+
+private:
+    uint32_t sessionId_;
 };
 } // OHOS::ArkCompiler::Toolchain
 #endif  // ECMASCRIPT_TOOLING_CLIENT_DOMAIN_TEST_CLIENT_H

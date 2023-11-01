@@ -22,27 +22,13 @@
 #include <securec.h>
 
 #include "tooling/client/utils/cli_command.h"
+#include "tooling/client/session/session.h"
+#include "manager/message_manager.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
-uint32_t g_messageId = 0;
-uv_async_t* g_socketSignal;
 uv_async_t* g_inputSignal;
 uv_async_t* g_releaseHandle;
 uv_loop_t* g_loop;
-
-DomainManager g_domainManager;
-WebsocketClient g_cliSocket;
-
-bool StrToUInt(const char *content, uint32_t *result)
-{
-    const int dec = 10;
-    char *endPtr = nullptr;
-    *result = std::strtoul(content, &endPtr, dec);
-    if (endPtr == content || *endPtr != '\0') {
-        return false;
-    }
-    return true;
-}
 
 void ReleaseHandle([[maybe_unused]] uv_async_t *releaseHandle)
 {
@@ -72,21 +58,36 @@ void ReleaseHandle([[maybe_unused]] uv_async_t *releaseHandle)
     }
 }
 
+void InputMessageInSession(uint32_t sessionId, std::vector<std::string>& cliCmdStr)
+{
+    CliCommand cmd(cliCmdStr, sessionId);
+    cmd.ExecCommand();
+    return;
+}
+
 void InputOnMessage(uv_async_t *handle)
 {
     char* msg = static_cast<char*>(handle->data);
     std::string inputStr = std::string(msg);
-    std::vector<std::string> cliCmdStr = Utils::SplitString(inputStr, " ");
-    g_messageId += 1;
-    CliCommand cmd(cliCmdStr, g_messageId, g_domainManager, g_cliSocket);
-    if (cmd.ExecCommand() == ErrCode::ERR_FAIL) {
-        g_messageId -= 1;
-    }
-    std::cout << ">>> ";
-    fflush(stdout);
     if (msg != nullptr) {
         free(msg);
     }
+    std::vector<std::string> cliCmdStr = Utils::SplitString(inputStr, " ");
+    if (cliCmdStr[0] == "forall") {
+        if (strstr(cliCmdStr[1].c_str(), "session") != nullptr) {
+            std::cout << "command " << cliCmdStr[1] << " not support forall" << std::endl;
+        } else {
+            cliCmdStr.erase(cliCmdStr.begin());
+            SessionManager::getInstance().CmdForAllSessions(std::bind(InputMessageInSession, std::placeholders::_1,
+                                                                      cliCmdStr));
+        }
+    } else {
+        uint32_t sessionId = SessionManager::getInstance().GetCurrentSessionId();
+        InputMessageInSession(sessionId, cliCmdStr);
+    }
+
+    std::cout << ">>> ";
+    fflush(stdout);
 }
 
 void GetInputCommand([[maybe_unused]] void *arg)
@@ -100,7 +101,6 @@ void GetInputCommand([[maybe_unused]] void *arg)
         }
         if ((!strcmp(inputStr.c_str(), "quit")) || (!strcmp(inputStr.c_str(), "q"))) {
             LOGE("arkdb: quit");
-            g_cliSocket.Close();
             if (uv_is_active(reinterpret_cast<uv_handle_t*>(g_releaseHandle))) {
                 uv_async_send(g_releaseHandle);
             }
@@ -111,7 +111,6 @@ void GetInputCommand([[maybe_unused]] void *arg)
             char* msg = (char*)malloc(len + 1);
             if ((msg != nullptr) && uv_is_active(reinterpret_cast<uv_handle_t*>(g_inputSignal))) {
                 if (strncpy_s(msg, len + 1, inputStr.c_str(), len) != 0) {
-                    g_cliSocket.Close();
                     if (uv_is_active(reinterpret_cast<uv_handle_t*>(g_releaseHandle))) {
                         uv_async_send(g_releaseHandle);
                     }
@@ -124,69 +123,31 @@ void GetInputCommand([[maybe_unused]] void *arg)
     }
 }
 
-void SocketOnMessage(uv_async_t *handle)
+void SocketOnMessage([[maybe_unused]] uv_async_t *handle)
 {
-    char* msg = static_cast<char*>(handle->data);
-    g_domainManager.DispatcherReply(msg);
-    if (msg != nullptr) {
-        free(msg);
-    }
-}
-
-void GetSocketMessage([[maybe_unused]] void *arg)
-{
-    while (g_cliSocket.IsConnected()) {
-        std::string decMessage = g_cliSocket.Decode();
-        uint32_t len = decMessage.length();
-        if (len == 0) {
+    uint32_t sessionId = 0;
+    std::string message;
+    while (MessageManager::getInstance().MessagePop(sessionId, message)) {
+        Session *session = SessionManager::getInstance().GetSessionById(sessionId);
+        if (session == nullptr) {
+            LOGE("arkdb get session by id %{public}u failed", sessionId);
             continue;
         }
-        char* msg = (char*)malloc(len + 1);
-        if ((msg != nullptr) && uv_is_active(reinterpret_cast<uv_handle_t*>(g_socketSignal))) {
-            if (strncpy_s(msg, len + 1, decMessage.c_str(), len) != 0) {
-                g_cliSocket.Close();
-                if (uv_is_active(reinterpret_cast<uv_handle_t*>(g_releaseHandle))) {
-                    uv_async_send(g_releaseHandle);
-                }
-                break;
-            }
-            g_socketSignal->data = std::move(msg);
-            uv_async_send(g_socketSignal);
-        }
+
+        session->ProcSocketMsg(const_cast<char *>(message.c_str()));
     }
 }
 
 int Main(const int argc, const char** argv)
 {
-    uint32_t port = 0;
-
     if (argc < 2) { // 2: two parameters
         LOGE("arkdb is missing a parameter");
         return -1;
     }
     if (strstr(argv[0], "arkdb") != nullptr) {
-        if (StrToUInt(argv[1], &port)) {
-            if ((port <= 0) || (port >= 65535)) { // 65535: max port
-                LOGE("arkdb:InitToolchainWebSocketForPort the port = %{public}d is wrong.", port);
-                return -1;
-            }
-            if (!g_cliSocket.InitToolchainWebSocketForPort(port, 5)) { // 5: five times
-                LOGE("arkdb:InitToolchainWebSocketForPort failed");
-                return -1;
-            }
-        } else {
-            if (!g_cliSocket.InitToolchainWebSocketForSockName(argv[1])) {
-                LOGE("arkdb:InitToolchainWebSocketForSockName failed");
-                return -1;
-            }
-        }
-
-        if (!g_cliSocket.ClientSendWSUpgradeReq()) {
-            LOGE("arkdb:ClientSendWSUpgradeReq failed");
-            return -1;
-        }
-        if (!g_cliSocket.ClientRecvWSUpgradeRsp()) {
-            LOGE("arkdb:ClientRecvWSUpgradeRsp failed");
+        std::string sockInfo(argv[1]);
+        if (SessionManager::getInstance().CreateDefaultSession(sockInfo)) {
+            LOGE("arkdb create default session failed");
             return -1;
         }
 
@@ -203,9 +164,6 @@ int Main(const int argc, const char** argv)
 
         uv_thread_t inputTid;
         uv_thread_create(&inputTid, GetInputCommand, nullptr);
-
-        uv_thread_t socketTid;
-        uv_thread_create(&socketTid, GetSocketMessage, nullptr);
 
         uv_run(g_loop, UV_RUN_DEFAULT);
     }

@@ -43,7 +43,7 @@ public:
     WebsocketClient() = default;
     ~WebsocketClient() = default;
     bool InitToolchainWebSocketForPort(int port, uint32_t timeoutLimit = 5);
-    bool InitToolchainWebSocketForSockName(const std::string &sockName, uint32_t timeoutLimit = 0);
+    bool InitToolchainWebSocketForSockName(const std::string &sockName, uint32_t timeoutLimit = 5);
     bool ClientSendWSUpgradeReq();
     bool ClientRecvWSUpgradeRsp();
     bool ClientSendReq(const std::string &message);
@@ -56,6 +56,7 @@ public:
     void Close();
     bool SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit);
     bool IsConnected();
+    std::string GetSocketStateString();
 
 private:
     int32_t client_ {-1};

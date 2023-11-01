@@ -19,55 +19,59 @@
 
 #include "common/log_wrapper.h"
 #include "tooling/client/manager/breakpoint_manager.h"
+#include "tooling/client/manager/source_manager.h"
 #include "tooling/client/manager/stack_manager.h"
 #include "tooling/base/pt_json.h"
+#include "tooling/client/session/session.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 namespace OHOS::ArkCompiler::Toolchain {
-bool DebuggerClient::DispatcherCmd(int id, const std::string &cmd, std::string* reqStr)
+bool DebuggerClient::DispatcherCmd(const std::string &cmd)
 {
-    std::map<std::string, std::function<std::string()>> dispatcherTable {
-        { "break", std::bind(&DebuggerClient::BreakCommand, this, id)},
-        { "backtrack", std::bind(&DebuggerClient::BacktrackCommand, this, id)},
-        { "continue", std::bind(&DebuggerClient::ResumeCommand, this, id)},
-        { "delete", std::bind(&DebuggerClient::DeleteCommand, this, id)},
-        { "jump", std::bind(&DebuggerClient::JumpCommand, this, id)},
-        { "disable", std::bind(&DebuggerClient::DisableCommand, this, id)},
-        { "display", std::bind(&DebuggerClient::DisplayCommand, this, id)},
-        { "enable", std::bind(&DebuggerClient::EnableCommand, this, id)},
-        { "finish", std::bind(&DebuggerClient::FinishCommand, this, id)},
-        { "frame", std::bind(&DebuggerClient::FrameCommand, this, id)},
-        { "ignore", std::bind(&DebuggerClient::IgnoreCommand, this, id)},
-        { "infobreakpoints", std::bind(&DebuggerClient::InfobreakpointsCommand, this, id)},
-        { "infosource", std::bind(&DebuggerClient::InfosourceCommand, this, id)},
-        { "list", std::bind(&DebuggerClient::ListCommand, this, id)},
-        { "next", std::bind(&DebuggerClient::NextCommand, this, id)},
-        { "ptype", std::bind(&DebuggerClient::PtypeCommand, this, id)},
-        { "run", std::bind(&DebuggerClient::RunCommand, this, id)},
-        { "setvar", std::bind(&DebuggerClient::SetvarCommand, this, id)},
-        { "step", std::bind(&DebuggerClient::StepCommand, this, id)},
-        { "undisplay", std::bind(&DebuggerClient::UndisplayCommand, this, id)},
-        { "watch", std::bind(&DebuggerClient::WatchCommand, this, id)},
-        { "resume", std::bind(&DebuggerClient::ResumeCommand, this, id)},
-        { "step-into", std::bind(&DebuggerClient::StepIntoCommand, this, id)},
-        { "step-out", std::bind(&DebuggerClient::StepOutCommand, this, id)},
-        { "step-over", std::bind(&DebuggerClient::StepOverCommand, this, id)},
+    std::map<std::string, std::function<int()>> dispatcherTable {
+        { "break", std::bind(&DebuggerClient::BreakCommand, this)},
+        { "backtrack", std::bind(&DebuggerClient::BacktrackCommand, this)},
+        { "continue", std::bind(&DebuggerClient::ResumeCommand, this)},
+        { "delete", std::bind(&DebuggerClient::DeleteCommand, this)},
+        { "jump", std::bind(&DebuggerClient::JumpCommand, this)},
+        { "disable", std::bind(&DebuggerClient::DisableCommand, this)},
+        { "display", std::bind(&DebuggerClient::DisplayCommand, this)},
+        { "enable", std::bind(&DebuggerClient::EnableCommand, this)},
+        { "finish", std::bind(&DebuggerClient::FinishCommand, this)},
+        { "frame", std::bind(&DebuggerClient::FrameCommand, this)},
+        { "ignore", std::bind(&DebuggerClient::IgnoreCommand, this)},
+        { "infobreakpoints", std::bind(&DebuggerClient::InfobreakpointsCommand, this)},
+        { "infosource", std::bind(&DebuggerClient::InfosourceCommand, this)},
+        { "list", std::bind(&DebuggerClient::ListCommand, this)},
+        { "next", std::bind(&DebuggerClient::NextCommand, this)},
+        { "ptype", std::bind(&DebuggerClient::PtypeCommand, this)},
+        { "run", std::bind(&DebuggerClient::RunCommand, this)},
+        { "setvar", std::bind(&DebuggerClient::SetvarCommand, this)},
+        { "step", std::bind(&DebuggerClient::StepCommand, this)},
+        { "undisplay", std::bind(&DebuggerClient::UndisplayCommand, this)},
+        { "watch", std::bind(&DebuggerClient::WatchCommand, this)},
+        { "resume", std::bind(&DebuggerClient::ResumeCommand, this)},
+        { "step-into", std::bind(&DebuggerClient::StepIntoCommand, this)},
+        { "step-out", std::bind(&DebuggerClient::StepOutCommand, this)},
+        { "step-over", std::bind(&DebuggerClient::StepOverCommand, this)},
     };
 
     auto entry = dispatcherTable.find(cmd);
     if (entry != dispatcherTable.end()) {
-        *reqStr = entry->second();
-        LOGI("DebuggerClient DispatcherCmd reqStr1: %{public}s", reqStr->c_str());
+        entry->second();
+        LOGI("DebuggerClient DispatcherCmd cmd: %{public}s", cmd.c_str());
         return true;
     }
 
-    *reqStr = "Unknown commond: " + cmd;
-    LOGI("DebuggerClient DispatcherCmd reqStr2: %{public}s", reqStr->c_str());
+    LOGI("unknown command: %{public}s", cmd.c_str());
     return false;
 }
 
-std::string DebuggerClient::BreakCommand(int id)
+int DebuggerClient::BreakCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
     request->Add("method", "Debugger.setBreakpointByUrl");
@@ -77,16 +81,24 @@ std::string DebuggerClient::BreakCommand(int id)
     params->Add("lineNumber", breakPointInfoList_.back().lineNumber);
     params->Add("url", breakPointInfoList_.back().url.c_str());
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Debugger");
+    }
+    return 0;
 }
 
-std::string DebuggerClient::BacktrackCommand([[maybe_unused]] int id)
+int DebuggerClient::BacktrackCommand()
 {
-    return "backtrack";
+    return 0;
 }
 
-std::string DebuggerClient::DeleteCommand(int id)
+int DebuggerClient::DeleteCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
     request->Add("method", "Debugger.removeBreakpoint");
@@ -95,155 +107,208 @@ std::string DebuggerClient::DeleteCommand(int id)
     std::string breakpointId = breakPointInfoList_.back().url;
     params->Add("breakpointId", breakpointId.c_str());
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Debugger");
+    }
+    return 0;
 }
 
-std::string DebuggerClient::DisableCommand(int id)
+int DebuggerClient::DisableCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
     request->Add("method", "Debugger.disable");
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Debugger");
+    }
+    return 0;
 }
 
-std::string DebuggerClient::DisplayCommand([[maybe_unused]] int id)
+int DebuggerClient::DisplayCommand()
 {
-    return "display";
+    return 0;
 }
 
-std::string DebuggerClient::EnableCommand(int id)
+int DebuggerClient::EnableCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
     request->Add("method", "Debugger.enable");
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Debugger");
+    }
+    return 0;
 }
 
-std::string DebuggerClient::FinishCommand([[maybe_unused]] int id)
+int DebuggerClient::FinishCommand()
 {
-    return "finish";
+    return 0;
 }
 
-std::string DebuggerClient::FrameCommand([[maybe_unused]] int id)
+int DebuggerClient::FrameCommand()
 {
-    return "frame";
+    return 0;
 }
 
-std::string DebuggerClient::IgnoreCommand([[maybe_unused]] int id)
+int DebuggerClient::IgnoreCommand()
 {
-    return "ignore";
+    return 0;
 }
 
-std::string DebuggerClient::InfobreakpointsCommand([[maybe_unused]] int id)
+int DebuggerClient::InfobreakpointsCommand()
 {
-    return "infobreakpoint";
+    return 0;
 }
 
-std::string DebuggerClient::InfosourceCommand([[maybe_unused]] int id)
+int DebuggerClient::InfosourceCommand()
 {
-    return "infosource";
+    return 0;
 }
 
-std::string DebuggerClient::JumpCommand([[maybe_unused]] int id)
+int DebuggerClient::JumpCommand()
 {
-    return "jump";
+    return 0;
 }
 
-std::string DebuggerClient::NextCommand([[maybe_unused]] int id)
+int DebuggerClient::NextCommand()
 {
-    return "next";
+    return 0;
 }
 
-std::string DebuggerClient::ListCommand([[maybe_unused]] int id)
+int DebuggerClient::ListCommand()
 {
-    return "list";
+    return 0;
 }
 
-std::string DebuggerClient::PtypeCommand([[maybe_unused]] int id)
+int DebuggerClient::PtypeCommand()
 {
-    return "ptype";
+    return 0;
 }
 
-std::string DebuggerClient::RunCommand([[maybe_unused]] int id)
+int DebuggerClient::RunCommand()
 {
-    return "run";
+    return 0;
 }
 
-std::string DebuggerClient::SetvarCommand([[maybe_unused]] int id)
+int DebuggerClient::SetvarCommand()
 {
-    return "Debugger.setVariableValue";
+    return 0;
 }
 
-std::string DebuggerClient::StepCommand([[maybe_unused]] int id)
+int DebuggerClient::StepCommand()
 {
-    return "step";
+    return 0;
 }
 
-std::string DebuggerClient::UndisplayCommand([[maybe_unused]] int id)
+int DebuggerClient::UndisplayCommand()
 {
-    return "undisplay";
+    return 0;
 }
 
-std::string DebuggerClient::WatchCommand([[maybe_unused]] int id)
+int DebuggerClient::WatchCommand()
 {
-    return "Debugger.evaluateOnCallFrame";
+    return 0;
 }
 
-std::string DebuggerClient::ResumeCommand(int id)
+int DebuggerClient::ResumeCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
     request->Add("method", "Debugger.resume");
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Debugger");
+    }
+    return 0;
 }
 
-std::string DebuggerClient::StepIntoCommand(int id)
+int DebuggerClient::StepIntoCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
     request->Add("method", "Debugger.stepInto");
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Debugger");
+    }
+    return 0;
 }
 
-std::string DebuggerClient::StepOutCommand(int id)
+int DebuggerClient::StepOutCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
     request->Add("method", "Debugger.stepOut");
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Debugger");
+    }
+    return 0;
 }
 
-std::string DebuggerClient::StepOverCommand(int id)
+int DebuggerClient::StepOverCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
     request->Add("id", id);
     request->Add("method", "Debugger.stepOver");
 
     std::unique_ptr<PtJson> params = PtJson::CreateObject();
     request->Add("params", params);
-    return request->Stringify();
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Debugger");
+    }
+    return 0;
 }
 
 void DebuggerClient::AddBreakPointInfo(const std::string& url, const int& lineNumber, const int& columnNumber)
 {
     BreakPointInfo breakPointInfo;
     breakPointInfo.url = url;
-    breakPointInfo.lineNumber = lineNumber;
+    breakPointInfo.lineNumber = lineNumber - 1;
     breakPointInfo.columnNumber = columnNumber;
     breakPointInfoList_.emplace_back(breakPointInfo);
 }
@@ -261,13 +326,15 @@ void DebuggerClient::RecvReply(std::unique_ptr<PtJson> json)
         return;
     }
 
-    Result ret;
     std::string wholeMethod;
     std::string method;
-    ret = json->GetString("method", &wholeMethod);
+    Result ret = json->GetString("method", &wholeMethod);
     if (ret != Result::SUCCESS) {
         LOGE("arkdb: find method error");
     }
+
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    SourceManager &sourceManager = session->GetSourceManager();
 
     std::string::size_type length = wholeMethod.length();
     std::string::size_type indexPoint = 0;
@@ -276,23 +343,13 @@ void DebuggerClient::RecvReply(std::unique_ptr<PtJson> json)
     if (method == "paused") {
         PausedReply(std::move(json));
         return;
+    } else if (method == "scriptParsed") {
+        sourceManager.EnableReply(std::move(json));
+        return;
     } else {
         LOGI("arkdb: Debugger reply is: %{public}s", json->Stringify().c_str());
     }
-
-    std::unique_ptr<PtJson> result;
-    ret = json->GetObject("result", &result);
-    if (ret != Result::SUCCESS) {
-        LOGE("arkdb: find result error");
-        return;
-    }
-
-    std::string breakpointId;
-    ret = result->GetString("breakpointId", &breakpointId);
-    if (ret == Result::SUCCESS) {
-        BreakPointManager &breakpoint = BreakPointManager::GetInstance();
-        breakpoint.Createbreaklocation(std::move(json));
-    }
+    handleResponse(std::move(json));
 }
 
 void DebuggerClient::PausedReply(const std::unique_ptr<PtJson> json)
@@ -328,8 +385,49 @@ void DebuggerClient::PausedReply(const std::unique_ptr<PtJson> json)
         data.emplace(i + 1, std::move(callFrameInfo));
     }
 
-    StackManager &stackManager = StackManager::GetInstance();
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    StackManager& stackManager = session->GetStackManager();
+    SourceManager &sourceManager = session->GetSourceManager();
+    WatchManager &watchManager = session->GetWatchManager();
     stackManager.ClearCallFrame();
     stackManager.SetCallFrames(std::move(data));
+    sourceManager.GetDebugSources(callFrames->Get(0));
+    watchManager.RequestWatchInfo(callFrames->Get(0));
+    watchManager.DebugTrueState();
+}
+
+void DebuggerClient::handleResponse(std::unique_ptr<PtJson> json)
+{
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    SourceManager &sourceManager = session->GetSourceManager();
+    WatchManager &watchManager = session->GetWatchManager();
+    BreakPointManager& breakpoint = session->GetBreakPointManager();
+    std::unique_ptr<PtJson> result;
+    Result ret = json->GetObject("result", &result);
+    if (ret != Result::SUCCESS) {
+        LOGE("arkdb: find result error");
+        return;
+    }
+    int32_t id;
+    ret = json->GetInt("id", &id);
+    if (ret == Result::SUCCESS) {
+        std::string scriptSource;
+        ret = result->GetString("scriptSource", &scriptSource);
+        if (ret == Result::SUCCESS) {
+            sourceManager.SetFileSource(id, scriptSource);
+            return;
+        }
+    }
+    std::string breakpointId;
+    ret = result->GetString("breakpointId", &breakpointId);
+    if (ret == Result::SUCCESS) {
+        breakpoint.Createbreaklocation(std::move(json));
+        sourceManager.GetDebugInfo(std::move(result));
+        return;
+    }
+    if (watchManager.HandleWatchResult(std::move(json), id)) {
+        return;
+    }
+    return;
 }
 } // OHOS::ArkCompiler::Toolchain
