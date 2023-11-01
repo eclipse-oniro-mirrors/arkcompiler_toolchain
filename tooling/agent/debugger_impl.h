@@ -62,7 +62,7 @@ public:
                                         std::vector<std::unique_ptr<Location>> *outLocations);
     DispatchResponse SetBreakpointsActive(const SetBreakpointsActiveParams &params);
     DispatchResponse GetPossibleAndSetBreakpointByUrl(const GetPossibleAndSetBreakpointParams &params,
-                                        std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
+        std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
     DispatchResponse SetPauseOnExceptions(const SetPauseOnExceptionsParams &params);
     DispatchResponse SetSkipAllPauses(const SetSkipAllPausesParams &params);
     DispatchResponse StepInto(const StepIntoParams &params);
@@ -198,6 +198,7 @@ private:
     bool ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
         std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
     bool IsVariableSkipped(const std::string &varName);
+    Local<FunctionRef> CheckAndGenerateCondFunc(const std::optional<std::string> &condition);
 
     const std::unordered_set<std::string> &GetRecordName(const std::string &url)
     {
