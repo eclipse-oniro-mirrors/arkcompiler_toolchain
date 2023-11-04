@@ -37,7 +37,7 @@ host_unittest_action("WebSocketTest") {
     sdk_libc_secshared_dep,
   ]
 
-  if (is_cross_platform_build && target_os == "ios") {
+  if (is_arkui_x && target_os == "ios") {
     deps += [ "$ark_third_party_root/openssl:libcrypto_static" ]
   } else {
     deps += [ "$ark_third_party_root/openssl:libcrypto_shared" ]

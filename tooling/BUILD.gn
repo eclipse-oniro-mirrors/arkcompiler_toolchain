@@ -81,7 +81,7 @@ ohos_source_set("libark_ecma_debugger_set") {
 
   deps = []
 
-  if (is_cross_platform_build && target_os == "ios") {
+  if (is_arkui_x && target_os == "ios") {
     deps += [ "$ark_third_party_root/cJSON:cjson_static" ]
   } else {
     deps += [ "$ark_third_party_root/cJSON:cjson" ]
@@ -89,7 +89,7 @@ ohos_source_set("libark_ecma_debugger_set") {
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
-  if (!is_cross_platform_build) {
+  if (!is_arkui_x) {
     external_deps += [ "runtime_core:libarkfile_static" ]
   } else {
     deps += [ "$ark_root/libpandafile:libarkfile_static" ]
@@ -124,7 +124,7 @@ ohos_shared_library("libark_ecma_debugger") {
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
-  if (!is_cross_platform_build) {
+  if (!is_arkui_x) {
     external_deps += [ "ets_runtime:libark_jsruntime" ]
   } else {
     deps += [ "../../ets_runtime:libark_jsruntime" ]
@@ -152,7 +152,7 @@ ohos_shared_library("libark_ecma_debugger_test") {
 
   deps = [ "$ark_third_party_root/libuv:uv" ]
 
-  if (is_cross_platform_build && target_os == "ios") {
+  if (is_arkui_x && target_os == "ios") {
     deps += [ "$ark_third_party_root/cJSON:cjson_static" ]
   } else {
     deps += [ "$ark_third_party_root/cJSON:cjson" ]
