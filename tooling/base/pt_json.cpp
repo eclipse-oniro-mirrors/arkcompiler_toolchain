@@ -320,6 +320,15 @@ uint32_t PtJson::GetUInt(uint32_t defaultValue) const
     return static_cast<uint32_t>(object_->valuedouble);
 }
 
+uint64_t PtJson::GetUInt64(uint64_t defaultValue) const
+{
+    if (!IsNumber()) {
+        return defaultValue;
+    }
+
+    return static_cast<uint64_t>(object_->valuedouble);
+}
+
 double PtJson::GetDouble(double defaultValue) const
 {
     if (!IsNumber()) {
@@ -388,6 +397,16 @@ Result PtJson::GetUInt(const char *key, uint32_t *value) const
     Result ret = GetDouble(key, &result);
     if (ret == Result::SUCCESS) {
         *value = static_cast<uint32_t>(result);
+    }
+    return ret;
+}
+
+Result PtJson::GetUInt64(const char *key, uint64_t *value) const
+{
+    double result;
+    Result ret = GetDouble(key, &result);
+    if (ret == Result::SUCCESS) {
+        *value = static_cast<uint64_t>(result);
     }
     return ret;
 }

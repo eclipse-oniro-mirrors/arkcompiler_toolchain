@@ -88,6 +88,7 @@ public:
     int32_t GetInt(int32_t defaultValue = 0) const;
     int64_t GetInt64(int64_t defaultValue = 0) const;
     uint32_t GetUInt(uint32_t defaultValue = 0) const;
+    uint64_t GetUInt64(uint64_t defaultValue = 0) const;
     double GetDouble(double defaultValue = 0.0) const;
     std::string GetString() const;
 
@@ -100,6 +101,7 @@ public:
     Result GetInt(const char *key, int32_t *value) const;
     Result GetInt64(const char *key, int64_t *value) const;
     Result GetUInt(const char *key, uint32_t *value) const;
+    Result GetUInt64(const char *key, uint64_t *value) const;
     Result GetDouble(const char *key, double *value) const;
     Result GetString(const char *key, std::string *value) const;
     Result GetObject(const char *key, std::unique_ptr<PtJson> *value) const;
