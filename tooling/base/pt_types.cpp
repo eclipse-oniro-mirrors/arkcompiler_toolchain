@@ -1686,16 +1686,16 @@ std::unique_ptr<NativeRange> NativeRange::Create(const PtJson &params)
     auto nativeRange = std::make_unique<NativeRange>();
     Result ret;
 
-    uint32_t start;
-    ret = params.GetUInt("start", &start);
+    uint64_t start;
+    ret = params.GetUInt64("start", &start);
     if (ret == Result::SUCCESS) {
         nativeRange->start_ = std::move(start);
     } else {
         error += "Unknown 'start';";
     }
 
-    uint32_t end;
-    ret = params.GetUInt("end", &end);
+    uint64_t end;
+    ret = params.GetUInt64("end", &end);
     if (ret == Result::SUCCESS) {
         nativeRange->end_ = std::move(end);
     } else {

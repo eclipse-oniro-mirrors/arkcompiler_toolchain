@@ -1308,23 +1308,23 @@ public:
 
     static std::unique_ptr<NativeRange> Create(const PtJson &params);
 
-    uint32_t GetStart() const
+    uint64_t GetStart() const
     {
         return start_;
     }
 
-    NativeRange &SetStart(uint32_t start)
+    NativeRange &SetStart(uint64_t start)
     {
         start_ = std::move(start);
         return *this;
     }
 
-    uint32_t GetEnd() const
+    uint64_t GetEnd() const
     {
         return end_;
     }
 
-    NativeRange &SetEnd(uint32_t end)
+    NativeRange &SetEnd(uint64_t end)
     {
         end_ = std::move(end);
         return *this;
@@ -1332,8 +1332,8 @@ public:
 
 private:
 
-    uint32_t start_ {0};
-    uint32_t end_ {0};
+    uint64_t start_ {0};
+    uint64_t end_ {0};
 };
 
 // Debugger.BreakLocation
