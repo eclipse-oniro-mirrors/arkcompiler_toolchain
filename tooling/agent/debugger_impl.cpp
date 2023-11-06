@@ -51,8 +51,10 @@ DebuggerImpl::DebuggerImpl(const EcmaVM *vm, ProtocolChannel *channel, RuntimeIm
     DebuggerExecutor::Initialize(vm_);
     updaterFunc_ = std::bind(&DebuggerImpl::UpdateScopeObject, this, _1, _2, _3);
     stepperFunc_ = std::bind(&DebuggerImpl::ClearSingleStepper, this);
+    returnNative_ = std::bind(&DebuggerImpl::NotifyReturnNative, this);
     vm_->GetJsDebuggerManager()->SetLocalScopeUpdater(&updaterFunc_);
     vm_->GetJsDebuggerManager()->SetStepperFunc(&stepperFunc_);
+    vm_->GetJsDebuggerManager()->SetJSReturnNativeFunc(&returnNative_);
 }
 
 DebuggerImpl::~DebuggerImpl()
@@ -107,6 +109,15 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
     // Store parsed script in map
     scripts_[script->GetScriptId()] = std::move(script);
     return true;
+}
+
+bool DebuggerImpl::NotifyNativeOut()
+{
+    if (nativeOutPause_) {
+        nativeOutPause_ = false;
+        return true;
+    }
+    return false;
 }
 
 bool DebuggerImpl::NotifySingleStep(const JSPtLocation &location)
@@ -253,9 +264,10 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
         paused.SetData(std::move(tmpException));
     }
     frontend_.Paused(vm_, paused);
-    if (reason != BREAK_ON_START) {
+    if (reason != BREAK_ON_START && reason != NATIVE_OUT) {
         singleStepper_.reset();
     }
+    nativeOutPause_ = false;
     debuggerState_ = DebuggerState::PAUSED;
     frontend_.WaitForDebugger(vm_);
     DebuggerApi::SetException(vm_, exception);
@@ -263,16 +275,14 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
 
 void DebuggerImpl::NotifyNativeCalling(const void *nativeAddress)
 {
-    if (mixStackEnabled_) {
-        tooling::MixedStack mixedStack;
-        nativePointer_ = DebuggerApi::GetNativePointer(vm_);
-        mixedStack.SetNativePointers(nativePointer_);
-        std::vector<std::unique_ptr<CallFrame>> callFrames;
-        if (GenerateCallFrames(&callFrames)) {
-            mixedStack.SetCallFrames(std::move(callFrames));
-        }
-        frontend_.MixedStack(vm_, mixedStack);
+    tooling::MixedStack mixedStack;
+    nativePointer_ = DebuggerApi::GetNativePointer(vm_);
+    mixedStack.SetNativePointers(nativePointer_);
+    std::vector<std::unique_ptr<CallFrame>> callFrames;
+    if (GenerateCallFrames(&callFrames)) {
+        mixedStack.SetCallFrames(std::move(callFrames));
     }
+    frontend_.MixedStack(vm_, mixedStack);
 
     // native calling only after step into should be reported
     if (singleStepper_ != nullptr &&
@@ -282,6 +292,43 @@ void DebuggerImpl::NotifyNativeCalling(const void *nativeAddress)
         nativeCalling.SetNativeAddress(nativeAddress);
         frontend_.NativeCalling(vm_, nativeCalling);
         frontend_.WaitForDebugger(vm_);
+    }
+
+    bool isNativeCalling = false;
+    uint64_t nativeEntry =  reinterpret_cast<uint64_t>(nativeAddress);
+    for (const auto &nativeRange : nativeRanges_) {
+        if (nativeEntry >= nativeRange.GetStart() && nativeEntry <= nativeRange.GetEnd()) {
+            isNativeCalling = true;
+            break;
+        }
+    }
+    if (!isNativeCalling) {
+        return;
+    }
+
+    checkNeedPause_ = true;
+}
+
+void DebuggerImpl::NotifyNativeReturnJS()
+{
+    if (checkNeedPause_) {
+        nativeOutPause_ = true;
+    }
+}
+
+void DebuggerImpl::NotifyReturnNative()
+{
+    if (vm_->GetJsDebuggerManager()->IsMixedDebugEnabled()) {
+        tooling::MixedStack mixedStack;
+        nativePointer_ = DebuggerApi::GetNativePointer(vm_);
+        mixedStack.SetNativePointers(nativePointer_);
+        std::vector<std::unique_ptr<CallFrame>> callFrames;
+        if (GenerateCallFrames(&callFrames)) {
+            mixedStack.SetCallFrames(std::move(callFrames));
+        }
+        if (!nativePointer_.empty()) {
+            frontend_.MixedStack(vm_, mixedStack);
+        }
     }
 }
 
@@ -321,7 +368,9 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         { "setBlackboxPatterns", &DebuggerImpl::DispatcherImpl::SetBlackboxPatterns },
         { "replyNativeCalling", &DebuggerImpl::DispatcherImpl::ReplyNativeCalling },
         { "getPossibleAndSetBreakpointByUrl", &DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl },
-        { "dropFrame", &DebuggerImpl::DispatcherImpl::DropFrame }
+        { "dropFrame", &DebuggerImpl::DispatcherImpl::DropFrame },
+        { "setNativeRange", &DebuggerImpl::DispatcherImpl::SetNativeRange },
+        { "resetSingleStepper", &DebuggerImpl::DispatcherImpl::ResetSingleStepper },
     };
 
     const std::string &method = request.GetMethod();
@@ -508,6 +557,28 @@ void DebuggerImpl::DispatcherImpl::SetSkipAllPauses(const DispatchRequest &reque
     }
 
     DispatchResponse response = debugger_->SetSkipAllPauses(*params);
+    SendResponse(request, response);
+}
+
+void DebuggerImpl::DispatcherImpl::SetNativeRange(const DispatchRequest &request)
+{
+    std::unique_ptr<SetNativeRangeParams> params = SetNativeRangeParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+    DispatchResponse response = debugger_->SetNativeRange(*params);
+    SendResponse(request, response);
+}
+
+void DebuggerImpl::DispatcherImpl::ResetSingleStepper(const DispatchRequest &request)
+{
+    std::unique_ptr<ResetSingleStepperParams> params = ResetSingleStepperParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+    DispatchResponse response = debugger_->ResetSingleStepper(*params);
     SendResponse(request, response);
 }
 
@@ -984,6 +1055,21 @@ bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
     }
 
     return true;
+}
+
+DispatchResponse DebuggerImpl::SetNativeRange(const SetNativeRangeParams &params)
+{
+    nativeRanges_ = params.GetNativeRange();
+    return DispatchResponse::Ok();
+}
+
+DispatchResponse DebuggerImpl::ResetSingleStepper(const ResetSingleStepperParams &params)
+{
+    // if JS to C++ and C++ has breakpoint; it need to clear singleStepper_
+    if (params.GetResetSingleStepper()) {
+        singleStepper_.reset();
+    }
+    return DispatchResponse::Ok();
 }
 
 DispatchResponse DebuggerImpl::SetPauseOnExceptions(const SetPauseOnExceptionsParams &params)

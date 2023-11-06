@@ -28,6 +28,7 @@ using BreakpointCallback = std::function<bool(const JSPtLocation &)>;
 using LoadModuleCallback = std::function<bool(std::string_view)>;
 using ExceptionCallback = std::function<bool(const JSPtLocation &)>;
 using SingleStepCallback = std::function<bool(const JSPtLocation &)>;
+using NativeOutCallback = std::function<bool()>;
 using VmStartCallback = std::function<bool()>;
 using VmDeathCallback = std::function<bool()>;
 using Scenario = std::function<bool()>;
@@ -56,6 +57,7 @@ struct TestEvents {
     LoadModuleCallback loadModule;
     ExceptionCallback exception;
     SingleStepCallback singleStep;
+    NativeOutCallback nativeOut;
     VmStartCallback vmStart;
     VmDeathCallback vmDeath;
 

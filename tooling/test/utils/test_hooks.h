@@ -87,6 +87,15 @@ public:
         return false;
     }
 
+    bool NativeOut() override
+    {
+        if (test_->nativeOut) {
+            return test_->nativeOut();
+        }
+
+        return false;
+    }
+
     void VmDeath() override
     {
         if (test_->vmDeath) {
@@ -104,6 +113,8 @@ public:
     }
 
     void NativeCalling([[maybe_unused]] const void *nativeAddress) override {}
+
+    void NativeReturnJS() override {}
 
     void TerminateTest()
     {

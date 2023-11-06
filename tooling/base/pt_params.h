@@ -521,6 +521,38 @@ private:
     std::optional<uint32_t> droppedDepth_ {};
 };
 
+class SetNativeRangeParams {
+public:
+    SetNativeRangeParams() = default;
+    ~SetNativeRangeParams() = default;
+    static std::unique_ptr<SetNativeRangeParams> Create(const PtJson &params);
+
+    std::vector<NativeRange> GetNativeRange() const
+    {
+        return nativeRange_;
+    }
+private:
+
+    std::vector<NativeRange> nativeRange_ {};
+};
+
+class ResetSingleStepperParams : public PtBaseParams {
+public:
+    ResetSingleStepperParams() = default;
+    ~ResetSingleStepperParams() = default;
+    static std::unique_ptr<ResetSingleStepperParams> Create(const PtJson &params);
+
+    bool GetResetSingleStepper() const
+    {
+        return resetSingleStepper_;
+    }
+private:
+    NO_COPY_SEMANTIC(ResetSingleStepperParams);
+    NO_MOVE_SEMANTIC(ResetSingleStepperParams);
+
+    bool resetSingleStepper_ {false};
+};
+
 class SetMixedDebugParams : public PtBaseParams {
 public:
     SetMixedDebugParams() = default;

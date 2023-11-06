@@ -35,7 +35,9 @@ public:
     void LoadModule(std::string_view pandaFileName, std::string_view entryPoint) override;
     void Exception(const JSPtLocation &location) override;
     bool SingleStep(const JSPtLocation &location) override;
+    bool NativeOut() override;
     void NativeCalling(const void *nativeAddress) override;
+    void NativeReturnJS() override;
     void VmStart() override {}
     void VmDeath() override {}
 

@@ -1301,6 +1301,41 @@ private:
     std::unique_ptr<ScriptPosition> end_ {nullptr};
 };
 
+class NativeRange {
+public:
+    NativeRange() = default;
+    ~NativeRange() = default;
+
+    static std::unique_ptr<NativeRange> Create(const PtJson &params);
+
+    uint32_t GetStart() const
+    {
+        return start_;
+    }
+
+    NativeRange &SetStart(uint32_t start)
+    {
+        start_ = std::move(start);
+        return *this;
+    }
+
+    uint32_t GetEnd() const
+    {
+        return end_;
+    }
+
+    NativeRange &SetEnd(uint32_t end)
+    {
+        end_ = std::move(end);
+        return *this;
+    }
+
+private:
+
+    uint32_t start_ {0};
+    uint32_t end_ {0};
+};
+
 // Debugger.BreakLocation
 class BreakLocation final : public PtBaseTypes {
 public:
