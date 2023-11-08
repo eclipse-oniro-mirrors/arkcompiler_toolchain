@@ -36,7 +36,9 @@ namespace OHOS {
         std::function<void(std::string&&)> fun = TestFun;
         int32_t instanceId = 10001; // 10001:test instanceId
         int port = 9230; // 9230:connection port for test
-        WsServer wsServer("toolchain", fun, instanceId, port);
+        int fd = -2; // -2 : old debug process
+        DebugInfo debugInfo = {fd, "toolchain", instanceId, port};
+        WsServer wsServer(debugInfo, fun);
         wsServer.RunServer();
         std::string message(data, data + size);
         wsServer.SendReply(message);

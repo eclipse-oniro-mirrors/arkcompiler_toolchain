@@ -28,7 +28,11 @@ extern "C" {
 #endif
 #endif /* End of #ifdef __cplusplus */
 
+// old process.
 void StartServer(const std::string& componentName);
+
+// socketpair process.
+void StartServerForSocketPair(int socketfd);
 
 void StopServer([[maybe_unused]] const std::string& componentName);
 

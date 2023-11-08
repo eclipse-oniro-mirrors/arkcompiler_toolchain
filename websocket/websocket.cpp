@@ -15,6 +15,8 @@
 
 #include "websocket/websocket.h"
 
+#include<fcntl.h>
+
 #include "define.h"
 #include "common/log_wrapper.h"
 #include "securec.h"
@@ -487,6 +489,47 @@ bool WebSocket::ConnectUnixWebSocket()
         shutdown(fd_, SHUT_RDWR);
         close(fd_);
         fd_ = -1;
+        return false;
+    }
+    socketState_ = SocketState::CONNECTED;
+    return true;
+}
+
+bool WebSocket::InitUnixWebSocket(int socketfd)
+{
+    if (socketState_ != SocketState::UNINITED) {
+        LOGI("InitUnixWebSocket websocket has inited");
+        return true;
+    }
+    if (socketfd < SOCKET_SUCCESS) {
+        LOGE("InitUnixWebSocket socketfd is invalid");
+        socketState_ = SocketState::UNINITED;
+        return false;
+    }
+    client_ = socketfd;
+    int flag = fcntl(client_, F_GETFL, 0);
+    fcntl(client_, F_SETFL, flag & ~O_NONBLOCK);
+    socketState_ = SocketState::INITED;
+    return true;
+}
+
+bool WebSocket::ConnectUnixWebSocketBySocketpair()
+{
+    if (socketState_ == SocketState::UNINITED) {
+        LOGE("ConnectUnixWebSocket failed, websocket not inited");
+        return false;
+    }
+    if (socketState_ == SocketState::CONNECTED) {
+        LOGI("ConnectUnixWebSocket websocket has connected");
+        return true;
+    }
+
+    if (!HttpHandShake()) {
+        LOGE("ConnectUnixWebSocket HttpHandShake failed");
+        socketState_ = SocketState::UNINITED;
+        shutdown(client_, SHUT_RDWR);
+        close(client_);
+        client_ = -1;
         return false;
     }
     socketState_ = SocketState::CONNECTED;
