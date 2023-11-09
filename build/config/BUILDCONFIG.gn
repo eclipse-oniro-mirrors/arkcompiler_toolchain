@@ -47,6 +47,9 @@ declare_args() {
   is_official_build = false
 
   is_component_build = false
+
+  # build for cross platform
+  is_arkui_x = false
 }
 
 is_wearable_product = "${target_platform}" == "wearable"
