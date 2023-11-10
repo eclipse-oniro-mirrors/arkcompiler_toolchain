@@ -371,6 +371,7 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         { "dropFrame", &DebuggerImpl::DispatcherImpl::DropFrame },
         { "setNativeRange", &DebuggerImpl::DispatcherImpl::SetNativeRange },
         { "resetSingleStepper", &DebuggerImpl::DispatcherImpl::ResetSingleStepper },
+        { "clientDisconnect", &DebuggerImpl::DispatcherImpl::ClientDisconnect },
     };
 
     const std::string &method = request.GetMethod();
@@ -646,6 +647,12 @@ void DebuggerImpl::DispatcherImpl::DropFrame(const DispatchRequest &request)
         return;
     }
     DispatchResponse response = debugger_->DropFrame(*params);
+    SendResponse(request, response);
+}
+
+void DebuggerImpl::DispatcherImpl::ClientDisconnect(const DispatchRequest &request)
+{
+    DispatchResponse response = debugger_->ClientDisconnect();
     SendResponse(request, response);
 }
 
@@ -1185,6 +1192,17 @@ DispatchResponse DebuggerImpl::DropFrame(const DropFrameParams &params)
     pauseOnNextByteCode_ = true;
     frontend_.RunIfWaitingForDebugger(vm_);
     debuggerState_ = DebuggerState::ENABLED;
+    return DispatchResponse::Ok();
+}
+
+DispatchResponse DebuggerImpl::ClientDisconnect()
+{
+    DeviceDisconnectCallback cb = vm_->GetDeviceDisconnectCallback();
+    if (cb == nullptr) {
+        LOG_DEBUGGER(ERROR) << "DebuggerImpl::ClientDisconnect callback is nullptr";
+    } else {
+        cb();
+    }
     return DispatchResponse::Ok();
 }
 

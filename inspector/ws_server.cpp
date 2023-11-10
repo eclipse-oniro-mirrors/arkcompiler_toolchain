@@ -69,8 +69,13 @@ void WsServer::RunServer()
         while (webSocket_->IsConnected()) {
             std::string message = webSocket_->Decode();
             if (!message.empty()) {
-                LOGI("WsServer OnMessage: %{public}s", message.c_str());
-                wsOnMessage_(std::move(message));
+                if (webSocket_->IsDecodeDisconnectMsg(message)) {
+                    LOGI("WsServer receiving disconnect msg: %{public}s", message.c_str());
+                    NotifyDisconnectEvent();
+                } else {
+                    LOGI("WsServer OnMessage: %{public}s", message.c_str());
+                    wsOnMessage_(std::move(message));
+                }
             }
         }
     }
@@ -102,6 +107,18 @@ void WsServer::SendReply(const std::string& message) const
         return;
     }
     LOGI("WsServer SendReply: %{public}s", message.c_str());
-    webSocket_->SendReply(message);
+    bool isSendFail = false;
+    if (!webSocket_->SendReply(message, isSendFail)) {
+        if (isSendFail) {
+            LOGI("WsServer SendReply send fail");
+            NotifyDisconnectEvent();
+        }
+    }
+}
+
+void WsServer::NotifyDisconnectEvent() const
+{
+    std::string message = "{\"id\":0, \"method\":\"Debugger.clientDisconnect\", \"params\":{}}";
+    wsOnMessage_(std::move(message));
 }
 } // namespace OHOS::ArkCompiler::Toolchain

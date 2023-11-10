@@ -77,6 +77,7 @@ public:
     DispatchResponse SetMixedDebugEnabled(const SetMixedDebugParams &params);
     DispatchResponse ReplyNativeCalling(const ReplyNativeCallingParams &params);
     DispatchResponse DropFrame(const DropFrameParams &params);
+    DispatchResponse ClientDisconnect();
 
     /**
      * @brief: match first script and callback
@@ -165,6 +166,7 @@ public:
         void ReplyNativeCalling(const DispatchRequest &request);
         void GetPossibleAndSetBreakpointByUrl(const DispatchRequest &request);
         void DropFrame(const DispatchRequest &request);
+        void ClientDisconnect(const DispatchRequest &request);
 
     private:
         NO_COPY_SEMANTIC(DispatcherImpl);

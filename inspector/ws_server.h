@@ -39,6 +39,8 @@ public:
     pthread_t tid_ {0};
 
 private:
+    void NotifyDisconnectEvent() const;
+
     std::atomic<bool> terminateExecution_ { false };
     [[maybe_unused]] int32_t instanceId_ {0};
     std::mutex wsMutex_;
