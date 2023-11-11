@@ -472,6 +472,7 @@ HWTEST_F(WebSocketTest, ReConnectWebSocketTest, testing::ext::TestSize.Level0)
 #endif
             ASSERT_TRUE(ret);
             std::string recv = serverSocket.Decode();
+            bool isSendFail = false;
             EXPECT_EQ(strcmp(recv.c_str(), (HELLO_SERVER + std::to_string(i)).c_str()), 0);
             serverSocket.SendReply(HELLO_CLIENT + std::to_string(i), isSendFail);
             recv = serverSocket.Decode();
