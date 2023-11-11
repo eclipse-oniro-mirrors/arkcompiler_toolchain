@@ -605,7 +605,7 @@ bool WebSocket::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
     return true;
 }
 #endif
-bool WebSocket::IsDecodeDisconnectMsg(const std::string& message) 
+bool WebSocket::IsDecodeDisconnectMsg(const std::string& message)
 {
     return message == std::string(DECODE_DISCONNECT_MSG);
 }

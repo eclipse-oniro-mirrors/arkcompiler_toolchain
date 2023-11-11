@@ -60,7 +60,7 @@ public:
     ~WebSocket() = default;
     std::string Decode();
     void Close();
-    bool SendReply(const std::string& message, bool& isSendFail, 
+    bool SendReply(const std::string& message, bool& isSendFail,
       FrameType frameType = FrameType::TEXT, bool isLast = true) const;
 #if !defined(OHOS_PLATFORM)
     bool InitTcpWebSocket(int port, uint32_t timeoutLimit = 0);

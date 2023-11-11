@@ -68,14 +68,12 @@ void WsServer::RunServer()
 #endif
         while (webSocket_->IsConnected()) {
             std::string message = webSocket_->Decode();
-            if (!message.empty()) {
-                if (webSocket_->IsDecodeDisconnectMsg(message)) {
-                    LOGI("WsServer receiving disconnect msg: %{public}s", message.c_str());
-                    NotifyDisconnectEvent();
-                } else {
-                    LOGI("WsServer OnMessage: %{public}s", message.c_str());
-                    wsOnMessage_(std::move(message));
-                }
+            if (!message.empty() && webSocket_->IsDecodeDisconnectMsg(message)) {
+                LOGI("WsServer receiving disconnect msg: %{public}s", message.c_str());
+                NotifyDisconnectEvent();
+            } else if (!message.empty()) {
+                LOGI("WsServer OnMessage: %{public}s", message.c_str());
+                wsOnMessage_(std::move(message));
             }
         }
     }

@@ -396,18 +396,19 @@ HWTEST_F(WebSocketTest, ConnectWebSocketTest, testing::ext::TestSize.Level0)
 #endif
         ASSERT_TRUE(ret);
         std::string recv = serverSocket.Decode();
+        bool isSendFail = false;
         EXPECT_EQ(strcmp(recv.c_str(), HELLO_SERVER), 0);
-        serverSocket.SendReply(HELLO_CLIENT);
+        serverSocket.SendReply(HELLO_CLIENT, isSendFail);
         recv = serverSocket.Decode();
         EXPECT_EQ(strcmp(recv.c_str(), CLIENT_OK), 0);
         recv = serverSocket.Decode();
         EXPECT_EQ(strcmp(recv.c_str(), LONG_MSG.c_str()), 0);
-        serverSocket.SendReply(SERVER_OK);
+        serverSocket.SendReply(SERVER_OK, isSendFail);
         recv = serverSocket.Decode();
         EXPECT_EQ(strcmp(recv.c_str(), CLIENT_OK), 0);
         recv = serverSocket.Decode();
         EXPECT_EQ(strcmp(recv.c_str(), LONG_LONG_MSG.c_str()), 0);
-        serverSocket.SendReply(SERVER_OK);
+        serverSocket.SendReply(SERVER_OK, isSendFail);
         recv = serverSocket.Decode();
         EXPECT_EQ(strcmp(recv.c_str(), CLIENT_OK), 0);
         recv = serverSocket.Decode();
@@ -472,7 +473,7 @@ HWTEST_F(WebSocketTest, ReConnectWebSocketTest, testing::ext::TestSize.Level0)
             ASSERT_TRUE(ret);
             std::string recv = serverSocket.Decode();
             EXPECT_EQ(strcmp(recv.c_str(), (HELLO_SERVER + std::to_string(i)).c_str()), 0);
-            serverSocket.SendReply(HELLO_CLIENT + std::to_string(i));
+            serverSocket.SendReply(HELLO_CLIENT + std::to_string(i), isSendFail);
             recv = serverSocket.Decode();
             EXPECT_EQ(strcmp(recv.c_str(), (CLIENT_OK + std::to_string(i)).c_str()), 0);
             while (serverSocket.IsConnected()) {
