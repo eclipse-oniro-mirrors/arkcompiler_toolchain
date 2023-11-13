@@ -46,7 +46,10 @@ void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
     std::string formatted = StripFormatString(fmt);
     va_list args;
     va_start(args, fmt);
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-nonliteral"
     __android_log_vprint(static_cast<int>(level), tag, formatted.c_str(), args);
+#pragma clang diagnostic pop
     va_end(args);
 }
 #else
