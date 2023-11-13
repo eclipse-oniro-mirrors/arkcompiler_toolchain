@@ -30,7 +30,7 @@ namespace OHOS::ArkCompiler::Toolchain {
 // if the data is too large, it will be split into multiple frames, the first frame will be marked as 0x0
 // and the last frame will be marked as 0x1.
 // we just add the 'isLast' parameter to indicate whether it is the last frame.
-bool WebSocket::SendReply(const std::string& message, FrameType frameType, bool isLast) const
+bool WebSocket::SendReply(const std::string& message, bool& isSendFail, FrameType frameType, bool isLast) const
 {
     if (socketState_ != SocketState::CONNECTED) {
         LOGE("SendReply failed, websocket not connected");
@@ -74,6 +74,7 @@ bool WebSocket::SendReply(const std::string& message, FrameType frameType, bool 
     }
     sendBuf[sendMsgLen + msgLen] = '\0';
     if (!Send(client_, sendBuf, sendMsgLen + msgLen, 0)) {
+        isSendFail = errno == EINTR ? false : true;
         LOGE("SendReply: send failed");
         return false;
     }
@@ -148,12 +149,13 @@ bool WebSocket::HttpProtocolDecode(const std::string& request, HttpProtocol& req
   *    +---------------------------------------------------------------+
   */
 
-bool WebSocket::HandleFrame(WebSocketFrame& wsFrame)
+bool WebSocket::HandleFrame(WebSocketFrame& wsFrame, bool &isRecvFail)
 {
     if (wsFrame.payloadLen == 126) { // 126: the payloadLen read from frame
         char recvbuf[PAYLOAD_LEN + 1] = {0};
         if (!Recv(client_, recvbuf, PAYLOAD_LEN, 0)) {
             LOGE("HandleFrame: Recv payloadLen == 126 failed");
+            isRecvFail = errno == EINTR ? false : true;
             return false;
         }
 
@@ -167,14 +169,15 @@ bool WebSocket::HandleFrame(WebSocketFrame& wsFrame)
         char recvbuf[EXTEND_PAYLOAD_LEN + 1] = {0};
         if (!Recv(client_, recvbuf, EXTEND_PAYLOAD_LEN, 0)) {
             LOGE("HandleFrame: Recv payloadLen > 127 failed");
+            isRecvFail = errno == EINTR ? false : true;
             return false;
         }
         wsFrame.payloadLen = NetToHostLongLong(recvbuf, EXTEND_PAYLOAD_LEN);
     }
-    return DecodeMessage(wsFrame);
+    return DecodeMessage(wsFrame, isRecvFail);
 }
 
-bool WebSocket::DecodeMessage(WebSocketFrame& wsFrame)
+bool WebSocket::DecodeMessage(WebSocketFrame& wsFrame, bool &isRecvFail)
 {
     if (wsFrame.payloadLen > UINT64_MAX) {
         LOGE("ReadMsg length error, the length should be less than UINT64_MAX");
@@ -186,11 +189,13 @@ bool WebSocket::DecodeMessage(WebSocketFrame& wsFrame)
         char buf[msgLen + 1];
         if (!Recv(client_, wsFrame.maskingkey, SOCKET_MASK_LEN, 0)) {
             LOGE("DecodeMessage: Recv maskingkey failed");
+            isRecvFail = errno == EINTR ? false : true;
             return false;
         }
 
         if (!Recv(client_, buf, msgLen, 0)) {
             LOGE("DecodeMessage: Recv message with mask failed");
+            isRecvFail = errno == EINTR ? false : true;
             return false;
         }
 
@@ -202,6 +207,7 @@ bool WebSocket::DecodeMessage(WebSocketFrame& wsFrame)
         char buf[msgLen + 1];
         if (!Recv(client_, buf, msgLen, 0)) {
             LOGE("DecodeMessage: Recv message without mask failed");
+            isRecvFail = errno == EINTR ? false : true;
             return false;
         }
 
@@ -244,10 +250,11 @@ std::string WebSocket::ResolveHeader(int32_t index, WebSocketFrame& wsFrame, con
     index++;
     wsFrame.mask = static_cast<uint8_t>((recvbuf[index] >> 7) & 0x1); // 7: to get the mask
     wsFrame.payloadLen = recvbuf[index] & 0x7f;
-    if (HandleFrame(wsFrame)) {
+    bool isRecvFail = false;
+    if (HandleFrame(wsFrame, isRecvFail)) {
         return wsFrame.payload.get();
     }
-    return "";
+    return isRecvFail ? std::string(DECODE_DISCONNECT_MSG) : "";
 }
 
 std::string WebSocket::Decode()
@@ -268,7 +275,7 @@ std::string WebSocket::Decode()
         close(client_);
         client_ = -1;
 #endif
-        return "";
+        return std::string(DECODE_DISCONNECT_MSG);
     }
     WebSocketFrame wsFrame;
     int32_t index = 0;
@@ -598,4 +605,8 @@ bool WebSocket::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
     return true;
 }
 #endif
+bool WebSocket::IsDecodeDisconnectMsg(const std::string& message)
+{
+    return message == std::string(DECODE_DISCONNECT_MSG);
+}
 } // namespace OHOS::ArkCompiler::Toolchain

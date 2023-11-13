@@ -69,6 +69,7 @@ void ConnectServer::SendMessage(const std::string& message) const
         return;
     }
     LOGI("ConnectServer SendReply: %{public}s", message.c_str());
-    webSocket_->SendReply(message);
+    bool isSendFail = false;
+    webSocket_->SendReply(message, isSendFail);
 }
 } // namespace OHOS::ArkCompiler::Toolchain

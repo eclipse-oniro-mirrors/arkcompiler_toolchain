@@ -60,7 +60,8 @@ public:
     ~WebSocket() = default;
     std::string Decode();
     void Close();
-    bool SendReply(const std::string& message, FrameType frameType = FrameType::TEXT, bool isLast = true) const;
+    bool SendReply(const std::string& message, bool& isSendFail,
+      FrameType frameType = FrameType::TEXT, bool isLast = true) const;
 #if !defined(OHOS_PLATFORM)
     bool InitTcpWebSocket(int port, uint32_t timeoutLimit = 0);
     bool ConnectTcpWebSocket();
@@ -69,14 +70,15 @@ public:
     bool ConnectUnixWebSocket();
 #endif
     bool IsConnected();
+    bool IsDecodeDisconnectMsg(const std::string& message);
 
 private:
     friend class panda::test::WebSocketTest;
 
-    bool DecodeMessage(WebSocketFrame& wsFrame);
+    bool DecodeMessage(WebSocketFrame& wsFrame, bool &isRecvFail);
     bool HttpHandShake();
     bool HttpProtocolDecode(const std::string& request, HttpProtocol& req);
-    bool HandleFrame(WebSocketFrame& wsFrame);
+    bool HandleFrame(WebSocketFrame& wsFrame, bool &isRecvFail);
     bool ProtocolUpgrade(const HttpProtocol& req);
     uint64_t NetToHostLongLong(char* buf, uint32_t len);
     bool SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit);
@@ -97,6 +99,7 @@ private:
     static constexpr int32_t PAYLOAD_LEN = 2;
     static constexpr int32_t EXTEND_PAYLOAD_LEN = 8;
     static constexpr char WEB_SOCKET_GUID[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+    static constexpr char DECODE_DISCONNECT_MSG[] = "disconnect";
 };
 } // namespace OHOS::ArkCompiler::Toolchain
 
