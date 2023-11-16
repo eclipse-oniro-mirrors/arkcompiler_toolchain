@@ -920,7 +920,6 @@ DispatchResponse DebuggerImpl::Resume([[maybe_unused]] const ResumeParams &param
     }
     frontend_.Resumed(vm_);
     debuggerState_ = DebuggerState::ENABLED;
-    DebuggerApi::SetSingleStepStatus(jsDebugger_, false);
     return DispatchResponse::Ok();
 }
 
