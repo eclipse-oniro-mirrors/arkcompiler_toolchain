@@ -18,6 +18,8 @@
 
 #include "ecmascript/napi/include/jsnapi.h"
 
+#include "libpandabase/macros.h"
+
 namespace panda::ecmascript {
 class FrameHandler;
 namespace tooling {
