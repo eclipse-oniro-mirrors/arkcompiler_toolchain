@@ -59,6 +59,11 @@ DebuggerImpl::DebuggerImpl(const EcmaVM *vm, ProtocolChannel *channel, RuntimeIm
 
 DebuggerImpl::~DebuggerImpl()
 {
+    // in worker thread, it will ~DebuggerImpl before release worker thread
+    // after ~DebuggerImpl, it maybe call these methods
+    vm_->GetJsDebuggerManager()->SetLocalScopeUpdater(nullptr);
+    vm_->GetJsDebuggerManager()->SetStepperFunc(nullptr);
+    vm_->GetJsDebuggerManager()->SetJSReturnNativeFunc(nullptr);
     DebuggerApi::DestroyJSDebugger(jsDebugger_);
 }
 
