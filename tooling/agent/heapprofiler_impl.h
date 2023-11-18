@@ -39,7 +39,7 @@ class HeapProfilerImpl final {
 public:
     explicit HeapProfilerImpl(const EcmaVM *vm, ProtocolChannel *channel)
         : vm_(vm), frontend_(channel), stream_(&frontend_) {}
-    ~HeapProfilerImpl() = default;
+    ~HeapProfilerImpl();
 
     DispatchResponse AddInspectedHeapObject(const AddInspectedHeapObjectParams &params);
     DispatchResponse CollectGarbage();
