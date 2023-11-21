@@ -364,11 +364,11 @@ bool WebSocket::InitTcpWebSocket(int port, uint32_t timeoutLimit)
         return false;
     }
 
-    sockaddr_in addr_sin = {};
-    addr_sin.sin_family = AF_INET;
-    addr_sin.sin_port = htons(port);
-    addr_sin.sin_addr.s_addr = INADDR_ANY;
-    if (bind(fd_, reinterpret_cast<struct sockaddr*>(&addr_sin), sizeof(addr_sin)) < SOCKET_SUCCESS) {
+    sockaddr_in addrSin = {};
+    addrSin.sin_family = AF_INET;
+    addrSin.sin_port = htons(port);
+    addrSin.sin_addr.s_addr = INADDR_ANY;
+    if (bind(fd_, reinterpret_cast<struct sockaddr*>(&addrSin), sizeof(addrSin)) < SOCKET_SUCCESS) {
         LOGE("InitTcpWebSocket bind failed, errno = %{public}d", errno);
         close(fd_);
         fd_ = -1;
