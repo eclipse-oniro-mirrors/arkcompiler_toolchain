@@ -101,6 +101,8 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
 
     recordNames_[url].insert(recordName);
 
+    // if load module, it needs to check whether clear singlestepper_
+    ClearSingleStepper();
     if (MatchUrlAndFileName(url, fileName)) {
         LOG_DEBUGGER(WARN) << "NotifyScriptParsed: already loaded: " << url;
         return false;
@@ -1635,7 +1637,7 @@ void DebuggerImpl::UpdateScopeObject(const FrameHandler *frameHandler,
 
 void DebuggerImpl::ClearSingleStepper()
 {
-    // ClearSingleStepper is originally called from Function::Call, if current depth is 0, then it is safe to reset
+    // if current depth is 0, then it is safe to reset
     if (singleStepper_ != nullptr && DebuggerApi::GetStackDepth(vm_) == 0) {
         singleStepper_.reset();
     }
