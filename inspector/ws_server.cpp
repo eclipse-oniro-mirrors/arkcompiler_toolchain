@@ -36,23 +36,31 @@ void WsServer::RunServer()
         }
         webSocket_ = std::make_unique<WebSocket>();
 #if !defined(OHOS_PLATFORM)
-        LOGI("WsSever Runsever: Init tcp websocket %{public}d", port_);
-        if (!webSocket_->InitTcpWebSocket(port_)) {
+        LOGI("WsSever Runsever: Init tcp websocket %{public}d", debugInfo_.port);
+        if (!webSocket_->InitTcpWebSocket(debugInfo_.port)) {
             return;
         }
 #else
-        int appPid = getpid();
-        std::string pidStr = std::to_string(appPid);
-        std::string instanceIdStr("");
+        int localAbstract = -2;
+        if (debugInfo_.socketfd == localAbstract) {
+            int appPid = getpid();
+            std::string pidStr = std::to_string(appPid);
+            std::string instanceIdStr("");
 
-        if (instanceId_ != 0) {
-            instanceIdStr = std::to_string(instanceId_);
-        }
-        std::string sockName = pidStr + instanceIdStr + componentName_;
-        LOGI("WsServer RunServer: %{public}d%{public}s%{public}s", appPid, instanceIdStr.c_str(),
-            componentName_.c_str());
-        if (!webSocket_->InitUnixWebSocket(sockName)) {
-            return;
+            if (debugInfo_.instanceId != 0) {
+                instanceIdStr = std::to_string(debugInfo_.instanceId);
+            }
+            std::string sockName = pidStr + instanceIdStr + debugInfo_.componentName;
+            LOGI("WsServer RunServer fport localabstract: %{public}d%{public}s%{public}s",
+                appPid, instanceIdStr.c_str(), debugInfo_.componentName.c_str());
+            if (!webSocket_->InitUnixWebSocket(sockName)) {
+                return;
+            }
+        } else {
+            LOGI("WsServer RunServer fport ark: %{public}d", debugInfo_.socketfd);
+            if (!webSocket_->InitUnixWebSocket(debugInfo_.socketfd)) {
+                return;
+            }
         }
 #endif
     }
@@ -62,8 +70,15 @@ void WsServer::RunServer()
             return;
         }
 #else
-        if (!webSocket_->ConnectUnixWebSocket()) {
-            return;
+        int localAbstract = -2;
+        if (debugInfo_.socketfd == localAbstract) {
+            if (!webSocket_->ConnectUnixWebSocket()) {
+                return;
+            }
+        } else {
+            if (!webSocket_->ConnectUnixWebSocketBySocketpair()) {
+                return;
+            }
         }
 #endif
         while (webSocket_->IsConnected()) {

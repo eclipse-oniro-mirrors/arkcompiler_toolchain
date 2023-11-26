@@ -32,10 +32,17 @@ using DebuggerPostTask = std::function<void(std::function<void()>&&)>;
 extern "C" {
 #endif
 
-bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
+bool StartDebug(const std::string& componentName, void* vm,
     int32_t instanceId, const DebuggerPostTask& debuggerPostTask, int port);
 
+bool StartDebugForSocketpair(void* vm, uint32_t tidOfMainThread,
+                             const DebuggerPostTask& debuggerPostTask, int socketfd);
+
 void StopDebug(const std::string& componentName);
+
+void StopOldDebug(void* vm, const std::string& componentName);
+
+void WaitForDebugger(void* vm);
 
 #if __cplusplus
 }
@@ -51,6 +58,7 @@ public:
     static constexpr int32_t DELAY_CHECK_DISPATCH_STATUS = 100;
 
     pthread_t tid_ = 0;
+    uint32_t tidForSocketPair_ = 0;
     void* vm_ = nullptr;
     std::unique_ptr<WsServer> websocketServer_;
     DebuggerPostTask debuggerPostTask_;

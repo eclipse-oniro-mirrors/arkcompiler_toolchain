@@ -24,21 +24,34 @@ std::shared_mutex g_sendMutex;
 
 void ConnectServer::RunServer()
 {
+    int localAbstract = -2;
     terminateExecution_ = false;
     webSocket_ = std::make_unique<WebSocket>();
     tid_ = pthread_self();
+#if defined(OHOS_PLATFORM)
     int appPid = getpid();
     std::string pidStr = std::to_string(appPid);
     std::string sockName = pidStr + bundleName_;
-#if defined(OHOS_PLATFORM)
-    if (!webSocket_->InitUnixWebSocket(sockName)) {
-        return;
+    if (socketfd_ == localAbstract) {
+        if (!webSocket_->InitUnixWebSocket(sockName)) {
+            return;
+        }
+    } else {
+        if (!webSocket_->InitUnixWebSocket(socketfd_)) {
+            return;
+        }
     }
 #endif
     while (!terminateExecution_) {
 #if defined(OHOS_PLATFORM)
-        if (!webSocket_->ConnectUnixWebSocket()) {
-            return;
+        if (socketfd_ == localAbstract) {
+            if (!webSocket_->ConnectUnixWebSocket()) {
+                return;
+            }
+        } else {
+            if (!webSocket_->ConnectUnixWebSocketBySocketpair()) {
+                return;
+            }
         }
 #endif
         while (webSocket_->IsConnected()) {

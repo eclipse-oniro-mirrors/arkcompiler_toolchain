@@ -68,6 +68,8 @@ public:
 #else
     bool InitUnixWebSocket(const std::string& sockName, uint32_t timeoutLimit = 0);
     bool ConnectUnixWebSocket();
+    bool InitUnixWebSocket(int socketfd);
+    bool ConnectUnixWebSocketBySocketpair();
 #endif
     bool IsConnected();
     bool IsDecodeDisconnectMsg(const std::string& message);

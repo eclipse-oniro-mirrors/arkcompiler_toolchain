@@ -26,6 +26,9 @@
 namespace OHOS::ArkCompiler::Toolchain {
 class ConnectServer {
 public:
+    ConnectServer(int socketfd, std::function<void(std::string&&)> onMessage)
+        : socketfd_(socketfd), wsOnMessage_(std::move(onMessage))
+    {}
     ConnectServer(const std::string& bundleName, std::function<void(std::string&&)> onMessage)
         : bundleName_(bundleName), wsOnMessage_(std::move(onMessage))
     {}
@@ -36,7 +39,8 @@ public:
 
 private:
     std::atomic<bool> terminateExecution_ = false;
-    std::string bundleName_;
+    [[maybe_unused]] int socketfd_ {-2};
+    [[maybe_unused]] std::string bundleName_;
     pthread_t tid_ {0};
     std::function<void(std::string&&)> wsOnMessage_ {};
     std::unique_ptr<WebSocket> webSocket_ { nullptr };

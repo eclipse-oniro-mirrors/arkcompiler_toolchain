@@ -115,6 +115,20 @@ void ResetService()
     }
 }
 
+void StartServerForSocketPair(int socketfd)
+{
+    g_inspector->connectServer_ = std::make_unique<ConnectServer>(socketfd,
+        std::bind(&OnMessage, std::placeholders::_1));
+
+    pthread_t tid;
+    if (pthread_create(&tid, nullptr, &HandleDebugManager,
+        static_cast<void*>(g_inspector->connectServer_.get())) != 0) {
+        LOGE("pthread_create fail!");
+        ResetService();
+        return;
+    }
+}
+
 void StartServer(const std::string& componentName)
 {
     g_inspector = std::make_unique<ConnectInspector>();

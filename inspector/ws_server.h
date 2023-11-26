@@ -26,10 +26,17 @@
 #include "websocket/websocket.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
+struct DebugInfo {
+    int socketfd {-2};
+    std::string componentName {};
+    int32_t instanceId {0};
+    int port {-1};
+};
+
 class WsServer {
 public:
-    WsServer(const std::string& component, const std::function<void(std::string&&)>& onMessage, int32_t instanceId,
-        int port) : instanceId_(instanceId), componentName_(component), wsOnMessage_(onMessage), port_(port)
+    WsServer(const DebugInfo& debugInfo, const std::function<void(std::string&&)>& onMessage)
+        : debugInfo_(debugInfo), wsOnMessage_(onMessage)
     {}
     ~WsServer() = default;
     void RunServer();
@@ -42,12 +49,10 @@ private:
     void NotifyDisconnectEvent() const;
 
     std::atomic<bool> terminateExecution_ { false };
-    [[maybe_unused]] int32_t instanceId_ {0};
     std::mutex wsMutex_;
-    std::string componentName_ {};
+    DebugInfo debugInfo_ {};
     std::function<void(std::string&&)> wsOnMessage_ {};
     std::unique_ptr<WebSocket> webSocket_ { nullptr };
-    [[maybe_unused]] int port_ = -1;
 };
 } // namespace OHOS::ArkCompiler::Toolchain
 
