@@ -341,12 +341,49 @@ std::unique_ptr<PtJson> BufferUsage::ToJson() const
     return object;
 }
 
+std::unique_ptr<PtJson> DataCollected::TraceEventToJson(TraceEvent &traceEvent) const
+{
+    std::unique_ptr<PtJson> event = PtJson::CreateObject();
+    std::unique_ptr<PtJson> args = PtJson::Parse(traceEvent.args_);
+    event->Add("args", args);
+    event->Add("cat", traceEvent.cat_.c_str());
+
+    if (traceEvent.dur_ != 0) {
+        event->Add("dur", traceEvent.dur_);
+    }
+
+    if (!traceEvent.id_.empty()) {
+        event->Add("id", traceEvent.id_.c_str());
+    }
+
+    event->Add("name", traceEvent.name_.c_str());
+    event->Add("ph", traceEvent.ph_.c_str());
+    event->Add("pid", traceEvent.pid_);
+
+    if (traceEvent.s_.empty()) {
+        event->Add("s", traceEvent.s_.c_str());
+    }
+
+    if (traceEvent.tdur_ != 0) {
+        event->Add("tdur", traceEvent.tdur_);
+    }
+
+    event->Add("tid", traceEvent.tid_);
+    event->Add("ts", traceEvent.ts_);
+
+    if (traceEvent.tts_ != 0) {
+        event->Add("tts", traceEvent.tts_);
+    }
+
+    return event;
+}
+
 std::unique_ptr<PtJson> DataCollected::ToJson() const
 {
     std::unique_ptr<PtJson> traceEvents = PtJson::CreateArray();
-    std::unique_ptr<PtJson> metadata = PtJson::CreateObject();
-
-    CpuProfileToJson(traceEvents.get(), metadata.get());
+    for (auto &traceEvent : *traceEvents_) {
+        traceEvents->Push(TraceEventToJson(traceEvent));
+    }
 
     std::unique_ptr<PtJson> value = PtJson::CreateObject();
     value->Add("value", traceEvents);
@@ -356,93 +393,6 @@ std::unique_ptr<PtJson> DataCollected::ToJson() const
     object->Add("params", value);
 
     return object;
-}
-
-std::unique_ptr<PtJson> TraceEvent::ToJson() const
-{
-    std::unique_ptr<PtJson> event = PtJson::CreateObject();
-    event->Add("cat", cat_.c_str());
-    event->Add("name", name_.c_str());
-    event->Add("ph", ph_.c_str());
-    event->Add("pid", pid_);
-    event->Add("tid", tid_);
-    event->Add("ts", ts_);
-
-    if (dur_.has_value()) {
-        event->Add("dur", dur_.value());
-    }
-
-    if (args_ != nullptr) {
-        event->Add("args", args_);
-    } else {
-        event->Add("args", std::move(PtJson::CreateObject()));
-    }
-
-    return event;
-}
-
-void DataCollected::CpuProfileToJson(PtJson *traceEvents, [[maybe_unused]] PtJson *metadata) const
-{
-    // timeline : TracingStartedInPage
-    std::unique_ptr<PtJson> pageArgsData = PtJson::CreateObject();
-    pageArgsData->Add("sessionId", "1");
-    std::unique_ptr<PtJson> pageArgs = PtJson::CreateObject();
-    pageArgs->Add("data", pageArgsData);
-    TraceEvent page("disabled-by-default-devtools.timeline", "TracingStartedInPage", "M", 1, cpuProfile_->GetTid());
-    page.SetArgs(std::move(pageArgs));
-    traceEvents->Push(page.ToJson());
-
-    // __metadata : thread_name
-    std::unique_ptr<PtJson> threadNameArgs = PtJson::CreateObject();
-    threadNameArgs->Add("name", ("Thread " + std::to_string(cpuProfile_->GetTid())).c_str());
-    TraceEvent threadName("__metadata", "thread_name", "M", 1, cpuProfile_->GetTid());
-    threadName.SetArgs(std::move(threadNameArgs));
-    traceEvents->Push(threadName.ToJson());
-
-    // toplevel : JSRoot
-    TraceEvent toplevel("toplevel", "JSRoot", "X", 1, cpuProfile_->GetTid());
-    toplevel.SetTs(cpuProfile_->GetStartTime());
-    toplevel.SetDur(cpuProfile_->GetEndTime() - cpuProfile_->GetStartTime());
-    traceEvents->Push(toplevel.ToJson());
-
-    // timeline : CpuProfile
-    std::unique_ptr<PtJson> cpuProfile = PtJson::CreateObject();
-    std::unique_ptr<PtJson> nodes = PtJson::CreateArray();
-    auto node = cpuProfile_->GetNodes();
-    for (size_t i = 0; i < node->size(); i++) {
-        nodes->Push((*node)[i]->ToJson());
-    }
-    cpuProfile->Add("nodes", nodes);
-
-    cpuProfile->Add("startTime", cpuProfile_->GetStartTime());
-    cpuProfile->Add("endTime", cpuProfile_->GetEndTime());
-
-    auto samples = cpuProfile_->GetSamples();
-    if (samples) {
-        std::unique_ptr<PtJson> samplesData = PtJson::CreateArray();
-        for (size_t i = 0; i < samples->size(); i++) {
-            samplesData->Push((*samples)[i]);
-        }
-        cpuProfile->Add("samples", samplesData);
-    }
-
-    auto timeDeltas = cpuProfile_->GetTimeDeltas();
-    if (timeDeltas) {
-        std::unique_ptr<PtJson> timeDeltasData = PtJson::CreateArray();
-        for (size_t i = 0; i < timeDeltas->size(); i++) {
-            timeDeltasData->Push((*timeDeltas)[i]);
-        }
-        cpuProfile->Add("timeDeltas", timeDeltasData);
-    }
-
-    std::unique_ptr<PtJson> cpuProfileArgsData = PtJson::CreateObject();
-    cpuProfileArgsData->Add("cpuProfile", cpuProfile);
-    std::unique_ptr<PtJson> cpuProfileArgs = PtJson::CreateObject();
-    cpuProfileArgs->Add("data", cpuProfileArgsData);
-    TraceEvent cpuProfileEvent("disabled-by-default-devtools.timeline", "CpuProfile", "I", 1, cpuProfile_->GetTid());
-    cpuProfileEvent.SetTs(cpuProfile_->GetEndTime());
-    cpuProfileEvent.SetArgs(std::move(cpuProfileArgs));
-    traceEvents->Push(cpuProfileEvent.ToJson());
 }
 
 std::unique_ptr<PtJson> TracingComplete::ToJson() const

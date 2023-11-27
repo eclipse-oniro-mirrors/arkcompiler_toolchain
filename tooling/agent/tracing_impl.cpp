@@ -43,15 +43,15 @@ void TracingImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 
 void TracingImpl::DispatcherImpl::End(const DispatchRequest &request)
 {
-    auto profileInfo = tracing_->End();
-    if (profileInfo == nullptr) {
-        LOG_DEBUGGER(ERROR) << "Transfer DFXJSNApi::StopCpuProfilerImpl is failure";
+    auto traceEvents = tracing_->End();
+    if (traceEvents == nullptr) {
+        LOG_DEBUGGER(ERROR) << "Transfer DFXJSNApi::StopTracing is failure";
         SendResponse(request, DispatchResponse::Fail("Stop is failure"));
         return;
     }
     SendResponse(request, DispatchResponse::Ok());
 
-    tracing_->frontend_.DataCollected(std::move(profileInfo));
+    tracing_->frontend_.DataCollected(std::move(traceEvents));
     tracing_->frontend_.TracingComplete();
 }
 
@@ -103,15 +103,14 @@ void TracingImpl::Frontend::BufferUsage(double percentFull, int32_t eventCount, 
     channel_->SendNotification(bufferUsage);
 }
 
-void TracingImpl::Frontend::DataCollected(std::unique_ptr<ProfileInfo> cpuProfileInfo)
+void TracingImpl::Frontend::DataCollected(std::unique_ptr<std::vector<TraceEvent>> traceEvents)
 {
     if (!AllowNotify()) {
         return;
     }
 
     tooling::DataCollected dataCollected;
-    std::unique_ptr<Profile> profile = Profile::FromProfileInfo(*cpuProfileInfo);
-    dataCollected.SetCpuProfile(std::move(profile));
+    dataCollected.SetTraceEvents(std::move(traceEvents));
 
     channel_->SendNotification(dataCollected);
 }
@@ -126,12 +125,13 @@ void TracingImpl::Frontend::TracingComplete()
     channel_->SendNotification(tracingComplete);
 }
 
-std::unique_ptr<ProfileInfo> TracingImpl::End()
+std::unique_ptr<std::vector<TraceEvent>> TracingImpl::End()
 {
+#if defined(ECMASCRIPT_SUPPORT_TRACING)
     uv_timer_stop(&handle_);
-    auto pprofiler = panda::DFXJSNApi::StopCpuProfilerForInfo(vm_);
-    panda::JSNApi::SetProfilerState(vm_, false);
-    return pprofiler;
+#endif
+    auto traceEvents = panda::DFXJSNApi::StopTracing(vm_);
+    return traceEvents;
 }
 
 DispatchResponse TracingImpl::GetCategories([[maybe_unused]] std::vector<std::string> categories)
@@ -152,8 +152,12 @@ DispatchResponse TracingImpl::RequestMemoryDump([[maybe_unused]] std::unique_ptr
 
 DispatchResponse TracingImpl::Start(std::unique_ptr<StartParams> params)
 {
-    panda::JSNApi::SetProfilerState(vm_, true);
+    std::string categories = params->GetCategories();
+    if (!panda::DFXJSNApi::StartTracing(vm_, categories)) {
+        return DispatchResponse::Fail("Start tracing failed");
+    }
 
+#if defined(ECMASCRIPT_SUPPORT_TRACING)
     if (params->HasBufferUsageReportingInterval()) {
         LOG_DEBUGGER(ERROR) << "HasBufferUsageReportingInterval " << params->GetBufferUsageReportingInterval();
         if (uv_is_active(reinterpret_cast<uv_handle_t*>(&handle_))) {
@@ -172,26 +176,24 @@ DispatchResponse TracingImpl::Start(std::unique_ptr<StartParams> params)
         uv_work_t *work = new uv_work_t;
         uv_queue_work(loop, work, [](uv_work_t *) { }, [](uv_work_t *work, int32_t) { delete work; });
     }
-
-    panda::DFXJSNApi::StartCpuProfilerForInfo(vm_);
+#endif
     return DispatchResponse::Ok();
 }
 
+#if defined(ECMASCRIPT_SUPPORT_TRACING)
 void TracingImpl::TracingBufferUsageReport(uv_timer_t* handle)
 {
-    LOG_DEBUGGER(ERROR) << "TracingBufferUsageReport";
     TracingImpl *tracing = static_cast<TracingImpl *>(handle->data);
     if (tracing == nullptr) {
         LOG_DEBUGGER(ERROR) << "tracing == nullptr";
         return;
     }
 
-    uint64_t cpuProfileBufferSize = panda::DFXJSNApi::GetProfileInfoBufferSize(tracing->vm_);
-    double percentFull = (cpuProfileBufferSize >= tracing->maxBufferSize_) ?
-                         1.0 :
-                         static_cast<double>(cpuProfileBufferSize) / tracing->maxBufferSize_;
+    double percentFull = 0.0;
     uint32_t eventCount = 0;
-    double value = percentFull;
+    double value = 0.0;
+    panda::DFXJSNApi::GetTracingBufferUseage(tracing->vm_, percentFull, eventCount, value);
     tracing->frontend_.BufferUsage(percentFull, eventCount, value);
 }
+#endif
 }  // namespace panda::ecmascript::tooling

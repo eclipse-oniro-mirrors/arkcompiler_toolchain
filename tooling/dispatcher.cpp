@@ -147,9 +147,11 @@ Dispatcher::Dispatcher(const EcmaVM *vm, ProtocolChannel *channel)
     dispatchers_["HeapProfiler"] =
         std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(heapProfiler));
 #endif
+#ifdef ECMASCRIPT_SUPPORT_TRACING
     auto tracing = std::make_unique<TracingImpl>(vm, channel);
     dispatchers_["Tracing"] =
         std::make_unique<TracingImpl::DispatcherImpl>(channel, std::move(tracing));
+#endif
 
     // debugger
     auto runtime = std::make_unique<RuntimeImpl>(vm, channel);
