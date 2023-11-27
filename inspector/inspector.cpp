@@ -303,7 +303,7 @@ bool StartDebugForSocketpair(void* vm, uint32_t tidOfMainThread,
 }
 
 // for cross-platform, previewer and localabstract.
-bool StartDebug(const std::string& componentName, void* vm,
+bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
     int32_t instanceId, const DebuggerPostTask& debuggerPostTask, int port)
 {
     g_vm = vm;
@@ -326,6 +326,10 @@ bool StartDebug(const std::string& componentName, void* vm,
         return false;
     }
 
+    if (isDebugMode && port > 0) {
+        LOGI("Wait for debugger for prevewer");
+        g_waitForDebugger(vm);
+    }
     return true;
 }
 
