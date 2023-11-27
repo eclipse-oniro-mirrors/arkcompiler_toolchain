@@ -17,12 +17,13 @@
 
 #include <chrono>
 #include <shared_mutex>
-#include <stdint.h>
 #if defined(OHOS_PLATFORM)
 #include <syscall.h>
 #endif
 #include <thread>
+#if defined(OHOS_PLATFORM)
 #include <unistd.h>
+#endif
 #include <unordered_map>
 
 #include "common/log_wrapper.h"

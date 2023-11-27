@@ -24,11 +24,11 @@ std::shared_mutex g_sendMutex;
 
 void ConnectServer::RunServer()
 {
-    int localAbstract = -2;
     terminateExecution_ = false;
     webSocket_ = std::make_unique<WebSocket>();
     tid_ = pthread_self();
 #if defined(OHOS_PLATFORM)
+    int localAbstract = -2;
     int appPid = getpid();
     std::string pidStr = std::to_string(appPid);
     std::string sockName = pidStr + bundleName_;
