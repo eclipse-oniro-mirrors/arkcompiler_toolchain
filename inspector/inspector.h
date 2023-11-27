@@ -32,7 +32,7 @@ using DebuggerPostTask = std::function<void(std::function<void()>&&)>;
 extern "C" {
 #endif
 
-bool StartDebug(const std::string& componentName, void* vm,
+bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
     int32_t instanceId, const DebuggerPostTask& debuggerPostTask, int port);
 
 bool StartDebugForSocketpair(void* vm, uint32_t tidOfMainThread,
