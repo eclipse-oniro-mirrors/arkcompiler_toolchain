@@ -223,14 +223,17 @@ void HeapProfilerClient::RecvReply(std::unique_ptr<PtJson> json)
         LOGE("json parse error");
         return;
     }
-
     if (!json->IsObject()) {
         LOGE("json parse format error");
         json->ReleaseRoot();
         return;
     }
-
-    Result ret;
+    std::unique_ptr<PtJson> result;
+    Result ret = json->GetObject("result", &result);
+    if (ret == Result::SUCCESS) {
+        SaveHeapsamplingData(std::move(result));
+        return;
+    }
     std::string wholeMethod;
     std::string method;
     ret = json->GetString("method", &wholeMethod);
@@ -238,7 +241,6 @@ void HeapProfilerClient::RecvReply(std::unique_ptr<PtJson> json)
         LOGE("find method error");
         return;
     }
-
     std::string::size_type length = wholeMethod.length();
     std::string::size_type indexPoint = 0;
     indexPoint = wholeMethod.find_first_of('.', 0);
@@ -249,21 +251,22 @@ void HeapProfilerClient::RecvReply(std::unique_ptr<PtJson> json)
     if (method == "lastSeenObjectId") {
         isAllocationMsg_ = true;
     }
-
     std::unique_ptr<PtJson> params;
     ret = json->GetObject("params", &params);
     if (ret != Result::SUCCESS) {
         LOGE("find params error");
         return;
     }
-
     std::string chunk;
     ret = params->GetString("chunk", &chunk);
-    if (ret != Result::SUCCESS) {
-        LOGE("find chunk error");
-        return;
+    if (ret == Result::SUCCESS) {
+        SaveHeapSnapshotAndAllocationTrackData(chunk);
     }
+    return;
+}
 
+void HeapProfilerClient::SaveHeapSnapshotAndAllocationTrackData(const std::string &chunk)
+{
     std::string head = "{\"snapshot\":\n";
     if (!strncmp(chunk.c_str(), head.c_str(), head.length())) {
         char date[16];
@@ -292,6 +295,32 @@ void HeapProfilerClient::RecvReply(std::unique_ptr<PtJson> json)
         isAllocationMsg_ = false;
     }
     WriteHeapProfilerForFile(fileName_, chunk);
+    return;
+}
+
+void HeapProfilerClient::SaveHeapsamplingData(std::unique_ptr<PtJson> result)
+{
+    std::unique_ptr<PtJson> profile;
+    Result ret = result->GetObject("profile", &profile);
+    if (ret != Result::SUCCESS) {
+        LOGE("arkdb: get profile failed");
+        return;
+    }
+    char date[16];
+    char time[16];
+    bool res = Utils::GetCurrentTime(date, time, sizeof(date));
+    if (!res) {
+        LOGE("arkdb: get time failed");
+        return;
+    }
+    fileName_ = "/data/Heap-" + std::to_string(sessionId_) + "-" + std::string(date) + "T" + std::string(time) +
+                ".heapprofile";
+    std::cout << "heapprofile file name is " << fileName_ << std::endl;
+    std::cout << ">>> ";
+    fflush(stdout);
+
+    WriteHeapProfilerForFile(fileName_, profile->Stringify());
+    return;
 }
 
 bool HeapProfilerClient::WriteHeapProfilerForFile(const std::string &fileName, const std::string &data)

@@ -51,6 +51,8 @@ public:
     int SampingStop();
     int CollectGarbage();
     void RecvReply(std::unique_ptr<PtJson> json);
+    void SaveHeapSnapshotAndAllocationTrackData(const std::string &chunk);
+    void SaveHeapsamplingData(std::unique_ptr<PtJson> result);
     bool WriteHeapProfilerForFile(const std::string &fileName, const std::string &data);
 
 private:
