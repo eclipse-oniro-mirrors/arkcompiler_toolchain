@@ -18,9 +18,6 @@
 #include "test/utils/test_util.h"
 
 // testcase list
-#include "test/testcases/js_breakpoint_arrow_test.h"
-#include "test/testcases/js_breakpoint_async_test.h"
-#include "test/testcases/js_exception_test.h"
 #include "test/testcases/js_range_error_test.h"
 #include "test/testcases/js_single_step_test.h"
 #include "test/testcases/js_step_into_test.h"
@@ -30,11 +27,7 @@
 #include "test/testcases/js_throw_exception_test.h"
 #include "test/testcases/js_variable_first_test.h"
 #include "test/testcases/js_variable_second_test.h"
-#include "test/testcases/js_module_variable_test.h"
 #include "test/testcases/js_dropframe_test.h"
-#include "test/testcases/js_local_variable_scope_test.h"
-#include "test/testcases/js_container_test.h"
-#include "test/testcases/js_closure_scope_test.h"
 
 namespace panda::ecmascript::tooling::test {
 static std::string g_currentTestName = "";
@@ -42,10 +35,7 @@ static std::string g_currentTestName = "";
 static void RegisterTests()
 {
     // Register testcases
-    TestUtil::RegisterTest("JsExceptionTest", GetJsExceptionTest());
     TestUtil::RegisterTest("JsSingleStepTest", GetJsSingleStepTest());
-    TestUtil::RegisterTest("JsBreakpointAsyncTest", GetJsBreakpointAsyncTest());
-    TestUtil::RegisterTest("JsBreakpointArrowTest", GetJsBreakpointArrowTest());
     TestUtil::RegisterTest("JsRangeErrorTest", GetJsRangeErrorTest());
     TestUtil::RegisterTest("JsSyntaxExceptionTest", GetJsSyntaxExceptionTest());
     TestUtil::RegisterTest("JsThrowExceptionTest", GetJsThrowExceptionTest());
@@ -55,10 +45,6 @@ static void RegisterTests()
     TestUtil::RegisterTest("JSDropFrameTest", GetJsDropFrameTest());
     TestUtil::RegisterTest("JsVariableFirstTest", GetJsVariableFirstTest());
     TestUtil::RegisterTest("JsVariableSecondTest", GetJsVariableSecondTest());
-    TestUtil::RegisterTest("JsModuleVariableTest", GetJsModuleVariableTest());
-    TestUtil::RegisterTest("JsLocalVariableScopeTest", GetJsLocalVariableScopeTest());
-    TestUtil::RegisterTest("JsContainerTest", GetJsContainerTest());
-    TestUtil::RegisterTest("JsClosureScopeTest", GetJsClosureScopeTest());
 }
 
 std::vector<const char *> GetTestList()

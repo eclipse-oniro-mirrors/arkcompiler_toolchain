@@ -18,7 +18,14 @@
 #include "tooling/test/client_utils/test_util.h"
 
 // testcase list
+#include "tooling/test/testcases/js_breakpoint_arrow_test.h"
+#include "tooling/test/testcases/js_breakpoint_async_test.h"
 #include "tooling/test/testcases/js_breakpoint_test.h"
+#include "tooling/test/testcases/js_closure_scope_test.h"
+#include "tooling/test/testcases/js_local_variable_scope_test.h"
+#include "tooling/test/testcases/js_exception_test.h"
+#include "tooling/test/testcases/js_container_test.h"
+#include "tooling/test/testcases/js_module_variable_test.h"
 
 namespace panda::ecmascript::tooling::test {
 static std::string g_currentTestName = "";
@@ -27,6 +34,13 @@ static void RegisterTests()
 {
     // Register testcases
     TestUtil::RegisterTest("JsBreakpointTest", GetJsBreakpointTest());
+    TestUtil::RegisterTest("JsBreakpointArrowTest", GetJsBreakpointArrowTest());
+    TestUtil::RegisterTest("JsBreakpointAsyncTest", GetJsBreakpointAsyncTest());
+    TestUtil::RegisterTest("JsClosureScopeTest", GetJsClosureScopeTest());
+    TestUtil::RegisterTest("JsLocalVariableScopeTest", GetJsLocalVariableScopeTest());
+    TestUtil::RegisterTest("JsExceptionTest", GetJsExceptionTest());
+    TestUtil::RegisterTest("JsContainerTest", GetJsContainerTest());
+    TestUtil::RegisterTest("JsModuleVariableTest", GetJsModuleVariableTest());
 }
 
 std::vector<const char *> GetTestList()

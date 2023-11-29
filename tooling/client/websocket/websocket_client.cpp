@@ -261,8 +261,9 @@ std::string WebsocketClient::Decode()
             socketState_ = ToolchainSocketState::INITED;
             close(client_);
             client_ = -1;
+            return "";
         }
-        return "";
+        return "try again";
     }
     ToolchainWebSocketFrame wsFrame;
     int32_t index = 0;

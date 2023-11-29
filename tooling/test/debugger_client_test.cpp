@@ -21,7 +21,7 @@
 
 namespace panda::ecmascript::tooling::test {
 using panda::test::TestHelper;
-
+static int g_port = 9002;  // 9002: socket port
 class DebuggerClientTest : public testing::TestWithParam<const char *> {
 public:
     static void SetUpTestCase()
@@ -36,16 +36,17 @@ public:
 
     void SetUp() override
     {
-        static int port = 9002;  // 9002: socket port
+        g_port -= 1;
         SetCurrentTestName(GetParam());
         TestHelper::CreateEcmaVMWithScope(instance, thread, scope);
-        TestUtil::ForkSocketClient(port, GetParam());
-        JSNApi::DebugOption debugOption = {DEBUGGER_LIBRARY, true, port};
+        TestUtil::ForkSocketClient(g_port, GetParam());
+        JSNApi::DebugOption debugOption = {DEBUGGER_LIBRARY, true, g_port};
         JSNApi::StartDebugger(instance, debugOption);
     }
 
     void TearDown() override
     {
+        std::this_thread::sleep_for(std::chrono::microseconds(500000)); // 500000: 500ms
         JSNApi::StopDebugger(instance);
         TestHelper::DestroyEcmaVMWithScope(instance, scope);
     }

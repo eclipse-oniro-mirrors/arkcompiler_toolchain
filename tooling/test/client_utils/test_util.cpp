@@ -20,6 +20,8 @@
 #include "tooling/client/utils/cli_command.h"
 #include "tooling/client/session/session.h"
 
+#include <cstring>
+
 namespace panda::ecmascript::tooling::test {
 TestMap TestUtil::testMap_;
 
@@ -119,6 +121,18 @@ void TestUtil::ForkSocketClient([[maybe_unused]] int port, const std::string &na
             } else {
                 ASSERT(action.action == SocketAction::RECV);
                 std::string recv = client.Decode();
+                if (recv.empty()) {
+                    LOG_DEBUGGER(ERROR) << "Notify fail";
+                    NotifyFail();
+                    SessionManager::getInstance().DelSessionById(0);
+                    exit(-1);
+                }
+                int times = 0;
+                while ((!strcmp(recv.c_str(), "try again")) && (times <= 5)) { // 5: five times
+                    std::this_thread::sleep_for(std::chrono::microseconds(500000)); // 500000: 500ms
+                    recv = client.Decode();
+                    times++;
+                }
                 switch (action.rule) {
                     case ActionRule::STRING_EQUAL: {
                         success = (recv == action.message);
@@ -144,7 +158,6 @@ void TestUtil::ForkSocketClient([[maybe_unused]] int port, const std::string &na
             }
         }
 
-        NotifySuccess();
         SessionManager::getInstance().DelSessionById(0);
         exit(0);
     }
