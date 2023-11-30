@@ -25,6 +25,7 @@
                 "ets_runtime",
                 "runtime_core",
                 "faultloggerd",
+                "init",
                 "hitrace",
                 "hilog"
             ],
