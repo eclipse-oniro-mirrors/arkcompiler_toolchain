@@ -328,7 +328,7 @@ bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
     }
 
     if (isDebugMode && port > 0) {
-        LOGI("Wait for debugger for prevewer");
+        LOGI("Wait for debugger for previewer");
         g_waitForDebugger(vm);
     }
     return true;
@@ -336,6 +336,7 @@ bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
 
 void WaitForDebugger(void* vm)
 {
+    LOGI("NotifyDebugMode :wait for debugger");
     g_waitForDebugger(vm);
 }
 
