@@ -151,12 +151,13 @@ Dispatcher::Dispatcher(const EcmaVM *vm, ProtocolChannel *channel)
     dispatchers_["Tracing"] =
         std::make_unique<TracingImpl::DispatcherImpl>(channel, std::move(tracing));
 
+    auto runtime = std::make_unique<RuntimeImpl>(vm, channel);
+    dispatchers_["Runtime"] =
+            std::make_unique<RuntimeImpl::DispatcherImpl>(channel, std::move(runtime));
+
     // only debugApp need to initialize debugger
     if (vm->GetJsDebuggerManager()->IsDebugApp()) {
-        auto runtime = std::make_unique<RuntimeImpl>(vm, channel);
         auto debugger = std::make_unique<DebuggerImpl>(vm, channel, runtime.get());
-        dispatchers_["Runtime"] =
-            std::make_unique<RuntimeImpl::DispatcherImpl>(channel, std::move(runtime));
         dispatchers_["Debugger"] =
             std::make_unique<DebuggerImpl::DispatcherImpl>(channel, std::move(debugger));
     }
