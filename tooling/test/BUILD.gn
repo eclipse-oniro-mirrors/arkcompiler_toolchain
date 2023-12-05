@@ -345,7 +345,9 @@ group("unittest") {
 
   # deps file
   deps = [
+    ":DebuggerCIntClientTest",
     ":DebuggerCInterpTest",
+    ":DebuggerClientTest",
     ":DebuggerEntryTest",
     ":DebuggerTest",
   ]
@@ -356,7 +358,9 @@ group("host_unittest") {
 
   # deps file
   deps = [
+    ":DebuggerCIntClientTestAction",
     ":DebuggerCInterpTestAction",
+    ":DebuggerClientTestAction",
     ":DebuggerEntryTestAction",
     ":DebuggerTestAction",
   ]

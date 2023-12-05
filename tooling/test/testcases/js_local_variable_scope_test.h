@@ -13,171 +13,146 @@
  * limitations under the License.
  */
 
-#ifndef ECMASCRIPT_TOOLING_TEST_UTILS_TESTCASES_JS_LOCAL_VARIABLE_SCOPE_TEST_H
-#define ECMASCRIPT_TOOLING_TEST_UTILS_TESTCASES_JS_LOCAL_VARIABLE_SCOPE_TEST_H
+#ifndef ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_LOCAL_VARIABLE_SCOPE_TEST_H
+#define ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_LOCAL_VARIABLE_SCOPE_TEST_H
 
-#include "test/utils/test_util.h"
+#include <map>
+#include "tooling/test/client_utils/test_util.h"
 
 namespace panda::ecmascript::tooling::test {
-class JsLocalVariableScopeTest : public TestEvents {
+class JsLocalVariableScopeTest : public TestActions {
 public:
     JsLocalVariableScopeTest()
     {
-        breakpoint = [this](const JSPtLocation &location) {
-            ASSERT_TRUE(location.GetMethodId().IsValid());
-            ASSERT_LOCATION_EQ(location, location_);
-            ++breakpointCounter_;
-            debugger_->NotifyPaused(location, PauseReason::INSTRUMENTATION);
-            TestUtil::SuspendUntilContinue(DebugEvent::BREAKPOINT, location);
-            return true;
-        };
+        testAction = {
+            {SocketAction::SEND, "enable"},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::SEND, "runtime-enable"},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::SEND, "run"},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            // load closure_scope.js
+            {SocketAction::RECV, "Debugger.scriptParsed", ActionRule::STRING_CONTAIN},
+            // break on start
+            {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
+            // set first breakpoint
+            {SocketAction::SEND, "b " DEBUGGER_JS_DIR "local_variable_scope.js 38"},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
 
-        loadModule = [this](std::string_view moduleName) {
-            std::string pandaFile = DEBUGGER_ABC_DIR "local_variable_scope.abc";
-            std::string sourceFile = DEBUGGER_JS_DIR "local_variable_scope.js";
-            static_cast<JsLocalVariableScopeTestChannel *>(channel_)->Initial(vm_, runtime_);
-            runtime_->Enable();
-            // 37: breakpointer line
-            location_ = TestUtil::GetLocation(sourceFile.c_str(), 37, 0, pandaFile.c_str());
-            ASSERT_TRUE(location_.GetMethodId().IsValid());
-            TestUtil::SuspendUntilContinue(DebugEvent::LOAD_MODULE);
-            ASSERT_EQ(moduleName, pandaFile);
-            ASSERT_TRUE(debugger_->NotifyScriptParsed(0, pandaFile));
-            auto condFuncRef = FunctionRef::Undefined(vm_);
-            auto ret = debugInterface_->SetBreakpoint(location_, condFuncRef);
-            ASSERT_TRUE(ret);
-            return true;
-        };
+            // hit breakpoint after resume first time
+            {SocketAction::SEND, "resume"},
+            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::RECV, "Debugger.paused", ActionRule::CUSTOM_RULE, [] (auto recv, auto) -> bool {
+                std::unique_ptr<PtJson> json = PtJson::Parse(recv);
+                Result ret;
+                std::string method;
+                ret = json->GetString("method", &method);
+                if (ret != Result::SUCCESS || method != "Debugger.paused") {
+                    return false;
+                }
+                DebuggerClient debuggerClient(0);
+                debuggerClient.PausedReply(std::move(json));
+                return true;
+            }},
+            {SocketAction::SEND, "print"},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+                std::unique_ptr<PtJson> json = PtJson::Parse(recv);
+                int32_t id = 0;
+                Result ret = json->GetInt("id", &id);
+                if (ret != Result::SUCCESS) {
+                    return false;
+                }
 
-        scenario = [this]() {
-            TestUtil::WaitForLoadModule();
-            TestUtil::Continue();
-            TestUtil::WaitForBreakpoint(location_);
-            TestUtil::Continue();
-            auto ret = debugInterface_->RemoveBreakpoint(location_);
-            ASSERT_TRUE(ret);
-            ASSERT_EXITED();
-            return true;
-        };
+                std::unique_ptr<PtJson> result = nullptr;
+                ret = json->GetObject("result", &result);
+                if (ret != Result::SUCCESS) {
+                    return false;
+                }
 
-        vmDeath = [this]() {
-            ASSERT_EQ(breakpointCounter_, 1U);
-            return true;
-        };
+                std::unique_ptr<PtJson> innerResult;
+                ret = result->GetArray("result", &innerResult);
+                if (ret != Result::SUCCESS) {
+                    return false;
+                }
 
-        channel_ = new JsLocalVariableScopeTestChannel();
+                std::string name;
+                std::unique_ptr<PtJson> value;
+                std::string valueDes;
+                std::string type;
+                for (int32_t i = 0; i < innerResult->GetSize(); i++) {
+                    ret = innerResult->Get(i)->GetString("name", &name);
+                    if (ret != Result::SUCCESS) {
+                        return false;
+                    }
+
+                    ret = innerResult->Get(i)->GetObject("value", &value);
+                    if (ret != Result::SUCCESS) {
+                        return false;
+                    }
+
+                    ret = value->GetString("type", &type);
+                    if (ret != Result::SUCCESS) {
+                        return false;
+                    }
+
+                    if (type == "undefined") {
+                        continue;
+                    }
+
+                    ret = value->GetString("description", &valueDes);
+                    if (ret != Result::SUCCESS) {
+                        return false;
+                    }
+
+                    if (this->truthGroundMap_.count(name) == 0) {
+                        return false;
+                    }
+
+                    if (this->truthGroundMap_[name] != valueDes) {
+                        return false;
+                    }
+                }
+                return true;
+            }},
+
+            // // reply success and run
+            {SocketAction::SEND, "success"},
+            {SocketAction::SEND, "resume"},
+            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+        };
     }
 
     std::pair<std::string, std::string> GetEntryPoint() override
     {
-        std::string pandaFile = DEBUGGER_ABC_DIR "local_variable_scope.abc";
-        return {pandaFile, entryPoint_};
+        return {pandaFile_, entryPoint_};
     }
+    ~JsLocalVariableScopeTest() = default;
 
-    ~JsLocalVariableScopeTest()
-    {
-        delete channel_;
-        channel_ = nullptr;
-    }
 private:
-    class JsLocalVariableScopeTestChannel : public TestChannel {
-    public:
-        JsLocalVariableScopeTestChannel() = default;
-        ~JsLocalVariableScopeTestChannel() = default;
-
-        void Initial(const EcmaVM *vm, RuntimeImpl *runtime)
-        {
-            vm_ = vm;
-            runtime_ = runtime;
-        }
-
-        void SendNotification(const PtBaseEvents &events) override
-        {
-            const static std::vector<std::function<bool(const PtBaseEvents &events)>> eventList = {
-                [](const PtBaseEvents &events) -> bool {
-                    std::string sourceFile = DEBUGGER_JS_DIR "local_variable_scope.js";
-                    auto parsed = static_cast<const ScriptParsed *>(&events);
-                    std::string str = parsed->ToJson()->Stringify();
-                
-                    ASSERT_EQ(parsed->GetName(), "Debugger.scriptParsed");
-                    ASSERT_EQ(parsed->GetUrl(), sourceFile);
-                    return true;
-                },
-                [this](const PtBaseEvents &events) -> bool {
-                    auto paused = static_cast<const Paused *>(&events);
-                    std::string str = paused->ToJson()->Stringify();
-
-                    ASSERT_EQ(paused->GetName(), "Debugger.paused");
-                    auto frame = paused->GetCallFrames()->at(0).get();
-                    auto scopes = frame->GetScopeChain();
-                    for (uint32_t i = 0; i < scopes->size(); i++) {
-                        auto scope = scopes->at(i).get();
-                        if (scope->GetType() != Scope::Type::Local()) {
-                            continue;
-                        }
-                        auto localScopeId = scope->GetObject()->GetObjectId();
-                        GetPropertiesParams params;
-                        params.SetObjectId(localScopeId).SetOwnProperties(true);
-                        std::vector<std::unique_ptr<PropertyDescriptor>> outPropertyDesc;
-                        runtime_->GetProperties(params, &outPropertyDesc, {}, {}, {});
-                        std::map<std::string, std::string> variables;
-
-                        for (const auto &property : outPropertyDesc) {
-                            auto value = property->GetValue();
-                            auto name = property->GetName();
-                            ASSERT_TRUE(truthGroundMap_.find(name) != truthGroundMap_.end());
-                            extractLocalVariable(name, value, variables);
-                            ASSERT_EQ(variables[name], truthGroundMap_.at(name));
-                        }
-                        ASSERT_EQ(variables.size(), truthGroundMap_.size());
-                    }
-                    return true;
-                }
-            };
-
-            ASSERT_TRUE(eventList[index_++](events));
-        }
-    private:
-        NO_COPY_SEMANTIC(JsLocalVariableScopeTestChannel);
-        NO_MOVE_SEMANTIC(JsLocalVariableScopeTestChannel);
-
-        void extractLocalVariable(std::string name, RemoteObject *value, std::map<std::string, std::string> &variables)
-        {
-            std::string variableValue = "undefined";
-            if (value->HasUnserializableValue()) {
-                variableValue = value->GetUnserializableValue();
-            }
-            if (variables.find(name) == variables.end()) {
-                variables.emplace(name, variableValue);
-            }
-        }
-        
-        const std::map<std::string, std::string> truthGroundMap_ = {
-            {"a", "1"},
-            {"b", "2"},
-            {"e", "6"},
-            {"f", "7"},
-            {"innerTest", "function innerTest( { [js code] }"},
-            {"j", "12"},
-            {"scopeTest", "function scopeTest( { [js code] }"},
-            {"n", "undefined"},
-            {"p", "undefined"},
-            {"q", "undefined"}
-        };
-
-        int32_t index_ {0};
-        const EcmaVM *vm_ {nullptr};
-        RuntimeImpl *runtime_ {nullptr};
-    };
+    std::string pandaFile_ = DEBUGGER_ABC_DIR "local_variable_scope.abc";
+    std::string sourceFile_ = DEBUGGER_JS_DIR "local_variable_scope.js";
     std::string entryPoint_ = "_GLOBAL::func_main_0";
-    JSPtLocation location_ {nullptr, JSPtLocation::EntityId(0), 0};
-    size_t breakpointCounter_ = 0;
+
+    std::map<std::string, std::string> truthGroundMap_ = {
+        {"a", "1"},
+        {"b", "2"},
+        {"e", "6"},
+        {"f", "7"},
+        {"innerTest", "function innerTest( { [js code] }"},
+        {"j", "12"},
+        {"scopeTest", "function scopeTest( { [js code] }"},
+        {"n", "undefined"},
+        {"p", "undefined"},
+        {"q", "undefined"}
+    };
 };
 
-std::unique_ptr<TestEvents> GetJsLocalVariableScopeTest()
+std::unique_ptr<TestActions> GetJsLocalVariableScopeTest()
 {
     return std::make_unique<JsLocalVariableScopeTest>();
 }
-} // namespace panda::ecmascript::tooling::test
+}  // namespace panda::ecmascript::tooling::test
 
-#endif  // ECMASCRIPT_TOOLING_TEST_UTILS_TESTCASES_JS_LOCAL_VARIABLE_SCOPE_TEST_H
+#endif  // ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_LOCAL_VARIABLE_SCOPE_TEST_H

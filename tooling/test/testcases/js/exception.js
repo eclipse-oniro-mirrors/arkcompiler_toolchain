@@ -15,7 +15,7 @@
 
 function exception_func() {
     var a = 'js_test';
-    var b = false; var c = b(a); print(a); print(b)
+    var b = false; var c = b; print(a); print(b)
     print(c)
 }
 

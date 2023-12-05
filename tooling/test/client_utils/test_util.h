@@ -18,6 +18,8 @@
 
 #include "tooling/test/client_utils/test_actions.h"
 
+#include "tooling/client/domain/debugger_client.h"
+#include "tooling/client/domain/runtime_client.h"
 #include "tooling/client/manager/domain_manager.h"
 #include "tooling/client/websocket/websocket_client.h"
 #include "ecmascript/jspandafile/js_pandafile_manager.h"
