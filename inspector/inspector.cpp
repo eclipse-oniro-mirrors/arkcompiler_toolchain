@@ -57,6 +57,7 @@ GetDispatchStatus g_getDispatchStatus = nullptr;
 
 std::atomic<bool> g_hasArkFuncsInited = false;
 std::unordered_map<const void*, Inspector*> g_inspectors;
+std::unordered_map<uint32_t, const DebuggerPostTask> g_debuggerPostTasks;
 std::shared_mutex g_mutex;
 
 #if !defined(IOS_PLATFORM)
@@ -142,7 +143,7 @@ void ResetServiceLocked(void *vm, bool isCloseHandle)
 }
 
 bool InitializeInspector(
-    void* vm, const DebuggerPostTask& debuggerPostTask, const DebugInfo& debugInfo, uint32_t tidOfMainThread = 0)
+    void* vm, const DebuggerPostTask& debuggerPostTask, const DebugInfo& debugInfo, uint32_t tidForSocketPair = 0)
 {
     std::unique_lock<std::shared_mutex> lock(g_mutex);
     Inspector *newInspector = nullptr;
@@ -157,7 +158,7 @@ bool InitializeInspector(
         }
     }
 
-    newInspector->tidForSocketPair_ = tidOfMainThread;
+    newInspector->tidForSocketPair_ = tidForSocketPair;
     newInspector->tid_ = pthread_self();
     newInspector->vm_ = vm;
     newInspector->debuggerPostTask_ = debuggerPostTask;
@@ -277,9 +278,17 @@ void Inspector::OnMessage(std::string&& msg)
     }
 }
 
+const DebuggerPostTask &GetDebuggerTask(uint32_t tid)
+{
+    std::unique_lock<std::shared_mutex> lock(g_mutex);
+    if (g_debuggerPostTasks.find(tid) == g_debuggerPostTasks.end()) {
+        return {};
+    }
+    return g_debuggerPostTasks[tid];
+}
+
 // for ohos platform.
-bool StartDebugForSocketpair(void* vm, uint32_t tidOfMainThread,
-                             const DebuggerPostTask& debuggerPostTask, int socketfd)
+bool StartDebugForSocketpair(void* vm, uint32_t tid, int socketfd)
 {
     g_vm = vm;
 #if !defined(IOS_PLATFORM)
@@ -294,8 +303,9 @@ bool StartDebugForSocketpair(void* vm, uint32_t tidOfMainThread,
 
     g_initializeDebugger(vm, std::bind(&SendReply, vm, std::placeholders::_2));
 
+    const DebuggerPostTask &realDebuggerPostTask = GetDebuggerTask(tid);
     DebugInfo debugInfo = {socketfd};
-    if (!InitializeInspector(vm, debuggerPostTask, debugInfo, tidOfMainThread)) {
+    if (!InitializeInspector(vm, realDebuggerPostTask, debugInfo, tid)) {
         LOGE("Initialize inspector failed");
         return false;
     }
@@ -365,5 +375,14 @@ void StopOldDebug(void* vm, const std::string& componentName)
 
     ResetServiceLocked(vm, false);
     LOGI("StopDebug end");
+}
+
+// for socketpair process.
+void StoreDebuggerPostTask(uint32_t tid, const DebuggerPostTask& debuggerPostTask)
+{
+    std::unique_lock<std::shared_mutex> lock(g_mutex);
+    if (g_debuggerPostTasks.find(tid) == g_debuggerPostTasks.end()) {
+        g_debuggerPostTasks.emplace(tid, debuggerPostTask);
+    }
 }
 } // namespace OHOS::ArkCompiler::Toolchain
