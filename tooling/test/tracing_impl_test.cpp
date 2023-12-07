@@ -54,6 +54,7 @@ HWTEST_F_L0(TracingImplTest, StartAndEndTest)
     ProtocolChannel *channel = nullptr;
     auto tracing = std::make_unique<TracingImpl>(ecmaVm, channel);
     auto params = std::make_unique<StartParams>();
+    params->SetCategories("cpu_profiler");
     DispatchResponse response = tracing->Start(std::move(params));
     ASSERT_TRUE(response.IsOk());
 
@@ -192,8 +193,8 @@ HWTEST_F_L0(TracingImplTest, DispatcherImplStartDumpTest)
     ProtocolChannel *channel =  new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<TracingImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<TracingImpl::DispatcherImpl>(channel, std::move(tracing));
-    std::string msg = std::string() + R"({"id":0,"method":"Debugger.start","params":{}})";
-        DispatchRequest request = DispatchRequest(msg);
+    std::string msg = std::string() + R"({"id":0,"method":"Debugger.start","params":{"categories":"cpu_profiler"}})";
+    DispatchRequest request = DispatchRequest(msg);
     dispatcherImpl->Dispatch(request);
     if (channel) {
         delete channel;
@@ -225,20 +226,30 @@ HWTEST_F_L0(TracingImplTest, FrontendBufferUsageTest)
 
 HWTEST_F_L0(TracingImplTest, FrontendDataCollectedTest)
 {
+    int64_t ts = 604898475815;
+    TraceEvent event("timeline", "UpdateCounters", "I", getpid(), 1415);
+    event.SetTs(ts);
+    event.SetTts(ts);
+    event.SetS("t");
+    std::string args = "{\"data\":{\"jsHeapSizeUsed\":" + std::to_string(1024) + "}}";
+    event.SetArgs(args);
+    std::unique_ptr<std::vector<TraceEvent>> traceEvents = std::make_unique<std::vector<TraceEvent>>();
+    traceEvents->emplace_back(event);
+
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
         [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
     ProtocolChannel *channel = nullptr;
     auto frontend = std::make_unique<TracingImpl::Frontend>(channel);
-    std::unique_ptr<ProfileInfo> profileInfo = std::make_unique<ProfileInfo>();
-    frontend->DataCollected(std::move(profileInfo));
+    frontend->DataCollected(std::move(traceEvents));
     ASSERT_TRUE(result == "");
     if (!channel) {
         channel =  new ProtocolHandler(callback, ecmaVm);
     }
     auto frontend1 = std::make_unique<TracingImpl::Frontend>(channel);
-    profileInfo = std::make_unique<ProfileInfo>();
-    frontend1->DataCollected(std::move(profileInfo));
+    std::unique_ptr<std::vector<TraceEvent>> traceEvents1 = std::make_unique<std::vector<TraceEvent>>();
+    traceEvents1->emplace_back(event);
+    frontend1->DataCollected(std::move(traceEvents1));
     if (channel) {
         delete channel;
         channel = nullptr;

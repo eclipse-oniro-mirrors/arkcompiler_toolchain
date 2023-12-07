@@ -19,6 +19,7 @@
 #include <memory>
 #include <optional>
 
+#include "ecmascript/dfx/tracing/tracing.h"
 #include "tooling/base/pt_script.h"
 #include "tooling/base/pt_types.h"
 #include "dispatcher.h"
@@ -1229,26 +1230,16 @@ public:
     DataCollected() = default;
     ~DataCollected() override = default;
     std::unique_ptr<PtJson> ToJson() const override;
+    std::unique_ptr<PtJson> TraceEventToJson(TraceEvent &traceEvent) const;
 
     std::string GetName() const override
     {
         return "Tracing.dataCollected";
     }
 
-    const std::vector<std::unique_ptr<PtJson>> *GetValue() const
+    DataCollected &SetTraceEvents(std::unique_ptr<std::vector<TraceEvent>> traceEvents)
     {
-        return &value_;
-    }
-
-    DataCollected &SetValue(std::vector<std::unique_ptr<PtJson>> value)
-    {
-        value_ = std::move(value);
-        return *this;
-    }
-
-    DataCollected &SetCpuProfile(std::unique_ptr<Profile> cpuProfile)
-    {
-        cpuProfile_ = std::move(cpuProfile);
+        traceEvents_ = std::move(traceEvents);
         return *this;
     }
 
@@ -1256,49 +1247,7 @@ private:
     NO_COPY_SEMANTIC(DataCollected);
     NO_MOVE_SEMANTIC(DataCollected);
 
-    void CpuProfileToJson(PtJson *traceEvents, PtJson *metadata) const;
-
-    std::vector<std::unique_ptr<PtJson>> value_ {};
-    std::unique_ptr<Profile> cpuProfile_;
-};
-
-class TraceEvent {
-public:
-    TraceEvent(std::string cat, std::string name, std::string ph, int64_t pid, int64_t tid)
-        : cat_(cat), name_(name), ph_(ph), pid_(pid), tid_(tid)
-    {
-    }
-
-    void SetTs(int64_t ts)
-    {
-        ts_ = ts;
-    }
-
-    void SetDur(int64_t dur)
-    {
-        dur_ = dur;
-    }
-
-    void SetArgs(std::unique_ptr<PtJson> args)
-    {
-        args_ = std::move(args);
-    }
-
-    ~TraceEvent() = default;
-    std::unique_ptr<PtJson> ToJson() const;
-
-private:
-    NO_COPY_SEMANTIC(TraceEvent);
-    NO_MOVE_SEMANTIC(TraceEvent);
-
-    std::string cat_;
-    std::string name_;
-    std::string ph_;
-    int64_t pid_ {0};
-    int64_t tid_ {0};
-    int64_t ts_ {0};
-    std::optional<int64_t> dur_;
-    std::unique_ptr<PtJson> args_;
+    std::unique_ptr<std::vector<TraceEvent>> traceEvents_;
 };
 
 class TracingComplete final : public PtBaseEvents {

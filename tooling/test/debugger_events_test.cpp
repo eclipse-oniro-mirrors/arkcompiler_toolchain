@@ -477,10 +477,18 @@ HWTEST_F_L0(DebuggerEventsTest, BufferUsageToJsonTest)
 
 HWTEST_F_L0(DebuggerEventsTest, DataCollectedToJsonTest)
 {
+    std::unique_ptr<std::vector<TraceEvent>> traceEvents = std::make_unique<std::vector<TraceEvent>>();
+    int64_t ts = 604898475815;
+    TraceEvent event("timeline", "UpdateCounters", "I", getpid(), 1415);
+    event.SetTs(ts);
+    event.SetTts(ts);
+    event.SetS("t");
+    std::string args = "{\"data\":{\"jsHeapSizeUsed\":" + std::to_string(1024) + "}}";
+    event.SetArgs(args);
+    traceEvents->emplace_back(event);
+
     DataCollected dataCollected;
-    std::unique_ptr<ProfileInfo> profileInfo = std::make_unique<ProfileInfo>();
-    std::unique_ptr<Profile> profile = Profile::FromProfileInfo(*profileInfo);
-    dataCollected.SetCpuProfile(std::move(profile));
+    dataCollected.SetTraceEvents(std::move(traceEvents));
 
     std::unique_ptr<PtJson> json = dataCollected.ToJson();
     std::string method;
