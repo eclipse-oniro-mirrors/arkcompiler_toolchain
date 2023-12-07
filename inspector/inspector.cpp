@@ -57,7 +57,7 @@ GetDispatchStatus g_getDispatchStatus = nullptr;
 
 std::atomic<bool> g_hasArkFuncsInited = false;
 std::unordered_map<const void*, Inspector*> g_inspectors;
-std::unordered_map<uint32_t, const DebuggerPostTask> g_debuggerPostTasks;
+std::unordered_map<uint32_t, std::pair<void*, const DebuggerPostTask>> g_debuggerInfo;
 std::shared_mutex g_mutex;
 
 #if !defined(IOS_PLATFORM)
@@ -280,16 +280,26 @@ void Inspector::OnMessage(std::string&& msg)
 
 const DebuggerPostTask &GetDebuggerTask(uint32_t tid)
 {
-    std::unique_lock<std::shared_mutex> lock(g_mutex);
-    if (g_debuggerPostTasks.find(tid) == g_debuggerPostTasks.end()) {
+    std::shared_lock<std::shared_mutex> lock(g_mutex);
+    if (g_debuggerInfo.find(tid) == g_debuggerInfo.end()) {
         return {};
     }
-    return g_debuggerPostTasks[tid];
+    return g_debuggerInfo[tid].second;
+}
+
+void *GetEcmaVM(uint32_t tid)
+{
+    std::shared_lock<std::shared_mutex> lock(g_mutex);
+    if (g_debuggerInfo.find(tid) == g_debuggerInfo.end()) {
+        return nullptr;
+    }
+    return g_debuggerInfo[tid].first;
 }
 
 // for ohos platform.
-bool StartDebugForSocketpair(void* vm, uint32_t tid, int socketfd)
+bool StartDebugForSocketpair(uint32_t tid, int socketfd)
 {
+    void* vm = GetEcmaVM(tid);
     g_vm = vm;
 #if !defined(IOS_PLATFORM)
     if (!LoadArkDebuggerLibrary()) {
@@ -303,9 +313,9 @@ bool StartDebugForSocketpair(void* vm, uint32_t tid, int socketfd)
 
     g_initializeDebugger(vm, std::bind(&SendReply, vm, std::placeholders::_2));
 
-    const DebuggerPostTask &realDebuggerPostTask = GetDebuggerTask(tid);
+    const DebuggerPostTask &debuggerPostTask = GetDebuggerTask(tid);
     DebugInfo debugInfo = {socketfd};
-    if (!InitializeInspector(vm, realDebuggerPostTask, debugInfo, tid)) {
+    if (!InitializeInspector(vm, debuggerPostTask, debugInfo, tid)) {
         LOGE("Initialize inspector failed");
         return false;
     }
@@ -364,8 +374,9 @@ void StopDebug(const std::string& componentName)
     LOGI("StopDebug end");
 }
 
-void StopOldDebug(void* vm, const std::string& componentName)
+void StopOldDebug(uint32_t tid, const std::string& componentName)
 {
+    void* vm = GetEcmaVM(tid);
     LOGI("StopDebug start, componentName = %{private}s, vm = %{private}p", componentName.c_str(), vm);
     std::unique_lock<std::shared_mutex> lock(g_mutex);
     auto iter = g_inspectors.find(vm);
@@ -378,11 +389,11 @@ void StopOldDebug(void* vm, const std::string& componentName)
 }
 
 // for socketpair process.
-void StoreDebuggerPostTask(uint32_t tid, const DebuggerPostTask& debuggerPostTask)
+void StoreDebuggerInfo(uint32_t tid, void* vm, const DebuggerPostTask& debuggerPostTask)
 {
     std::unique_lock<std::shared_mutex> lock(g_mutex);
-    if (g_debuggerPostTasks.find(tid) == g_debuggerPostTasks.end()) {
-        g_debuggerPostTasks.emplace(tid, debuggerPostTask);
+    if (g_debuggerInfo.find(tid) == g_debuggerInfo.end()) {
+        g_debuggerInfo.emplace(tid, std::make_pair(vm, debuggerPostTask));
     }
 }
 } // namespace OHOS::ArkCompiler::Toolchain
