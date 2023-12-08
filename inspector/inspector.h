@@ -35,15 +35,15 @@ extern "C" {
 bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
     int32_t instanceId, const DebuggerPostTask& debuggerPostTask, int port);
 
-bool StartDebugForSocketpair(void* vm, uint32_t tid, int socketfd);
+bool StartDebugForSocketpair(uint32_t tid, int socketfd);
 
 void StopDebug(const std::string& componentName);
 
-void StopOldDebug(void* vm, const std::string& componentName);
+void StopOldDebug(uint32_t tid, const std::string& componentName);
 
 void WaitForDebugger(void* vm);
 
-void StoreDebuggerPostTask(uint32_t tid, const DebuggerPostTask& debuggerPostTask);
+void StoreDebuggerInfo(uint32_t tid, void* vm, const DebuggerPostTask& debuggerPostTask);
 
 #if __cplusplus
 }
