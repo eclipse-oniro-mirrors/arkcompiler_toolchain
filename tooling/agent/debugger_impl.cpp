@@ -78,6 +78,11 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
     }
 #endif
 
+    // The release application does not require scriptParsed
+    if (!vm_->GetJsDebuggerManager()->IsDebugApp()) {
+        return false;
+    }
+
     const JSPandaFile *jsPandaFile = JSPandaFileManager::GetInstance()->FindJSPandaFile(fileName.c_str()).get();
     if (jsPandaFile == nullptr) {
         LOG_DEBUGGER(ERROR) << "NotifyScriptParsed: unknown file: " << fileName;
