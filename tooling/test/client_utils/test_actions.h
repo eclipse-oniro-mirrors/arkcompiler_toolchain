@@ -46,6 +46,13 @@ std::ostream &operator<<(std::ostream &out, ActionRule value);
 
 using MatchFunc = std::function<bool(const std::string&, const std::string&)>;
 
+enum class TestCase {
+    COMMON,
+    SOURCE,
+    WATCH,
+    WATCH_OBJECT,
+};
+
 /*
  * Add some common match func here
  */
@@ -67,6 +74,7 @@ struct ActionInfo {
     MatchFunc matchFunc = [] (auto, auto) -> auto {
         return true;
     };
+    TestCase event = TestCase::COMMON;
 
     ActionInfo(const ActionInfo&) = default;
     ActionInfo& operator=(const ActionInfo&) = default;

@@ -121,32 +121,8 @@ void TestUtil::ForkSocketClient([[maybe_unused]] int port, const std::string &na
             } else {
                 ASSERT(action.action == SocketAction::RECV);
                 std::string recv = client.Decode();
-                if (recv.empty()) {
-                    LOG_DEBUGGER(ERROR) << "Notify fail";
-                    NotifyFail();
-                    SessionManager::getInstance().DelSessionById(0);
-                    exit(-1);
-                }
-                int times = 0;
-                while ((!strcmp(recv.c_str(), "try again")) && (times <= 5)) { // 5: five times
-                    std::this_thread::sleep_for(std::chrono::microseconds(500000)); // 500000: 500ms
-                    recv = client.Decode();
-                    times++;
-                }
-                switch (action.rule) {
-                    case ActionRule::STRING_EQUAL: {
-                        success = (recv == action.message);
-                        break;
-                    }
-                    case ActionRule::STRING_CONTAIN: {
-                        success = (recv.find(action.message) != std::string::npos);
-                        break;
-                    }
-                    case ActionRule::CUSTOM_RULE: {
-                        success = action.matchFunc(recv, action.message);
-                        break;
-                    }
-                }
+                HandleAcceptanceMessages(action, client, recv, success);
+                SendMessage(action, recv);
                 LOG_DEBUGGER(INFO) << "recv: " << recv;
                 LOG_DEBUGGER(INFO) << "rule: " << action.rule;
             }
@@ -162,5 +138,87 @@ void TestUtil::ForkSocketClient([[maybe_unused]] int port, const std::string &na
         exit(0);
     }
     LOG_DEBUGGER(INFO) << "ForkSocketClient end";
+}
+
+void TestUtil::HandleAcceptanceMessages(ActionInfo action, WebsocketClient &client, std::string &recv, bool &success)
+{
+    if (recv.empty()) {
+        LOG_DEBUGGER(ERROR) << "Notify fail";
+        NotifyFail();
+        SessionManager::getInstance().DelSessionById(0);
+        exit(-1);
+    }
+    int times = 0;
+    while ((!strcmp(recv.c_str(), "try again")) && (times <= 5)) { // 5: five times
+        std::this_thread::sleep_for(std::chrono::microseconds(500000)); // 500000: 500ms
+        recv = client.Decode();
+        times++;
+    }
+    switch (action.rule) {
+        case ActionRule::STRING_EQUAL: {
+            success = (recv == action.message);
+            break;
+        }
+        case ActionRule::STRING_CONTAIN: {
+            success = (recv.find(action.message) != std::string::npos);
+            break;
+        }
+        case ActionRule::CUSTOM_RULE: {
+            success = action.matchFunc(recv, action.message);
+            break;
+        }
+    }
+    return;
+}
+
+void TestUtil::SendMessage(ActionInfo action, std::string recv)
+{
+    switch (action.event) {
+        case TestCase::SOURCE: {
+            std::unique_ptr<PtJson> json = PtJson::Parse(recv);
+            std::unique_ptr<PtJson> params = nullptr;
+            Result ret = json->GetObject("params", &params);
+            std::string scriptId;
+            ret = params->GetString("scriptId", &scriptId);
+            if (ret != Result::SUCCESS) {
+                return;
+            }
+            SessionManager::getInstance().GetCurrentSession()->
+                GetSourceManager().SendRequeSource(std::atoi(scriptId.c_str()));
+            break;
+        }
+        case TestCase::WATCH: {
+            if (!SessionManager::getInstance().GetCurrentSession()->GetWatchManager().GetWatchInfoSize()) {
+                SessionManager::getInstance().GetCurrentSession()->GetWatchManager().AddWatchInfo("a");
+                SessionManager::getInstance().GetCurrentSession()->GetWatchManager().AddWatchInfo("this");
+            }
+            const uint watchInfoSize = 2;
+            for (uint i = 0; i < watchInfoSize; i++) {
+                SessionManager::getInstance().GetCurrentSession()->GetWatchManager().SendRequestWatch(i, "0");
+            }
+            break;
+        }
+        case TestCase::WATCH_OBJECT: {
+            std::unique_ptr<PtJson> json = PtJson::Parse(recv);
+            std::unique_ptr<PtJson> result = nullptr;
+            Result ret = json->GetObject("result", &result);
+            std::unique_ptr<PtJson> watchResult = nullptr;
+            ret = result->GetObject("result", &watchResult);
+            if (ret != Result::SUCCESS) {
+                return;
+            }
+            std::string objectId;
+            ret = watchResult->GetString("objectId", &objectId);
+            if (ret != Result::SUCCESS) {
+                return;
+            }
+            SessionManager::getInstance().GetCurrentSession()->GetWatchManager().GetPropertiesCommand(0, objectId);
+            break;
+        }
+        default: {
+            return;
+        }
+    }
+    return;
 }
 }  // namespace panda::ecmascript::tooling::test
