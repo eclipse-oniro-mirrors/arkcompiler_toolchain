@@ -360,7 +360,7 @@ std::unique_ptr<PtJson> DataCollected::TraceEventToJson(TraceEvent &traceEvent) 
     event->Add("ph", traceEvent.ph_.c_str());
     event->Add("pid", traceEvent.pid_);
 
-    if (traceEvent.s_.empty()) {
+    if (!traceEvent.s_.empty()) {
         event->Add("s", traceEvent.s_.c_str());
     }
 
