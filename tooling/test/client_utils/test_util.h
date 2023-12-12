@@ -63,6 +63,8 @@ public:
     }
 
     static void ForkSocketClient(int port, const std::string &name);
+    static void HandleAcceptanceMessages(ActionInfo action, WebsocketClient &client, std::string &recv, bool &success);
+    static void SendMessage(ActionInfo action, std::string recv);
 
 private:
     static void NotifyFail();

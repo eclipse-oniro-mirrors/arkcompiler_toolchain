@@ -25,6 +25,15 @@ function count_to_ten() {
     a = 9;
     a = 10;
 }
+const person = {
+  name: "rose",
+  age: 19,
+  greet: function() {
+    this.name = "jack";
+    this.age = 18;
+  }
+};
 
 count_to_ten();
 count_to_ten();
+person.greet();

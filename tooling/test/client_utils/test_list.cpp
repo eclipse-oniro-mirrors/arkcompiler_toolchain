@@ -22,10 +22,14 @@
 #include "tooling/test/testcases/js_breakpoint_async_test.h"
 #include "tooling/test/testcases/js_breakpoint_test.h"
 #include "tooling/test/testcases/js_closure_scope_test.h"
-#include "tooling/test/testcases/js_local_variable_scope_test.h"
-#include "tooling/test/testcases/js_exception_test.h"
 #include "tooling/test/testcases/js_container_test.h"
+#include "tooling/test/testcases/js_exception_test.h"
+#include "tooling/test/testcases/js_heapsampling_test.h"
+#include "tooling/test/testcases/js_local_variable_scope_test.h"
 #include "tooling/test/testcases/js_module_variable_test.h"
+#include "tooling/test/testcases/js_source_test.h"
+#include "tooling/test/testcases/js_tracing_test.h"
+#include "tooling/test/testcases/js_watch_test.h"
 
 namespace panda::ecmascript::tooling::test {
 static std::string g_currentTestName = "";
@@ -41,6 +45,10 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsExceptionTest", GetJsExceptionTest());
     TestUtil::RegisterTest("JsContainerTest", GetJsContainerTest());
     TestUtil::RegisterTest("JsModuleVariableTest", GetJsModuleVariableTest());
+    TestUtil::RegisterTest("JsSourceTest", GetJsSourceTest());
+    TestUtil::RegisterTest("JsTracingTest", GetJsTracingTest());
+    TestUtil::RegisterTest("JsHeapsamplingTest", GetJsHeapsamplingTest());
+    TestUtil::RegisterTest("JsWatchTest", GetJsWatchTest());
 }
 
 std::vector<const char *> GetTestList()
