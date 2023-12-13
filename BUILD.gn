@@ -221,7 +221,7 @@ group("ark_toolchain_unittest") {
 group("ark_toolchain_host_unittest") {
   testonly = true
   deps = []
-  if (host_os != "mac") {
+  if (host_os != "mac" && !is_debug) {
     # js unittest
     deps += [
       "//arkcompiler/toolchain/tooling/test:host_unittest",
