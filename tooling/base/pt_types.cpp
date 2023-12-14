@@ -14,6 +14,7 @@
  */
 
 #include "tooling/base/pt_types.h"
+#include "ecmascript/napi/jsnapi_helper.h"
 
 namespace panda::ecmascript::tooling {
 using ObjectType = RemoteObject::TypeName;
@@ -231,7 +232,7 @@ std::unique_ptr<RemoteObject> RemoteObject::FromTagged(const EcmaVM *ecmaVm, Loc
     return object;
 }
 
-void RemoteObject::AppendingHashToDescription(const EcmaVM *ecmaVM, Local<JSValueRef> tagged, 
+void RemoteObject::AppendingHashToDescription(const EcmaVM *ecmaVM, Local<JSValueRef> tagged,
     std::string &description)
 {
     JSHandle<JSTaggedValue> valueHandle = JSNApiHelper::ToJSHandle(tagged);
