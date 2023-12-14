@@ -27,6 +27,7 @@
 #include "ecmascript/dfx/cpu_profiler/samples_record.h"
 #include "ecmascript/dfx/hprof/heap_sampling.h"
 #include "libpandabase/macros.h"
+#include "jsnapi.h"
 
 namespace panda::ecmascript::tooling {
 // ========== Base types begin
@@ -254,7 +255,8 @@ public:
     static std::unique_ptr<RemoteObject> FromTagged(const EcmaVM *ecmaVm, Local<JSValueRef> tagged);
     static std::unique_ptr<RemoteObject> Create(const PtJson &params);
     std::unique_ptr<PtJson> ToJson() const override;
-
+    static void AppendingHashToDescription(const EcmaVM *ecmaVM, Local<JSValueRef> tagged, 
+        std::string &description);
     /*
      * @see {#ObjectType}
      */
