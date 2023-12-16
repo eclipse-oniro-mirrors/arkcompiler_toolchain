@@ -255,7 +255,8 @@ public:
     static std::unique_ptr<RemoteObject> FromTagged(const EcmaVM *ecmaVm, Local<JSValueRef> tagged);
     static std::unique_ptr<RemoteObject> Create(const PtJson &params);
     std::unique_ptr<PtJson> ToJson() const override;
-    static void AppendingHashToDescription(Local<JSValueRef> tagged, std::string &description);
+    static void AppendingHashToDescription(const EcmaVM *ecmaVM, Local<JSValueRef> tagged,
+        std::string &description);
     /*
      * @see {#ObjectType}
      */

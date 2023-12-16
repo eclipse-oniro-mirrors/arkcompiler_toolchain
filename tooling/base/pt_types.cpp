@@ -232,7 +232,8 @@ std::unique_ptr<RemoteObject> RemoteObject::FromTagged(const EcmaVM *ecmaVm, Loc
     return object;
 }
 
-void RemoteObject::AppendingHashToDescription(Local<JSValueRef> tagged, std::string &description)
+void RemoteObject::AppendingHashToDescription(const EcmaVM *ecmaVM, Local<JSValueRef> tagged,
+    std::string &description)
 {
     if (ecmaVM->GetJsDebuggerManager() != nullptr && ecmaVM->GetJsDebuggerManager()->IsObjHashDisplayEnabled()) {
         JSHandle<JSTaggedValue> valueHandle = JSNApiHelper::ToJSHandle(tagged);
