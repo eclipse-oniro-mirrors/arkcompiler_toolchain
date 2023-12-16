@@ -15,6 +15,9 @@
 
 #include "tooling/base/pt_types.h"
 #include "ecmascript/napi/jsnapi_helper.h"
+#include "ecmascript/debugger/js_debugger.h"
+#include "ecmascript/property_attributes.h"
+#include "jsnapi_expo.h"
 
 namespace panda::ecmascript::tooling {
 using ObjectType = RemoteObject::TypeName;
