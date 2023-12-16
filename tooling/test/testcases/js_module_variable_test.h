@@ -321,10 +321,10 @@ private:
         }
     }
 
-    bool CompareExpected(std::string recv)
+    bool CompareExpected(std::string recv, const std::string &expect)
     {
         expectDesIndex++;
-        return recv == expect;
+        return recv == expect; 
     }
 
     const std::map<std::string, std::vector<std::string>> moduleVariableMap_ = {
