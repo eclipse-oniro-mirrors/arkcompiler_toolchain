@@ -42,6 +42,9 @@ public:
         TestUtil::ForkSocketClient(g_port, GetParam());
         JSNApi::DebugOption debugOption = {DEBUGGER_LIBRARY, true, g_port};
         JSNApi::StartDebugger(instance, debugOption);
+        if (instance->GetJsDebuggerManager() != nullptr) {
+            instance->GetJsDebuggerManager()->DisableObjectHashDisplay();
+        }
     }
 
     void TearDown() override

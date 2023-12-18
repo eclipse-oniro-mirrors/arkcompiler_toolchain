@@ -17,6 +17,7 @@
 #include "ecmascript/napi/include/jsnapi.h"
 #include "ecmascript/tests/test_helper.h"
 #include "tooling/test/utils/test_list.h"
+#include "ecmascript/debugger/js_debugger.h"
 
 namespace panda::ecmascript::tooling::test {
 using panda::test::TestHelper;
@@ -39,6 +40,9 @@ public:
         TestHelper::CreateEcmaVMWithScope(instance, thread, scope);
         JSNApi::DebugOption debugOption = {DEBUGGER_TEST_LIBRARY, true};
         JSNApi::StartDebugger(instance, debugOption);
+        if (instance->GetJsDebuggerManager() != nullptr) {
+            instance->GetJsDebuggerManager()->DisableObjectHashDisplay();
+        }
     }
 
     void TearDown() override

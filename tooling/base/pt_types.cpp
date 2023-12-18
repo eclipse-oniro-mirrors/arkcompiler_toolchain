@@ -14,6 +14,9 @@
  */
 
 #include "tooling/base/pt_types.h"
+#include "ecmascript/napi/jsnapi_helper.h"
+#include "ecmascript/debugger/js_debugger.h"
+#include "ecmascript/property_attributes.h"
 
 namespace panda::ecmascript::tooling {
 using ObjectType = RemoteObject::TypeName;
@@ -231,6 +234,19 @@ std::unique_ptr<RemoteObject> RemoteObject::FromTagged(const EcmaVM *ecmaVm, Loc
     return object;
 }
 
+void RemoteObject::AppendingHashToDescription(const EcmaVM *ecmaVM, Local<JSValueRef> tagged,
+    std::string &description)
+{
+    if (ecmaVM->GetJsDebuggerManager() != nullptr && ecmaVM->GetJsDebuggerManager()->IsObjHashDisplayEnabled()) {
+        JSHandle<JSTaggedValue> valueHandle = JSNApiHelper::ToJSHandle(tagged);
+        int32_t hash = DebuggerApi::GetObjectHash(valueHandle);
+        if (hash != 0) {
+            std::string hashString = " " + std::to_string(hash);
+            description += hashString;
+        }
+    }
+}
+
 PrimitiveRemoteObject::PrimitiveRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged)
 {
     if (tagged->IsNull()) {
@@ -270,6 +286,7 @@ StringRemoteObject::StringRemoteObject([[maybe_unused]] const EcmaVM *ecmaVm, Lo
 SymbolRemoteObject::SymbolRemoteObject(const EcmaVM *ecmaVm, Local<SymbolRef> tagged)
 {
     std::string description = DescriptionForSymbol(ecmaVm, tagged);
+    AppendingHashToDescription(ecmaVm, tagged, description);
     SetType(RemoteObject::TypeName::Symbol)
         .SetValue(tagged)
         .SetUnserializableValue(description)
@@ -279,6 +296,7 @@ SymbolRemoteObject::SymbolRemoteObject(const EcmaVM *ecmaVm, Local<SymbolRef> ta
 FunctionRemoteObject::FunctionRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged)
 {
     std::string description = DescriptionForFunction(ecmaVm, tagged);
+    AppendingHashToDescription(ecmaVm, tagged, description);
     SetType(RemoteObject::TypeName::Function)
         .SetClassName(RemoteObject::ClassName::Function)
         .SetValue(tagged)
@@ -289,6 +307,7 @@ FunctionRemoteObject::FunctionRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRe
 GeneratorFunctionRemoteObject::GeneratorFunctionRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged)
 {
     std::string description = DescriptionForGeneratorFunction(ecmaVm, tagged);
+    AppendingHashToDescription(ecmaVm, tagged, description);
     SetType(RemoteObject::TypeName::Function)
         .SetClassName(RemoteObject::ClassName::Generator)
         .SetValue(tagged)
@@ -300,6 +319,7 @@ ObjectRemoteObject::ObjectRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> t
                                        const std::string &classname)
 {
     std::string description = DescriptionForObject(ecmaVm, tagged);
+    AppendingHashToDescription(ecmaVm, tagged, description);
     SetType(RemoteObject::TypeName::Object)
         .SetClassName(classname)
         .SetValue(tagged)
@@ -311,6 +331,7 @@ ObjectRemoteObject::ObjectRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> t
                                        const std::string &classname, const std::string &subtype)
 {
     std::string description = DescriptionForObject(ecmaVm, tagged);
+    AppendingHashToDescription(ecmaVm, tagged, description);
     SetType(RemoteObject::TypeName::Object)
         .SetSubType(subtype)
         .SetClassName(classname)
