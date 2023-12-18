@@ -27,7 +27,6 @@
 #include "ecmascript/dfx/cpu_profiler/samples_record.h"
 #include "ecmascript/dfx/hprof/heap_sampling.h"
 #include "libpandabase/macros.h"
-#include "jsnapi.h"
 
 namespace panda::ecmascript::tooling {
 // ========== Base types begin

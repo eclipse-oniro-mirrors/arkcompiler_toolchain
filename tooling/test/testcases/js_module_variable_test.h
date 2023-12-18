@@ -166,7 +166,9 @@ public:
 
                     if (moduleVariableMap_.find(variableName) != moduleVariableMap_.end()) {
                         const std::vector<std::string> &expectedAttributes = moduleVariableMap_.at(variableName);
-                        if (!compareVariable(actualAttributes, expectedAttributes)) {
+                        if (actualAttributes == expectedAttributes) {
+                            continue;
+                        } else {
                             std::cout << "Property mismatch: " << variableName << std::endl;
                             return false;
                         }
@@ -284,18 +286,7 @@ private:
     std::string pandaFile_ = DEBUGGER_ABC_DIR "module_variable.abc";
     std::string sourceFile_ = DEBUGGER_JS_DIR "module_variable.js";
     std::string entryPoint_ = "module_variable";
-    bool includeHash_ = true;
     size_t expectDesIndex = 0;
-
-    bool compareVariable(const std::vector<std::string> &actual, const std::vector<std::string> &expected)
-    {
-        for (size_t i = 0; i < actual.size(); i++) {
-            if (actual[i] != expected[i]) {
-                return false;
-            }
-        }
-        return true;
-    }
 
     void PushValueInfo(RemoteObject *value, std::vector<std::string> &infos)
     {
@@ -309,15 +300,13 @@ private:
             std::cout << "class name: " << value->GetClassName() << std::endl;
             infos.push_back(value->GetClassName());
         }
-        if (value->HasUnserializableValue() && !(value->GetType() == "object")) {
+        if (value->HasUnserializableValue()) {
             std::cout << "unserializableValue: " << value->GetUnserializableValue() << std::endl;
             infos.push_back(value->GetUnserializableValue());
         }
-        if (!includeHash_) {
-            if (value->HasDescription()) {
-                std::cout << "desc: " << value->GetDescription() << std::endl;
-                infos.push_back(value->GetDescription());
-            }
+        if (value->HasDescription()) {
+            std::cout << "desc: " << value->GetDescription() << std::endl;
+            infos.push_back(value->GetDescription());
         }
     }
 
