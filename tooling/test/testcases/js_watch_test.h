@@ -46,12 +46,12 @@ public:
             {SocketAction::SEND, "resume"},
             {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
-            {SocketAction::RECV, "Debugger.paused", ActionRule::CUSTOM_RULE, [] (auto, auto) -> bool { return true; },
-                TestCase::WATCH},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "Debugger.paused", ActionRule::CUSTOM_RULE, [] (auto, auto, auto) -> bool {
+                return true; }, TestCase::WATCH},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return RecvWatchDescription(recv);
             }},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return RecvWatchType(recv);
             }},
             {SocketAction::SEND, "b " DEBUGGER_JS_DIR "sample.js 33"},
@@ -60,16 +60,16 @@ public:
             {SocketAction::SEND, "resume"},
             {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
-            {SocketAction::RECV, "Debugger.paused", ActionRule::CUSTOM_RULE, [] (auto, auto) -> bool {
+            {SocketAction::RECV, "Debugger.paused", ActionRule::CUSTOM_RULE, [] (auto, auto, auto) -> bool {
                 return true;
             }, TestCase::WATCH},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return RecvWatchType(recv);
             }},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return RecvWatchObject(recv);
             }, TestCase::WATCH_OBJECT},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return RecvWatchDescriptionByJack(recv);
             }},
             // reply success and run

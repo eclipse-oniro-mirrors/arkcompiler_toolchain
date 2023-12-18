@@ -39,7 +39,7 @@ public:
             {SocketAction::SEND, "cpuprofile"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
             {SocketAction::SEND, "cpuprofile-stop"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [] (auto recv, auto, auto) -> bool {
                 std::unique_ptr<PtJson> json = PtJson::Parse(recv);
                 Result ret;
                 int id;

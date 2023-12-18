@@ -31,12 +31,12 @@ public:
             {SocketAction::SEND, "run"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
             // load sample.js
-            {SocketAction::RECV, "Debugger.scriptParsed", ActionRule::CUSTOM_RULE, [] (auto, auto) -> bool {
+            {SocketAction::RECV, "Debugger.scriptParsed", ActionRule::CUSTOM_RULE, [] (auto, auto, auto) -> bool {
                 return true;
             }, TestCase::SOURCE},
             // break on start
             {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [] (auto recv, auto, auto) -> bool {
                 std::unique_ptr<PtJson> json = PtJson::Parse(recv);
                 Result ret;
                 int id;

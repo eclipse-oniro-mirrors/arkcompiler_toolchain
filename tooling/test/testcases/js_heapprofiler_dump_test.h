@@ -39,7 +39,7 @@ public:
 
             {SocketAction::SEND, "hd"},
             {SocketAction::RECV, "HeapProfiler.reportHeapSnapshotProgress", ActionRule::CUSTOM_RULE,
-                [] (auto recv, auto) -> bool {
+                [] (auto recv, auto, auto) -> bool {
                 std::unique_ptr<PtJson> json = PtJson::Parse(recv);
                 Result ret;
                 std::unique_ptr<PtJson> params;
@@ -62,7 +62,7 @@ public:
                 return true;
             }},
             {SocketAction::RECV, "HeapProfiler.reportHeapSnapshotProgress", ActionRule::CUSTOM_RULE,
-                [] (auto recv, auto) -> bool {
+                [] (auto recv, auto, auto) -> bool {
                 std::unique_ptr<PtJson> json = PtJson::Parse(recv);
                 Result ret;
                 std::unique_ptr<PtJson> params;
@@ -85,7 +85,7 @@ public:
                 return true;
             }},
             {SocketAction::RECV, "HeapProfiler.addHeapSnapshotChunk", ActionRule::CUSTOM_RULE,
-                [] (auto recv, auto) -> bool {
+                [] (auto recv, auto, auto) -> bool {
                 std::unique_ptr<PtJson> json = PtJson::Parse(recv);
                 Result ret;
                 std::unique_ptr<PtJson> params;

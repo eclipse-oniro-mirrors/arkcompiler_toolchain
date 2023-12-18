@@ -25,7 +25,7 @@
 namespace panda::ecmascript::tooling::test {
 TestMap TestUtil::testMap_;
 
-MatchFunc MatchRule::replySuccess = [] (auto recv, auto) -> bool {
+MatchFunc MatchRule::replySuccess = [] (auto recv, auto, auto) -> bool {
     std::unique_ptr<PtJson> json = PtJson::Parse(recv);
     Result ret;
     int32_t id = 0;
@@ -164,7 +164,12 @@ void TestUtil::HandleAcceptanceMessages(ActionInfo action, WebsocketClient &clie
             break;
         }
         case ActionRule::CUSTOM_RULE: {
-            success = action.matchFunc(recv, action.message);
+            bool needMoreMsg = false;
+            success = action.matchFunc(recv, action.message, needMoreMsg);
+            while (needMoreMsg) {
+                recv = client.Decode();
+                success = action.matchFunc(recv, action.message, needMoreMsg);
+            }
             break;
         }
     }

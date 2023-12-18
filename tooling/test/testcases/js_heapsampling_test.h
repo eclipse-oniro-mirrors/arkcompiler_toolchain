@@ -52,7 +52,7 @@ public:
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
             {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
             {SocketAction::SEND, "sampling-stop"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return RecvHeapsamlingInfo(recv);
             }},
             {SocketAction::SEND, "heapprofiler-disable"},

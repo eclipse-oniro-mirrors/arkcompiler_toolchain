@@ -44,7 +44,7 @@ enum class ActionRule {
 };
 std::ostream &operator<<(std::ostream &out, ActionRule value);
 
-using MatchFunc = std::function<bool(const std::string&, const std::string&)>;
+using MatchFunc = std::function<bool(const std::string&, const std::string&, bool&)>;
 
 enum class TestCase {
     COMMON,
@@ -71,7 +71,7 @@ struct ActionInfo {
     SocketAction action;
     std::string message;
     ActionRule rule = ActionRule::STRING_CONTAIN;
-    MatchFunc matchFunc = [] (auto, auto) -> auto {
+    MatchFunc matchFunc = [] (auto, auto, auto) -> auto {
         return true;
     };
     TestCase event = TestCase::COMMON;

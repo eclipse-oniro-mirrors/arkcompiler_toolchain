@@ -30,6 +30,8 @@
 #include "tooling/test/testcases/js_source_test.h"
 #include "tooling/test/testcases/js_tracing_test.h"
 #include "tooling/test/testcases/js_watch_test.h"
+#include "tooling/test/testcases/js_heapdump_test.h"
+#include "tooling/test/testcases/js_allocationtrack_test.h"
 
 namespace panda::ecmascript::tooling::test {
 static std::string g_currentTestName = "";
@@ -49,6 +51,8 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsTracingTest", GetJsTracingTest());
     TestUtil::RegisterTest("JsHeapsamplingTest", GetJsHeapsamplingTest());
     TestUtil::RegisterTest("JsWatchTest", GetJsWatchTest());
+    TestUtil::RegisterTest("JsHeapdumpTest", GetJsHeapdumpTest());
+    TestUtil::RegisterTest("JsAllocationtrackTest", GetJsAllocationtrackTest());
 }
 
 std::vector<const char *> GetTestList()

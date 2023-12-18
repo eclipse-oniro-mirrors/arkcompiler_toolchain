@@ -53,7 +53,7 @@ public:
             {SocketAction::SEND, "resume"},
             {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
-            {SocketAction::RECV, "Debugger.paused", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "Debugger.paused", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 std::unique_ptr<PtJson> json = PtJson::Parse(recv);
                 Result ret;
                 std::string method;
@@ -87,7 +87,7 @@ public:
             }},
 
             {SocketAction::SEND, "p"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [] (auto recv, auto, auto) -> bool {
                 std::unique_ptr<PtJson> json = PtJson::Parse(recv);
                 std::unique_ptr<PtJson> result;
 
@@ -114,7 +114,7 @@ public:
             }},
 
             {SocketAction::SEND, "p 3"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 std::unique_ptr<PtJson> json = PtJson::Parse(recv);
                 std::unique_ptr<PtJson> result;
 
@@ -184,87 +184,87 @@ public:
             }},
 
             {SocketAction::SEND, "p 5"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return CompareExpected(recv, innerDes[expectDesIndex]);
             }},
 
             {SocketAction::SEND, "p 6"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return CompareExpected(recv, innerDes[expectDesIndex]);
             }},
 
             {SocketAction::SEND, "p 7"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return CompareExpected(recv, innerDes[expectDesIndex]);
             }},
 
             {SocketAction::SEND, "p 10"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return CompareExpected(recv, innerDes[expectDesIndex]);
             }},
 
             {SocketAction::SEND, "p 13"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return CompareExpected(recv, innerDes[expectDesIndex]);
             }},
 
             {SocketAction::SEND, "p 16"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return CompareExpected(recv, innerDes[expectDesIndex]);
             }},
 
             {SocketAction::SEND, "p 17"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return CompareExpected(recv, innerDes[expectDesIndex]);
             }},
 
             {SocketAction::SEND, "p 20"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return CompareExpected(recv, innerDes[expectDesIndex]);
             }},
 
             {SocketAction::SEND, "p 23"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return CompareExpected(recv, innerDes[expectDesIndex]);
             }},
 
             {SocketAction::SEND, "p 26"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return CompareExpected(recv, innerDes[expectDesIndex]);
             }},
 
             {SocketAction::SEND, "p 29"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return CompareExpected(recv, innerDes[expectDesIndex]);
             }},
 
             {SocketAction::SEND, "p 32"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return CompareExpected(recv, innerDes[expectDesIndex]);
             }},
 
             {SocketAction::SEND, "p 35"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return CompareExpected(recv, innerDes[expectDesIndex]);
             }},
 
             {SocketAction::SEND, "p 38"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return CompareExpected(recv, innerDes[expectDesIndex]);
             }},
 
             {SocketAction::SEND, "p 44"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return CompareExpected(recv, innerDes[expectDesIndex]);
             }},
 
             {SocketAction::SEND, "p 50"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return CompareExpected(recv, innerDes[expectDesIndex]);
             }},
 
             {SocketAction::SEND, "p 91"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto) -> bool {
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [this] (auto recv, auto, auto) -> bool {
                 return CompareExpected(recv, innerDes[expectDesIndex]);
             }},
 
