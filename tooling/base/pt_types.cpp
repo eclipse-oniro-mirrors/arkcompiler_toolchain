@@ -240,7 +240,7 @@ void RemoteObject::AppendingHashToDescription(const EcmaVM *ecmaVM, Local<JSValu
     if (ecmaVM->GetJsDebuggerManager() != nullptr && ecmaVM->GetJsDebuggerManager()->IsObjHashDisplayEnabled()) {
         JSHandle<JSTaggedValue> valueHandle = JSNApiHelper::ToJSHandle(tagged);
         int32_t hash = DebuggerApi::GetObjectHash(valueHandle);
-        if (hash) {
+        if (hash != 0) {
             std::string hashString = " " + std::to_string(hash);
             description += hashString;
         }
