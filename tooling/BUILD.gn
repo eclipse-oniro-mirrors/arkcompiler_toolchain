@@ -140,7 +140,10 @@ ohos_shared_library("libark_ecma_debugger_test") {
 
   defines = [ "OHOS_UNIT_TEST" ]
 
-  deps = [ "$ark_third_party_root/libuv:uv" ]
+  deps = [
+    "$ark_third_party_root/libuv:uv",
+    "$js_root:libark_jsruntime_test",
+  ]
 
   if (is_arkui_x && target_os == "ios") {
     deps += [ "$ark_third_party_root/cJSON:cjson_static" ]
@@ -148,10 +151,8 @@ ohos_shared_library("libark_ecma_debugger_test") {
     deps += [ "$ark_third_party_root/cJSON:cjson" ]
   }
 
-  external_deps = [ "ets_runtime:libark_jsruntime_test" ]
-
   # hiviewdfx libraries
-  external_deps += hiviewdfx_ext_deps
+  external_deps = hiviewdfx_ext_deps
   deps += hiviewdfx_deps
 
   install_enable = false
