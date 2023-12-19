@@ -819,7 +819,7 @@ public:
 
     double GetSamplingInterval() const
     {
-        return samplingInterval_.value_or(32768);
+        return samplingInterval_.value_or(32768); // 32768: default interval
     }
 
 private:
