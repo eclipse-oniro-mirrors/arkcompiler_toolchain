@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include "tooling/client/utils/utils.h"
 #include "common/log_wrapper.h"
+#include "tooling/client/utils/utils.h"
 #include <ctime>
 #include <climits>
 #include <cerrno>
