@@ -498,7 +498,6 @@ std::string ObjectRemoteObject::DescriptionForObject(const EcmaVM *ecmaVm, Local
 
 std::string ObjectRemoteObject::DescriptionForNativePointer(const Local<NativePointerRef> &tagged)
 {
-
     std::stringstream address;
     address << tagged->Value();
     std::string description = "[External: " + address.str() + "]";
