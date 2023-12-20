@@ -28,11 +28,11 @@ void ConnectServer::RunServer()
     webSocket_ = std::make_unique<WebSocket>();
     tid_ = pthread_self();
 #if defined(OHOS_PLATFORM)
-    int localAbstract = -2;
+    int runSeverInOldProcess = -2; // run sever in old process.
     int appPid = getpid();
     std::string pidStr = std::to_string(appPid);
     std::string sockName = pidStr + bundleName_;
-    if (socketfd_ == localAbstract) {
+    if (socketfd_ == runSeverInOldProcess) {
         if (!webSocket_->InitUnixWebSocket(sockName)) {
             return;
         }
@@ -44,7 +44,7 @@ void ConnectServer::RunServer()
 #endif
     while (!terminateExecution_) {
 #if defined(OHOS_PLATFORM)
-        if (socketfd_ == localAbstract) {
+        if (socketfd_ == runSeverInOldProcess) {
             if (!webSocket_->ConnectUnixWebSocket()) {
                 return;
             }

@@ -323,7 +323,7 @@ bool StartDebugForSocketpair(uint32_t tid, int socketfd)
     return true;
 }
 
-// for cross-platform, previewer and localabstract.
+// for cross-platform, previewer and old process of StartDebugger.
 bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
     int32_t instanceId, const DebuggerPostTask& debuggerPostTask, int port)
 {
@@ -340,8 +340,8 @@ bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
 
     g_initializeDebugger(vm, std::bind(&SendReply, vm, std::placeholders::_2));
 
-    int localAbstract = -2; // old process: localAbstract
-    DebugInfo debugInfo = {localAbstract, componentName, instanceId, port};
+    int startDebugInOldProcess = -2; // start debug in old process.
+    DebugInfo debugInfo = {startDebugInOldProcess, componentName, instanceId, port};
     if (!InitializeInspector(vm, debuggerPostTask, debugInfo)) {
         LOGE("Initialize inspector failed");
         return false;
