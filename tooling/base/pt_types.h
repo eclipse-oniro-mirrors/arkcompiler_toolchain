@@ -585,6 +585,7 @@ private:
     static std::string DescriptionForTreeMap();
     static std::string DescriptionForTreeSet();
     static std::string DescriptionForVector();
+    static std::string DescriptionForNativePointer(const Local<NativePointerRef> &tagged);
 };
 
 // Runtime.ExceptionDetails
