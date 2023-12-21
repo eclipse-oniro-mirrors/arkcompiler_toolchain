@@ -38,7 +38,7 @@ public:
     {
         SetCurrentTestName(GetParam());
         TestHelper::CreateEcmaVMWithScope(instance, thread, scope, false, true);
-        JSNApi::DebugOption debugOption = {DEBUGGER_TEST_LIBRARY, true};
+        JSNApi::DebugOption debugOption = {DEBUGGER_TEST_LIBRARY, true, -1};
         JSNApi::StartDebugger(instance, debugOption);
         if (instance->GetJsDebuggerManager() != nullptr) {
             instance->GetJsDebuggerManager()->DisableObjectHashDisplay();

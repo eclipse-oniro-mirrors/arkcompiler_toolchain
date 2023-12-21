@@ -299,6 +299,7 @@ void *GetEcmaVM(uint32_t tid)
 // for ohos platform.
 bool StartDebugForSocketpair(uint32_t tid, int socketfd)
 {
+    LOGI("StartDebugForSocketpair, tid = %{private}d, socketfd = %{private}d", tid, socketfd);
     void* vm = GetEcmaVM(tid);
     g_vm = vm;
 #if !defined(IOS_PLATFORM)
@@ -327,6 +328,8 @@ bool StartDebugForSocketpair(uint32_t tid, int socketfd)
 bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
     int32_t instanceId, const DebuggerPostTask& debuggerPostTask, int port)
 {
+    LOGI("StartDebug, componentName = %{private}s, isDebugMode = %{private}d, instanceId = %{private}d",
+        componentName.c_str(), isDebugMode, instanceId);
     g_vm = vm;
 #if !defined(IOS_PLATFORM)
     if (!LoadArkDebuggerLibrary()) {
@@ -356,7 +359,7 @@ bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
 
 void WaitForDebugger(void* vm)
 {
-    LOGI("NotifyDebugMode :wait for debugger");
+    LOGI("WaitForDebugger");
     g_waitForDebugger(vm);
 }
 
@@ -376,8 +379,8 @@ void StopDebug(const std::string& componentName)
 
 void StopOldDebug(uint32_t tid, const std::string& componentName)
 {
+    LOGI("StopDebug start, componentName = %{private}s, tid = %{private}d", componentName.c_str(), tid);
     void* vm = GetEcmaVM(tid);
-    LOGI("StopDebug start, componentName = %{private}s, vm = %{private}p", componentName.c_str(), vm);
     std::unique_lock<std::shared_mutex> lock(g_mutex);
     auto iter = g_inspectors.find(vm);
     if (iter == g_inspectors.end() || iter->second == nullptr) {

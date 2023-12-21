@@ -759,9 +759,11 @@ void DebuggerImpl::Frontend::WaitForDebugger(const EcmaVM *vm)
     channel_->WaitForDebugger();
 }
 
-void DebuggerImpl::Frontend::RunIfWaitingForDebugger(const EcmaVM *vm)
+void DebuggerImpl::Frontend::RunIfWaitingForDebugger([[maybe_unused]] const EcmaVM *vm)
 {
-    if (!AllowNotify(vm)) {
+    // Because release hap can WaitForDebugger, need RunIfWaitingForDebugger to run continue.
+    // But release hap debugMode is false, so not check debugMode.
+    if (channel_ == nullptr) {
         return;
     }
 
