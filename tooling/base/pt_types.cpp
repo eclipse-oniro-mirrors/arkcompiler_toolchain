@@ -229,6 +229,9 @@ std::unique_ptr<RemoteObject> RemoteObject::FromTagged(const EcmaVM *ecmaVm, Loc
     if (tagged->IsObject()) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
+    if (tagged->IsNativePointer()) {
+        return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
+    }
     std::unique_ptr<RemoteObject> object = std::make_unique<RemoteObject>();
     object->SetType(ObjectType::Undefined);
     return object;
@@ -487,7 +490,18 @@ std::string ObjectRemoteObject::DescriptionForObject(const EcmaVM *ecmaVm, Local
     if (tagged->IsVector()) {
         return DescriptionForVector();
     }
+    if (tagged->IsNativePointer()) {
+        return DescriptionForNativePointer(Local<NativePointerRef>(tagged));
+    }
     return RemoteObject::ObjectDescription;
+}
+
+std::string ObjectRemoteObject::DescriptionForNativePointer(const Local<NativePointerRef> &tagged)
+{
+    std::stringstream address;
+    address << std::hex << tagged->Value();
+    std::string description = "[External: " + address.str() + "]";
+    return description;
 }
 
 std::string ObjectRemoteObject::DescriptionForArray(const EcmaVM *ecmaVm, Local<ArrayRef> tagged)
