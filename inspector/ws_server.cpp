@@ -41,8 +41,8 @@ void WsServer::RunServer()
             return;
         }
 #else
-        int localAbstract = -2;
-        if (debugInfo_.socketfd == localAbstract) {
+        int runSeverInOldProcess = -2;
+        if (debugInfo_.socketfd == runSeverInOldProcess) {
             int appPid = getpid();
             std::string pidStr = std::to_string(appPid);
             std::string instanceIdStr("");
@@ -70,8 +70,8 @@ void WsServer::RunServer()
             return;
         }
 #else
-        int localAbstract = -2;
-        if (debugInfo_.socketfd == localAbstract) {
+        int runSeverInOldProcess = -2;
+        if (debugInfo_.socketfd == runSeverInOldProcess) {
             if (!webSocket_->ConnectUnixWebSocket()) {
                 return;
             }
