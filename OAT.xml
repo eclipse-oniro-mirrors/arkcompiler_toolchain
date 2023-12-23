@@ -56,6 +56,12 @@ Note:If the text contains special characters, please escape them according to th
         <policy name="defaultPolicy" desc="" >
 	    <policyitem type="compatibility" name="Apache" path="arkcompiler/toolchain" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc=""/>
         </policy>
+        <policylist>
+            <policy name="projectPolicy" desc="">
+                <policyitem type="copyright" name="Copyright 2015 The Chromium Authors. All rights reserved." path="build/toolchain/.*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Chromium Copyright"/>
+                <policyitem type="license" name="BSDStyleLicense" path="build/toolchain/.*" desc="Chromium License"/>
+            </policy>
+        </policylist>
         <filefilterlist>
             <filefilter name="copyrightPolicyFilter" desc="copyright文件头校验策略的过滤条件" >
             </filefilter>
