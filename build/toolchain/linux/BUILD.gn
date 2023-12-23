@@ -20,6 +20,14 @@ clang_toolchain("clang_arm") {
   }
 }
 
+clang_toolchain("clang_riscv64") {
+  toolprefix = "riscv64-linux-gnu-"
+  toolchain_args = {
+    current_cpu = "riscv64"
+    current_os = "linux"
+  }
+}
+
 clang_toolchain("clang_arm64") {
   toolprefix = "aarch64-linux-gnu-"
   toolchain_args = {
