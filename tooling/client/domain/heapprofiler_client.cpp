@@ -268,6 +268,7 @@ void HeapProfilerClient::RecvReply(std::unique_ptr<PtJson> json)
 void HeapProfilerClient::SaveHeapSnapshotAndAllocationTrackData(const std::string &chunk)
 {
     std::string head = "{\"snapshot\":\n";
+    std::string heapFile;
     if (!strncmp(chunk.c_str(), head.c_str(), head.length())) {
         char date[16];
         char time[16];
@@ -277,12 +278,14 @@ void HeapProfilerClient::SaveHeapSnapshotAndAllocationTrackData(const std::strin
             return;
         }
         if (isAllocationMsg_) {
-            fileName_ = "/data/Heap-" + std::to_string(sessionId_) + "-" + std::string(date) + "T" + std::string(time) +
+            heapFile = "Heap-" + std::to_string(sessionId_) + "-" + std::string(date) + "T" + std::string(time) +
                         ".heaptimeline";
+            fileName_ = path_ + heapFile;
             std::cout << "heaptimeline file name is " << fileName_ << std::endl;
         } else {
-            fileName_ = "/data/Heap-"+ std::to_string(sessionId_) + "-"  + std::string(date) + "T" + std::string(time) +
+            heapFile = "Heap-"+ std::to_string(sessionId_) + "-"  + std::string(date) + "T" + std::string(time) +
                         ".heapsnapshot";
+            fileName_ = path_ + heapFile;
             std::cout << "heapsnapshot file name is " << fileName_ << std::endl;
         }
         std::cout << ">>> ";
@@ -301,6 +304,7 @@ void HeapProfilerClient::SaveHeapSnapshotAndAllocationTrackData(const std::strin
 void HeapProfilerClient::SaveHeapsamplingData(std::unique_ptr<PtJson> result)
 {
     std::unique_ptr<PtJson> profile;
+    std::string heapFile;
     Result ret = result->GetObject("profile", &profile);
     if (ret != Result::SUCCESS) {
         LOGE("arkdb: get profile failed");
@@ -313,8 +317,9 @@ void HeapProfilerClient::SaveHeapsamplingData(std::unique_ptr<PtJson> result)
         LOGE("arkdb: get time failed");
         return;
     }
-    fileName_ = "/data/Heap-" + std::to_string(sessionId_) + "-" + std::string(date) + "T" + std::string(time) +
+    heapFile = "Heap-" + std::to_string(sessionId_) + "-" + std::string(date) + "T" + std::string(time) +
                 ".heapprofile";
+    fileName_ = path_ + heapFile;
     std::cout << "heapprofile file name is " << fileName_ << std::endl;
     std::cout << ">>> ";
     fflush(stdout);
@@ -326,14 +331,13 @@ void HeapProfilerClient::SaveHeapsamplingData(std::unique_ptr<PtJson> result)
 bool HeapProfilerClient::WriteHeapProfilerForFile(const std::string &fileName, const std::string &data)
 {
     std::ofstream ofs;
-    std::string pathname = path_ + fileName;
     std::string realPath;
-    bool res = Utils::RealPath(pathname, realPath, false);
+    bool res = Utils::RealPath(fileName, realPath, false);
     if (!res) {
         LOGE("arkdb: path is not realpath!");
         return false;
     }
-    ofs.open(pathname.c_str(), std::ios::app);
+    ofs.open(fileName.c_str(), std::ios::app);
     if (!ofs.is_open()) {
         LOGE("arkdb: file open error!");
         return false;

@@ -185,7 +185,7 @@ void ProfilerClient::RecvProfilerResult(std::unique_ptr<PtJson> json)
 
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
     ProfilerSingleton &pro = session->GetProfilerSingleton();
-    std::string fileName = "/data/CPU-" + std::to_string(sessionId_) + "-" + std::string(date) + "T" +
+    std::string fileName = "CPU-" + std::to_string(sessionId_) + "-" + std::string(date) + "T" +
                            std::string(time) + ".cpuprofile";
     std::string cpufile = pro.GetAddress() + fileName;
     std::cout << "session " << sessionId_ << " cpuprofile file name is " << cpufile << std::endl;
@@ -215,7 +215,7 @@ bool ProfilerClient::WriteCpuProfileForFile(const std::string &fileName, const s
     ofs.clear();
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
     ProfilerSingleton &pro = session->GetProfilerSingleton();
-    pro.SetAddress("");
+    pro.SetAddress("/data/");
     return true;
 }
 
