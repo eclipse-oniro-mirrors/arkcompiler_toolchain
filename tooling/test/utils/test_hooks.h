@@ -114,7 +114,7 @@ public:
 
     void NativeCalling([[maybe_unused]] const void *nativeAddress) override {}
 
-    void NativeReturnJS() override {}
+    void NativeReturn([[maybe_unused]] const void *nativeAddress) override {}
 
     void TerminateTest()
     {
