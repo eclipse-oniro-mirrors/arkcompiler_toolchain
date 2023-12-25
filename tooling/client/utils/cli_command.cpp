@@ -329,6 +329,15 @@ ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
     }
 
     if (cmd == "break" && GetArgList().size() == 2) { // 2: two parameters
+        std::vector<Breaklocation> breaklist_ = breakpoint.Getbreaklist();
+        size_t bsize = breaklist_.size();
+        for (size_t i = 0; i < bsize; i++) {
+            if (breaklist_[i].url == GetArgList()[0] &&
+                std::stoi(breaklist_[i].lineNumber) + 1 == std::stoi(GetArgList()[1])) {
+                LOGE("ardb: the breakpoint is exist");
+                return ErrCode::ERR_FAIL;
+            }
+        }
         debuggerCli.AddBreakPointInfo(GetArgList()[0], std::stoi(GetArgList()[1]));
     }
 
