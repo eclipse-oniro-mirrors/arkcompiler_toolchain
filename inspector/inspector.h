@@ -35,15 +35,15 @@ extern "C" {
 bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
     int32_t instanceId, const DebuggerPostTask& debuggerPostTask, int port);
 
-bool StartDebugForSocketpair(uint32_t tid, int socketfd);
+bool StartDebugForSocketpair(int tid, int socketfd);
 
 void StopDebug(const std::string& componentName);
 
-void StopOldDebug(uint32_t tid, const std::string& componentName);
+void StopOldDebug(int tid, const std::string& componentName);
 
 void WaitForDebugger(void* vm);
 
-void StoreDebuggerInfo(uint32_t tid, void* vm, const DebuggerPostTask& debuggerPostTask);
+void StoreDebuggerInfo(int tid, void* vm, const DebuggerPostTask& debuggerPostTask);
 
 #if __cplusplus
 }
@@ -59,7 +59,7 @@ public:
     static constexpr int32_t DELAY_CHECK_DISPATCH_STATUS = 100;
 
     pthread_t tid_ = 0;
-    uint32_t tidForSocketPair_ = 0;
+    int tidForSocketPair_ = 0;
     void* vm_ = nullptr;
     std::unique_ptr<WsServer> websocketServer_;
     DebuggerPostTask debuggerPostTask_;
