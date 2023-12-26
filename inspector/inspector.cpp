@@ -282,7 +282,8 @@ const DebuggerPostTask &GetDebuggerTask(uint32_t tid)
 {
     std::shared_lock<std::shared_mutex> lock(g_mutex);
     if (g_debuggerInfo.find(tid) == g_debuggerInfo.end()) {
-        return {};
+        static DebuggerPostTask tempTask;
+        return tempTask;
     }
     return g_debuggerInfo[tid].second;
 }

@@ -46,8 +46,8 @@ public:
 
 private:
     [[maybe_unused]] int32_t sessionId_;
-    int32_t scriptId_;
-    int32_t debugLineNum_;
+    int32_t scriptId_ = 0;
+    int32_t debugLineNum_ = 0;
     std::unordered_map<int, int> scriptIdMap_ {};
     std::unordered_map<int, std::pair<std::string, std::vector<std::string>>> fileSource_ {};
     SourceManager(const SourceManager&) = delete;

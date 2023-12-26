@@ -119,7 +119,7 @@ private:
     std::string sockInfo_;
     DomainManager domainManager_;
     WebsocketClient cliSocket_;
-    uv_thread_t socketTid_;
+    uv_thread_t socketTid_ = 0;
     std::atomic<uint32_t> messageId_ {1};
     BreakPointManager breakpoint_;
     StackManager stackManager_;

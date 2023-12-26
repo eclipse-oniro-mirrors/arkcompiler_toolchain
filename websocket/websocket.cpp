@@ -515,7 +515,11 @@ bool WebSocket::InitUnixWebSocket(int socketfd)
     }
     client_ = socketfd;
     int flag = fcntl(client_, F_GETFL, 0);
-    fcntl(client_, F_SETFL, flag & ~O_NONBLOCK);
+    if (flag == -1) {
+        LOGE("InitUnixWebSocket get client state is failed");
+        return false;
+    }
+    fcntl(client_, F_SETFL, static_cast<size_t>(flag) & ~O_NONBLOCK);
     socketState_ = SocketState::INITED;
     return true;
 }
