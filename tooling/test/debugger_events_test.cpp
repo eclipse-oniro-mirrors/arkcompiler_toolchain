@@ -522,4 +522,25 @@ HWTEST_F_L0(DebuggerEventsTest, TracingCompleteToJsonTest)
     ASSERT_EQ(params->GetString("traceFormat", &tmpStr), Result::SUCCESS);
     ASSERT_EQ(params->GetString("streamCompression", &tmpStr), Result::SUCCESS);
 }
+
+HWTEST_F_L0(DebuggerEventsTest, MixedStackToJsonTest)
+{
+    MixedStack mixedStack;
+    std::vector<std::unique_ptr<CallFrame>> v;
+    mixedStack.SetCallFrames(std::move(v));
+    std::vector<void *> p;
+    mixedStack.SetNativePointers(std::move(p));
+    std::unique_ptr<PtJson> json = mixedStack.ToJson();
+    
+    std::string method;
+    ASSERT_EQ(json->GetString("method", &method), Result::SUCCESS);
+    EXPECT_EQ(mixedStack.GetName(), method);
+
+    std::unique_ptr<PtJson> params;
+    ASSERT_EQ(json->GetObject("params", &params), Result::SUCCESS);
+    std::unique_ptr<PtJson> callFrames;
+    std::unique_ptr<PtJson> nativePointer;
+    ASSERT_EQ(params->GetArray("callFrames", &callFrames), Result::SUCCESS);
+    ASSERT_EQ(params->GetArray("nativePointer", &nativePointer), Result::SUCCESS);
+}
 }  // namespace panda::test
