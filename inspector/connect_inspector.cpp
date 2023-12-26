@@ -117,6 +117,7 @@ void ResetService()
 
 void StartServerForSocketPair(int socketfd)
 {
+    LOGI("StartServerForSocketPair, socketfd = %{private}d", socketfd);
     g_inspector->connectServer_ = std::make_unique<ConnectServer>(socketfd,
         std::bind(&OnMessage, std::placeholders::_1));
 
@@ -131,6 +132,7 @@ void StartServerForSocketPair(int socketfd)
 
 void StartServer(const std::string& componentName)
 {
+    LOGI("StartServer, componentName = %{private}s", componentName.c_str());
     g_inspector = std::make_unique<ConnectInspector>();
     g_inspector->connectServer_ = std::make_unique<ConnectServer>(componentName,
         std::bind(&OnMessage, std::placeholders::_1));
@@ -146,6 +148,7 @@ void StartServer(const std::string& componentName)
 
 void StopServer([[maybe_unused]] const std::string& componentName)
 {
+    LOGI("StopServer, componentName = %{private}s", componentName.c_str());
     ResetService();
 }
 
