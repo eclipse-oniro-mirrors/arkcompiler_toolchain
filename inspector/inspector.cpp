@@ -57,7 +57,7 @@ GetDispatchStatus g_getDispatchStatus = nullptr;
 
 std::atomic<bool> g_hasArkFuncsInited = false;
 std::unordered_map<const void*, Inspector*> g_inspectors;
-std::unordered_map<uint32_t, std::pair<void*, const DebuggerPostTask>> g_debuggerInfo;
+std::unordered_map<int, std::pair<void*, const DebuggerPostTask>> g_debuggerInfo;
 std::shared_mutex g_mutex;
 
 #if !defined(IOS_PLATFORM)
@@ -143,7 +143,7 @@ void ResetServiceLocked(void *vm, bool isCloseHandle)
 }
 
 bool InitializeInspector(
-    void* vm, const DebuggerPostTask& debuggerPostTask, const DebugInfo& debugInfo, uint32_t tidForSocketPair = 0)
+    void* vm, const DebuggerPostTask& debuggerPostTask, const DebugInfo& debugInfo, int tidForSocketPair = 0)
 {
     std::unique_lock<std::shared_mutex> lock(g_mutex);
     Inspector *newInspector = nullptr;
@@ -278,7 +278,7 @@ void Inspector::OnMessage(std::string&& msg)
     }
 }
 
-const DebuggerPostTask &GetDebuggerTask(uint32_t tid)
+const DebuggerPostTask &GetDebuggerPostTask(int tid)
 {
     std::shared_lock<std::shared_mutex> lock(g_mutex);
     if (g_debuggerInfo.find(tid) == g_debuggerInfo.end()) {
@@ -287,7 +287,7 @@ const DebuggerPostTask &GetDebuggerTask(uint32_t tid)
     return g_debuggerInfo[tid].second;
 }
 
-void *GetEcmaVM(uint32_t tid)
+void *GetEcmaVM(int tid)
 {
     std::shared_lock<std::shared_mutex> lock(g_mutex);
     if (g_debuggerInfo.find(tid) == g_debuggerInfo.end()) {
@@ -297,7 +297,7 @@ void *GetEcmaVM(uint32_t tid)
 }
 
 // for ohos platform.
-bool StartDebugForSocketpair(uint32_t tid, int socketfd)
+bool StartDebugForSocketpair(int tid, int socketfd)
 {
     LOGI("StartDebugForSocketpair, tid = %{private}d, socketfd = %{private}d", tid, socketfd);
     void* vm = GetEcmaVM(tid);
@@ -314,7 +314,7 @@ bool StartDebugForSocketpair(uint32_t tid, int socketfd)
 
     g_initializeDebugger(vm, std::bind(&SendReply, vm, std::placeholders::_2));
 
-    const DebuggerPostTask &debuggerPostTask = GetDebuggerTask(tid);
+    const DebuggerPostTask &debuggerPostTask = GetDebuggerPostTask(tid);
     DebugInfo debugInfo = {socketfd};
     if (!InitializeInspector(vm, debuggerPostTask, debugInfo, tid)) {
         LOGE("Initialize inspector failed");
@@ -377,7 +377,7 @@ void StopDebug(const std::string& componentName)
     LOGI("StopDebug end");
 }
 
-void StopOldDebug(uint32_t tid, const std::string& componentName)
+void StopOldDebug(int tid, const std::string& componentName)
 {
     LOGI("StopDebug start, componentName = %{private}s, tid = %{private}d", componentName.c_str(), tid);
     void* vm = GetEcmaVM(tid);
@@ -392,7 +392,7 @@ void StopOldDebug(uint32_t tid, const std::string& componentName)
 }
 
 // for socketpair process.
-void StoreDebuggerInfo(uint32_t tid, void* vm, const DebuggerPostTask& debuggerPostTask)
+void StoreDebuggerInfo(int tid, void* vm, const DebuggerPostTask& debuggerPostTask)
 {
     std::unique_lock<std::shared_mutex> lock(g_mutex);
     if (g_debuggerInfo.find(tid) == g_debuggerInfo.end()) {
