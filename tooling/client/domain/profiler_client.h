@@ -54,7 +54,7 @@ public:
 
 private:
     std::vector<std::string> cpulist_;
-    std::string address_ = "";
+    std::string address_ = "/data/";
     ProfilerSingleton(const ProfilerSingleton&) = delete;
     ProfilerSingleton& operator=(const ProfilerSingleton&) = delete;
 };
