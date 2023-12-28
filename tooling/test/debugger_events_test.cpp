@@ -522,4 +522,39 @@ HWTEST_F_L0(DebuggerEventsTest, TracingCompleteToJsonTest)
     ASSERT_EQ(params->GetString("traceFormat", &tmpStr), Result::SUCCESS);
     ASSERT_EQ(params->GetString("streamCompression", &tmpStr), Result::SUCCESS);
 }
+
+HWTEST_F_L0(DebuggerEventsTest, MixedStackToJsonTest)
+{
+    MixedStack mixedStack;
+    auto callFrames_ = std::vector<std::unique_ptr<CallFrame>>();
+    std::unique_ptr<CallFrame> callFrame = std::make_unique<CallFrame>();
+    std::unique_ptr<Location> location = std::make_unique<Location>();
+    location->SetScriptId(13).SetLine(16);
+
+    std::unique_ptr<RemoteObject> res = std::make_unique<RemoteObject>();
+    res->SetType("idle2");
+
+    callFrame->SetCallFrameId(55);
+    callFrame->SetLocation(std::move(location));
+    callFrame->SetThis(std::move(res));
+    callFrames_.emplace_back(std::move(callFrame));
+    mixedStack.SetCallFrames(std::move(callFrames_));
+
+    std::vector<void *> p;
+    int a = 5;
+    void * ptr = &a;
+    p.emplace_back(std::move(ptr));
+    mixedStack.SetNativePointers(std::move(p));
+    std::unique_ptr<PtJson> json = mixedStack.ToJson();
+    
+    std::string method;
+    ASSERT_EQ(json->GetString("method", &method), Result::SUCCESS);
+    EXPECT_EQ(mixedStack.GetName(), method);
+    std::unique_ptr<PtJson> params;
+    ASSERT_EQ(json->GetObject("params", &params), Result::SUCCESS);
+    std::unique_ptr<PtJson> callFrames;
+    ASSERT_EQ(params->GetArray("callFrames", &callFrames), Result::SUCCESS);
+    std::unique_ptr<PtJson> nativePointer;
+    ASSERT_EQ(params->GetArray("nativePointer", &nativePointer), Result::SUCCESS);
+}
 }  // namespace panda::test
