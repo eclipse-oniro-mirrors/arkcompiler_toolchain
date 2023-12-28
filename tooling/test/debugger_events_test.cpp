@@ -553,8 +553,8 @@ HWTEST_F_L0(DebuggerEventsTest, MixedStackToJsonTest)
     std::unique_ptr<PtJson> params;
     ASSERT_EQ(json->GetObject("params", &params), Result::SUCCESS);
     std::unique_ptr<PtJson> callFrames;
-    std::unique_ptr<PtJson> nativePointer;
     ASSERT_EQ(params->GetArray("callFrames", &callFrames), Result::SUCCESS);
+    std::unique_ptr<PtJson> nativePointer;
     ASSERT_EQ(params->GetArray("nativePointer", &nativePointer), Result::SUCCESS);
 }
 }  // namespace panda::test
