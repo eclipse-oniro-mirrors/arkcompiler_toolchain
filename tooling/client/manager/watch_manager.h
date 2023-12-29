@@ -53,10 +53,10 @@ private:
     [[maybe_unused]] int32_t sessionId_;
     std::vector<std::string> watchInfoList_;
     std::unordered_map<int, int> watchInfoMap_;
-    bool IsDebug_;
+    bool IsDebug_ = false;
     std::string callFrameId_;
     RuntimeClient runtimeClient_;
-    int inputRowFlag_;
+    int inputRowFlag_ = 0;
     bool isShowWatchInfo_ = true;
 };
 } // OHOS::ArkCompiler::Toolchain

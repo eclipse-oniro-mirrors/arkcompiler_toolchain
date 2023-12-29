@@ -107,7 +107,7 @@ void SourceManager::SetFileSource(int scriptIdIndex, const std::string& fileSour
 
     auto it = fileSource_.find(scriptId);
     if (it != fileSource_.end() && it->second.second.empty()) {
-        int startPos = 0;
+        std::string::size_type startPos = 0;
         std::string::size_type endPos = fileSource.find("\r\n");
         while (endPos != std::string::npos) {
             std::string line = fileSource.substr(startPos, endPos - startPos);
