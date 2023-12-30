@@ -842,6 +842,12 @@ public:
         return "HeapProfiler.addHeapSnapshotChunk";
     }
 
+    AddHeapSnapshotChunk &SetChunk(const std::string &chunk)
+    {
+        chunk_ = chunk;
+        return *this;
+    }
+    
     std::string &GetChunk()
     {
         return chunk_;
