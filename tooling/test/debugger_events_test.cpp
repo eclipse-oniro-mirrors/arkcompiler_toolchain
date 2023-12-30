@@ -557,4 +557,20 @@ HWTEST_F_L0(DebuggerEventsTest, MixedStackToJsonTest)
     std::unique_ptr<PtJson> nativePointer;
     ASSERT_EQ(params->GetArray("nativePointer", &nativePointer), Result::SUCCESS);
 }
+
+HWTEST_F_L0(DebuggerEventsTest, AddHeapSnapshotChunkToJsonTest)
+{
+    AddHeapSnapshotChunk addHeapSnapshotChunk;
+    addHeapSnapshotChunk.SetChunk("Chunk0001");
+
+    std::unique_ptr<PtJson> json = addHeapSnapshotChunk.ToJson();
+    std::unique_ptr<PtJson> params;
+    ASSERT_EQ(json->GetObject("params", &params), Result::SUCCESS);
+    std::string method;
+    ASSERT_EQ(json->GetString("method", &method), Result::SUCCESS);
+    EXPECT_EQ(addHeapSnapshotChunk.GetName(), method);
+    std::string tmpStr;
+    ASSERT_EQ(params->GetString("Chunk", &tmpStr), Result::SUCCESS);
+    EXPECT_EQ("Chunk0001", tmpStr);
+}
 }  // namespace panda::test

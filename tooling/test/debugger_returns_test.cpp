@@ -400,4 +400,31 @@ HWTEST_F_L0(DebuggerReturnsTest, RequestMemoryDumpReturnsToJsonTest)
     ASSERT_EQ(requestMemoryDumpReturns->ToJson()->GetBool("success", &success), Result::SUCCESS);
     ASSERT_TRUE(success);
 }
+
+HWTEST_F_L0(DebuggerReturnsTest, SearchInContentReturnsToJsonTest)
+{
+    auto result = std::vector<std::unique_ptr<SearchMatch>>();
+    std::unique_ptr<SearchMatch> searchMatch = std::make_unique<SearchMatch>();
+    std::unique_ptr<SearchInContentReturns> searchInContentReturns =
+                                                std::make_unique<SearchInContentReturns>(std::move(result));
+
+    std::unique_ptr<PtJson> json;
+    ASSERT_EQ(searchInContentReturns->ToJson()->GetArray("result", &json), Result::SUCCESS);
+    ASSERT_NE(json, nullptr);
+    EXPECT_EQ(json->GetSize(), 0);
+}
+
+HWTEST_F_L0(DebuggerReturnsTest, GetPossibleAndSetBreakpointByUrlReturnsToJsonTest)
+{
+    auto locations = std::vector<std::unique_ptr<BreakpointReturnInfo>>();
+    std::unique_ptr<BreakpointReturnInfo> breakpointReturnInfo = std::make_unique<BreakpointReturnInfo>();
+    breakpointReturnInfo->SetScriptId(11).SetLineNumber(1).SetColumnNumber(44);
+    locations.emplace_back(std::move(breakpointReturnInfo));
+    std::unique_ptr<GetPossibleAndSetBreakpointByUrlReturns> getPossibleAndSetBreakpointByUrlReturns = std::make_unique
+                                                    <GetPossibleAndSetBreakpointByUrlReturns>(std::move(locations));
+    std::unique_ptr<PtJson> locationsJson;
+    ASSERT_EQ(getPossibleAndSetBreakpointByUrlReturns->ToJson()->GetArray("locations", &locationsJson), Result::SUCCESS);
+    ASSERT_NE(locationsJson, nullptr);
+    EXPECT_EQ(locationsJson->GetSize(), 1);
+}
 }  // namespace panda::test
