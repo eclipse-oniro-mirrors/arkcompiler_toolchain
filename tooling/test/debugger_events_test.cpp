@@ -554,8 +554,12 @@ HWTEST_F_L0(DebuggerEventsTest, MixedStackToJsonTest)
     ASSERT_EQ(json->GetObject("params", &params), Result::SUCCESS);
     std::unique_ptr<PtJson> callFrames;
     ASSERT_EQ(params->GetArray("callFrames", &callFrames), Result::SUCCESS);
+    ASSERT_NE(callFrames, nullptr);
+    EXPECT_EQ(callFrames->GetSize(), 1);
     std::unique_ptr<PtJson> nativePointer;
     ASSERT_EQ(params->GetArray("nativePointer", &nativePointer), Result::SUCCESS);
+    ASSERT_NE(nativePointer, nullptr);
+    EXPECT_EQ(nativePointer->GetSize(), 1);
 }
 
 HWTEST_F_L0(DebuggerEventsTest, AddHeapSnapshotChunkToJsonTest)
