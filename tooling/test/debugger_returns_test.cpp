@@ -422,9 +422,9 @@ HWTEST_F_L0(DebuggerReturnsTest, GetPossibleAndSetBreakpointByUrlReturnsToJsonTe
     locations.emplace_back(std::move(breakpointReturnInfo));
     std::unique_ptr<GetPossibleAndSetBreakpointByUrlReturns> getPossibleAndSetBreakpointByUrlReturns = std::make_unique
                                                     <GetPossibleAndSetBreakpointByUrlReturns>(std::move(locations));
-    std::unique_ptr<PtJson> locationsJson;
-    ASSERT_EQ(getPossibleAndSetBreakpointByUrlReturns->ToJson()->GetArray("locations", &locationsJson), Result::SUCCESS);
-    ASSERT_NE(locationsJson, nullptr);
-    EXPECT_EQ(locationsJson->GetSize(), 1);
+    std::unique_ptr<PtJson> locationsJS;
+    ASSERT_EQ(getPossibleAndSetBreakpointByUrlReturns->ToJson()->GetArray("locations", &locationsJS), Result::SUCCESS);
+    ASSERT_NE(locationsJS, nullptr);
+    EXPECT_EQ(locationsJS->GetSize(), 1);
 }
 }  // namespace panda::test
