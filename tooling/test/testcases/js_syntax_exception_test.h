@@ -28,7 +28,7 @@ public:
             ASSERT_LOCATION_EQ(location, location_);
             ++breakpointCounter_;
             std::vector<std::unique_ptr<CallFrame>> callFrames;
-            ASSERT_TRUE(debugger_->GenerateCallFrames(&callFrames));
+            ASSERT_TRUE(debugger_->GenerateCallFrames(&callFrames, true));
             ASSERT_TRUE(callFrames.size() > 0);
             auto jsLocation = callFrames[0]->GetLocation();
             ASSERT_TRUE(jsLocation != nullptr);
@@ -44,7 +44,7 @@ public:
             ASSERT_EQ(sourceLocation.column, 8); // 8: exception column
             ++exceptionCounter_;
             std::vector<std::unique_ptr<CallFrame>> callFrames;
-            ASSERT_TRUE(debugger_->GenerateCallFrames(&callFrames));
+            ASSERT_TRUE(debugger_->GenerateCallFrames(&callFrames, true));
             ASSERT_TRUE(callFrames.size() > 0);
             auto jsLocation = callFrames[0]->GetLocation();
             ASSERT_TRUE(jsLocation != nullptr);

@@ -45,8 +45,9 @@ public:
     bool NotifyNativeOut();
     void NotifyHandleProtocolCommand();
     void NotifyNativeCalling(const void *nativeAddress);
-    void NotifyNativeReturnJS();
+    void NotifyNativeReturn(const void *nativeAddress);
     void NotifyReturnNative();
+    bool IsUserCode(const void *nativeAddress);
     void SetDebuggerState(DebuggerState debuggerState);
 
     DispatchResponse ContinueToLocation(const ContinueToLocationParams &params);
@@ -133,7 +134,7 @@ public:
         }
         return result;
     }
-    bool GenerateCallFrames(std::vector<std::unique_ptr<CallFrame>> *callFrames);
+    bool GenerateCallFrames(std::vector<std::unique_ptr<CallFrame>> *callFrames, bool getScope);
 
     class DispatcherImpl final : public DispatcherBase {
     public:
@@ -185,7 +186,7 @@ private:
     std::vector<DebugInfoExtractor *> GetExtractors(const std::string &url);
     std::optional<std::string> CmptEvaluateValue(CallFrameId callFrameId, const std::string &expression,
         std::unique_ptr<RemoteObject> *result);
-    bool GenerateCallFrame(CallFrame *callFrame, const FrameHandler *frameHandler, CallFrameId frameId);
+    bool GenerateCallFrame(CallFrame *callFrame, const FrameHandler *frameHandler, CallFrameId frameId, bool getScope);
     void SaveCallFrameHandler(const FrameHandler *frameHandler);
     std::unique_ptr<Scope> GetLocalScopeChain(const FrameHandler *frameHandler,
         std::unique_ptr<RemoteObject> *thisObj);
@@ -262,7 +263,6 @@ private:
     std::vector<void *>  nativePointer_;
 
     bool nativeOutPause_ {false};
-    bool checkNeedPause_ {false};
     std::vector<NativeRange> nativeRanges_ {};
     std::unordered_map<JSTaggedType *, RemoteObjectId> scopeObjects_ {};
     std::vector<std::shared_ptr<FrameHandler>> callFrameHandlers_;

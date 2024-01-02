@@ -257,7 +257,7 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
 
     // Notify paused event
     std::vector<std::unique_ptr<CallFrame>> callFrames;
-    if (!GenerateCallFrames(&callFrames)) {
+    if (!GenerateCallFrames(&callFrames, true)) {
         LOG_DEBUGGER(ERROR) << "NotifyPaused: GenerateCallFrames failed";
         return;
     }
@@ -285,17 +285,19 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
     DebuggerApi::SetException(vm_, exception);
 }
 
+bool DebuggerImpl::IsUserCode(const void *nativeAddress)
+{
+    uint64_t nativeEntry =  reinterpret_cast<uint64_t>(nativeAddress);
+    for (const auto &nativeRange : nativeRanges_) {
+        if (nativeEntry >= nativeRange.GetStart() && nativeEntry <= nativeRange.GetEnd()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void DebuggerImpl::NotifyNativeCalling(const void *nativeAddress)
 {
-    tooling::MixedStack mixedStack;
-    nativePointer_ = DebuggerApi::GetNativePointer(vm_);
-    mixedStack.SetNativePointers(nativePointer_);
-    std::vector<std::unique_ptr<CallFrame>> callFrames;
-    if (GenerateCallFrames(&callFrames)) {
-        mixedStack.SetCallFrames(std::move(callFrames));
-    }
-    frontend_.MixedStack(vm_, mixedStack);
-
     // native calling only after step into should be reported
     if (singleStepper_ != nullptr &&
         singleStepper_->GetStepperType() == StepperType::STEP_INTO) {
@@ -306,41 +308,39 @@ void DebuggerImpl::NotifyNativeCalling(const void *nativeAddress)
         frontend_.WaitForDebugger(vm_);
     }
 
-    bool isNativeCalling = false;
-    uint64_t nativeEntry =  reinterpret_cast<uint64_t>(nativeAddress);
-    for (const auto &nativeRange : nativeRanges_) {
-        if (nativeEntry >= nativeRange.GetStart() && nativeEntry <= nativeRange.GetEnd()) {
-            isNativeCalling = true;
-            break;
+    if (IsUserCode(nativeAddress) && mixStackEnabled_) {
+        tooling::MixedStack mixedStack;
+        nativePointer_ = DebuggerApi::GetNativePointer(vm_);
+        mixedStack.SetNativePointers(nativePointer_);
+        std::vector<std::unique_ptr<CallFrame>> callFrames;
+        if (GenerateCallFrames(&callFrames, false)) {
+            mixedStack.SetCallFrames(std::move(callFrames));
         }
+        frontend_.MixedStack(vm_, mixedStack);
     }
-    if (!isNativeCalling) {
-        return;
-    }
-
-    checkNeedPause_ = true;
 }
 
-void DebuggerImpl::NotifyNativeReturnJS()
+void DebuggerImpl::NotifyNativeReturn(const void *nativeAddress)
 {
-    if (checkNeedPause_) {
+    if (IsUserCode(nativeAddress) && mixStackEnabled_) {
         nativeOutPause_ = true;
     }
 }
 
 void DebuggerImpl::NotifyReturnNative()
 {
-    if (vm_->GetJsDebuggerManager()->IsMixedDebugEnabled()) {
+    if (mixStackEnabled_) {
         tooling::MixedStack mixedStack;
         nativePointer_ = DebuggerApi::GetNativePointer(vm_);
+        if (nativePointer_.empty()) {
+            return;
+        }
         mixedStack.SetNativePointers(nativePointer_);
         std::vector<std::unique_ptr<CallFrame>> callFrames;
-        if (GenerateCallFrames(&callFrames)) {
+        if (GenerateCallFrames(&callFrames, false)) {
             mixedStack.SetCallFrames(std::move(callFrames));
         }
-        if (!nativePointer_.empty()) {
-            frontend_.MixedStack(vm_, mixedStack);
-        }
+        frontend_.MixedStack(vm_, mixedStack);
     }
 }
 
@@ -1283,16 +1283,16 @@ std::vector<DebugInfoExtractor *> DebuggerImpl::GetExtractors(const std::string 
     return extractors;
 }
 
-bool DebuggerImpl::GenerateCallFrames(std::vector<std::unique_ptr<CallFrame>> *callFrames)
+bool DebuggerImpl::GenerateCallFrames(std::vector<std::unique_ptr<CallFrame>> *callFrames, bool getScope)
 {
     CallFrameId callFrameId = 0;
-    auto walkerFunc = [this, &callFrameId, &callFrames](const FrameHandler *frameHandler) -> StackState {
+    auto walkerFunc = [this, &callFrameId, &callFrames, &getScope](const FrameHandler *frameHandler) -> StackState {
         if (DebuggerApi::IsNativeMethod(frameHandler)) {
             LOG_DEBUGGER(INFO) << "GenerateCallFrames: Skip CFrame and Native method";
             return StackState::CONTINUE;
         }
         std::unique_ptr<CallFrame> callFrame = std::make_unique<CallFrame>();
-        if (!GenerateCallFrame(callFrame.get(), frameHandler, callFrameId)) {
+        if (!GenerateCallFrame(callFrame.get(), frameHandler, callFrameId, getScope)) {
             if (callFrameId == 0) {
                 return StackState::FAILED;
             }
@@ -1313,8 +1313,8 @@ void DebuggerImpl::SaveCallFrameHandler(const FrameHandler *frameHandler)
     callFrameHandlers_.emplace_back(handlerPtr);
 }
 
-bool DebuggerImpl::GenerateCallFrame(CallFrame *callFrame,
-    const FrameHandler *frameHandler, CallFrameId callFrameId)
+bool DebuggerImpl::GenerateCallFrame(CallFrame *callFrame, const FrameHandler *frameHandler,
+                                     CallFrameId callFrameId, bool getScope)
 {
     if (!frameHandler->HasFrame()) {
         return false;
@@ -1362,19 +1362,21 @@ bool DebuggerImpl::GenerateCallFrame(CallFrame *callFrame,
 
     JSThread *thread = vm_->GetJSThread();
     std::vector<std::unique_ptr<Scope>> scopeChain;
-    scopeChain.emplace_back(GetLocalScopeChain(frameHandler, &thisObj));
-    // generate closure scopes
-    auto closureScopeChains = GetClosureScopeChains(frameHandler, &thisObj);
-    for (auto &scope : closureScopeChains) {
-        scopeChain.emplace_back(std::move(scope));
-    }
-    if (jsPandaFile != nullptr && !jsPandaFile->IsBundlePack() && jsPandaFile->IsNewVersion()) {
-        JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm_));
-        if (currentModule->IsSourceTextModule()) { // CJS module is string
-            scopeChain.emplace_back(GetModuleScopeChain());
+    if (getScope) {
+        scopeChain.emplace_back(GetLocalScopeChain(frameHandler, &thisObj));
+        // generate closure scopes
+        auto closureScopeChains = GetClosureScopeChains(frameHandler, &thisObj);
+        for (auto &scope : closureScopeChains) {
+            scopeChain.emplace_back(std::move(scope));
         }
+        if (jsPandaFile != nullptr && !jsPandaFile->IsBundlePack() && jsPandaFile->IsNewVersion()) {
+            JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm_));
+            if (currentModule->IsSourceTextModule()) { // CJS module is string
+                scopeChain.emplace_back(GetModuleScopeChain());
+            }
+        }
+        scopeChain.emplace_back(GetGlobalScopeChain());
     }
-    scopeChain.emplace_back(GetGlobalScopeChain());
 
     callFrame->SetCallFrameId(callFrameId)
         .SetFunctionName(functionName)

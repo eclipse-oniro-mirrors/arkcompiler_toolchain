@@ -37,7 +37,7 @@ public:
     bool SingleStep(const JSPtLocation &location) override;
     bool NativeOut() override;
     void NativeCalling(const void *nativeAddress) override;
-    void NativeReturnJS() override;
+    void NativeReturn(const void *nativeAddress) override;
     void VmStart() override {}
     void VmDeath() override {}
 
