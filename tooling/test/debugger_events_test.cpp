@@ -87,8 +87,19 @@ HWTEST_F_L0(DebuggerEventsTest, BreakpointResolvedToJsonTest)
 HWTEST_F_L0(DebuggerEventsTest, PausedToJsonTest)
 {
     Paused paused;
-    std::vector<std::unique_ptr<CallFrame>> v;
-    paused.SetCallFrames(std::move(v))
+    auto callFrames_ = std::vector<std::unique_ptr<CallFrame>>();
+    std::unique_ptr<CallFrame> callFrame = std::make_unique<CallFrame>();
+    std::unique_ptr<Location> location = std::make_unique<Location>();
+    location->SetScriptId(13).SetLine(16);
+
+    std::unique_ptr<RemoteObject> res = std::make_unique<RemoteObject>();
+    res->SetType("idle2");
+    callFrame->SetCallFrameId(55);
+    callFrame->SetLocation(std::move(location));
+    callFrame->SetThis(std::move(res));
+    callFrames_.emplace_back(std::move(callFrame));
+
+    paused.SetCallFrames(std::move(callFrames_))
         .SetReason(PauseReason::EXCEPTION);
     
     std::unique_ptr<PtJson> json = paused.ToJson();
@@ -100,6 +111,8 @@ HWTEST_F_L0(DebuggerEventsTest, PausedToJsonTest)
     EXPECT_EQ("exception", reason);
     std::unique_ptr<PtJson> callFrames;
     ASSERT_EQ(params->GetArray("callFrames", &callFrames), Result::SUCCESS);
+    ASSERT_NE(callFrames, nullptr);
+    EXPECT_EQ(callFrames->GetSize(), 1);
 
     Paused paused1;
     std::unique_ptr<RemoteObject> obj = std::make_unique<RemoteObject>();
