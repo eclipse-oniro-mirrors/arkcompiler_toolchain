@@ -1027,4 +1027,19 @@ HWTEST_F_L0(DebuggerParamsTest, CallFunctionOnParamsCreateTest)
     EXPECT_EQ(objectData->GetObjectGroup(), "testGrp");
     ASSERT_TRUE(objectData->GetThrowOnSideEffect());
 }
+
+HWTEST_F_L0(DebuggerParamsTest, ResetSingleStepperParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<ResetSingleStepperParams> objectData;
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"resetSingleStepper":"test"}})";
+    objectData = ResetSingleStepperParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"resetSingleStepper":true}})";
+    objectData = ResetSingleStepperParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    ASSERT_TRUE(objectData->GetResetSingleStepper());
+}
 }  // namespace panda::test
