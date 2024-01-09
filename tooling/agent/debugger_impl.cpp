@@ -308,7 +308,7 @@ void DebuggerImpl::NotifyNativeCalling(const void *nativeAddress)
         frontend_.WaitForDebugger(vm_);
     }
 
-    if (IsUserCode(nativeAddress) && mixStackEnabled_) {
+    if (mixStackEnabled_ && IsUserCode(nativeAddress)) {
         tooling::MixedStack mixedStack;
         nativePointer_ = DebuggerApi::GetNativePointer(vm_);
         mixedStack.SetNativePointers(nativePointer_);
@@ -322,7 +322,7 @@ void DebuggerImpl::NotifyNativeCalling(const void *nativeAddress)
 
 void DebuggerImpl::NotifyNativeReturn(const void *nativeAddress)
 {
-    if (IsUserCode(nativeAddress) && mixStackEnabled_) {
+    if (mixStackEnabled_ && IsUserCode(nativeAddress)) {
         nativeOutPause_ = true;
     }
 }
@@ -1157,6 +1157,7 @@ DispatchResponse DebuggerImpl::SetBlackboxPatterns()
 DispatchResponse DebuggerImpl::SetMixedDebugEnabled([[maybe_unused]] const SetMixedDebugParams &params)
 {
     vm_->GetJsDebuggerManager()->SetMixedDebugEnabled(params.GetEnabled());
+    vm_->GetJsDebuggerManager()->SetMixedStackEnabled(params.GetMixedStackEnabled());
     mixStackEnabled_ = params.GetMixedStackEnabled();
     return DispatchResponse::Ok();
 }
