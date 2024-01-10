@@ -303,17 +303,16 @@ ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
     BreakPointManager &breakpoint = session->GetBreakPointManager();
 
     if (cmd == "delete") {
-        std::string bnumber = GetArgList()[0];
-        int tmpNum = std::stoi(bnumber);
-        if (tmpNum < 0) {
-            LOGE("ardb: the entered sequence number cannot be negativ!");
+        if (GetArgList().size() != 1) { // 1: one parameters
             return ErrCode::ERR_FAIL;
         }
+        int tmpNum = std::stoi(GetArgList()[0]);
         size_t num = static_cast<size_t>(tmpNum);
         if (breakpoint.Getbreaklist().size() >= num && num > 0) {
             debuggerCli.AddBreakPointInfo(breakpoint.Getbreaklist()[num - 1].breakpointId, 0); // 1: breakpoinId
             breakpoint.Deletebreaklist(num);
         } else {
+            LOGE("ardb: the breakpoint is not exist");
             return ErrCode::ERR_FAIL;
         }
     }
@@ -328,7 +327,10 @@ ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
         stackManager.ShowCallFrames();
     }
 
-    if (cmd == "break" && GetArgList().size() == 2) { // 2: two parameters
+    if (cmd == "break") {
+        if (GetArgList().size() != 2) { // 2: two parameters
+            return ErrCode::ERR_FAIL;
+        }
         std::vector<Breaklocation> breaklist_ = breakpoint.Getbreaklist();
         size_t bsize = breaklist_.size();
         for (size_t i = 0; i < bsize; i++) {
