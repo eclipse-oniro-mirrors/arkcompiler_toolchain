@@ -282,8 +282,11 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
         GetVectorValue(value, outPropertyDesc);
         GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
         return DispatchResponse::Ok();
+    } else if (value->IsPromise()) {
+        GetPromiseValue(value, outPropertyDesc);
+        GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
+        return DispatchResponse::Ok();
     }
-
     Local<ArrayRef> keys = Local<ObjectRef>(value)->GetOwnPropertyNames(vm_);
     int32_t length = static_cast<int32_t>(keys->Length(vm_));
     Local<JSValueRef> name = JSValueRef::Undefined(vm_);
@@ -872,5 +875,18 @@ void RuntimeImpl::GetProxyValue(Local<JSValueRef> value,
     SetKeyValue(handler, outPropertyDesc, "[[Handler]]");
     Local<JSValueRef> isRevoked = BooleanRef::New(vm_, proxyRef->IsRevoked());
     SetKeyValue(isRevoked, outPropertyDesc, "[[IsRevoked]]");
+}
+
+void RuntimeImpl::GetPromiseValue(Local<JSValueRef> value,
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+{
+    Local<PromiseRef> promiseRef = value->ToObject(vm_);
+    if (promiseRef.IsEmpty()) {
+        return;
+    }
+    Local<JSValueRef> promiseState = promiseRef->GetPromiseState(vm_);
+    SetKeyValue(promiseState, outPropertyDesc, "[[PromiseState]]");
+    Local<JSValueRef> promiseResult = promiseRef->GetPromiseResult(vm_);
+    SetKeyValue(promiseResult, outPropertyDesc, "[[PromiseResult]]");
 }
 }  // namespace panda::ecmascript::tooling

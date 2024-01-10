@@ -37,8 +37,9 @@ public:
             std::string sourceFile = DEBUGGER_JS_DIR "variable_first.js";
             static_cast<JsVariableFirstTestChannel *>(channel_)->Initial(vm_, runtime_);
             runtime_->Enable();
-            // 290: breakpointer line
-            location_ = TestUtil::GetLocation(sourceFile.c_str(), 290, 0, pandaFile.c_str());
+            // 306: breakpointer line
+            int32_t lineNumber = 306;
+            location_ = TestUtil::GetLocation(sourceFile.c_str(), lineNumber, 0, pandaFile.c_str());
             ASSERT_TRUE(location_.GetMethodId().IsValid());
             TestUtil::SuspendUntilContinue(DebugEvent::LOAD_MODULE);
             ASSERT_EQ(moduleName, pandaFile);
@@ -110,9 +111,9 @@ private:
 
                     ASSERT_EQ(paused->GetName(), "Debugger.paused");
                     auto frame = paused->GetCallFrames()->at(0).get();
-                    ASSERT_EQ(frame->GetFunctionName(), "foo");
+                    ASSERT_EQ(frame->GetFunctionName(), "resolveHandler");
                     auto scopes = frame->GetScopeChain();
-                    ASSERT_EQ(scopes->size(), 2U);  // 2: contain local and global
+                    ASSERT_EQ(scopes->size(), 3U);  // 2: contain local, global and closure
                     for (uint32_t i = 0; i < scopes->size(); i++) {
                         auto scope = scopes->at(i).get();
                         if (scope->GetType() != Scope::Type::Local()) {
@@ -808,6 +809,13 @@ private:
                            "Cannot get source code of funtion",
                            "set", "function", "Function", "function set( { [js code] }",
                            "Cannot get source code of funtion" } },
+            { "resolveHandler", { "function", "Function", "function resolveHandler( { [js code] }",
+                                  "Cannot get source code of funtion"} },
+            { "result", { "object", "Object", "Object", "[object Object]", "flag", "boolean",
+                          "true", "true"} },
+            { "a", { "object", "promise", "Promise", "Promise", "[object Promise]",
+                     "[[PromiseState]]", "string", "Fullfilled", "Fullfilled", "[[PromiseResult]]",
+                     "object", "Object", "Object", "[object Object]"} },
         };
 
         int32_t index_ {0};
