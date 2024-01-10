@@ -21,7 +21,7 @@
 #include "tooling/client/domain/debugger_client.h"
 #include "tooling/client/domain/runtime_client.h"
 #include "tooling/client/manager/domain_manager.h"
-#include "tooling/client/websocket/websocket_client.h"
+#include "websocket/client/websocket_client.h"
 #include "ecmascript/jspandafile/js_pandafile_manager.h"
 #include "ecmascript/debugger/js_debugger.h"
 #include "os/mutex.h"
@@ -63,7 +63,7 @@ public:
     }
 
     static void ForkSocketClient(int port, const std::string &name);
-    static void HandleAcceptanceMessages(ActionInfo action, WebsocketClient &client, std::string &recv, bool &success);
+    static void HandleAcceptanceMessages(ActionInfo action, WebSocketClient &client, std::string &recv, bool &success);
     static void SendMessage(ActionInfo action, std::string recv);
 
 private:

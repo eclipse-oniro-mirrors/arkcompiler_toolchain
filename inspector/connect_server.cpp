@@ -25,7 +25,7 @@ std::shared_mutex g_sendMutex;
 void ConnectServer::RunServer()
 {
     terminateExecution_ = false;
-    webSocket_ = std::make_unique<WebSocket>();
+    webSocket_ = std::make_unique<WebSocketServer>();
     tid_ = pthread_self();
 #if defined(OHOS_PLATFORM)
     int runSeverInOldProcess = -2; // run sever in old process.
@@ -45,7 +45,7 @@ void ConnectServer::RunServer()
     while (!terminateExecution_) {
 #if defined(OHOS_PLATFORM)
         if (socketfd_ == runSeverInOldProcess) {
-            if (!webSocket_->ConnectUnixWebSocket()) {
+            if (!webSocket_->AcceptNewConnection()) {
                 return;
             }
         } else {

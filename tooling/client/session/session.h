@@ -30,7 +30,7 @@
 #include "tooling/client/manager/stack_manager.h"
 #include "tooling/client/manager/variable_manager.h"
 #include "tooling/client/manager/watch_manager.h"
-#include "tooling/client/websocket/websocket_client.h"
+#include "websocket/client/websocket_client.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 using CmdForAllCB = std::function<void(uint32_t sessionId)>;
@@ -61,7 +61,7 @@ public:
 
     bool ClientSendReq(const std::string &message)
     {
-        return cliSocket_.ClientSendReq(message);
+        return cliSocket_.SendReply(message);
     }
 
     DomainManager& GetDomainManager()
@@ -84,7 +84,7 @@ public:
         return variableManager_;
     }
 
-    WebsocketClient& GetWebsocketClient()
+    WebSocketClient& GetWebSocketClient()
     {
         return cliSocket_;
     }
@@ -118,7 +118,7 @@ private:
     uint32_t sessionId_;
     std::string sockInfo_;
     DomainManager domainManager_;
-    WebsocketClient cliSocket_;
+    WebSocketClient cliSocket_;
     uv_thread_t socketTid_ = 0;
     std::atomic<uint32_t> messageId_ {1};
     BreakPointManager breakpoint_;

@@ -24,13 +24,17 @@ host_unittest_action("WebSocketTest") {
   sources = [
     # test file
     "../../common/log_wrapper.cpp",
+    "frame_builder_test.cpp",
+    "http_decoder_test.cpp",
+    "web_socket_frame_test.cpp",
     "websocket_test.cpp",
   ]
 
   configs = [ "$toolchain_root:toolchain_test_config" ]
 
   deps = [
-    "$toolchain_root/websocket:websocket",
+    "$toolchain_root/websocket:websocket_client",
+    "$toolchain_root/websocket:websocket_server",
     sdk_libc_secshared_dep,
   ]
 
