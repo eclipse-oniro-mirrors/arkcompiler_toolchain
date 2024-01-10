@@ -814,7 +814,7 @@ private:
             { "result", { "object", "Object", "Object", "[object Object]", "flag", "boolean",
                           "true", "true"} },
             { "a", { "object", "promise", "Promise", "Promise", "[object Promise]",
-                     "[[PromiseState]]", "string", "Fullfilled", "Fullfilled", "[[PromiseResult]]",
+                     "[[PromiseState]]", "string", "Fulfilled", "Fulfilled", "[[PromiseResult]]",
                      "object", "Object", "Object", "[object Object]"} },
         };
 
