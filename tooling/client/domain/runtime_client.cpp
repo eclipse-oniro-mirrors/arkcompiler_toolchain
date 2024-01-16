@@ -17,6 +17,7 @@
 
 #include "common/log_wrapper.h"
 #include "tooling/client/manager/variable_manager.h"
+#include "tooling/client/manager/watch_manager.h"
 #include "tooling/base/pt_json.h"
 #include "tooling/client/session/session.h"
 
@@ -121,6 +122,8 @@ int RuntimeClient::RunIfWaitingForDebuggerCommand()
     if (session->ClientSendReq(message)) {
         session->GetDomainManager().SetDomainById(id, "Runtime");
     }
+    WatchManager &watchManager = session->GetWatchManager();
+    watchManager.DebugFalseState();
     return 0;
 }
 

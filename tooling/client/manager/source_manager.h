@@ -41,7 +41,6 @@ public:
     void ListSourceCodeWithParameters(int startLine, int endLine);
     void ListSource(int startLine, int endLine);
     void GetListSource(std::string lineNum);
-    void GetDebugInfo(const std::unique_ptr<PtJson> json);
     bool IsNumer(const std::string& str);
 
 private:

@@ -335,6 +335,7 @@ void DebuggerClient::RecvReply(std::unique_ptr<PtJson> json)
 
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
     SourceManager &sourceManager = session->GetSourceManager();
+    WatchManager &watchManager = session->GetWatchManager();
 
     std::string::size_type length = wholeMethod.length();
     std::string::size_type indexPoint = 0;
@@ -345,6 +346,9 @@ void DebuggerClient::RecvReply(std::unique_ptr<PtJson> json)
         return;
     } else if (method == "scriptParsed") {
         sourceManager.EnableReply(std::move(json));
+        return;
+    } else if (method == "resumed") {
+        watchManager.DebugFalseState();
         return;
     } else {
         LOGI("arkdb: Debugger reply is: %{public}s", json->Stringify().c_str());
@@ -422,7 +426,6 @@ void DebuggerClient::handleResponse(std::unique_ptr<PtJson> json)
     ret = result->GetString("breakpointId", &breakpointId);
     if (ret == Result::SUCCESS) {
         breakpoint.Createbreaklocation(std::move(json));
-        sourceManager.GetDebugInfo(std::move(result));
         return;
     }
     if (watchManager.HandleWatchResult(std::move(json), id)) {

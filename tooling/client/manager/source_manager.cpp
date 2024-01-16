@@ -288,28 +288,4 @@ void SourceManager::GetListSource(std::string lineNum)
     }
     return;
 }
-
-void SourceManager::GetDebugInfo(const std::unique_ptr<PtJson> json)
-{
-    Result ret;
-    std::unique_ptr<PtJson> locations;
-    ret = json->GetArray("locations", &locations);
-    if (ret != Result::SUCCESS) {
-        LOGE("json parse locations error");
-        return;
-    }
-    std::string scriptId;
-    ret = locations->Get(0)->GetString("scriptId", &scriptId);
-    if (ret != Result::SUCCESS) {
-        LOGE("json parse scriptId error");
-        return;
-    }
-    scriptId_ = std::atoi(scriptId.c_str());
-    ret = locations->Get(0)->GetInt("lineNumber", &debugLineNum_);
-    if (ret != Result::SUCCESS) {
-        LOGE("json parse lineNumber error");
-        return;
-    }
-    return;
-}
 }
