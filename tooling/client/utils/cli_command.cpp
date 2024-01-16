@@ -221,13 +221,35 @@ void CliCommand::CreateCommandMap()
 
 ErrCode CliCommand::HeapProfilerCommand(const std::string &cmd)
 {
-    std::cout << "exe success, cmd is " << cmd << std::endl;
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
     DomainManager &domainManager = session->GetDomainManager();
     HeapProfilerClient &heapProfilerClient = domainManager.GetHeapProfilerClient();
     VecStr argList = GetArgList();
-    if (argList.empty()) {
-        argList.push_back("/data/");
+    if ((cmd == "allocationtrack" || cmd == "sampling") && !argList.empty()) {
+        std::cout << "This command does not need to follow a suffix" << std::endl;
+        return ErrCode::ERR_FAIL;
+    } else {
+        if (argList.empty()) {
+            argList.push_back("/data/");
+            std::cout << "exe success, cmd is " << cmd << std::endl;
+        } else {
+            const std::string &arg = argList[0];
+            std::string pathDump = arg;
+            std::ifstream fileExit(pathDump.c_str());
+            if (fileExit.good() && (pathDump[0] == pathDump[pathDump.size()-1]) && (GetArgList().size() == 1)) {
+                std::cout << "exe success, cmd is " << cmd << std::endl;
+            } else if (GetArgList().size() > 1) {
+                std::cout << "The folder path may contains spaces" << std::endl;
+                return ErrCode::ERR_FAIL;
+            } else if (pathDump[0] != pathDump[pathDump.size()-1]) {
+                std::cout << "The folder path format is incorrect :" << pathDump << std::endl;
+                std::cout << "Attention: Check for symbols /" << std::endl;
+                return ErrCode::ERR_FAIL;
+            } else {
+                std::cout << "The folder path does not exist :" << pathDump << std::endl;
+                return ErrCode::ERR_FAIL;
+            }
+        }
     }
 
     bool result = heapProfilerClient.DispatcherCmd(cmd, argList[0]);
@@ -236,20 +258,43 @@ ErrCode CliCommand::HeapProfilerCommand(const std::string &cmd)
 
 ErrCode CliCommand::CpuProfileCommand(const std::string &cmd)
 {
-    std::cout << "exe success, cmd is " << cmd << std::endl;
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
     DomainManager &domainManager = session->GetDomainManager();
     ProfilerClient &profilerClient = domainManager.GetProfilerClient();
     ProfilerSingleton &pro = session->GetProfilerSingleton();
+    VecStr argList = GetArgList();
+    if (cmd == "cpuprofile") {
+        if (argList.empty()) {
+            std::cout << "exe success, cmd is " << cmd << std::endl;
+        } else {
+            std::cout << "This command does not need to follow a suffix" << std::endl;
+            return ErrCode::ERR_FAIL;
+        }
+    }
     if (cmd == "cpuprofile-show") {
+        std::cout << "exe success, cmd is " << cmd << std::endl;
         pro.ShowCpuFile();
         return ErrCode::ERR_OK;
     }
     if (cmd == "cpuprofile-setSamplingInterval") {
+        std::cout << "exe success, cmd is " << cmd << std::endl;
         profilerClient.SetSamplingInterval(std::atoi(GetArgList()[0].c_str()));
     }
     if (cmd == "cpuprofile-stop" && GetArgList().size() == 1) {
         pro.SetAddress(GetArgList()[0]);
+        const std::string &arg = argList[0];
+        std::string pathCpuPro = arg;
+        std::ifstream fileExit(pathCpuPro.c_str());
+        if (fileExit.good() && (pathCpuPro[0] == pathCpuPro[pathCpuPro.size()-1])) {
+            std::cout << "exe success, cmd is " << cmd << std::endl;
+        } else if (pathCpuPro[0] != pathCpuPro[pathCpuPro.size()-1]) {
+            std::cout << "The folder path format is incorrect :" << pathCpuPro << std::endl;
+            std::cout << "Attention: Check for symbols /" << std::endl;
+            return ErrCode::ERR_FAIL;
+        } else {
+            std::cout << "The folder path does not exist :" << pathCpuPro << std::endl;
+            return ErrCode::ERR_FAIL;
+        }
     }
     bool result = profilerClient.DispatcherCmd(cmd);
     return result ? ErrCode::ERR_OK : ErrCode::ERR_FAIL;
