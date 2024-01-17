@@ -22,7 +22,7 @@ namespace OHOS::ArkCompiler::Toolchain {
 // if the data is too large, it will be split into multiple frames, the first frame will be marked as 0x0
 // and the last frame will be marked as 0x1.
 // we just add the 'isLast' parameter to indicate whether it is the last frame.
-bool WebSocketBase::SendReply(const std::string& message, bool& isSendFail, FrameType frameType, bool isLast) const
+bool WebSocketBase::SendReply(const std::string& message, FrameType frameType, bool isLast) const
 {
     if (socketState_ != SocketState::CONNECTED) {
         LOGE("SendReply failed, websocket not connected");
@@ -32,16 +32,9 @@ bool WebSocketBase::SendReply(const std::string& message, bool& isSendFail, Fram
     auto frame = CreateFrame(isLast, frameType, message);
     if (!Send(connectionFd_, frame, 0)) {
         LOGE("SendReply: send failed");
-        SetSocketFail(isSendFail);
         return false;
     }
     return true;
-}
-
-bool WebSocketBase::SendReply(const std::string& message, FrameType frameType, bool isLast) const
-{
-    bool ignored = false;
-    return SendReply(message, ignored, frameType, isLast);
 }
 
 /**
@@ -66,46 +59,44 @@ bool WebSocketBase::SendReply(const std::string& message, FrameType frameType, b
   *    +---------------------------------------------------------------+
   */
 
-bool WebSocketBase::ReadPayload(WebSocketFrame& wsFrame, bool &isRecvFail)
+bool WebSocketBase::ReadPayload(WebSocketFrame& wsFrame)
 {
     if (wsFrame.payloadLen == WebSocketFrame::TWO_BYTES_LENTH_ENC) {
         uint8_t recvbuf[WebSocketFrame::TWO_BYTES_LENTH] = {0};
         if (!Recv(connectionFd_, recvbuf, WebSocketFrame::TWO_BYTES_LENTH, 0)) {
             LOGE("ReadPayload: Recv payloadLen == 126 failed");
-            SetSocketFail(isRecvFail);
             return false;
         }
         wsFrame.payloadLen = NetToHostLongLong(recvbuf, WebSocketFrame::TWO_BYTES_LENTH);
     } else if (wsFrame.payloadLen == WebSocketFrame::EIGHT_BYTES_LENTH_ENC) {
         uint8_t recvbuf[WebSocketFrame::EIGHT_BYTES_LENTH] = {0};
         if (!Recv(connectionFd_, recvbuf, WebSocketFrame::EIGHT_BYTES_LENTH, 0)) {
-            LOGE("ReadPayload: Recv `payloadLen == 127` failed");
-            SetSocketFail(isRecvFail);
+            LOGE("ReadPayload: Recv payloadLen == 127 failed");
             return false;
         }
         wsFrame.payloadLen = NetToHostLongLong(recvbuf, WebSocketFrame::EIGHT_BYTES_LENTH);
     }
-    return DecodeMessage(wsFrame, isRecvFail);
+    return DecodeMessage(wsFrame);
 }
 
-bool WebSocketBase::HandleDataFrame(WebSocketFrame& wsFrame, bool &isRecvFail)
+bool WebSocketBase::HandleDataFrame(WebSocketFrame& wsFrame)
 {
     if (wsFrame.opcode == EnumToNumber(FrameType::TEXT)) {
-        return ReadPayload(wsFrame, isRecvFail);
+        return ReadPayload(wsFrame);
     } else {
         LOGW("Received unsupported data frame, opcode = %{public}d", wsFrame.opcode);
     }
-    return false;
+    return true;
 }
 
-bool WebSocketBase::HandleControlFrame(WebSocketFrame& wsFrame, bool &isRecvFail)
+bool WebSocketBase::HandleControlFrame(WebSocketFrame& wsFrame)
 {
     if (wsFrame.opcode == EnumToNumber(FrameType::PING)) {
         // A Pong frame sent in response to a Ping frame must have identical
         // "Application data" as found in the message body of the Ping frame
         // being replied to.
         // https://www.rfc-editor.org/rfc/rfc6455#section-5.5.3
-        if (!ReadPayload(wsFrame, isRecvFail)) {
+        if (!ReadPayload(wsFrame)) {
             LOGE("Failed to read ping frame payload");
             return false;
         }
@@ -126,9 +117,6 @@ std::string WebSocketBase::Decode()
 
     uint8_t recvbuf[WebSocketFrame::HEADER_LEN] = {0};
     if (!Recv(connectionFd_, recvbuf, WebSocketFrame::HEADER_LEN, 0)) {
-        if (errno == EAGAIN) {
-            return "try again";
-        }
         LOGE("Decode failed, client websocket disconnect");
         CloseConnection(CloseStatusCode::UNEXPECTED_ERROR, SocketState::INITED);
         return std::string(DECODE_DISCONNECT_MSG);
@@ -139,15 +127,14 @@ std::string WebSocketBase::Decode()
         CloseConnection(CloseStatusCode::PROTOCOL_ERROR, SocketState::INITED);
     }
 
-    bool isRecvFail = false;
     if (IsControlFrame(wsFrame.opcode)) {
-        if (HandleControlFrame(wsFrame, isRecvFail)) {
+        if (HandleControlFrame(wsFrame)) {
             return wsFrame.payload;
         }
-    } else if (HandleDataFrame(wsFrame, isRecvFail)) {
+    } else if (HandleDataFrame(wsFrame)) {
         return wsFrame.payload;
     }
-    return isRecvFail ? std::string(DECODE_DISCONNECT_MSG) : "";
+    return std::string(DECODE_DISCONNECT_MSG);
 }
 
 bool WebSocketBase::IsConnected()
@@ -213,12 +200,6 @@ void WebSocketBase::CloseConnection(CloseStatusCode status, SocketState newSocke
 bool WebSocketBase::IsDecodeDisconnectMsg(const std::string& message)
 {
     return message == DECODE_DISCONNECT_MSG;
-}
-
-/* static */
-void WebSocketBase::SetSocketFail(bool& isSendFail)
-{
-    isSendFail = (errno != EINTR);
 }
 
 #if !defined(OHOS_PLATFORM)

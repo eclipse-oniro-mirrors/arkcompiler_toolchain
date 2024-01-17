@@ -54,7 +54,7 @@ private:
     std::string CreateFrame(bool isLast, FrameType frameType) const override;
     std::string CreateFrame(bool isLast, FrameType frameType, const std::string& payload) const override;
     std::string CreateFrame(bool isLast, FrameType frameType, std::string&& payload) const override;
-    bool DecodeMessage(WebSocketFrame& wsFrame, bool &isRecvFail) const override;
+    bool DecodeMessage(WebSocketFrame& wsFrame) const override;
 
     bool HttpHandShake();
     bool ProtocolUpgrade(const HttpRequest& req);

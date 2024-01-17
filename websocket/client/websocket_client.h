@@ -30,7 +30,7 @@ class WebSocketClient final : public WebSocketBase {
 public:
     ~WebSocketClient() noexcept override = default;
 
-    bool DecodeMessage(WebSocketFrame& wsFrame, bool &isRecvFail) const override;
+    bool DecodeMessage(WebSocketFrame& wsFrame) const override;
     void Close() override;
 
     bool InitToolchainWebSocketForPort(int port, uint32_t timeoutLimit = 5);
