@@ -30,7 +30,6 @@ bool RuntimeClient::DispatcherCmd(const std::string &cmd)
         { "runtime-enable", std::bind(&RuntimeClient::RuntimeEnableCommand, this)},
         { "runtime-disable", std::bind(&RuntimeClient::RuntimeDisableCommand, this)},
         { "print", std::bind(&RuntimeClient::GetPropertiesCommand, this)},
-        { "print2", std::bind(&RuntimeClient::GetPropertiesCommand2, this)},
         { "run", std::bind(&RuntimeClient::RunIfWaitingForDebuggerCommand, this)},
     };
 

@@ -26,6 +26,7 @@ public:
     static bool GetCurrentTime(char *date, char *tim, size_t size);
     static bool StrToUInt(const char *content, uint32_t *result);
     static std::vector<std::string> SplitString(const std::string &str, const std::string &delimiter);
+    static bool IsNumber(const std::string &str);
 };
 } // OHOS::ArkCompiler::Toolchain
 #endif
