@@ -63,10 +63,6 @@ public:
     std::string Decode();
     // Send message on current connection.
     // Returns success status.
-    bool SendReply(const std::string& message, bool& isSendFail,
-                   FrameType frameType = FrameType::TEXT, bool isLast = true) const;
-    // Send message on current connection.
-    // Returns success status.
     bool SendReply(const std::string& message, FrameType frameType = FrameType::TEXT, bool isLast = true) const;
 
     bool IsConnected();
@@ -91,9 +87,8 @@ protected:
 
 protected:
     static bool SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit);
-    static void SetSocketFail(bool& isSendFail);
 
-    bool ReadPayload(WebSocketFrame& wsFrame, bool &isRecvFail);
+    bool ReadPayload(WebSocketFrame& wsFrame);
     void SendPongFrame(std::string payload);
     void SendCloseFrame(CloseStatusCode status);
     // Sending close frame and close connection.
@@ -101,14 +96,14 @@ protected:
     // Close connection socket.
     void CloseConnectionSocket(ConnectionCloseReason status, SocketState newSocketState);
 
-    virtual bool HandleDataFrame(WebSocketFrame& wsFrame, bool &isRecvFail);
-    virtual bool HandleControlFrame(WebSocketFrame& wsFrame, bool &isRecvFail);
+    virtual bool HandleDataFrame(WebSocketFrame& wsFrame);
+    virtual bool HandleControlFrame(WebSocketFrame& wsFrame);
 
     virtual bool ValidateIncomingFrame(const WebSocketFrame& wsFrame) = 0;
     virtual std::string CreateFrame(bool isLast, FrameType frameType) const = 0;
     virtual std::string CreateFrame(bool isLast, FrameType frameType, const std::string& payload) const = 0;
     virtual std::string CreateFrame(bool isLast, FrameType frameType, std::string&& payload) const = 0;
-    virtual bool DecodeMessage(WebSocketFrame& wsFrame, bool &isRecvFail) const = 0;
+    virtual bool DecodeMessage(WebSocketFrame& wsFrame) const = 0;
 
 protected:
     std::atomic<SocketState> socketState_ {SocketState::UNINITED};

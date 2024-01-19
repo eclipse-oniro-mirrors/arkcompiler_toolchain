@@ -166,7 +166,10 @@ bool WebSocketClient::ClientRecvWSUpgradeRsp()
     }
 
     std::string msgBuf(HTTP_HANDSHAKE_MAX_LEN, 0);
-    auto msgLen = recv(connectionFd_, msgBuf.data(), HTTP_HANDSHAKE_MAX_LEN, 0);
+    ssize_t msgLen = 0;
+    while ((msgLen = recv(connectionFd_, msgBuf.data(), HTTP_HANDSHAKE_MAX_LEN, 0)) < 0 && errno == EINTR) {
+        LOGW("ClientRecvWSUpgradeRsp::client recv wsupgrade rsp failed, errno == EINTR");
+    }
     if (msgLen <= 0) {
         LOGE("ClientRecvWSUpgradeRsp::client recv wsupgrade rsp failed, error = %{public}d, desc = %{public}sn",
             errno, strerror(errno));
@@ -227,7 +230,7 @@ bool WebSocketClient::ValidateServerHandShake(HttpResponse& response)
     return true;
 }
 
-bool WebSocketClient::DecodeMessage(WebSocketFrame& wsFrame, bool &isRecvFail) const
+bool WebSocketClient::DecodeMessage(WebSocketFrame& wsFrame) const
 {
     uint64_t msgLen = wsFrame.payloadLen;
     if (msgLen == 0) {
@@ -239,7 +242,6 @@ bool WebSocketClient::DecodeMessage(WebSocketFrame& wsFrame, bool &isRecvFail) c
 
     if (!Recv(connectionFd_, buffer, 0)) {
         LOGE("DecodeMessage: Recv message without mask failed");
-        SetSocketFail(isRecvFail);
         return false;
     }
 

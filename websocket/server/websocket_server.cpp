@@ -21,7 +21,7 @@
 #include "websocket/server/websocket_server.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
-bool WebSocketServer::DecodeMessage(WebSocketFrame& wsFrame, bool &isRecvFail) const
+bool WebSocketServer::DecodeMessage(WebSocketFrame& wsFrame) const
 {
     uint64_t msgLen = wsFrame.payloadLen;
     if (msgLen == 0) {
@@ -33,13 +33,11 @@ bool WebSocketServer::DecodeMessage(WebSocketFrame& wsFrame, bool &isRecvFail) c
 
     if (!Recv(connectionFd_, wsFrame.maskingKey, sizeof(wsFrame.maskingKey), 0)) {
         LOGE("DecodeMessage: Recv maskingKey failed");
-        SetSocketFail(isRecvFail);
         return false;
     }
 
     if (!Recv(connectionFd_, buffer, 0)) {
         LOGE("DecodeMessage: Recv message with mask failed");
-        SetSocketFail(isRecvFail);
         return false;
     }
 
@@ -76,7 +74,10 @@ bool WebSocketServer::ResponseInvalidHandShake() const
 bool WebSocketServer::HttpHandShake()
 {
     std::string msgBuf(HTTP_HANDSHAKE_MAX_LEN, 0);
-    ssize_t msgLen = recv(connectionFd_, msgBuf.data(), HTTP_HANDSHAKE_MAX_LEN, 0);
+    ssize_t msgLen = 0;
+    while ((msgLen = recv(connectionFd_, msgBuf.data(), HTTP_HANDSHAKE_MAX_LEN, 0)) < 0 && errno == EINTR) {
+        LOGW("HttpHandShake recv failed, errno == EINTR");
+    }
     if (msgLen <= 0) {
         LOGE("ReadMsg failed, msgLen = %{public}ld, errno = %{public}d", static_cast<long>(msgLen), errno);
         return false;

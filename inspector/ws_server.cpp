@@ -120,12 +120,9 @@ void WsServer::SendReply(const std::string& message) const
         return;
     }
     LOGI("WsServer SendReply: %{public}s", message.c_str());
-    bool isSendFail = false;
-    if (!webSocket_->SendReply(message, isSendFail)) {
-        if (isSendFail) {
-            LOGI("WsServer SendReply send fail");
-            NotifyDisconnectEvent();
-        }
+    if (!webSocket_->SendReply(message)) {
+        LOGE("WsServer SendReply send fail");
+        NotifyDisconnectEvent();
     }
 }
 
