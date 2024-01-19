@@ -258,34 +258,12 @@ void SourceManager::ListSource(int startLine, int endLine)
     }
 }
 
-bool SourceManager::IsNumer(const std::string& str)
-{
-    for (char c : str) {
-        if (std::isdigit(c)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void SourceManager::GetListSource(std::string lineNum)
+void SourceManager::GetListSource(std::string startLine, std::string endLine)
 {
     const int BLANK_LINE = std::numeric_limits<int>::max();
-    if (lineNum != "") {
-        size_t found = lineNum.find(",");
-        if (found != std::string::npos) {
-            std::string startLine = lineNum.substr(0, found);
-            std::string endLine = lineNum.substr(found + 1);
-            ListSource(std::atoi(startLine.c_str()), std::atoi(endLine.c_str()));
-        } else {
-            if (!IsNumer(lineNum)) {
-                return;
-            }
-            ListSource(std::atoi(lineNum.c_str()), BLANK_LINE);
-        }
-    } else {
-        ListSource(BLANK_LINE, BLANK_LINE);
-    }
+    int startline = startLine.empty() ? BLANK_LINE : std::stoi(startLine);
+    int endline = endLine.empty() ? BLANK_LINE : std::stoi(endLine);
+    ListSource(startline, endline);
     return;
 }
 }
