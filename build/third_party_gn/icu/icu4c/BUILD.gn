@@ -13,7 +13,6 @@
 
 import("$build_root/ark.gni")
 config("icu_config") {
-  visibility = [ ":*" ]
   include_dirs = [
     "//third_party/icu/icu4c/source/common",
     "//third_party/icu/icu4c/source/i18n",
@@ -26,7 +25,6 @@ config("static_icustubdata_all_deps_config") {
 }
 
 ohos_static_library("static_icustubdata") {
-  stack_protector_ret = false
   configs = [
     ":icu_config",
     "$build_root/config/compiler:rtti",
@@ -42,9 +40,12 @@ ohos_static_library("static_icustubdata") {
     "-Wwrite-strings",
     "-std=c++11",
     "-Wno-ignored-attributes",
+    "-Wno-deprecated-declarations",
   ]
   output_dir = "${root_out_dir}/third_party/icu/stubdata"
   output_name = "stubdata"
+  part_name = "icu"
+  subsystem_name = "thirdparty"
 }
 
 icu_common_source = [
@@ -244,6 +245,8 @@ icu_common_source = [
   "//third_party/icu/icu4c/source/common/rbbinode.cpp",
   "//third_party/icu/icu4c/source/common/ustrcase.cpp",
   "//third_party/icu/icu4c/source/common/servnotf.cpp",
+  "//third_party/icu/icu4c/source/common/emojiprops.cpp",
+  "//third_party/icu/icu4c/source/common/lstmbe.cpp",
   "//third_party/icu/icu4c/source/ohos/init_data.cpp",
 ]
 
@@ -258,6 +261,7 @@ icu_i18n_source = [
   "//third_party/icu/icu4c/source/i18n/alphaindex.cpp",
   "//third_party/icu/icu4c/source/i18n/indiancal.cpp",
   "//third_party/icu/icu4c/source/i18n/dayperiodrules.cpp",
+  "//third_party/icu/icu4c/source/i18n/displayoptions.cpp",
   "//third_party/icu/icu4c/source/i18n/quantityformatter.cpp",
   "//third_party/icu/icu4c/source/i18n/collationfastlatinbuilder.cpp",
   "//third_party/icu/icu4c/source/i18n/csrucode.cpp",
@@ -491,13 +495,22 @@ icu_i18n_source = [
 ]
 
 ohos_shared_library("shared_icuuc") {
-  stack_protector_ret = false
+  ldflags = [
+    "-shared",
+    "-lm",
+  ]
+  if (current_os == "ios") {
+    ldflags += [
+      "-Wl",
+      "-install_name",
+      "@rpath/libhmicuuc.framework/libhmicuuc",
+    ]
+  }
   configs = [
     ":icu_config",
     "$build_root/config/compiler:rtti",
   ]
   all_dependent_configs = [ ":static_icustubdata_all_deps_config" ]
-  deps = [ ":static_icustubdata" ]
   defines = [
     "U_ATTRIBUTE_DEPRECATED=",
     "U_COMMON_IMPLEMENTATION",
@@ -507,6 +520,7 @@ ohos_shared_library("shared_icuuc") {
     "_REENTRANT",
   ]
   sources = icu_common_source
+  deps = [ ":static_icustubdata" ]
   cflags_cc = [
     "-O3",
     "-W",
@@ -520,11 +534,9 @@ ohos_shared_library("shared_icuuc") {
     "-std=c++11",
     "-Wno-ignored-attributes",
     "-Wno-unused-but-set-variable",
+    "-Wno-deprecated-declarations",
   ]
-  ldflags = [
-    "-shared",
-    "-lm",
-  ]
+
   if (is_standard_system || ark_standalone_build) {
     part_name = "icu"
     subsystem_name = "thirdparty"
@@ -532,17 +544,34 @@ ohos_shared_library("shared_icuuc") {
     part_name = "i18n"
     subsystem_name = "global"
   }
+
+  innerapi_tags = [ "platformsdk" ]
   install_images = [ system_base_dir ]
   relative_install_dir = "platformsdk"
   output_name = "hmicuuc"
   install_enable = true
-  if (!is_mingw) {
-    cflags_cc += [ "-fPIC" ]
+}
+
+if (current_os == "ios") {
+  ohos_combine_darwin_framework("libhmicuuc") {
+    deps = [ ":shared_icuuc" ]
+    subsystem_name = "thirdparty"
+    part_name = "icu"
   }
 }
 
 ohos_shared_library("shared_icui18n") {
-  stack_protector_ret = false
+  ldflags = [
+    "-shared",
+    "-lm",
+  ]
+  if (current_os == "ios") {
+    ldflags += [
+      "-Wl",
+      "-install_name",
+      "@rpath/libhmicui18n.framework/libhmicui18n",
+    ]
+  }
   sources = icu_i18n_source
   configs = [
     ":icu_config",
@@ -571,15 +600,13 @@ ohos_shared_library("shared_icui18n") {
     "-std=c++11",
     "-Wno-ignored-attributes",
     "-Wno-unused-but-set-variable",
-  ]
-  ldflags = [
-    "-shared",
-    "-lm",
+    "-Wno-deprecated-declarations",
   ]
   if (!is_mingw) {
     cflags_cc += [ "-fPIC" ]
     ldflags += [ "-ldl" ]
   }
+
   if (is_standard_system || ark_standalone_build) {
     part_name = "icu"
     subsystem_name = "thirdparty"
@@ -587,19 +614,33 @@ ohos_shared_library("shared_icui18n") {
     part_name = "i18n"
     subsystem_name = "global"
   }
+
+  innerapi_tags = [ "platformsdk" ]
   install_images = [ system_base_dir ]
   relative_install_dir = "platformsdk"
   output_name = "hmicui18n"
   install_enable = true
 }
 
-ohos_static_library("static_icuuc") {
-  stack_protector_ret = false
+if (current_os == "ios") {
+  ohos_combine_darwin_framework("libhmicui18n") {
+    deps = [ ":shared_icui18n" ]
+    subsystem_name = "thirdparty"
+    part_name = "icu"
+  }
+}
+
+ohos_source_set("static_icuuc") {
   configs = [
     ":icu_config",
     "$build_root/config/compiler:rtti",
   ]
-  deps = [ ":static_icustubdata" ]
+
+  if (!(defined(is_arkui_x) && is_arkui_x) ||
+      current_toolchain == host_toolchain) {
+    deps = [ ":static_icustubdata" ]
+  }
+
   defines = [
     "U_ATTRIBUTE_DEPRECATED=",
     "U_COMMON_IMPLEMENTATION",
@@ -611,7 +652,6 @@ ohos_static_library("static_icuuc") {
   ]
   sources = icu_common_source
   cflags_cc = [
-    "-Os",
     "-W",
     "-Wall",
     "-pedantic",
@@ -625,13 +665,12 @@ ohos_static_library("static_icuuc") {
     "-Wno-unused-function",
     "-Wno-ignored-attributes",
     "-Wno-unused-but-set-variable",
+    "-Wno-deprecated-declarations",
   ]
 
   cflags = [
-    "-fvisibility=hidden",
     "-fdata-sections",
     "-ffunction-sections",
-    "-Os",
     "-Wno-unused-function",
   ]
 
@@ -644,8 +683,7 @@ ohos_static_library("static_icuuc") {
   output_name = "hmicuuc"
 }
 
-ohos_static_library("static_icui18n") {
-  stack_protector_ret = false
+ohos_source_set("static_icui18n") {
   sources = icu_i18n_source
   configs = [
     ":icu_config",
@@ -663,7 +701,6 @@ ohos_static_library("static_icui18n") {
   ]
 
   cflags_cc = [
-    "-Os",
     "-W",
     "-Wall",
     "-pedantic",
@@ -678,6 +715,7 @@ ohos_static_library("static_icui18n") {
     "-fno-exceptions",
     "-Wno-ignored-attributes",
     "-Wno-unused-but-set-variable",
+    "-Wno-deprecated-declarations",
   ]
 
   if (is_mingw) {
@@ -687,10 +725,8 @@ ohos_static_library("static_icui18n") {
   }
 
   cflags = [
-    "-fvisibility=hidden",
     "-fdata-sections",
     "-ffunction-sections",
-    "-Os",
   ]
 
   ldflags = [
@@ -699,4 +735,63 @@ ohos_static_library("static_icui18n") {
     "-lm",
   ]
   output_name = "hmicui18n"
+}
+
+ohos_static_library("static_icu") {
+  configs = [
+    ":icu_config",
+    "$build_root/config/compiler:rtti",
+  ]
+
+  defines = [
+    "U_ATTRIBUTE_DEPRECATED=",
+    "U_COMMON_IMPLEMENTATION",
+    "U_I18N_IMPLEMENTATION",
+    "U_STATIC_IMPLEMENTATION",
+    "UPRV_BLOCK_MACRO_BEGIN=",
+    "UPRV_BLOCK_MACRO_END=",
+    "UCONFIG_USE_WINDOWS_LCID_MAPPING_API=0",
+    "_REENTRANT",
+  ]
+  sources = icu_common_source
+  sources += icu_i18n_source
+  sources += [ "//third_party/icu/ohos_icu4j/data/lite/icudt72l_dat.S" ]
+  cflags_cc = [
+    "-W",
+    "-Wall",
+    "-pedantic",
+    "-Wpointer-arith",
+    "-Wwrite-strings",
+    "-std=c++11",
+    "-Wno-error=unused-parameter",
+    "-Wno-error=unused-const-variable",
+    "-Wno-error=unneeded-internal-declaration",
+    "-fvisibility-inlines-hidden",
+    "-Wno-unused-function",
+    "-Wno-ignored-attributes",
+    "-Wno-unused-but-set-variable",
+    "-Wno-deprecated-declarations",
+  ]
+
+  cflags = [
+    "-fvisibility=hidden",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Wno-unused-function",
+  ]
+
+  ldflags = [
+    "-static",
+    "-ldl",
+    "-lm",
+  ]
+
+  output_name = "hmicu"
+  if (is_standard_system || ark_standalone_build) {
+    part_name = "icu"
+    subsystem_name = "thirdparty"
+  } else {
+    part_name = "i18n"
+    subsystem_name = "global"
+  }
 }

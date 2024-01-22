@@ -24,6 +24,7 @@ common_source = [
   "//third_party/libuv/src/uv-common.c",
   "//third_party/libuv/src/uv-data-getter-setters.c",
   "//third_party/libuv/src/version.c",
+  "//third_party/libuv/src/strtok.c",
 ]
 if (!is_mingw && !is_win) {
   nonwin_srcs = [
