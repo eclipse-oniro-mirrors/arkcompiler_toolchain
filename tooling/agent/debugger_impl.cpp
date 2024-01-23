@@ -308,7 +308,7 @@ void DebuggerImpl::NotifyNativeCalling(const void *nativeAddress)
         frontend_.WaitForDebugger(vm_);
     }
 
-    if (IsUserCode(nativeAddress) && mixStackEnabled_) {
+    if (mixStackEnabled_ && IsUserCode(nativeAddress)) {
         tooling::MixedStack mixedStack;
         nativePointer_ = DebuggerApi::GetNativePointer(vm_);
         mixedStack.SetNativePointers(nativePointer_);
@@ -322,7 +322,7 @@ void DebuggerImpl::NotifyNativeCalling(const void *nativeAddress)
 
 void DebuggerImpl::NotifyNativeReturn(const void *nativeAddress)
 {
-    if (IsUserCode(nativeAddress) && mixStackEnabled_) {
+    if (mixStackEnabled_ && IsUserCode(nativeAddress)) {
         nativeOutPause_ = true;
     }
 }
@@ -662,10 +662,10 @@ void DebuggerImpl::DispatcherImpl::DropFrame(const DispatchRequest &request)
     SendResponse(request, response);
 }
 
-void DebuggerImpl::DispatcherImpl::ClientDisconnect(const DispatchRequest &request)
+// inner message, not SendResponse to outer
+void DebuggerImpl::DispatcherImpl::ClientDisconnect([[maybe_unused]] const DispatchRequest &request)
 {
-    DispatchResponse response = debugger_->ClientDisconnect();
-    SendResponse(request, response);
+    debugger_->ClientDisconnect();
 }
 
 bool DebuggerImpl::Frontend::AllowNotify(const EcmaVM *vm) const
@@ -1157,6 +1157,7 @@ DispatchResponse DebuggerImpl::SetBlackboxPatterns()
 DispatchResponse DebuggerImpl::SetMixedDebugEnabled([[maybe_unused]] const SetMixedDebugParams &params)
 {
     vm_->GetJsDebuggerManager()->SetMixedDebugEnabled(params.GetEnabled());
+    vm_->GetJsDebuggerManager()->SetMixedStackEnabled(params.GetMixedStackEnabled());
     mixStackEnabled_ = params.GetMixedStackEnabled();
     return DispatchResponse::Ok();
 }

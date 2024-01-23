@@ -26,6 +26,7 @@
 #include "tooling/client/manager/stack_manager.h"
 #include "tooling/client/manager/variable_manager.h"
 #include "tooling/client/session/session.h"
+#include "tooling/client/utils/utils.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 const std::string HELP_MSG = "usage: <command> <options>\n"
@@ -173,35 +174,34 @@ void CliCommand::CreateCommandMap()
             std::bind(&CliCommand::CpuProfileCommand, this, "cpuprofile-setSamplingInterval")},
         {std::make_pair("runtime-enable", "rt-enable"), std::bind(&CliCommand::RuntimeCommand, this, "runtime-enable")},
         {std::make_pair("heapusage", "hu"), std::bind(&CliCommand::RuntimeCommand, this, "heapusage")},
-        {std::make_pair("break", "b"), std::bind(&CliCommand::DebuggerCommand, this, "break")},
+        {std::make_pair("break", "b"), std::bind(&CliCommand::BreakCommand, this, "break")},
         {std::make_pair("backtrack", "bt"), std::bind(&CliCommand::DebuggerCommand, this, "backtrack")},
         {std::make_pair("continue", "c"), std::bind(&CliCommand::DebuggerCommand, this, "continue")},
-        {std::make_pair("delete", "d"), std::bind(&CliCommand::DebuggerCommand, this, "delete")},
+        {std::make_pair("delete", "d"), std::bind(&CliCommand::DeleteCommand, this, "delete")},
         {std::make_pair("disable", "disable"), std::bind(&CliCommand::DebuggerCommand, this, "disable")},
-        {std::make_pair("display", "display"), std::bind(&CliCommand::DebuggerCommand, this, "display")},
+        {std::make_pair("display", "display"), std::bind(&CliCommand::DisplayCommand, this, "display")},
         {std::make_pair("enable", "enable"), std::bind(&CliCommand::DebuggerCommand, this, "enable")},
         {std::make_pair("finish", "fin"), std::bind(&CliCommand::DebuggerCommand, this, "finish")},
         {std::make_pair("frame", "f"), std::bind(&CliCommand::DebuggerCommand, this, "frame")},
         {std::make_pair("help", "h"), std::bind(&CliCommand::ExecHelpCommand, this)},
         {std::make_pair("ignore", "ig"), std::bind(&CliCommand::DebuggerCommand, this, "ignore")},
         {std::make_pair("infobreakpoints", "infob"), std::bind(&CliCommand::DebuggerCommand, this, "infobreakpoints")},
-        {std::make_pair("infosource", "infos"), std::bind(&CliCommand::DebuggerCommand, this, "infosource")},
+        {std::make_pair("infosource", "infos"), std::bind(&CliCommand::InfosourceCommand, this, "infosource")},
         {std::make_pair("jump", "j"), std::bind(&CliCommand::DebuggerCommand, this, "jump")},
-        {std::make_pair("list", "l"), std::bind(&CliCommand::DebuggerCommand, this, "list")},
+        {std::make_pair("list", "l"), std::bind(&CliCommand::ListCommand, this, "list")},
         {std::make_pair("next", "n"), std::bind(&CliCommand::DebuggerCommand, this, "next")},
-        {std::make_pair("print", "p"), std::bind(&CliCommand::RuntimeCommand, this, "print")},
-        {std::make_pair("print2", "p2"), std::bind(&CliCommand::RuntimeCommand, this, "print2")},
+        {std::make_pair("print", "p"), std::bind(&CliCommand::PrintCommand, this, "print")},
         {std::make_pair("ptype", "ptype"), std::bind(&CliCommand::DebuggerCommand, this, "ptype")},
         {std::make_pair("run", "r"), std::bind(&CliCommand::RuntimeCommand, this, "run")},
         {std::make_pair("setvar", "sv"), std::bind(&CliCommand::DebuggerCommand, this, "setvar")},
         {std::make_pair("step", "s"), std::bind(&CliCommand::DebuggerCommand, this, "step")},
         {std::make_pair("undisplay", "undisplay"), std::bind(&CliCommand::DebuggerCommand, this, "undisplay")},
-        {std::make_pair("watch", "wa"), std::bind(&CliCommand::DebuggerCommand, this, "watch")},
+        {std::make_pair("watch", "wa"), std::bind(&CliCommand::WatchCommand, this, "watch")},
         {std::make_pair("resume", "resume"), std::bind(&CliCommand::DebuggerCommand, this, "resume")},
-        {std::make_pair("showstack", "ss"), std::bind(&CliCommand::DebuggerCommand, this, "showstack")},
-        {std::make_pair("step-into", "si"), std::bind(&CliCommand::DebuggerCommand, this, "step-into")},
-        {std::make_pair("step-out", "so"), std::bind(&CliCommand::DebuggerCommand, this, "step-out")},
-        {std::make_pair("step-over", "sov"), std::bind(&CliCommand::DebuggerCommand, this, "step-over")},
+        {std::make_pair("showstack", "ss"), std::bind(&CliCommand::ShowstackCommand, this, "showstack")},
+        {std::make_pair("step-into", "si"), std::bind(&CliCommand::StepCommand, this, "step-into")},
+        {std::make_pair("step-out", "so"), std::bind(&CliCommand::StepCommand, this, "step-out")},
+        {std::make_pair("step-over", "sov"), std::bind(&CliCommand::StepCommand, this, "step-over")},
         {std::make_pair("runtime-disable", "rt-disable"),
             std::bind(&CliCommand::RuntimeCommand, this, "runtime-disable")},
         {std::make_pair("session-new", "session-new"),
@@ -221,13 +221,35 @@ void CliCommand::CreateCommandMap()
 
 ErrCode CliCommand::HeapProfilerCommand(const std::string &cmd)
 {
-    std::cout << "exe success, cmd is " << cmd << std::endl;
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
     DomainManager &domainManager = session->GetDomainManager();
     HeapProfilerClient &heapProfilerClient = domainManager.GetHeapProfilerClient();
     VecStr argList = GetArgList();
-    if (argList.empty()) {
-        argList.push_back("/data/");
+    if ((cmd == "allocationtrack" || cmd == "sampling") && !argList.empty()) {
+        std::cout << "This command does not need to follow a suffix" << std::endl;
+        return ErrCode::ERR_FAIL;
+    } else {
+        if (argList.empty()) {
+            argList.push_back("/data/");
+            std::cout << "exe success, cmd is " << cmd << std::endl;
+        } else {
+            const std::string &arg = argList[0];
+            std::string pathDump = arg;
+            std::ifstream fileExit(pathDump.c_str());
+            if (fileExit.good() && (pathDump[0] == pathDump[pathDump.size()-1]) && (GetArgList().size() == 1)) {
+                std::cout << "exe success, cmd is " << cmd << std::endl;
+            } else if (GetArgList().size() > 1) {
+                std::cout << "The folder path may contains spaces" << std::endl;
+                return ErrCode::ERR_FAIL;
+            } else if (pathDump[0] != pathDump[pathDump.size()-1]) {
+                std::cout << "The folder path format is incorrect :" << pathDump << std::endl;
+                std::cout << "Attention: Check for symbols /" << std::endl;
+                return ErrCode::ERR_FAIL;
+            } else {
+                std::cout << "The folder path does not exist :" << pathDump << std::endl;
+                return ErrCode::ERR_FAIL;
+            }
+        }
     }
 
     bool result = heapProfilerClient.DispatcherCmd(cmd, argList[0]);
@@ -236,160 +258,303 @@ ErrCode CliCommand::HeapProfilerCommand(const std::string &cmd)
 
 ErrCode CliCommand::CpuProfileCommand(const std::string &cmd)
 {
-    std::cout << "exe success, cmd is " << cmd << std::endl;
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
     DomainManager &domainManager = session->GetDomainManager();
     ProfilerClient &profilerClient = domainManager.GetProfilerClient();
     ProfilerSingleton &pro = session->GetProfilerSingleton();
+    VecStr argList = GetArgList();
+    if (cmd == "cpuprofile") {
+        if (argList.empty()) {
+            std::cout << "exe success, cmd is " << cmd << std::endl;
+        } else {
+            std::cout << "This command does not need to follow a suffix" << std::endl;
+            return ErrCode::ERR_FAIL;
+        }
+    }
     if (cmd == "cpuprofile-show") {
+        std::cout << "exe success, cmd is " << cmd << std::endl;
         pro.ShowCpuFile();
         return ErrCode::ERR_OK;
     }
     if (cmd == "cpuprofile-setSamplingInterval") {
+        std::cout << "exe success, cmd is " << cmd << std::endl;
         profilerClient.SetSamplingInterval(std::atoi(GetArgList()[0].c_str()));
     }
     if (cmd == "cpuprofile-stop" && GetArgList().size() == 1) {
         pro.SetAddress(GetArgList()[0]);
+        const std::string &arg = argList[0];
+        std::string pathCpuPro = arg;
+        std::ifstream fileExit(pathCpuPro.c_str());
+        if (fileExit.good() && (pathCpuPro[0] == pathCpuPro[pathCpuPro.size()-1])) {
+            std::cout << "exe success, cmd is " << cmd << std::endl;
+        } else if (pathCpuPro[0] != pathCpuPro[pathCpuPro.size()-1]) {
+            std::cout << "The folder path format is incorrect :" << pathCpuPro << std::endl;
+            std::cout << "Attention: Check for symbols /" << std::endl;
+            return ErrCode::ERR_FAIL;
+        } else {
+            std::cout << "The folder path does not exist :" << pathCpuPro << std::endl;
+            return ErrCode::ERR_FAIL;
+        }
     }
     bool result = profilerClient.DispatcherCmd(cmd);
     return result ? ErrCode::ERR_OK : ErrCode::ERR_FAIL;
 }
 
-ErrCode CliCommand::HandleDebuggerCommand(const std::string &cmd)
-{
-    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
-    BreakPointManager &breakpoint = session->GetBreakPointManager();
-    SourceManager &sourceManager = session->GetSourceManager();
-    WatchManager &watchManager = session->GetWatchManager();
-    if (cmd == "display") {
-        breakpoint.Show();
-        return ErrCode::ERR_OK;
-    }
-
-    if (cmd == "infosource") {
-        if (GetArgList().size() == 1) {
-            sourceManager.GetFileSource(std::atoi(GetArgList()[0].c_str()));
-        } else {
-            sourceManager.GetFileName();
-        }
-        return ErrCode::ERR_OK;
-    }
-
-    if (cmd == "list" && watchManager.GetDebugState()) {
-        if (GetArgList().size() == 1) {
-            sourceManager.GetListSource(GetArgList()[0]);
-        } else {
-            sourceManager.GetListSource("");
-        }
-        return ErrCode::ERR_OK;
-    }
-
-    if (cmd == "watch" && GetArgList().size() == 1) {
-        watchManager.AddWatchInfo(GetArgList()[0]);
-        if (watchManager.GetDebugState()) {
-            watchManager.SendRequestWatch(watchManager.GetWatchInfoSize() - 1, watchManager.GetCallFrameId());
-        }
-        return ErrCode::ERR_OK;
-    }
-    return ErrCode::ERR_FAIL;
-}
-
 ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
 {
-    std::cout << "exe success, cmd is " << cmd << std::endl;
+    if (GetArgList().size()) {
+        OutputCommand(cmd, false);
+        return ErrCode::ERR_FAIL;
+    }
+
     bool result = false;
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
     DebuggerClient &debuggerCli = session->GetDomainManager().GetDebuggerClient();
-    BreakPointManager &breakpoint = session->GetBreakPointManager();
-
-    if (cmd == "delete") {
-        std::string bnumber = GetArgList()[0];
-        int tmpNum = std::stoi(bnumber);
-        if (tmpNum < 0) {
-            LOGE("ardb: the entered sequence number cannot be negativ!");
-            return ErrCode::ERR_FAIL;
-        }
-        size_t num = static_cast<size_t>(tmpNum);
-        if (breakpoint.Getbreaklist().size() >= num && num > 0) {
-            debuggerCli.AddBreakPointInfo(breakpoint.Getbreaklist()[num - 1].breakpointId, 0); // 1: breakpoinId
-            breakpoint.Deletebreaklist(num);
-        } else {
-            return ErrCode::ERR_FAIL;
-        }
-    }
-
-    if (cmd == "step-into" || cmd == "step-out" || cmd == "step-over") {
-        RuntimeClient &runtimeClient = session->GetDomainManager().GetRuntimeClient();
-        runtimeClient.SetIsInitializeTree(true);
-    }
-
-    if (cmd == "showstack") {
-        StackManager &stackManager = session->GetStackManager();
-        stackManager.ShowCallFrames();
-    }
-
-    if (cmd == "break" && GetArgList().size() == 2) { // 2: two parameters
-        std::vector<Breaklocation> breaklist_ = breakpoint.Getbreaklist();
-        size_t bsize = breaklist_.size();
-        for (size_t i = 0; i < bsize; i++) {
-            if (breaklist_[i].url == GetArgList()[0] &&
-                std::stoi(breaklist_[i].lineNumber) + 1 == std::stoi(GetArgList()[1])) {
-                LOGE("ardb: the breakpoint is exist");
-                return ErrCode::ERR_FAIL;
-            }
-        }
-        debuggerCli.AddBreakPointInfo(GetArgList()[0], std::stoi(GetArgList()[1]));
-    }
-
-    if (HandleDebuggerCommand(cmd) == ErrCode::ERR_OK) {
-        return ErrCode::ERR_OK;
-    }
-
+    
     result = debuggerCli.DispatcherCmd(cmd);
+    OutputCommand(cmd, true);
     return result ? ErrCode::ERR_OK : ErrCode::ERR_FAIL;
 }
 
 ErrCode CliCommand::RuntimeCommand(const std::string &cmd)
 {
-    std::cout << "exe success, cmd is " << cmd << std::endl;
+    if (GetArgList().size()) {
+        OutputCommand(cmd, false);
+        return ErrCode::ERR_FAIL;
+    }
     bool result = false;
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
     RuntimeClient &runtimeClient = session->GetDomainManager().GetRuntimeClient();
-
-    if (cmd == "print" && GetArgList().size() == 1) {
-        runtimeClient.SetIsInitializeTree(false);
-        VariableManager &variableManager = session->GetVariableManager();
-        int32_t objectId = variableManager.FindObjectIdWithIndex(std::stoi(GetArgList()[0]));
-        runtimeClient.SetObjectId(std::to_string(objectId));
-    }
-
+    
     result = runtimeClient.DispatcherCmd(cmd);
     if (result) {
         runtimeClient.SetObjectId("0");
     } else {
         return ErrCode::ERR_FAIL;
     }
+    OutputCommand(cmd, true);
+    return ErrCode::ERR_OK;
+}
+
+ErrCode CliCommand::BreakCommand(const std::string &cmd)
+{
+    bool result = false;
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    DebuggerClient &debuggerCli = session->GetDomainManager().GetDebuggerClient();
+    BreakPointManager &breakpointManager = session->GetBreakPointManager();
+    std::vector<Breaklocation> breaklist_ = breakpointManager.Getbreaklist();
+    if (GetArgList().size() == 2) { //2: two arguments
+        if (!Utils::IsNumber(GetArgList()[1])) {
+            OutputCommand(cmd, false);
+            return ErrCode::ERR_FAIL;
+        }
+        for (auto breakpoint : breaklist_) {
+            if (breakpoint.url == GetArgList()[0] &&
+                std::stoi(breakpoint.lineNumber) + 1 == std::stoi(GetArgList()[1])) {
+                std::cout << "the breakpoint is exist" << std::endl;
+                return ErrCode::ERR_FAIL;
+            }
+        }
+        debuggerCli.AddBreakPointInfo(GetArgList()[0], std::stoi(GetArgList()[1]));
+    } else {
+        OutputCommand(cmd, false);
+        return ErrCode::ERR_FAIL;
+    }
+    
+    result = debuggerCli.DispatcherCmd(cmd);
+    OutputCommand(cmd, true);
+    return result ? ErrCode::ERR_OK : ErrCode::ERR_FAIL;
+}
+
+ErrCode CliCommand::DeleteCommand(const std::string &cmd)
+{
+    bool result = false;
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    DebuggerClient &debuggerCli = session->GetDomainManager().GetDebuggerClient();
+    BreakPointManager &breakpoint = session->GetBreakPointManager();
+    if (GetArgList().size() == 1) {
+        if (!Utils::IsNumber(GetArgList()[0])) {
+            OutputCommand(cmd, false);
+            return ErrCode::ERR_FAIL;
+        }
+        int tmpNum = std::stoi(GetArgList()[0]);
+        size_t num = static_cast<size_t>(tmpNum);
+        if (breakpoint.Getbreaklist().size() >= num && num > 0) {
+            debuggerCli.AddBreakPointInfo(breakpoint.Getbreaklist()[num - 1].breakpointId, 0); // 1: breakpoinId
+            breakpoint.Deletebreaklist(num);
+        } else {
+            std::cout << "the breakpoint is not exist" << std::endl;
+            return ErrCode::ERR_FAIL;
+        }
+    } else {
+        OutputCommand(cmd, false);
+        return ErrCode::ERR_FAIL;
+    }
+    result = debuggerCli.DispatcherCmd(cmd);
+    OutputCommand(cmd, true);
+    return result ? ErrCode::ERR_OK : ErrCode::ERR_FAIL;
+}
+
+ErrCode CliCommand::DisplayCommand(const std::string &cmd)
+{
+    if (GetArgList().size()) {
+        OutputCommand(cmd, false);
+        return ErrCode::ERR_FAIL;
+    }
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    BreakPointManager &breakpointManager = session->GetBreakPointManager();
+    breakpointManager.Show();
+    OutputCommand(cmd, true);
+    return ErrCode::ERR_OK;
+}
+
+ErrCode CliCommand::InfosourceCommand(const std::string &cmd)
+{
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    SourceManager &sourceManager = session->GetSourceManager();
+    if (GetArgList().size() > 1) {
+        OutputCommand(cmd, false);
+        return ErrCode::ERR_FAIL;
+    } else if (GetArgList().size() == 1) {
+        if (!Utils::IsNumber(GetArgList()[0])) {
+            OutputCommand(cmd, false);
+            return ErrCode::ERR_FAIL;
+        }
+        sourceManager.GetFileSource(std::stoi(GetArgList()[0]));
+    } else {
+        sourceManager.GetFileName();
+    }
+    OutputCommand(cmd, true);
+    return ErrCode::ERR_OK;
+}
+
+ErrCode CliCommand::ListCommand(const std::string &cmd)
+{
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    SourceManager &sourceManager = session->GetSourceManager();
+    WatchManager &watchManager = session->GetWatchManager();
+    if (!watchManager.GetDebugState()) {
+        std::cout << "Start debugging your code before using the list command" << std::endl;
+        return ErrCode::ERR_FAIL;
+    }
+    if (GetArgList().size() > 2) { //2: two arguments
+        OutputCommand(cmd, false);
+        return ErrCode::ERR_FAIL;
+    } else if (GetArgList().size() == 2) { //2: two arguments
+        if (Utils::IsNumber(GetArgList()[0]) && Utils::IsNumber(GetArgList()[1])) {
+            sourceManager.GetListSource(GetArgList()[0], GetArgList()[1]);
+        } else {
+            OutputCommand(cmd, false);
+            return ErrCode::ERR_FAIL;
+        }
+    } else if (GetArgList().size() == 1) {
+        if (Utils::IsNumber(GetArgList()[0])) {
+            sourceManager.GetListSource(GetArgList()[0], "");
+        } else {
+            OutputCommand(cmd, false);
+            return ErrCode::ERR_FAIL;
+        }
+    } else {
+        sourceManager.GetListSource("", "");
+    }
+    OutputCommand(cmd, true);
+    return ErrCode::ERR_OK;
+}
+
+ErrCode CliCommand::StepCommand(const std::string &cmd)
+{
+    if (GetArgList().size()) {
+        OutputCommand(cmd, false);
+        return ErrCode::ERR_FAIL;
+    }
+    bool result = false;
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    DebuggerClient &debuggerCli = session->GetDomainManager().GetDebuggerClient();
+    RuntimeClient &runtimeClient = session->GetDomainManager().GetRuntimeClient();
+    runtimeClient.SetIsInitializeTree(true);
+    result = debuggerCli.DispatcherCmd(cmd);
+    OutputCommand(cmd, true);
+    return result ? ErrCode::ERR_OK : ErrCode::ERR_FAIL;
+}
+
+ErrCode CliCommand::ShowstackCommand(const std::string &cmd)
+{
+    if (GetArgList().size()) {
+        OutputCommand(cmd, false);
+        return ErrCode::ERR_FAIL;
+    }
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    StackManager &stackManager = session->GetStackManager();
+    stackManager.ShowCallFrames();
+    OutputCommand(cmd, true);
+    return ErrCode::ERR_OK;
+}
+
+ErrCode CliCommand::PrintCommand(const std::string &cmd)
+{
+    if (GetArgList().size() > 1) {
+        OutputCommand(cmd, false);
+        return ErrCode::ERR_FAIL;
+    }
+    bool result = false;
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    RuntimeClient &runtimeClient = session->GetDomainManager().GetRuntimeClient();
+    if (GetArgList().size() == 1) {
+        runtimeClient.SetIsInitializeTree(false);
+        VariableManager &variableManager = session->GetVariableManager();
+        int32_t objectId = variableManager.FindObjectIdWithIndex(std::stoi(GetArgList()[0]));
+        runtimeClient.SetObjectId(std::to_string(objectId));
+    }
+    result = runtimeClient.DispatcherCmd(cmd);
+    if (result) {
+        runtimeClient.SetObjectId("0");
+    } else {
+        return ErrCode::ERR_FAIL;
+    }
+    OutputCommand(cmd, true);
+    return ErrCode::ERR_OK;
+}
+
+ErrCode CliCommand::WatchCommand(const std::string &cmd)
+{
+    if (GetArgList().size() != 1) {
+        OutputCommand(cmd, false);
+        return ErrCode::ERR_FAIL;
+    }
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    WatchManager &watchManager = session->GetWatchManager();
+    watchManager.AddWatchInfo(GetArgList()[0]);
+    if (watchManager.GetDebugState()) {
+        watchManager.SendRequestWatch(watchManager.GetWatchInfoSize() - 1, watchManager.GetCallFrameId());
+    } else {
+        std::cout << "Start debugging your code before using the watch command" << std::endl;
+        return ErrCode::ERR_FAIL;
+    }
+    OutputCommand(cmd, true);
     return ErrCode::ERR_OK;
 }
 
 ErrCode CliCommand::SessionAddCommand([[maybe_unused]] const std::string &cmd)
 {
     VecStr argList = GetArgList();
-    if (argList.size() >= 1) {
+    if (argList.size() == 1) {
         if (!SessionManager::getInstance().CreateNewSession(argList[0])) {
-            std::cout << "session create success" << std::endl;
+            OutputCommand(cmd, true);
             return ErrCode::ERR_OK;
+        } else {
+            std::cout << "session add failed" << std::endl;
         }
+    } else {
+        OutputCommand(cmd, false);
     }
 
-    std::cout << "session add failed" << std::endl;
     return ErrCode::ERR_FAIL;
 }
 
 ErrCode CliCommand::SessionDelCommand([[maybe_unused]] const std::string &cmd)
 {
     VecStr argList = GetArgList();
-    if (argList.size() >= 1) {
+    if (argList.size() == 1 && Utils::IsNumber(argList[0])) {
         uint32_t sessionId = 0;
         if (Utils::StrToUInt(argList[0].c_str(), &sessionId)) {
             if (sessionId == 0) {
@@ -399,32 +564,45 @@ ErrCode CliCommand::SessionDelCommand([[maybe_unused]] const std::string &cmd)
             if (SessionManager::getInstance().DelSessionById(sessionId) == 0) {
                 std::cout << "session remove success" << std::endl;
                 return ErrCode::ERR_OK;
+            } else {
+                std::cout << "sessionId is not exist" << std::endl;
             }
         }
+    } else {
+        OutputCommand(cmd, false);
     }
-
+    
     return ErrCode::ERR_FAIL;
 }
 
 ErrCode CliCommand::SessionListCommand([[maybe_unused]] const std::string &cmd)
 {
+    if (GetArgList().size()) {
+        OutputCommand(cmd, false);
+        return ErrCode::ERR_FAIL;
+    }
     SessionManager::getInstance().SessionList();
+    OutputCommand(cmd, true);
     return ErrCode::ERR_OK;
 }
 
 ErrCode CliCommand::SessionSwitchCommand([[maybe_unused]] const std::string &cmd)
 {
     VecStr argList = GetArgList();
-    if (argList.size() >= 1) {
+    if (argList.size() == 1 && Utils::IsNumber(argList[0])) {
         uint32_t sessionId = 0;
         if (Utils::StrToUInt(argList[0].c_str(), &sessionId)) {
             if (SessionManager::getInstance().SessionSwitch(sessionId) == 0) {
-                std::cout << "session switch success" << std::endl;
+                OutputCommand(cmd, true);
                 return ErrCode::ERR_OK;
+            } else {
+                std::cout << "sessionId is not exist" << std::endl;
             }
         }
+    } else {
+        OutputCommand(cmd, false);
     }
-    return ErrCode::ERR_OK;
+    return ErrCode::ERR_FAIL;
 }
 
 ErrCode CliCommand::TestCommand(const std::string &cmd)
@@ -443,6 +621,15 @@ ErrCode CliCommand::ExecHelpCommand()
 {
     std::cout << HELP_MSG;
     return ErrCode::ERR_OK;
+}
+
+void CliCommand::OutputCommand(const std::string &cmd, bool flag)
+{
+    if (flag) {
+        std::cout << "exe success, cmd is " << cmd << std::endl;
+    } else {
+        std::cout << cmd << " parameters is incorrect" << std::endl;
+    }
 }
 
 ErrCode CliCommand::OnCommand()

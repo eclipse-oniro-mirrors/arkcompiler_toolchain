@@ -290,6 +290,29 @@ var o = {
 
         revoke();
         proxy2.revoke();
+        
+        var promiseFulfilled = new Promise((resolve, reject) => {
+            let result = {
+                flag: true
+            }
+            if (result.flag == true) {
+                resolve(result);
+            } else {
+                reject(new Error("The promise is rejected"));
+            }
+        });
+
+        function resolveHandler(result) {
+            let a = promiseFulfilled;
+            print("promise is fulfilled with result.flag " + result.flag);
+        }
+
+        function rejectHandler(error) {
+            print(error.message);
+        }
+
+        promiseFulfilled.then(result => resolveHandler(result)).catch(error => rejectHandler(error));
+
         var nop = undefined;
     }
 }

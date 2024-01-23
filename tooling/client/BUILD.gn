@@ -43,12 +43,12 @@ ohos_source_set("libark_client_set") {
     "session/session.cpp",
     "utils/cli_command.cpp",
     "utils/utils.cpp",
-    "websocket/websocket_client.cpp",
   ]
 
   deps += [
     "$ark_third_party_root/libuv:uv",
     "$ark_third_party_root/openssl:libcrypto_shared",
+    "$toolchain_root/websocket:websocket_client",
     "..:libark_ecma_debugger",
     sdk_libc_secshared_dep,
   ]

@@ -18,6 +18,8 @@
 #include <ctime>
 #include <climits>
 #include <cerrno>
+#include <string>
+#include "utils.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 bool Utils::GetCurrentTime(char *date, char *tim, size_t size)
@@ -115,4 +117,21 @@ bool Utils::RealPath(const std::string &path, std::string &realPath, [[maybe_unu
     realPath = std::string(buffer);
     return true;
 }
+
+bool Utils::IsNumber(const std::string &str)
+{
+    std::string Str = str;
+    Str.erase(0, Str.find_first_not_of("0"));
+    if (Str.size() > 9) { //9: size of int
+        return false;
+    }
+    
+    for (char c : Str) {
+        if (!std::isdigit(c)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 } // OHOS::ArkCompiler::Toolchain

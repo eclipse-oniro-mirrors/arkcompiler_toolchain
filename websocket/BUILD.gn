@@ -13,46 +13,96 @@
 
 import("//arkcompiler/toolchain/toolchain.gni")
 
-ohos_source_set("websocket") {
-  stack_protector_ret = false
+config("websocket_config") {
   defines = []
-  deps = []
 
-  configs = [ sdk_libc_secshared_config ]
+  include_dirs = [
+    "$toolchain_root/inspector",
+    "//third_party/openssl/include",
+  ]
+
   if (is_mingw || is_mac) {
     cflags = [ "-std=c++17" ]
   }
 
-  # hiviewdfx libraries
-  external_deps = hiviewdfx_ext_deps
-  deps += hiviewdfx_deps
+  cflags_cc = [ "-Wno-vla-extension" ]
+}
+
+websocket_configs = [
+  sdk_libc_secshared_config,
+  "..:ark_toolchain_common_config",
+  ":websocket_config",
+]
+
+websocket_deps = [ sdk_libc_secshared_dep ]
+if (is_arkui_x && target_os == "ios") {
+  websocket_deps += [ "$ark_third_party_root/openssl:libcrypto_static" ]
+} else if (is_mingw) {
+  websocket_deps += [ "$ark_third_party_root/openssl:libcrypto_restool" ]
+} else {
+  websocket_deps += [ "$ark_third_party_root/openssl:libcrypto_shared" ]
+}
+
+# hiviewdfx libraries
+websocket_ext_deps = hiviewdfx_ext_deps
+
+ohos_source_set("websocket_base") {
+  stack_protector_ret = false
+
+  configs = websocket_configs
+
+  external_deps = websocket_ext_deps
+  deps = websocket_deps
 
   if (target_os == "android" && !ark_standalone_build) {
     libs = [ "log" ]
   }
 
-  include_dirs = []
-
-  include_dirs += [
-    "$toolchain_root/inspector",
-    "//utils/native/base/include",
-    "//third_party/openssl/include",
+  sources = [
+    "frame_builder.cpp",
+    "handshake_helper.cpp",
+    "http.cpp",
+    "network.cpp",
+    "websocket_base.cpp",
   ]
 
-  sources = [ "websocket.cpp" ]
+  subsystem_name = "arkcompiler"
+  part_name = "toolchain"
+}
 
-  deps += [ sdk_libc_secshared_dep ]
-  if (is_arkui_x && target_os == "ios") {
-    deps += [ "$ark_third_party_root/openssl:libcrypto_static" ]
-  } else if (is_mingw) {
-    deps += [ "$ark_third_party_root/openssl:libcrypto_restool" ]
-  } else {
-    deps += [ "$ark_third_party_root/openssl:libcrypto_shared" ]
+ohos_source_set("websocket_server") {
+  stack_protector_ret = false
+
+  configs = websocket_configs
+
+  external_deps = websocket_ext_deps
+  deps = websocket_deps
+  deps += [ ":websocket_base" ]
+
+  if (target_os == "android" && !ark_standalone_build) {
+    libs = [ "log" ]
   }
 
-  configs += [ "..:ark_toolchain_common_config" ]
+  sources = [ "server/websocket_server.cpp" ]
 
-  cflags_cc = [ "-Wno-vla-extension" ]
+  subsystem_name = "arkcompiler"
+  part_name = "toolchain"
+}
+
+ohos_source_set("websocket_client") {
+  stack_protector_ret = false
+
+  configs = websocket_configs
+
+  external_deps = websocket_ext_deps
+  deps = websocket_deps
+  deps += [ ":websocket_base" ]
+
+  if (target_os == "android" && !ark_standalone_build) {
+    libs = [ "log" ]
+  }
+
+  sources = [ "client/websocket_client.cpp" ]
 
   subsystem_name = "arkcompiler"
   part_name = "toolchain"

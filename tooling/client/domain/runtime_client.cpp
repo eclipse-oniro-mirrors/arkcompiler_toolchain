@@ -17,6 +17,7 @@
 
 #include "common/log_wrapper.h"
 #include "tooling/client/manager/variable_manager.h"
+#include "tooling/client/manager/watch_manager.h"
 #include "tooling/base/pt_json.h"
 #include "tooling/client/session/session.h"
 
@@ -29,7 +30,6 @@ bool RuntimeClient::DispatcherCmd(const std::string &cmd)
         { "runtime-enable", std::bind(&RuntimeClient::RuntimeEnableCommand, this)},
         { "runtime-disable", std::bind(&RuntimeClient::RuntimeDisableCommand, this)},
         { "print", std::bind(&RuntimeClient::GetPropertiesCommand, this)},
-        { "print2", std::bind(&RuntimeClient::GetPropertiesCommand2, this)},
         { "run", std::bind(&RuntimeClient::RunIfWaitingForDebuggerCommand, this)},
     };
 
@@ -121,6 +121,8 @@ int RuntimeClient::RunIfWaitingForDebuggerCommand()
     if (session->ClientSendReq(message)) {
         session->GetDomainManager().SetDomainById(id, "Runtime");
     }
+    WatchManager &watchManager = session->GetWatchManager();
+    watchManager.DebugFalseState();
     return 0;
 }
 

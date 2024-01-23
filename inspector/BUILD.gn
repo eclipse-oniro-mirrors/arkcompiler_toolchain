@@ -32,7 +32,7 @@ ohos_source_set("ark_debugger_static") {
     libs = [ "log" ]
   }
 
-  deps += [ "../websocket:websocket" ]
+  deps += [ "../websocket:websocket_server" ]
   sources = [
     "../common/log_wrapper.cpp",
     "inspector.cpp",
@@ -81,7 +81,7 @@ ohos_source_set("connectserver_debugger_static") {
 
   include_dirs = [ "$toolchain_root" ]
 
-  deps += [ "../websocket:websocket" ]
+  deps += [ "../websocket:websocket_server" ]
   sources = [
     "../common/log_wrapper.cpp",
     "connect_inspector.cpp",

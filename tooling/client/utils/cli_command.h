@@ -26,7 +26,6 @@
 #include "tooling/client/domain/profiler_client.h"
 #include "tooling/client/manager/domain_manager.h"
 #include "tooling/client/utils/utils.h"
-#include "tooling/client/websocket/websocket_client.h"
 #include "tooling/client/session/session.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
@@ -54,16 +53,25 @@ public:
     ErrCode ExecCommand();
     void CreateCommandMap();
     ErrCode HeapProfilerCommand(const std::string &cmd);
-    ErrCode HandleDebuggerCommand(const std::string &cmd);
     ErrCode DebuggerCommand(const std::string &cmd);
     ErrCode CpuProfileCommand(const std::string &cmd);
     ErrCode RuntimeCommand(const std::string &cmd);
+    ErrCode BreakCommand(const std::string &cmd);
+    ErrCode DeleteCommand(const std::string &cmd);
+    ErrCode StepCommand(const std::string &cmd);
+    ErrCode ShowstackCommand(const std::string &cmd);
+    ErrCode DisplayCommand(const std::string &cmd);
+    ErrCode InfosourceCommand(const std::string &cmd);
+    ErrCode ListCommand(const std::string &cmd);
+    ErrCode PrintCommand(const std::string &cmd);
+    ErrCode WatchCommand(const std::string &cmd);
     ErrCode SessionAddCommand(const std::string &cmd);
     ErrCode SessionDelCommand(const std::string &cmd);
     ErrCode SessionListCommand(const std::string &cmd);
     ErrCode SessionSwitchCommand(const std::string &cmd);
     ErrCode TestCommand(const std::string &cmd);
     ErrCode ExecHelpCommand();
+    void OutputCommand(const std::string &cmd, bool flag);
 
     VecStr GetArgList()
     {

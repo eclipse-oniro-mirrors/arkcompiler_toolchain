@@ -18,7 +18,8 @@
 
 #include <functional>
 #include <iostream>
-#include "websocket/websocket.h"
+#include <memory>
+#include "websocket/server/websocket_server.h"
 #ifdef WINDOWS_PLATFORM
 #include <pthread.h>
 #endif
@@ -43,7 +44,7 @@ private:
     [[maybe_unused]] std::string bundleName_;
     pthread_t tid_ {0};
     std::function<void(std::string&&)> wsOnMessage_ {};
-    std::unique_ptr<WebSocket> webSocket_ { nullptr };
+    std::unique_ptr<WebSocketServer> webSocket_ { nullptr };
 };
 } // namespace OHOS::ArkCompiler::Toolchain
 

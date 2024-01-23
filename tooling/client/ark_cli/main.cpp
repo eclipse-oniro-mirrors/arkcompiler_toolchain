@@ -95,6 +95,7 @@ void GetInputCommand([[maybe_unused]] void *arg)
     std::cout << ">>> ";
     std::string inputStr;
     while (getline(std::cin, inputStr)) {
+        inputStr.erase(0, inputStr.find_first_not_of(" "));
         if (inputStr.empty()) {
             std::cout << ">>> ";
             continue;
