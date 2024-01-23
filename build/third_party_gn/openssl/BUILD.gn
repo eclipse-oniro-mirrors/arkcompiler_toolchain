@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Copyright (c) 2020-2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -13,33 +13,51 @@
 
 import("$build_root/ark.gni")
 
+print("openssl detecting os now...")
+print("current_cpu = ${current_cpu}")
+print("current_os = ${current_os}")
+print("host_os = ${host_os}")
 openssl_selected_platform = ""
+print("is_mingw = ${is_mingw}")
 if (current_cpu == "arm" && !(current_os == "linux" || host_os == "mac")) {
+  print("openssl selected linux-armv4")
   openssl_selected_platform = "linux-armv4"
 } else if (current_cpu == "arm64" &&
            (!(current_os == "linux" || host_os == "mac") ||
             current_os == "ohos")) {
+  print("openssl selected linux-aarch64")
   openssl_selected_platform = "linux-aarch64"
 } else if ((current_cpu == "x64" || current_cpu == "x86_64") &&
            (current_os == "mac" || current_os == "ios")) {
+  # compilation for ios depends the platform
+  print("openssl selected darwin64-x86_64-cc")
   openssl_selected_platform = "darwin64-x86_64-cc"
 } else if (current_cpu == "arm64" &&
            (current_os == "mac" || current_os == "ios")) {
+  # ios and macos both use the platform
+  print("openssl selected darwin64-arm64-cc")
   openssl_selected_platform = "darwin64-arm64-cc"
 } else if ((current_cpu == "x64" || current_cpu == "x86_64") &&
            current_os != "mingw") {
+  print("openssl selected linux-x86_64")
   openssl_selected_platform = "linux-x86_64"
-} else if (current_cpu == "x86" && current_os != "mingw") {
-  openssl_selected_platform = "linux-x86"
 } else if (is_mingw) {
+  print("openssl selected mingw64")
   openssl_selected_platform = "mingw64"
-} else if (current_cpu == "mipsel") {
-  openssl_selected_platform = "linux-mips32"
+} else if (current_cpu == "arm" && current_os == "android") {
+  print("openssl selected linux-armv4")
+  openssl_selected_platform = "linux-armv4"
+} else if (current_cpu == "arm64" && current_os == "android") {
+  print("openssl selected linux-aarch64")
+  openssl_selected_platform = "linux-aarch64"
 }
+print(
+    "openssl detecting os done. openssl_selected_platform = ${openssl_selected_platform}")
 
 openssl_selected_platform_full_path =
     "${target_out_dir}/build_all_generated/${openssl_selected_platform}"
 
+# 升级修改适配检查点1 libcrypto 不同平台汇编代码
 libcrypto_build_all_generated_linux_armv4_sources = [
   "${openssl_selected_platform_full_path}/crypto/aes/aes-armv4.S",
   "${openssl_selected_platform_full_path}/crypto/aes/aesv8-armx.S",
@@ -57,6 +75,8 @@ libcrypto_build_all_generated_linux_armv4_sources = [
   "${openssl_selected_platform_full_path}/crypto/sha/sha256-armv4.S",
   "${openssl_selected_platform_full_path}/crypto/sha/sha512-armv4.S",
 ]
+
+# 升级修改适配检查点2 libcrypto 不同平台汇编代码
 libcrypto_build_all_generated_linux_aarch64_sources = [
   "${openssl_selected_platform_full_path}/crypto/aes/aesv8-armx.S",
   "${openssl_selected_platform_full_path}/crypto/aes/vpaes-armv8.S",
@@ -72,6 +92,8 @@ libcrypto_build_all_generated_linux_aarch64_sources = [
   "${openssl_selected_platform_full_path}/crypto/sha/sha256-armv8.S",
   "${openssl_selected_platform_full_path}/crypto/sha/sha512-armv8.S",
 ]
+
+# 升级修改适配检查点3 libcrypto 不同平台汇编代码
 libcrypto_build_all_generated_darwin64_x86_64_cc_sources = [
   "${openssl_selected_platform_full_path}/crypto/aes/aes-x86_64.s",
   "${openssl_selected_platform_full_path}/crypto/aes/aesni-mb-x86_64.s",
@@ -106,6 +128,8 @@ libcrypto_build_all_generated_darwin64_x86_64_cc_sources = [
   "${openssl_selected_platform_full_path}/crypto/x86_64cpuid.s",
   "${openssl_selected_platform_full_path}/engines/e_padlock-x86_64.s",
 ]
+
+# 升级修改适配检查点4 libcrypto 不同平台汇编代码
 libcrypto_build_all_generated_darwin64_arm64_cc_sources = [
   "${openssl_selected_platform_full_path}/crypto/aes/aesv8-armx.S",
   "${openssl_selected_platform_full_path}/crypto/aes/vpaes-armv8.S",
@@ -121,6 +145,8 @@ libcrypto_build_all_generated_darwin64_arm64_cc_sources = [
   "${openssl_selected_platform_full_path}/crypto/sha/sha256-armv8.S",
   "${openssl_selected_platform_full_path}/crypto/sha/sha512-armv8.S",
 ]
+
+# 升级修改适配检查点5 libcrypto 不同平台汇编代码
 libcrypto_build_all_generated_linux_x86_64_sources = [
   "${openssl_selected_platform_full_path}/crypto/aes/aes-x86_64.s",
   "${openssl_selected_platform_full_path}/crypto/aes/aesni-mb-x86_64.s",
@@ -155,7 +181,8 @@ libcrypto_build_all_generated_linux_x86_64_sources = [
   "${openssl_selected_platform_full_path}/crypto/x86_64cpuid.s",
   "${openssl_selected_platform_full_path}/engines/e_padlock-x86_64.s",
 ]
-libcrypto_build_all_generated_linux_x86_sources = []
+
+# 升级修改适配检查点6 libcrypto 不同平台汇编代码
 libcrypto_build_all_generated_mingw64_sources = [
   "${openssl_selected_platform_full_path}/crypto/aes/aes-x86_64.s",
   "${openssl_selected_platform_full_path}/crypto/aes/aesni-mb-x86_64.s",
@@ -207,14 +234,12 @@ if (openssl_selected_platform == "linux-armv4") {
 } else if (openssl_selected_platform == "linux-x86_64") {
   libcrypto_build_all_generated_selected_platform_sources +=
       libcrypto_build_all_generated_linux_x86_64_sources
-} else if (openssl_selected_platform == "linux-x86") {
-  libcrypto_build_all_generated_selected_platform_sources +=
-      libcrypto_build_all_generated_linux_x86_sources
 } else if (openssl_selected_platform == "mingw64") {
   libcrypto_build_all_generated_selected_platform_sources +=
       libcrypto_build_all_generated_mingw64_sources
 }
 
+# 升级修改适配检查点7 libcommon 生成的源码列表
 libcommon_build_all_generated_selected_platform_sources = [
   "${openssl_selected_platform_full_path}/providers/common/der/der_digests_gen.c",
   "${openssl_selected_platform_full_path}/providers/common/der/der_dsa_gen.c",
@@ -224,6 +249,7 @@ libcommon_build_all_generated_selected_platform_sources = [
   "${openssl_selected_platform_full_path}/providers/common/der/der_wrap_gen.c",
 ]
 
+# 升级修改适配检查点8 libdefault 生成的源码列表
 libdefault_build_all_generated_selected_platform_sources = [
   "${openssl_selected_platform_full_path}/providers/common/der/der_sm2_gen.c",
 ]
@@ -243,47 +269,19 @@ libdefault_build_all_generated_selected_platform_sources = [
 #
 # The gn build system requires the script in exec_script and action should be python script,
 # so we invoke the shell script in python script
+print(exec_script(
+          rebase_path("//third_party/openssl/run_command.py"),
+          [
+            rebase_path(
+                "//third_party/openssl/make_openssl_build_all_generated.sh"),
+            rebase_path("//third_party/openssl"),
+            rebase_path("${target_out_dir}/build_all_generated"),
+            openssl_selected_platform,
+          ],
+          "string",
+          []))
 action("openssl_build_all_generated") {
-  if (current_cpu == "arm" && !(current_os == "linux" || host_os == "mac")) {
-    print("openssl current_platform linux-armv4")
-    openssl_current_platform = "linux-armv4"
-  } else if (current_cpu == "arm64" &&
-             (!(current_os == "linux" || host_os == "mac") ||
-              current_os == "ohos")) {
-    print("openssl currcurrent_platforment linux-aarch64")
-    openssl_current_platform = "linux-aarch64"
-  } else if ((current_cpu == "x64" || current_cpu == "x86_64") &&
-             (current_os == "mac" || current_os == "ios")) {
-    # compilation for ios depends the platform
-    print("openssl current_platform darwin64-x86_64-cc")
-    openssl_current_platform = "darwin64-x86_64-cc"
-  } else if (current_cpu == "arm64" &&
-             (current_os == "mac" || current_os == "ios")) {
-    # ios and macos both use the platform
-    print("openssl current_platform darwin64-arm64-cc")
-    openssl_current_platform = "darwin64-arm64-cc"
-  } else if ((current_cpu == "x64" || current_cpu == "x86_64") &&
-             current_os != "mingw") {
-    print("openssl current_platform linux-x86_64")
-    openssl_current_platform = "linux-x86_64"
-  } else if (current_cpu == "x86" && current_os != "mingw") {
-    print("openssl current_platform linux-x86")
-    openssl_current_platform = "linux-x86"
-  } else if (is_mingw) {
-    print("openssl current_platform mingw64")
-    openssl_current_platform = "mingw64"
-  } else if (current_cpu == "mipsel") {
-    print("openssl current_platform linux-mip32")
-    openssl_current_platform = "linux-mips32"
-  }
-
-  script = rebase_path("//third_party/openssl/run_command.py")
-  args = [
-    rebase_path("//third_party/openssl/make_openssl_build_all_generated.sh"),
-    rebase_path("//third_party/openssl"),
-    rebase_path("${target_out_dir}/build_all_generated"),
-    openssl_current_platform,
-  ]
+  script = rebase_path("//third_party/openssl/empty.py")
   outputs = []
   outputs += libcommon_build_all_generated_selected_platform_sources
   outputs += libdefault_build_all_generated_selected_platform_sources
@@ -328,6 +326,7 @@ openssl_internal_cflags = [
   "-Wno-unused-but-set-variable",
 ]
 
+# 升级修改适配检查点9 内部公共头文件目录列表
 crypto_config_common_private_include_dirs = [
   "//third_party/openssl/",
   "//third_party/openssl/apps/include",
@@ -361,21 +360,39 @@ ohos_prebuilt_etc("openssl.cnf") {
   part_name = "openssl"
 }
 
+# 升级修改适配检查点10 内部公共编译选项宏列表
 crypto_config_common_cflags = [
   "-Wa,--noexecstack",
   "-DNDEBUG",
   "-DOPENSSL_BUILDING_OPENSSL",
   "-DOPENSSL_CPUID_OBJ",
   "-DOPENSSL_PIC",
+
+  # use `openssl version -a` cmd to see runtime OPENSSLDIR, ENGINESDIR, MODULESDIR value
+
+  # the origin value generated by Configure
+  # linux-armv4, linux-aarch64, darwin64-x86_64-cc, darwin64-arm64-cc
+  # /usr/local/lib/engines-3
+  # linux-x86_64, mingw64
+  # /usr/local/lib64/engines-3
   "-DENGINESDIR=\"\"",
+
+  # the origin value generated by Configure
+  # linux-armv4, linux-aarch64, darwin64-x86_64-cc, darwin64-arm64-cc
+  # /usr/local/lib/ossl-modules
+  # linux-x86_64, mingw64
+  # /usr/local/lib64/ossl-modules
   "-DMODULESDIR=\"\"",
 
-  # to locate openssl.cnf
+  # the origin value generated by Configure
+  # /usr/local/ssl
+  # we set the variable as the following to locate openssl.cnf
   "-DOPENSSLDIR=\"/system/etc\"",
 
   "-DSTATIC_LEGACY",
 ]
 
+# 升级修改适配检查点11 内部不同平台编译选项列表
 crypto_config_linux_armv4_cflags = [
   "-DOPENSSL_USE_NODELETE",
   "-fPIC",
@@ -394,6 +411,7 @@ crypto_config_linux_armv4_cflags = [
   "-DSHA512_ASM",
 ]
 
+# 升级修改适配检查点12 内部不同平台编译选项列表
 crypto_config_linux_aarch64_cflags = [
   "-DOPENSSL_USE_NODELETE",
   "-fPIC",
@@ -409,6 +427,7 @@ crypto_config_linux_aarch64_cflags = [
   "-DVPAES_ASM",
 ]
 
+# 升级修改适配检查点13 内部不同平台编译选项列表
 crypto_config_darwin64_x86_64_cc_cflags = [
   "-fPIC",
   "-DL_ENDIAN",
@@ -435,6 +454,7 @@ crypto_config_darwin64_x86_64_cc_cflags = [
   "-DX25519_ASM",
 ]
 
+# 升级修改适配检查点14 内部不同平台编译选项列表
 crypto_config_darwin64_arm64_cc_cflags = [
   "-DL_ENDIAN",
   "-D_REENTRANT",
@@ -450,6 +470,7 @@ crypto_config_darwin64_arm64_cc_cflags = [
   "-DVPAES_ASM",
 ]
 
+# 升级修改适配检查点15 内部不同平台编译选项列表
 crypto_config_linux_x86_64_cflags = [
   "-DL_ENDIAN",
   "-DOPENSSL_IA32_SSE2",
@@ -478,8 +499,7 @@ crypto_config_linux_x86_64_cflags = [
   "-DX25519_ASM",
 ]
 
-crypto_config_linux_x86_cflags = []
-
+# 升级修改适配检查点16 内部不同平台编译选项列表
 crypto_config_mingw64_cflags = [
   "-D_MT",
   "-D_UNICODE",
@@ -522,8 +542,6 @@ if (openssl_selected_platform == "linux-armv4") {
       crypto_config_darwin64_arm64_cc_cflags
 } else if (openssl_selected_platform == "linux-x86_64") {
   crypto_config_current_platform_cflags += crypto_config_linux_x86_64_cflags
-} else if (openssl_selected_platform == "linux-x86") {
-  crypto_config_current_platform_cflags += crypto_config_linux_x86_cflags
 } else if (openssl_selected_platform == "mingw64") {
   crypto_config_current_platform_cflags += crypto_config_mingw64_cflags
 }
@@ -551,6 +569,7 @@ config("crypto_config_public") {
   libs = mingw32_libs
 }
 
+# 升级修改适配检查点17 libcommon 原目录源码列表
 libcommon_common_sources = [
   "//third_party/openssl/providers/common/der/der_dsa_key.c",
   "//third_party/openssl/providers/common/der/der_dsa_sig.c",
@@ -571,6 +590,7 @@ libcommon_common_sources = [
   "//third_party/openssl/ssl/record/tls_pad.c",
 ]
 
+# 升级修改适配检查点18 libdefault 原目录源码列表
 libdefault_common_sources = [
   "//third_party/openssl/providers/common/bio_prov.c",
   "//third_party/openssl/providers/common/capabilities.c",
@@ -697,6 +717,8 @@ libdefault_common_sources = [
   "//third_party/openssl/providers/implementations/storemgmt/file_store_any2obj.c",
   "//third_party/openssl/ssl/s3_cbc.c",
 ]
+
+# 升级修改适配检查点19 liblegacy 源码列表
 liblegacy_sources = [
   "//third_party/openssl/providers/implementations/ciphers/cipher_blowfish.c",
   "//third_party/openssl/providers/implementations/ciphers/cipher_blowfish_hw.c",
@@ -723,6 +745,10 @@ liblegacy_sources = [
 ]
 
 ohos_source_set("crypto_source") {
+  subsystem_name = "thirdparty"
+  part_name = "openssl"
+
+  # 升级修改适配检查点20 libcrypto 原目录源码列表
   sources = [
     "//third_party/openssl/crypto/aes/aes_cfb.c",
     "//third_party/openssl/crypto/aes/aes_ecb.c",
@@ -866,7 +892,6 @@ ohos_source_set("crypto_source") {
     "//third_party/openssl/crypto/bn/bn_srp.c",
     "//third_party/openssl/crypto/bn/bn_word.c",
     "//third_party/openssl/crypto/bn/bn_x931p.c",
-    "//third_party/openssl/crypto/bn/rsa_sup_mul.c",
     "//third_party/openssl/crypto/bsearch.c",
     "//third_party/openssl/crypto/buffer/buf_err.c",
     "//third_party/openssl/crypto/buffer/buffer.c",
@@ -1456,7 +1481,6 @@ ohos_source_set("crypto_source") {
     "//third_party/openssl/providers/nullprov.c",
     "//third_party/openssl/providers/prov_running.c",
   ]
-
   sources += libcommon_common_sources
   sources += libcommon_build_all_generated_selected_platform_sources
   sources += libdefault_common_sources
@@ -1465,6 +1489,7 @@ ohos_source_set("crypto_source") {
   sources += liblegacy_sources
 
   if (openssl_selected_platform == "linux-armv4") {
+    # 升级修改适配检查点21 libcrypto 不同平台c源码列表
     sources += [
       "//third_party/openssl/crypto/aes/aes_cbc.c",
       "//third_party/openssl/crypto/armcap.c",
@@ -1477,6 +1502,7 @@ ohos_source_set("crypto_source") {
       "//third_party/openssl/engines/e_afalg.c",
     ]
   } else if (openssl_selected_platform == "linux-aarch64") {
+    # 升级修改适配检查点22 libcrypto 不同平台c源码列表
     sources += [
       "//third_party/openssl/crypto/aes/aes_cbc.c",
       "//third_party/openssl/crypto/aes/aes_core.c",
@@ -1490,12 +1516,14 @@ ohos_source_set("crypto_source") {
       "//third_party/openssl/engines/e_afalg.c",
     ]
   } else if (openssl_selected_platform == "darwin64-x86_64-cc") {
+    # 升级修改适配检查点23 libcrypto 不同平台c源码列表
     sources += [
       "//third_party/openssl/crypto/bn/asm/x86_64-gcc.c",
       "//third_party/openssl/crypto/bn/rsaz_exp.c",
       "//third_party/openssl/crypto/bn/rsaz_exp_x2.c",
     ]
   } else if (openssl_selected_platform == "darwin64-arm64-cc") {
+    # 升级修改适配检查点24 libcrypto 不同平台c源码列表
     sources += [
       "//third_party/openssl/crypto/aes/aes_cbc.c",
       "//third_party/openssl/crypto/aes/aes_core.c",
@@ -1508,45 +1536,44 @@ ohos_source_set("crypto_source") {
       "//third_party/openssl/crypto/whrlpool/wp_block.c",
     ]
   } else if (openssl_selected_platform == "linux-x86_64") {
+    # 升级修改适配检查点25 libcrypto 不同平台c源码列表
     sources += [
       "//third_party/openssl/crypto/bn/asm/x86_64-gcc.c",
       "//third_party/openssl/crypto/bn/rsaz_exp.c",
       "//third_party/openssl/crypto/bn/rsaz_exp_x2.c",
       "//third_party/openssl/engines/e_afalg.c",
     ]
-  } else if (openssl_selected_platform == "linux-x86") {
-    sources += []
   } else if (openssl_selected_platform == "mingw64") {
+    # 升级修改适配检查点26 libcrypto 不同平台c源码列表
     sources += [
       "//third_party/openssl/crypto/bn/asm/x86_64-gcc.c",
       "//third_party/openssl/crypto/bn/rsaz_exp.c",
       "//third_party/openssl/crypto/bn/rsaz_exp_x2.c",
-      "//third_party/openssl/crypto/dllmain.c",
     ]
   }
 
   configs = [ ":crypto_config_private" ]
   public_configs = [ ":crypto_config_public" ]
   deps = [ ":openssl_build_all_generated" ]
-  subsystem_name = "thirdparty"
-  part_name = "openssl"
 }
 
 ohos_static_library("libcrypto_static") {
+  subsystem_name = "thirdparty"
+  part_name = "openssl"
   deps = [ ":crypto_source" ]
   public_configs = [ ":crypto_config_public" ]
   complete_static_lib = true
-  subsystem_name = "thirdparty"
-  part_name = "openssl"
 }
 
 if (is_mingw || is_mac) {
   ohos_shared_library("libcrypto_restool") {
-    if (is_mingw) {
-      lib_dirs = [ "//prebuilts/mingw-w64/ohos/linux-x86_64/clang-mingw/x86_64-w64-mingw32/lib" ]
-      libs = [ "ws2_32" ]
-    }
+    sources = []
+    configs = []
     deps = [ ":crypto_source" ]
+    if (openssl_selected_platform == "mingw64") {
+      sources += [ "//third_party/openssl/crypto/dllmain.c" ]
+      configs += [ ":crypto_config_private" ]
+    }
     subsystem_name = "thirdparty"
     part_name = "openssl"
     public_configs = [ ":crypto_config_public" ]
@@ -1554,28 +1581,49 @@ if (is_mingw || is_mac) {
       "system",
       "updater",
     ]
-    subsystem_name = "thirdparty"
-    part_name = "openssl"
   }
 }
 
 ohos_shared_library("libcrypto_shared") {
-  if (is_mingw) {
-    lib_dirs = [ "//prebuilts/mingw-w64/ohos/linux-x86_64/clang-mingw/x86_64-w64-mingw32/lib" ]
-    libs = [ "ws2_32" ]
-  }
+  sources = []
+  configs = []
   deps = [
     ":crypto_source",
     ":openssl.cnf",
   ]
-  output_name = "libcrypto_openssl"
+  if (openssl_selected_platform == "mingw64") {
+    sources += [ "//third_party/openssl/crypto/dllmain.c" ]
+    configs += [ ":crypto_config_private" ]
+  }
+  if (current_os == "ios") {
+    ldflags = [
+      "-Wl",
+      "-install_name",
+      "@rpath/libcrypto_openssl.framework/libcrypto_openssl",
+    ]
+    output_name = "crypto_openssl"
+  } else {
+    output_name = "libcrypto_openssl"
+  }
   subsystem_name = "thirdparty"
   part_name = "openssl"
+  innerapi_tags = [
+    "platformsdk",
+    "chipsetsdk",
+  ]
   public_configs = [ ":crypto_config_public" ]
   install_images = [
     "system",
     "updater",
   ]
+}
+
+if (current_os == "ios") {
+  ohos_combine_darwin_framework("libcrypto_openssl") {
+    deps = [ ":libcrypto_shared" ]
+    subsystem_name = "thirdparty"
+    part_name = "openssl"
+  }
 }
 
 unused_variables = []
@@ -1588,7 +1636,6 @@ unused_variables += crypto_config_linux_aarch64_cflags
 unused_variables += crypto_config_darwin64_x86_64_cc_cflags
 unused_variables += crypto_config_darwin64_arm64_cc_cflags
 unused_variables += crypto_config_linux_x86_64_cflags
-unused_variables += crypto_config_linux_x86_cflags
 unused_variables += crypto_config_mingw64_cflags
 unused_variables += libcommon_common_sources
 unused_variables += libdefault_common_sources
@@ -1597,7 +1644,6 @@ unused_variables += libcrypto_build_all_generated_linux_aarch64_sources
 unused_variables += libcrypto_build_all_generated_darwin64_x86_64_cc_sources
 unused_variables += libcrypto_build_all_generated_darwin64_arm64_cc_sources
 unused_variables += libcrypto_build_all_generated_linux_x86_64_sources
-unused_variables += libcrypto_build_all_generated_linux_x86_sources
 unused_variables += libcrypto_build_all_generated_mingw64_sources
 
 config("ssl_config_private") {
@@ -1611,6 +1657,10 @@ config("ssl_config_public") {
 }
 
 ohos_source_set("ssl_source") {
+  subsystem_name = "thirdparty"
+  part_name = "openssl"
+
+  # 升级修改适配检查点27 libssl 源码列表
   sources = [
     "//third_party/openssl/ssl/bio_ssl.c",
     "//third_party/openssl/ssl/d1_lib.c",
@@ -1624,8 +1674,6 @@ ohos_source_set("ssl_source") {
     "//third_party/openssl/ssl/record/ssl3_buffer.c",
     "//third_party/openssl/ssl/record/ssl3_record.c",
     "//third_party/openssl/ssl/record/ssl3_record_tls13.c",
-
-    # ssl/s3_cbc.c has been added into libdefault_common_sources
     "//third_party/openssl/ssl/s3_enc.c",
     "//third_party/openssl/ssl/s3_lib.c",
     "//third_party/openssl/ssl/s3_msg.c",
@@ -1644,8 +1692,6 @@ ohos_source_set("ssl_source") {
     "//third_party/openssl/ssl/ssl_stat.c",
     "//third_party/openssl/ssl/ssl_txt.c",
     "//third_party/openssl/ssl/ssl_utst.c",
-
-    # ssl/record/tls_pad.c has been added into libcommon_common_sources
     "//third_party/openssl/ssl/statem/extensions.c",
     "//third_party/openssl/ssl/statem/extensions_clnt.c",
     "//third_party/openssl/ssl/statem/extensions_cust.c",
@@ -1666,16 +1712,14 @@ ohos_source_set("ssl_source") {
   configs = [ ":ssl_config_private" ]
   public_configs = [ ":ssl_config_public" ]
   deps = [ ":openssl_build_all_generated" ]
-  subsystem_name = "thirdparty"
-  part_name = "openssl"
 }
 
 ohos_static_library("libssl_static") {
+  subsystem_name = "thirdparty"
+  part_name = "openssl"
   deps = [ ":ssl_source" ]
   public_configs = [ ":ssl_config_public" ]
   complete_static_lib = true
-  subsystem_name = "thirdparty"
-  part_name = "openssl"
 }
 
 ohos_shared_library("libssl_shared") {
@@ -1684,17 +1728,23 @@ ohos_shared_library("libssl_shared") {
     ":openssl.cnf",
     ":ssl_source",
   ]
-
-  if (is_mingw) {
-    lib_dirs = [ "//prebuilts/mingw-w64/ohos/linux-x86_64/clang-mingw/x86_64-w64-mingw32/lib" ]
-    libs = [ "ws2_32" ]
+  if (current_os == "ios") {
+    ldflags = [
+      "-Wl",
+      "-install_name",
+      "@rpath/libssl_openssl.framework/libssl_openssl",
+    ]
+    output_name = "ssl_openssl"
+  } else {
+    output_name = "libssl_openssl"
   }
-
-  output_name = "libssl_openssl"
   subsystem_name = "thirdparty"
   part_name = "openssl"
 
-  innerapi_tags = [ "platformsdk" ]
+  innerapi_tags = [
+    "platformsdk",
+    "chipsetsdk",
+  ]
   public_configs = [
     ":crypto_config_public",
     ":ssl_config_public",
@@ -1708,7 +1758,16 @@ ohos_shared_library("libssl_shared") {
   ]
 }
 
+if (current_os == "ios") {
+  ohos_combine_darwin_framework("libssl_openssl") {
+    deps = [ ":libssl_shared" ]
+    subsystem_name = "thirdparty"
+    part_name = "openssl"
+  }
+}
+
 ohos_static_library("libapps") {
+  # 升级修改适配检查点28 libapps 源码列表
   sources = [
     "//third_party/openssl/apps/lib/app_libctx.c",
     "//third_party/openssl/apps/lib/app_params.c",
@@ -1737,6 +1796,7 @@ ohos_static_library("libapps") {
 }
 
 ohos_executable("openssl") {
+  # 升级修改适配检查点29 apps/openssl 源码列表
   sources = [
     "${openssl_selected_platform_full_path}/apps/progs.c",
     "//third_party/openssl/apps/asn1parse.c",
@@ -1808,3 +1868,38 @@ ohos_executable("openssl") {
   part_name = "openssl"
   configs = [ ":crypto_config_private" ]
 }
+# 升级修改适配检查点 汇总
+#
+# libcommon =
+#     libcommon 生成的源码列表(7) +
+#     libcommon 原目录源码列表(17)
+#
+# libdefault =
+#     libdefault 生成的源码列表(8) +
+#     libdefault 原目录源码列表(18)
+#
+# liblegacy =
+#     liblegacy 源码列表(19)
+#
+# libcrypto =
+#     libcrypto 不同平台汇编代码(1,2,3,4,5,6) +
+#     libcrypto 不同平台c源码列表(21,22,23,24,25,26) +
+#     libcrypto 原目录源码列表(20) +
+#     libcommon +
+#     libdefault +
+#     liblegacy
+#
+# libssl =
+#     libssl 源码列表(27)
+#
+# libapps =
+#     libapps 源码列表(28)
+#
+# apps/openssl =
+#     apps/openssl 源码列表(29) +
+#     libapps
+#
+# 编译选项 =
+#     内部公共头文件目录列表(9) +
+#     内部公共编译选项宏列表(10) +
+#     内部不同平台编译选项列表(11,12,13,14,15,16)
