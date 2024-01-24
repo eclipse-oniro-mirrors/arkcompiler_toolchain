@@ -297,12 +297,8 @@ void *GetEcmaVM(int tid)
     return g_debuggerInfo[tid].first;
 }
 
-// for ohos platform.
-bool StartDebugForSocketpair(int tid, int socketfd)
+bool InitializeDebuggerForSocketpair(void* vm)
 {
-    LOGI("StartDebugForSocketpair, tid = %{private}d, socketfd = %{private}d", tid, socketfd);
-    void* vm = GetEcmaVM(tid);
-    g_vm = vm;
 #if !defined(IOS_PLATFORM)
     if (!LoadArkDebuggerLibrary()) {
         return false;
@@ -312,9 +308,19 @@ bool StartDebugForSocketpair(int tid, int socketfd)
         LOGE("Initialize ark functions failed");
         return false;
     }
-
     g_initializeDebugger(vm, std::bind(&SendReply, vm, std::placeholders::_2));
+    return true;
+}
 
+// for ohos platform.
+bool StartDebugForSocketpair(int tid, int socketfd)
+{
+    LOGI("StartDebugForSocketpair, tid = %{private}d, socketfd = %{private}d", tid, socketfd);
+    void* vm = GetEcmaVM(tid);
+    g_vm = vm;
+    if (!InitializeDebuggerForSocketpair(vm)) {
+        return false;
+    }
     const DebuggerPostTask &debuggerPostTask = GetDebuggerPostTask(tid);
     DebugInfo debugInfo = {socketfd};
     if (!InitializeInspector(vm, debuggerPostTask, debugInfo, tid)) {
