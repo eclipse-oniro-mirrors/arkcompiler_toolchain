@@ -115,9 +115,12 @@ void ResetService()
     }
 }
 
-void StartServerForSocketPair(int socketfd)
+void StartServerForSocketPair(int socketfd, bool isDebugApp)
 {
     LOGI("StartServerForSocketPair, socketfd = %{private}d", socketfd);
+    if (!isDebugApp) {
+        g_inspector = std::make_unique<ConnectInspector>();
+    }
     g_inspector->connectServer_ = std::make_unique<ConnectServer>(socketfd,
         std::bind(&OnMessage, std::placeholders::_1));
 
