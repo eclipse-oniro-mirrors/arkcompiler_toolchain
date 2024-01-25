@@ -18,8 +18,8 @@
 #include <sys/un.h>
 
 #include "gtest/gtest.h"
-#include "websocket/client/websocket_client.h"
-#include "websocket/server/websocket_server.h"
+#include "client/websocket_client.h"
+#include "server/websocket_server.h"
 
 using namespace OHOS::ArkCompiler::Toolchain;
 

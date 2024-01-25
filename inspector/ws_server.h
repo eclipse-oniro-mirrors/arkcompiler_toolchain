@@ -16,17 +16,18 @@
 #ifndef ARKCOMPILER_TOOLCHAIN_INSPECTOR_WS_SERVER_H
 #define ARKCOMPILER_TOOLCHAIN_INSPECTOR_WS_SERVER_H
 
+#include <atomic>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <mutex>
 #ifdef WINDOWS_PLATFORM
 #include <pthread.h>
 #endif
-
-#include "websocket/server/websocket_server.h"
+#include <string>
 
 namespace OHOS::ArkCompiler::Toolchain {
+class WebSocketServer;
+
 struct DebugInfo {
     int socketfd {-2};
     std::string componentName {};
@@ -36,10 +37,8 @@ struct DebugInfo {
 
 class WsServer {
 public:
-    WsServer(const DebugInfo& debugInfo, const std::function<void(std::string&&)>& onMessage)
-        : debugInfo_(debugInfo), wsOnMessage_(onMessage)
-    {}
-    ~WsServer() = default;
+    WsServer(const DebugInfo& debugInfo, const std::function<void(std::string&&)>& onMessage);
+    ~WsServer();
     void RunServer();
     void StopServer();
     void SendReply(const std::string& message) const;

@@ -18,9 +18,21 @@
 #include <shared_mutex>
 #include <unistd.h>
 #include "common/log_wrapper.h"
+#include "websocket/server/websocket_server.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 std::shared_mutex g_sendMutex;
+
+// defined in .cpp file for WebSocketServer forward declaration
+ConnectServer::ConnectServer(int socketfd, std::function<void(std::string&&)> onMessage)
+    : socketfd_(socketfd), wsOnMessage_(std::move(onMessage))
+{}
+
+ConnectServer::ConnectServer(const std::string& bundleName, std::function<void(std::string&&)> onMessage)
+    : bundleName_(bundleName), wsOnMessage_(std::move(onMessage))
+{}
+
+ConnectServer::~ConnectServer() = default;
 
 void ConnectServer::RunServer()
 {

@@ -22,9 +22,17 @@
 #include <unistd.h>
 
 #include "common/log_wrapper.h"
+#include "websocket/server/websocket_server.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 std::shared_mutex g_mutex;
+
+// defined in .cpp file for WebSocketServer forward declaration
+WsServer::WsServer(const DebugInfo& debugInfo, const std::function<void(std::string&&)>& onMessage)
+    : debugInfo_(debugInfo), wsOnMessage_(onMessage)
+{}
+
+WsServer::~WsServer() = default;
 
 void WsServer::RunServer()
 {

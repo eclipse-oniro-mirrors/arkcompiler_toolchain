@@ -19,6 +19,7 @@
 #include "tooling/client/domain/runtime_client.h"
 #include "tooling/client/utils/cli_command.h"
 #include "tooling/client/session/session.h"
+#include "websocket/client/websocket_client.h"
 
 #include <cstring>
 

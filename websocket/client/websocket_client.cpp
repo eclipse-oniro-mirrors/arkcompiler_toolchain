@@ -20,11 +20,11 @@
 #include <unistd.h>
 
 #include "common/log_wrapper.h"
-#include "websocket/frame_builder.h"
-#include "websocket/handshake_helper.h"
-#include "websocket/network.h"
-#include "websocket/string_utils.h"
-#include "websocket/client/websocket_client.h"
+#include "frame_builder.h"
+#include "handshake_helper.h"
+#include "network.h"
+#include "string_utils.h"
+#include "client/websocket_client.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 bool WebSocketClient::InitToolchainWebSocketForPort(int port, uint32_t timeoutLimit)

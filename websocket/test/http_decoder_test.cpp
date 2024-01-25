@@ -16,7 +16,7 @@
 #include <string_view>
 
 #include "gtest/gtest.h"
-#include "websocket/http.h"
+#include "http.h"
 
 using namespace OHOS::ArkCompiler::Toolchain;
 
