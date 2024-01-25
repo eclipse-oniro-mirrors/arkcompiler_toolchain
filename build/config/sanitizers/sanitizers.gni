@@ -25,4 +25,8 @@ declare_args() {
   is_ubsan_security = false
 
   using_sanitizer = false
+
+  use_sanitizer_coverage = false
+
+  use_fuzzing_engine = false
 }

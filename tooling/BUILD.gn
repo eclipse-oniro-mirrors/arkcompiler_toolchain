@@ -25,7 +25,7 @@ config("ark_ecma_debugger_config") {
     "//third_party/cJSON",
     "//third_party/libuv/include",
   ]
-  if (!is_mingw && !is_mac && target_os != "ios") {
+  if (!is_mingw && target_os != "ios") {
     include_dirs += [ "//third_party/libuv/include" ]
   }
 }
@@ -145,7 +145,7 @@ ohos_shared_library("libark_ecma_debugger_test") {
     "$js_root:libark_jsruntime_test",
   ]
 
-  if (is_arkui_x && target_os == "ios") {
+  if ((is_arkui_x && target_os == "ios") || target_os == "mac") {
     deps += [ "$ark_third_party_root/cJSON:cjson_static" ]
   } else {
     deps += [ "$ark_third_party_root/cJSON:cjson" ]
@@ -157,6 +157,8 @@ ohos_shared_library("libark_ecma_debugger_test") {
 
   install_enable = false
 
-  output_extension = "so"
+  if (!is_mingw && !is_mac) {
+    output_extension = "so"
+  }
   subsystem_name = "test"
 }

@@ -48,6 +48,7 @@ template("ohos_executable") {
                              "unit_test",
                              "external_deps",
                              "stack_protector_ret",
+                             "use_rtti",
                            ])
     output_dir = output_dir
     if (defined(invoker.configs)) {
@@ -62,7 +63,9 @@ template("ohos_executable") {
       configs += [ "//arkcompiler/toolchain/build/config/compiler:exceptions" ]
       ldflags = []
     }
-
+    if (defined(invoker.use_rtti) && invoker.use_rtti) {
+      configs += [ "//arkcompiler/toolchain/build/config/compiler:rtti" ]
+    }
     if (!defined(libs)) {
       libs = []
     }
@@ -143,6 +146,7 @@ template("ohos_static_library") {
                              "use_exceptions",
                              "external_deps",
                              "stack_protector_ret",
+                             "use_rtti",
                            ])
     if (defined(invoker.configs)) {
       configs += invoker.configs
@@ -157,6 +161,9 @@ template("ohos_static_library") {
       ldflags = []
     }
 
+    if (defined(invoker.use_rtti) && invoker.use_rtti) {
+      configs += [ "//arkcompiler/toolchain/build/config/compiler:rtti" ]
+    }
     if (!defined(libs)) {
       libs = []
     }
@@ -217,6 +224,7 @@ template("ohos_shared_library") {
                              "external_deps",
                              "stack_protector_ret",
                              "innerapi_tags",
+                             "use_rtti",
                            ])
     output_dir = output_dir
     if (defined(invoker.configs)) {
@@ -234,6 +242,9 @@ template("ohos_shared_library") {
     }
     if (!defined(inputs)) {
       inputs = []
+    }
+    if (defined(invoker.use_rtti) && invoker.use_rtti) {
+      configs += [ "//arkcompiler/toolchain/build/config/compiler:rtti" ]
     }
 
     if (defined(version_script)) {
@@ -318,9 +329,13 @@ template("ohos_source_set") {
                              "subsystem_name",
                              "part_name",
                              "stack_protector_ret",
+                             "use_rtti",
                            ])
     if (defined(invoker.configs)) {
       configs += invoker.configs
+    }
+    if (defined(invoker.use_rtti) && invoker.use_rtti) {
+      configs += [ "//arkcompiler/toolchain/build/config/compiler:rtti" ]
     }
     if (defined(invoker.remove_configs)) {
       configs -= invoker.remove_configs
