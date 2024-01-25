@@ -35,8 +35,9 @@ bool Recv(int32_t client, char* buf, size_t totalLen, int32_t flags)
     size_t recvLen = 0;
     while (recvLen < totalLen) {
         ssize_t len = 0;
-        while ((len = recv(client, buf + recvLen, totalLen - recvLen, flags)) < 0 && errno == EINTR) {
-            LOGW("Recv payload failed, errno == EINTR");
+        while ((len = recv(client, buf + recvLen, totalLen - recvLen, flags)) < 0 &&
+               (errno == EINTR || errno == EAGAIN)) {
+            LOGW("Recv payload failed, errno = %{public}d", errno);
         }
         if (len <= 0) {
             LOGE("Recv payload in while failed, len = %{public}ld, errno = %{public}d", static_cast<long>(len), errno);
