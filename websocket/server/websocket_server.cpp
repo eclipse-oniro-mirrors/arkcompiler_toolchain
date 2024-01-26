@@ -75,8 +75,9 @@ bool WebSocketServer::HttpHandShake()
 {
     std::string msgBuf(HTTP_HANDSHAKE_MAX_LEN, 0);
     ssize_t msgLen = 0;
-    while ((msgLen = recv(connectionFd_, msgBuf.data(), HTTP_HANDSHAKE_MAX_LEN, 0)) < 0 && errno == EINTR) {
-        LOGW("HttpHandShake recv failed, errno == EINTR");
+    while ((msgLen = recv(connectionFd_, msgBuf.data(), HTTP_HANDSHAKE_MAX_LEN, 0)) < 0 &&
+           (errno == EINTR || errno == EAGAIN)) {
+        LOGW("HttpHandShake recv failed, errno = %{public}d", errno);
     }
     if (msgLen <= 0) {
         LOGE("ReadMsg failed, msgLen = %{public}ld, errno = %{public}d", static_cast<long>(msgLen), errno);
