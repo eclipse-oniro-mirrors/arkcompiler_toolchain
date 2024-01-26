@@ -313,6 +313,8 @@ bool StartDebugForSocketpair(int tid, int socketfd)
         return false;
     }
 
+    g_initializeDebugger(vm, std::bind(&SendReply, vm, std::placeholders::_2));
+
     const DebuggerPostTask &debuggerPostTask = GetDebuggerPostTask(tid);
     DebugInfo debugInfo = {socketfd};
     if (!InitializeInspector(vm, debuggerPostTask, debugInfo, tid)) {
