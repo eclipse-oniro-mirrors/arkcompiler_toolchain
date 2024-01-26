@@ -475,7 +475,8 @@ class ArkPy:
             if any('target_cpu="arm64"' in arg for arg in gn_args):
                 if run_pgo:
                     test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout 180000" \
-                          " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu:../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                          " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu:" \
+                          "../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
                           " --ark-arch aarch64" \
                           " --ark-arch-root=../../{1}/common/common/libc/" \
                           " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
@@ -540,7 +541,8 @@ class ArkPy:
         regress_test_cmd = "python3 arkcompiler/ets_runtime/test/regresstest/run_regress_test.py" \
                       " --ark-tool ./{0}/arkcompiler/ets_runtime/ark_js_vm" \
                       " --ark-frontend-binary ./{0}/arkcompiler/ets_frontend/es2abc" \
-                      " --LD_LIBRARY_PATH ./{0}/arkcompiler/ets_runtime:./{0}/thirdparty/icu:./prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                      " --LD_LIBRARY_PATH ./{0}/arkcompiler/ets_runtime:./{0}/thirdparty/icu:" \
+                      "./prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
                       " --out-dir ./{0}/ {1}".format(out_path, args_to_regress_test_cmd)
         regress_test_log_path = os.path.join(out_path, log_file_name)
         str_to_test_log = "============\n regresstest_time: {0}\nregresstest_target: {1}\n\n".format(
