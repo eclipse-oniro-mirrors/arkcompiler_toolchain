@@ -30,6 +30,9 @@ namespace OHOS {
         RuntimeOption option;
         option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
         auto vm = JSNApi::CreateJSVM(option);
+        if (size <= 0) {
+            return;
+        }
         BreakpointDetails details;
         details.line_ = size;
         details.column_ = size;

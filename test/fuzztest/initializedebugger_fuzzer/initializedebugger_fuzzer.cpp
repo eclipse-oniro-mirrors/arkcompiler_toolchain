@@ -28,6 +28,9 @@ namespace OHOS {
         option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
         option.SetEnableAsmInterpreter(false);
         auto vm = JSNApi::CreateJSVM(option);
+        if (size <= 0) {
+            return;
+        }
         using OnResponseType = const std::function<void(const void *, const std::string &)>;
         OnResponseType onResponse = [data, size]([[maybe_unused]] const void *d,
             [[maybe_unused]] const std::string &s) -> void { d = data + size; };

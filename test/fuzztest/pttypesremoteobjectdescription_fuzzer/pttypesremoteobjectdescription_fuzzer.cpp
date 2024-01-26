@@ -24,12 +24,12 @@ using namespace panda::ecmascript::tooling;
 namespace OHOS {
     void PtTypesRemoteObjectDescriptionFuzzTest(const uint8_t* data, size_t size)
     {
-        if (size <= 0 || data == NULL) {
-            return;
-        }
         RuntimeOption option;
         option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
         auto vm = JSNApi::CreateJSVM(option);
+        if (size <= 0 || data == NULL) {
+            return;
+        }
         RemoteObject obj;
         obj.SetDescription(std::string((const char*)data, size));
         std::string des = obj.GetDescription();
