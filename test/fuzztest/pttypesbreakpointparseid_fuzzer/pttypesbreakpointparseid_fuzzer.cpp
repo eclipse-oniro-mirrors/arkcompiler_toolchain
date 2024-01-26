@@ -24,12 +24,12 @@ using namespace panda::ecmascript::tooling;
 namespace OHOS {
     void PtTypesBreakpointParseIdFuzzTest(const uint8_t* data, size_t size)
     {
-        if (size <= 0) {
-            return;
-        }
         RuntimeOption option;
         option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
         auto vm = JSNApi::CreateJSVM(option);
+        if (size <= 0) {
+            return;
+        }
         BreakpointDetails details;
         details.line_ = size;
         details.column_ = size;
