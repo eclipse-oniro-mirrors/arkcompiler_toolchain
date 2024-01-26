@@ -14,6 +14,8 @@
 # Toolchain-related configuration that may be needed outside the context of the
 # toolchain() rules themselves.
 
+import("$build_root/misc/overrides/build.gni")
+
 declare_args() {
   # If this is set to true, or if LLVM_FORCE_HEAD_REVISION is set to 1
   # in the environment, we use the revision in the llvm repo to determine
@@ -54,6 +56,8 @@ assert(!use_xcode_clang || target_os == "ios",
 # Extension for shared library files (including leading dot).
 if (is_mac) {
   shlib_extension = ".dylib"
+  dylib_extension = ".dylib.so"
+  rlib_extension = ".rlib"
 } else if (is_ohos && is_component_build) {
   # By appending .z, we prevent name collisions with libraries already loaded by the ohos.
   shlib_extension = ".z.so"

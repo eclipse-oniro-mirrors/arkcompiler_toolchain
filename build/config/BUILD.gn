@@ -13,6 +13,7 @@
 
 config("executable_config") {
   configs = []
+
   if (!is_mac) {
     if (!is_mingw) {
       cflags = [ "-fPIE" ]
@@ -31,6 +32,17 @@ config("executable_config") {
     } else if (is_android) {
       configs += [ "$build_root/config/aosp:executable_config" ]
     }
+  } else if (is_mac) {
+    configs += [ "$build_root/config/mac:mac_dynamic_flags" ]
+  }
+}
+
+# This config defines the configs applied to all shared libraries.
+config("shared_library_config") {
+  configs = []
+
+  if (is_mac) {
+    configs += [ "$build_root/config/mac:mac_dynamic_flags" ]
   }
 }
 

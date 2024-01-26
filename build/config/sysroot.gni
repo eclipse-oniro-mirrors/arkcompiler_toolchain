@@ -18,6 +18,9 @@ if (is_ohos) {
 } else if (is_android) {
   import("$build_root/config/aosp/config.gni")
   sysroot = "$aosp_ndk_root/sysroot"
+} else if (is_mac) {
+  import("$build_root/config/mac/mac_sdk.gni")
+  sysroot = mac_sdk_path
 }
 
 link_sysroot = sysroot

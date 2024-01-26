@@ -20,7 +20,9 @@ module_output_path = "arkcompiler/toolchain"
 config("debug_api_test") {
   visibility = [ ":*" ]
 
-  ldflags = [ "-Wl,-rpath=\$ORIGIN/" ]
+  if (!is_mac) {
+    ldflags = [ "-Wl,-rpath=\$ORIGIN/" ]
+  }
 
   configs = [ "//arkcompiler/toolchain:toolchain_test_config" ]
 

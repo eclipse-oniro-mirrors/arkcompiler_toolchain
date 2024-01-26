@@ -24,7 +24,7 @@ config("runtime_config") {
   cflags = []
   asmflags = []
 
-  if (!is_mac && sysroot != "") {
+  if (sysroot != "") {
     # Pass the sysroot to all C compiler variants, the assembler, and linker.
     sysroot_flags = [ "--sysroot=" + rebase_path(sysroot, root_build_dir) ]
 

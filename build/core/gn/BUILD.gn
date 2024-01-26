@@ -28,21 +28,17 @@ print("target_os=$target_os,    target_cpu=$target_cpu")
 print()
 
 group("default") {
-  if (host_os != "mac") {
-    deps = [
-      ":ets_frontend",
-      ":ets_runtime",
-      ":runtime_core",
-      ":toolchain",
-    ]
-  }
+  deps = [
+    ":ets_frontend",
+    ":ets_runtime",
+    ":runtime_core",
+    ":toolchain",
+  ]
 }
 
 group("unittest_packages") {
   testonly = true
-  if (host_os != "mac") {
-    deps = [ "$toolchain_root:ark_js_host_unittest" ]
-  }
+  deps = [ "$toolchain_root:ark_js_host_unittest" ]
 }
 
 group("ets_runtime") {
@@ -52,7 +48,8 @@ group("ets_runtime") {
     "$js_root/ecmascript/quick_fix:quick_fix",
   ]
   if ((target_os == "linux" && target_cpu == "x64") ||
-      (target_cpu == "arm64" && target_os == "ohos")) {
+      (target_cpu == "arm64" && target_os == "ohos") ||
+      (target_cpu == "arm64" && target_os == "mac")) {
     deps += [
       "$js_root/ecmascript/compiler:ark_aot_compiler",
       "$js_root/ecmascript/compiler:ark_stub_compiler",
@@ -63,7 +60,8 @@ group("ets_runtime") {
 }
 
 group("ets_frontend") {
-  if ((target_os == "linux" && target_cpu == "x64") || target_os == "mingw") {
+  if ((target_os == "linux" && target_cpu == "x64") || target_os == "mingw" ||
+      target_os == "mac") {
     deps = [
       "$ets_frontend_root/es2panda:es2panda",
       "$ets_frontend_root/merge_abc:merge_abc",
