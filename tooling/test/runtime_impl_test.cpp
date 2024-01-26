@@ -154,31 +154,6 @@ HWTEST_F_L0(RuntimeImplTest, DispatcherImplGetProperties)
     }
 }
 
-HWTEST_F_L0(RuntimeImplTest, DispatcherImplCallFunctionOn)
-{
-    std::string result = "";
-    std::function<void(const void*, const std::string &)> callback =
-        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
-    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
-    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, channel);
-    auto dispatcherImpl = std::make_unique<RuntimeImpl::DispatcherImpl>(channel, std::move(runtimeImpl));
-
-    std::string msg = std::string() + R"({"id":0,"method":"Rumtime.callFunctionOn","params":{
-        "functionDeclaration":0}})";
-    DispatchRequest request(msg);
-    dispatcherImpl->GetProperties(request);
-    ASSERT_TRUE(result.find("wrong params") != std::string::npos);
-
-    msg = std::string() + R"({"id":0,"method":"Rumtime.getProperties","params":{"functionDeclaration":"test"}})";
-    DispatchRequest request1(msg);
-    dispatcherImpl->CallFunctionOn(request1);
-    ASSERT_TRUE(result.find("Unsupport eval now") != std::string::npos);
-    if (channel != nullptr) {
-        delete channel;
-        channel = nullptr;
-    }
-}
-
 HWTEST_F_L0(RuntimeImplTest, DispatcherImplGetHeapUsage)
 {
     std::string result = "";

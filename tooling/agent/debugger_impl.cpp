@@ -384,6 +384,7 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         { "setNativeRange", &DebuggerImpl::DispatcherImpl::SetNativeRange },
         { "resetSingleStepper", &DebuggerImpl::DispatcherImpl::ResetSingleStepper },
         { "clientDisconnect", &DebuggerImpl::DispatcherImpl::ClientDisconnect },
+        { "callFunctionOn", &DebuggerImpl::DispatcherImpl::CallFunctionOn }
     };
 
     const std::string &method = request.GetMethod();
@@ -666,6 +667,30 @@ void DebuggerImpl::DispatcherImpl::DropFrame(const DispatchRequest &request)
 void DebuggerImpl::DispatcherImpl::ClientDisconnect([[maybe_unused]] const DispatchRequest &request)
 {
     debugger_->ClientDisconnect();
+}
+
+void DebuggerImpl::DispatcherImpl::CallFunctionOn(const DispatchRequest &request)
+{
+    std::unique_ptr<CallFunctionOnParams> params = CallFunctionOnParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+
+    std::unique_ptr<RemoteObject> outRemoteObject;
+    std::optional<std::unique_ptr<ExceptionDetails>> outExceptionDetails;
+    DispatchResponse response = debugger_->CallFunctionOn(*params, &outRemoteObject, &outExceptionDetails);
+    if (outExceptionDetails) {
+        ASSERT(outExceptionDetails.value() != nullptr);
+        LOG_DEBUGGER(WARN) << "CallFunctionOn thrown an exception";
+    }
+    if (outRemoteObject == nullptr) {
+        SendResponse(request, response);
+        return;
+    }
+
+    CallFunctionOnReturns result(std::move(outRemoteObject), std::move(outExceptionDetails));
+    SendResponse(request, response, result);
 }
 
 bool DebuggerImpl::Frontend::AllowNotify(const EcmaVM *vm) const
@@ -1217,6 +1242,42 @@ DispatchResponse DebuggerImpl::ClientDisconnect()
     } else {
         cb();
     }
+    return DispatchResponse::Ok();
+}
+
+DispatchResponse DebuggerImpl::CallFunctionOn([[maybe_unused]] const CallFunctionOnParams &params,
+    std::unique_ptr<RemoteObject> *outRemoteObject,
+    [[maybe_unused]] std::optional<std::unique_ptr<ExceptionDetails>> *outExceptionDetails)
+{
+    // get callFrameId
+    CallFrameId callFrameId = params.GetCallFrameId();
+    if (callFrameId < 0 || callFrameId >= static_cast<CallFrameId>(callFrameHandlers_.size())) {
+        return DispatchResponse::Fail("Invalid callFrameId.");
+    }
+    // get function declaration
+    std::string functionDeclaration = params.GetFunctionDeclaration();
+    std::vector<uint8_t> dest;
+    if (!DecodeAndCheckBase64(functionDeclaration, dest)) {
+        LOG_DEBUGGER(ERROR) << "CallFunctionOn: base64 decode failed";
+        return DispatchResponse::Fail("base64 decode failed, functionDeclaration: " +
+            functionDeclaration);
+    }
+    auto funcRef = DebuggerApi::GenerateFuncFromBuffer(vm_, dest.data(), dest.size(),
+        JSPandaFile::ENTRY_FUNCTION_NAME);
+    // call function
+    auto res = DebuggerApi::CallFunctionOnCall(const_cast<EcmaVM *>(vm_), funcRef,
+        callFrameHandlers_[callFrameId]);
+    if (vm_->GetJSThread()->HasPendingException()) {
+        LOG_DEBUGGER(ERROR) << "CallFunctionOn: has pending exception";
+        std::string msg;
+        DebuggerApi::HandleUncaughtException(vm_, msg);
+        *outRemoteObject = RemoteObject::FromTagged(vm_,
+            Exception::EvalError(vm_, StringRef::NewFromUtf8(vm_, msg.data())));
+        return DispatchResponse::Fail(msg);
+    }
+
+    *outRemoteObject = RemoteObject::FromTagged(vm_, res);
+    runtime_->CacheObjectIfNeeded(res, (*outRemoteObject).get());
     return DispatchResponse::Ok();
 }
 
