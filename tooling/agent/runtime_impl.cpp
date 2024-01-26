@@ -30,7 +30,6 @@ void RuntimeImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         { "disable", &RuntimeImpl::DispatcherImpl::Disable },
         { "getProperties", &RuntimeImpl::DispatcherImpl::GetProperties },
         { "runIfWaitingForDebugger", &RuntimeImpl::DispatcherImpl::RunIfWaitingForDebugger },
-        { "callFunctionOn", &RuntimeImpl::DispatcherImpl::CallFunctionOn },
         { "getHeapUsage", &RuntimeImpl::DispatcherImpl::GetHeapUsage }
     };
 
@@ -89,30 +88,6 @@ void RuntimeImpl::DispatcherImpl::GetProperties(const DispatchRequest &request)
     SendResponse(request, response, result);
 }
 
-void RuntimeImpl::DispatcherImpl::CallFunctionOn(const DispatchRequest &request)
-{
-    std::unique_ptr<CallFunctionOnParams> params = CallFunctionOnParams::Create(request.GetParams());
-    if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
-    }
-
-    std::unique_ptr<RemoteObject> outRemoteObject;
-    std::optional<std::unique_ptr<ExceptionDetails>> outExceptionDetails;
-    DispatchResponse response = runtime_->CallFunctionOn(*params, &outRemoteObject, &outExceptionDetails);
-    if (outExceptionDetails) {
-        ASSERT(outExceptionDetails.value() != nullptr);
-        LOG_DEBUGGER(WARN) << "CallFunctionOn thrown an exception";
-    }
-    if (outRemoteObject == nullptr) {
-        SendResponse(request, response);
-        return;
-    }
-
-    CallFunctionOnReturns result(std::move(outRemoteObject), std::move(outExceptionDetails));
-    SendResponse(request, response, result);
-}
-
 void RuntimeImpl::DispatcherImpl::GetHeapUsage(const DispatchRequest &request)
 {
     double usedSize = 0;
@@ -151,16 +126,6 @@ DispatchResponse RuntimeImpl::Disable()
 DispatchResponse RuntimeImpl::RunIfWaitingForDebugger()
 {
     frontend_.RunIfWaitingForDebugger();
-    return DispatchResponse::Ok();
-}
-
-DispatchResponse RuntimeImpl::CallFunctionOn([[maybe_unused]] const CallFunctionOnParams &params,
-    std::unique_ptr<RemoteObject> *outRemoteObject,
-    [[maybe_unused]] std::optional<std::unique_ptr<ExceptionDetails>> *outExceptionDetails)
-{
-    // Return EvalError temporarily.
-    auto error = Exception::EvalError(vm_, StringRef::NewFromUtf8(vm_, "Unsupport eval now"));
-    *outRemoteObject = RemoteObject::FromTagged(vm_, error);
     return DispatchResponse::Ok();
 }
 
