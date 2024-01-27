@@ -36,7 +36,7 @@ public:
                 {{84, 0}, {87, 0}, {27, 0}, {79, 0}, {42, 0}, {38, 0}, {56, 0}, {60, 0}, {96, 0}, {54, 0}};
             // line number for stepinto array
             size_t stepInto[STEP_SIZE][LINE_COLUMN] =
-                {{85, 5}, {23, 0}, {73, 0}, {80, 0}, {36, 0}, {43, 0}, {50, 0}, {61, 0}, {97, 15}};
+                {{85, 5}, {23, 0}, {73, 0}, {80, 0}, {36, 0}, {39, 0}, {50, 0}, {61, 0}, {97, 15}};
             SetJSPtLocation(breakpoint[0], POINTER_SIZE, pointerLocations_);
             SetJSPtLocation(stepInto[0], STEP_SIZE, stepLocations_);
             TestUtil::SuspendUntilContinue(DebugEvent::LOAD_MODULE);
@@ -56,7 +56,11 @@ public:
             ++breakpointCounter_;
             TestUtil::SuspendUntilContinue(DebugEvent::BREAKPOINT, location);
             debugger_->SetDebuggerState(DebuggerState::PAUSED);
-            debugger_->StepInto(StepIntoParams());
+            if (stepCompleteCounter_ < STEP_SIZE) {
+                debugger_->StepInto(StepIntoParams());
+            } else {
+                debugger_->StepOut();
+            }
             return true;
         };
 
