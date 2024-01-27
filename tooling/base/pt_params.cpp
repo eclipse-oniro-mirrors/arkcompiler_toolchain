@@ -719,6 +719,14 @@ std::unique_ptr<CallFunctionOnParams> CallFunctionOnParams::Create(const PtJson 
     std::string error;
     Result ret;
 
+    // paramsObject->callFrameId_
+    std::string callFrameId;
+    ret = params.GetString("callFrameId", &callFrameId);
+    if (ret == Result::SUCCESS) {
+        paramsObject->callFrameId_ = std::stoi(callFrameId);
+    } else {
+        error += "Unknown or wrong type of 'callFrameId';";
+    }
     // paramsObject->functionDeclaration_
     std::string functionDeclaration;
     ret = params.GetString("functionDeclaration", &functionDeclaration);
