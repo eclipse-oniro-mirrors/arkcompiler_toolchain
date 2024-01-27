@@ -30,6 +30,9 @@ namespace OHOS {
     {
         auto cn = std::make_unique<common_fuzzer>();
         auto vm = cn->GetEcvm();
+        if (size <= 0) {
+            return;
+        }
         auto str = cn->GetString(data, size);
         Paused paused;
         paused.GetCallFrames();
