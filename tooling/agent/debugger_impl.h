@@ -79,6 +79,10 @@ public:
     DispatchResponse ReplyNativeCalling(const ReplyNativeCallingParams &params);
     DispatchResponse DropFrame(const DropFrameParams &params);
     DispatchResponse ClientDisconnect();
+    DispatchResponse CallFunctionOn(
+            const CallFunctionOnParams &params,
+            std::unique_ptr<RemoteObject> *outRemoteObject,
+            std::optional<std::unique_ptr<ExceptionDetails>> *outExceptionDetails);
 
     /**
      * @brief: match first script and callback
@@ -168,6 +172,7 @@ public:
         void GetPossibleAndSetBreakpointByUrl(const DispatchRequest &request);
         void DropFrame(const DispatchRequest &request);
         void ClientDisconnect(const DispatchRequest &request);
+        void CallFunctionOn(const DispatchRequest &request);
 
     private:
         NO_COPY_SEMANTIC(DispatcherImpl);
