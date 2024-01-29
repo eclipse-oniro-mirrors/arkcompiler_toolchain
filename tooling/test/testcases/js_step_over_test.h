@@ -54,7 +54,11 @@ public:
             ++breakpointCounter_;
             TestUtil::SuspendUntilContinue(DebugEvent::BREAKPOINT, location);
             debugger_->SetDebuggerState(DebuggerState::PAUSED);
-            debugger_->StepOver(StepOverParams());
+            if (stepCompleteCounter_ < STEP_SIZE) {
+                debugger_->StepOver(StepOverParams());
+            } else {
+                debugger_->StepOut();
+            }
             return true;
         };
 
