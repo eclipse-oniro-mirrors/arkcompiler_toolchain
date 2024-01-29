@@ -120,13 +120,13 @@ bool Utils::RealPath(const std::string &path, std::string &realPath, [[maybe_unu
 
 bool Utils::IsNumber(const std::string &str)
 {
-    std::string Str = str;
-    Str.erase(0, Str.find_first_not_of("0"));
-    if (Str.size() > 9) { //9: size of int
+    std::string tmpStr = str;
+    tmpStr.erase(0, tmpStr.find_first_not_of("0"));
+    if (tmpStr.size() > 9) { //9: size of int
         return false;
     }
     
-    for (char c : Str) {
+    for (char c : tmpStr) {
         if (!std::isdigit(c)) {
             return false;
         }
