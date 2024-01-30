@@ -167,8 +167,9 @@ bool WebSocketClient::ClientRecvWSUpgradeRsp()
 
     std::string msgBuf(HTTP_HANDSHAKE_MAX_LEN, 0);
     ssize_t msgLen = 0;
-    while ((msgLen = recv(connectionFd_, msgBuf.data(), HTTP_HANDSHAKE_MAX_LEN, 0)) < 0 && errno == EINTR) {
-        LOGW("ClientRecvWSUpgradeRsp::client recv wsupgrade rsp failed, errno == EINTR");
+    while ((msgLen = recv(connectionFd_, msgBuf.data(), HTTP_HANDSHAKE_MAX_LEN, 0)) < 0 &&
+           (errno == EINTR || errno == EAGAIN)) {
+        LOGW("ClientRecvWSUpgradeRsp::client recv wsupgrade rsp failed, errno = %{public}d", errno);
     }
     if (msgLen <= 0) {
         LOGE("ClientRecvWSUpgradeRsp::client recv wsupgrade rsp failed, error = %{public}d, desc = %{public}sn",

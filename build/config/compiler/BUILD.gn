@@ -22,14 +22,26 @@ declare_args() {
   treat_warnings_as_errors = true
 }
 
+use_rtti = use_cfi_diag || is_ubsan_vptr || is_ubsan_security
+
 config("rtti") {
-  cflags_cc = [ "-frtti" ]
+  if (is_win) {
+    cflags_cc = [ "/GR" ]
+  } else {
+    cflags_cc = [ "-frtti" ]
+  }
 }
 
 config("no_rtti") {
   # Some sanitizer configs may require RTTI to be left enabled globally
-  cflags_cc = [ "-fno-rtti" ]
-  cflags_objcc = cflags_cc
+  if (!use_rtti) {
+    if (is_win) {
+      cflags_cc = [ "/GR-" ]
+    } else {
+      cflags_cc = [ "-fno-rtti" ]
+      cflags_objcc = cflags_cc
+    }
+  }
 }
 
 config("exceptions") {
@@ -246,6 +258,8 @@ config("compiler") {
     cflags += [ "-fno-stack-protector" ]
   } else if (is_ohos) {
     configs += [ "$build_root/config/ohos:compiler" ]
+  } else if (is_mac) {
+    configs += [ "$build_root/config/mac:compiler" ]
   }
   if (is_linux || is_ohos || is_android) {
     cflags += [ "-fPIC" ]
@@ -449,6 +463,10 @@ config("runtime_config") {
 
   if (is_android) {
     configs += [ "$build_root/config/aosp:runtime_config" ]
+  }
+
+  if (is_mac) {
+    configs += [ "$build_root/config/mac:runtime_config" ]
   }
 }
 

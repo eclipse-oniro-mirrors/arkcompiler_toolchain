@@ -135,6 +135,22 @@ class ArkPy:
                 "gn_args": ["target_os=\"ohos\"", "target_cpu=\"mipsel\""],
                 "prefix_of_name_of_out_dir_of_second_level": "mipsel",
             },
+            "mac_arm64": {
+                "flags": ["mac_arm64", "arm64"],
+                "description":
+                    "Build for arkcompiler target of target-operating-system linux and "
+                    "target-central-processing-unit arm64.",
+                "gn_args": ["target_os=\"mac\"", "target_cpu=\"arm64\""],
+                "prefix_of_name_of_out_dir_of_second_level": "mac_arm64",
+            },
+            "mac_x86": {
+                "flags": ["mac_x86", "x86"],
+                "description":
+                    "Build for arkcompiler target of target-operating-system mac and "
+                    "target-central-processing-unit x86.",
+                "gn_args": ["target_os=\"mac\"", "target_cpu=\"x86\""],
+                "prefix_of_name_of_out_dir_of_second_level": "mac_x86",
+            },
         },
         "mode": {
             "release": {
@@ -414,7 +430,7 @@ class ArkPy:
             self.build_for_gn_target(
                 x64_out_path, ['target_os="linux"', 'target_cpu="x64"', 'is_debug=false'],
                 self.ARG_DICT["target"]["test262"]["gn_targets_depend_on"], log_file_name)
-        
+
         self.build_for_gn_target(
             out_path, gn_args, self.ARG_DICT["target"]["test262"]["gn_targets_depend_on"], log_file_name)
         test262_cmd = self.get_test262_cmd(gn_args, out_path, x64_out_path, aot_mode, run_pgo, args_to_test262_cmd)
@@ -459,7 +475,8 @@ class ArkPy:
             if any('target_cpu="arm64"' in arg for arg in gn_args):
                 if run_pgo:
                     test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout 180000" \
-                          " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu:../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                          " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu:" \
+                          "../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
                           " --ark-arch aarch64" \
                           " --ark-arch-root=../../{1}/common/common/libc/" \
                           " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
@@ -524,7 +541,8 @@ class ArkPy:
         regress_test_cmd = "python3 arkcompiler/ets_runtime/test/regresstest/run_regress_test.py" \
                       " --ark-tool ./{0}/arkcompiler/ets_runtime/ark_js_vm" \
                       " --ark-frontend-binary ./{0}/arkcompiler/ets_frontend/es2abc" \
-                      " --LD_LIBRARY_PATH ./{0}/arkcompiler/ets_runtime:./{0}/thirdparty/icu:./prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                      " --LD_LIBRARY_PATH ./{0}/arkcompiler/ets_runtime:./{0}/thirdparty/icu:" \
+                      "./prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
                       " --out-dir ./{0}/ {1}".format(out_path, args_to_regress_test_cmd)
         regress_test_log_path = os.path.join(out_path, log_file_name)
         str_to_test_log = "============\n regresstest_time: {0}\nregresstest_target: {1}\n\n".format(
@@ -625,7 +643,7 @@ class ArkPy:
         return
 
     def start_for_matched_os_cpu_mode(self, os_cpu_key: str, mode_key: str, arg_list: list):
-        # get binary gn and ninja 
+        # get binary gn and ninja
         self.get_binaries()
         # get out_path
         name_of_out_dir_of_second_level = \

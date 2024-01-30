@@ -10,7 +10,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 declare_args() {
   ark_standalone_build = true
   use_musl = true
@@ -20,8 +19,27 @@ declare_args() {
   enable_lto_O0 = false
 }
 
+check_mac_system_and_cpu_script =
+    rebase_path("$build_root/scripts/check_mac_system_and_cpu.py")
+check_darwin_system_result =
+    exec_script(check_mac_system_and_cpu_script, [ "system" ], "string")
+
+if (check_darwin_system_result != "") {
+  check_mac_host_cpu_result =
+      exec_script(check_mac_system_and_cpu_script, [ "cpu" ], "string")
+  if (check_mac_host_cpu_result != "") {
+    host_cpu = "arm64"
+  }
+}
+
 if (host_os == "linux") {
   host_platform_dir = "linux-x86_64"
+} else if (host_os == "mac") {
+  if (host_cpu == "arm64") {
+    host_platform_dir = "darwin-arm64"
+  } else {
+    host_platform_dir = "darwin-x86_64"
+  }
 } else {
   assert(false, "Unsupported host_os: $host_os")
 }
@@ -30,6 +48,20 @@ declare_args() {
   # Debug build. Enabling official builds automatically sets is_debug to false.
   is_debug = false
   is_standard_system = false
+}
+
+declare_args() {
+  # Enable mini debug info, it will add .gnu_debugdata
+  # section in each stripped sofile
+
+  # Currently, we don't publish ohos-adapted python on m1 platform,
+  # So that we disable mini debug info on m1 platform until
+  # ohos-adapted python publishing on m1 platform
+  if (host_os == "mac") {
+    full_mini_debug = false
+  } else {
+    full_mini_debug = true
+  }
 }
 
 declare_args() {
@@ -70,6 +102,8 @@ if (host_toolchain == "") {
     } else {
       host_toolchain = "$build_root/toolchain/linux:$host_cpu"
     }
+  } else if (host_os == "mac") {
+    host_toolchain = "$build_root/toolchain/mac:clang_$host_cpu"
   } else {
     assert(false, "Unsupported host_os: $host_os")
   }
@@ -88,6 +122,8 @@ if (target_os == "ohos") {
   _default_toolchain = "$build_root/toolchain/mingw:mingw_x86_64"
 } else if (target_os == "android" && target_cpu == "arm64") {
   _default_toolchain = "$build_root/toolchain/aosp:aosp_clang_arm64"
+} else if (target_os == "mac" && target_cpu == "arm64") {
+  _default_toolchain = "$build_root/toolchain/mac:clang_arm64"
 }
 if (custom_toolchain != "") {
   set_default_toolchain(custom_toolchain)
@@ -107,7 +143,19 @@ if (current_os == "") {
 # Variables like "is_..." are already used to represent for
 # "current_os == "..."" in most of the repositories. Thus, we need to make them
 # change with the change of current_os.
-if (current_os == "ohos") {
+if (current_os == "mac") {
+  is_aix = false
+  is_ohos = false
+  is_chromeos = false
+  is_linux = false
+  is_mac = true
+  is_nacl = false
+  is_posix = true
+  is_win = false
+  is_mingw = false
+  is_android = false
+  is_ios = false
+} else if (current_os == "ohos") {
   is_ohos = true
   is_linux = false
   is_mac = false
@@ -158,7 +206,8 @@ default_compiler_configs = [
 
 default_static_library_configs = default_compiler_configs
 default_source_set_configs = default_compiler_configs
-default_shared_library_configs = default_compiler_configs
+default_shared_library_configs =
+    default_compiler_configs + [ "$build_root/config:shared_library_config" ]
 default_executable_configs =
     default_compiler_configs + [ "$build_root/config:executable_config" ]
 

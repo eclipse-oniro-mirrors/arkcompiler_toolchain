@@ -54,6 +54,10 @@ group("unittest") {
 
   # deps file
   deps = [ ":WebSocketTest" ]
+
+  if (is_mac) {
+    deps -= [ ":WebSocketTest" ]
+  }
 }
 
 group("host_unittest") {
@@ -61,4 +65,8 @@ group("host_unittest") {
 
   # deps file
   deps = [ ":WebSocketTestAction" ]
+
+  if (is_mac) {
+    deps -= [ ":WebSocketTestAction" ]
+  }
 }
