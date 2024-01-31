@@ -350,7 +350,9 @@ class ArkPy:
             "  python3 ark.py \033[92mx64.release workload\033[0m\n"
             "  python3 ark.py \033[92mx64.release workload report\033[0m\n"
             "  python3 ark.py \033[92mx64.release workload report dev\033[0m\n"
-            "  python3 ark.py \033[92mx64.release workload report dev -20\033[0m\n")
+            "  python3 ark.py \033[92mx64.release workload report dev -20\033[0m\n"
+            "  python3 ark.py \033[92mx64.release workload report dev -20 10\033[0m\n"
+            "  python3 ark.py \033[92mx64.release workload report dev -20 10 weekly_workload\033[0m\n")
         # Arguments
         help_msg += "\033[32mArguments:\033[0m\n{}".format(
             self.get_help_msg_of_dict(
@@ -617,19 +619,27 @@ class ArkPy:
         report = False
         tools = 'dev'
         boundary_value = '-10'
+        run_count = '10'
+        code_v = ''
         if len(arg_list) >= 2 and arg_list[1] == 'report':
             report = True
         if len(arg_list) >= 3 and arg_list[2]:
             tools = arg_list[2]
         if len(arg_list) >= 4 and arg_list[3]:
             boundary_value = arg_list[3]
+        if len(arg_list) >= 5 and arg_list[4]:
+            run_count = arg_list[4]
+        if len(arg_list) >= 6 and arg_list[5]:
+            code_v = arg_list[5]
         self.build_for_gn_target(out_path, gn_args, ["default"], self.GN_TARGET_LOG_FILE_NAME)
         workload_cmd = "cd arkcompiler/ets_runtime/test/workloadtest/ && python3 work_load.py" \
           " --code-path {0}" \
           " --report {1}" \
           " --tools-type {2}" \
           " --boundary-value {3}" \
-          .format(root_dir, report, tools, boundary_value)
+          " --run-count {4}" \
+          " --code-v {5}" \
+          .format(root_dir, report, tools, boundary_value, run_count, code_v)
         workload_log_path = os.path.join(out_path, log_file_name)
         str_to_workload_log = "================================\nwokload_time: {0}\nwokload_target: {1}\n\n".format(
             str_of_time_now(), 'file')
