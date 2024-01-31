@@ -37,6 +37,8 @@ bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
 
 bool StartDebugForSocketpair(int tid, int socketfd);
 
+bool InitializeDebuggerForSocketpair(void* vm);
+
 void StopDebug(const std::string& componentName);
 
 void StopOldDebug(int tid, const std::string& componentName);
