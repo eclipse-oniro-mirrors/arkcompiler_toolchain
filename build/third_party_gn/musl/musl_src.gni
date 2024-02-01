@@ -465,6 +465,7 @@ musl_src_file = [
   "src/linux/chroot.c",
   "src/linux/clock_adjtime.c",
   "src/linux/clone.c",
+  "src/linux/getprocpid.c",
   "src/linux/copy_file_range.c",
   "src/linux/epoll.c",
   "src/linux/eventfd.c",
@@ -1999,6 +2000,7 @@ musl_inc_sys_files = [
   "include/sys/vt.h",
   "include/sys/wait.h",
   "include/sys/xattr.h",
+  "include/sys/cdefs.h",
 ]
 
 musl_inc_trace_files = [ "include/trace/trace_marker.h" ]
@@ -2136,6 +2138,7 @@ musl_src_porting_file = [
   "include/string.h",
   "include/sys/stat.h",
   "include/sys/sspret.h",
+  "include/sys/cdefs.h",
   "include/fortify/fcntl.h",
   "include/fortify/fortify.h",
   "include/fortify/poll.h",
@@ -2175,11 +2178,13 @@ musl_src_porting_file = [
   "src/internal/services.h",
   "src/internal/network_conf_function.h",
   "src/internal/network_conf_function.c",
+  "src/internal/proc_xid_impl.h",
   "ldso/namespace.h",
   "ldso/ns_config.h",
   "ldso/strops.h",
   "src/legacy/ulimit.c",
   "src/linux/clone.c",
+  "src/linux/getprocpid.c",
   "src/linux/reboot.c",
   "src/linux/tgkill.c",
   "src/malloc/mallocng/malloc_usable_size.c",
@@ -2346,3 +2351,5 @@ added_freebsd_files = [
   "$FREEBSD_DIR/lib/libc/gdtoa/glue.c",
   "$FREEBSD_DIR/lib/libc/stdio/parsefloat.c",
 ]
+
+freebsd_sys_headers = [ "$FREEBSD_DIR/sys/sys/queue.h" ]
