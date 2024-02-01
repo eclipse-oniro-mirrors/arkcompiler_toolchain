@@ -2703,4 +2703,149 @@ HWTEST_F_L0(DebuggerTypesTest, TraceConfigToJsonTest)
     EXPECT_EQ(ret, Result::SUCCESS);
     ASSERT_TRUE(tmpBool);
 }
+
+HWTEST_F_L0(DebuggerTypesTest, CallArgumentCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<CallArgument> callArgument;
+
+    //  abnormal params of null msg
+    msg = std::string() + R"({})";
+    callArgument = CallArgument::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(callArgument, nullptr);
+
+    // abnormal params of unexist key params
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test"})";
+    callArgument = CallArgument::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(callArgument, nullptr);
+
+    // abnormal params of null params.sub-key
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    callArgument = CallArgument::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(callArgument, nullptr);
+
+    // abnormal params of unknown params.sub-key
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"unknownKey":100}})";
+    callArgument = CallArgument::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(callArgument, nullptr);
+}
+
+HWTEST_F_L0(DebuggerTypesTest, CallArgumentToJsonTest)
+{
+    CallArgument callArgument;
+    Local<JSValueRef> callArgumentName = StringRef::NewFromUtf8(ecmaVm, "name");
+    callArgument.SetValue(callArgumentName);
+
+    RemoteObjectId remoteObjectId_1(10);
+    callArgument.SetObjectId(remoteObjectId_1);
+    UnserializableValue testValue1("test");
+    callArgument.SetUnserializableValue(testValue1);
+    std::unique_ptr<PtJson> ret = callArgument.ToJson();
+    ASSERT_TRUE(ret != nullptr);
+
+    CallArgument callArgument_test1;
+    RemoteObjectId remoteObjectId_2(20);
+    callArgument_test1.SetObjectId(remoteObjectId_2);
+    ret = callArgument_test1.ToJson();
+    ASSERT_TRUE(ret != nullptr);
+
+    CallArgument callArgument_test2;
+    UnserializableValue testValue2("CallArgumentToJson");
+    callArgument_test2.ToJson();
+    ASSERT_TRUE(ret != nullptr);
+}
+
+HWTEST_F_L0(DebuggerTypesTest, ScriptPositionCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<ScriptPosition> scriptPosition;
+
+    //  abnormal params of null msg
+    msg = std::string() + R"({})";
+    scriptPosition = ScriptPosition::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(scriptPosition, nullptr);
+
+    // abnormal params of unexist key params
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test"})";
+    scriptPosition = ScriptPosition::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(scriptPosition, nullptr);
+
+    // abnormal params of null params.sub-key
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    scriptPosition = ScriptPosition::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(scriptPosition, nullptr);
+
+    // abnormal params of unknown params.sub-key
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"unknownKey":100}})";
+    scriptPosition = ScriptPosition::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(scriptPosition, nullptr);
+
+    // normal params of params.sub-key=["scriptId":"2","lineNumber":99,"columnNumber":138,"type":"return"]
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{
+          "scriptId":"222","lineNumber":899,"columnNumber":138,"type":"return"
+    }})";
+    scriptPosition = ScriptPosition::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(scriptPosition, nullptr);
+    EXPECT_EQ(scriptPosition->GetLine(), 899);
+    EXPECT_EQ(scriptPosition->GetColumn(), 138);
+
+    // normal params of params.sub-key=["scriptId":"2122","lineNumber":8299]
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{
+          "scriptId":"222","lineNumber":8299,"columnNumber":16,"type":"return"
+    }})";
+    scriptPosition = ScriptPosition::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(scriptPosition, nullptr);
+    EXPECT_EQ(scriptPosition->GetLine(), 8299);
+    EXPECT_EQ(scriptPosition->GetColumn(), 16); 
+}
+
+HWTEST_F_L0(DebuggerTypesTest, ScriptPositionToJsonTest)
+{
+    ScriptPosition scriptPosition;
+    int32_t lineNumber = 11;
+    scriptPosition.SetLine(lineNumber);
+    int32_t columnNumber = 7;
+    scriptPosition.SetColumn(columnNumber);
+    std::unique_ptr<PtJson> ret = scriptPosition.ToJson();
+    ASSERT_TRUE(ret != nullptr);
+}
+
+HWTEST_F_L0(DebuggerTypesTest, RuntimeCallFrameToJsonTest)
+{
+    std::unique_ptr<PtJson> runtimeCallFrame = PtJson::CreateObject();
+    std::string runtimeCallFrame_functionName = "RuntimeCallFrameToJsonTest";
+    std::string runtimeCallFrame_scriptId = "scriptId";
+    std::string runtimeCallFrame_url = "url";
+    int32_t runtimeCallFrame_lineNumber = 2;
+    int32_t runtimeCallFrame_columnNumber = 10;
+    runtimeCallFrame->Add("functionName", runtimeCallFrame_functionName.c_str());
+    runtimeCallFrame->Add("moduleName", runtimeCallFrame_functionName.c_str());
+    runtimeCallFrame->Add("scriptId", runtimeCallFrame_scriptId.c_str());
+    runtimeCallFrame->Add("url", runtimeCallFrame_url.c_str());
+    runtimeCallFrame->Add("lineNumber", runtimeCallFrame_lineNumber);
+    runtimeCallFrame->Add("columnNumber", runtimeCallFrame_columnNumber);
+    std::unique_ptr<RuntimeCallFrame> ret = RuntimeCallFrame::Create(*runtimeCallFrame);
+    ASSERT_TRUE(ret != nullptr);
+}
+
+HWTEST_F_L0(DebuggerTypesTest, LocationRangeCreateTest)
+{
+    std::unique_ptr<PtJson> locationRange = PtJson::CreateObject();
+    std::unique_ptr<PtJson> locationRange_start = PtJson::CreateObject();
+    std::unique_ptr<PtJson> locationRange_end = PtJson::CreateObject();
+
+    std::string locationRange_scriptId = "14";
+    int32_t locationRange_lineNumber = 1;
+    int32_t locationRange_columnNumber = 2;
+    locationRange_start->Add("lineNumber", locationRange_lineNumber);
+    locationRange_start->Add("columnNumber", locationRange_columnNumber);
+    locationRange_end->Add("lineNumber", locationRange_lineNumber + 1);
+    locationRange_end->Add("columnNumber", locationRange_columnNumber + 2);
+
+    locationRange->Add("scriptId", locationRange_scriptId.c_str());
+    locationRange->Add("start", locationRange_start);
+    locationRange->Add("end", locationRange_end);
+    std::unique_ptr<LocationRange> ret = LocationRange::Create(*locationRange);
+    ASSERT_TRUE(ret != nullptr);
+}
 }  // namespace panda::test
