@@ -2796,7 +2796,7 @@ HWTEST_F_L0(DebuggerTypesTest, ScriptPositionCreateTest)
     scriptPosition = ScriptPosition::Create(DispatchRequest(msg).GetParams());
     ASSERT_NE(scriptPosition, nullptr);
     EXPECT_EQ(scriptPosition->GetLine(), 8299);
-    EXPECT_EQ(scriptPosition->GetColumn(), 16); 
+    EXPECT_EQ(scriptPosition->GetColumn(), 16);
 }
 
 HWTEST_F_L0(DebuggerTypesTest, ScriptPositionToJsonTest)
