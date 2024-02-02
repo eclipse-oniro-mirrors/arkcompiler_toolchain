@@ -176,6 +176,7 @@ class ArkPy:
                 "flags": ["unittest", "ut"],
                 "description":
                     "Compile and run unittest of arkcompiler target. "
+                    "Add --keep-going=N to keep running unittest when errors occured less than N. "
                     "Add --gn-args=\"run_with_qemu=true\" to command when running unittest of non-host type with qemu.",
                 "gn_targets_depend_on": ["unittest_packages"],
             },
@@ -230,6 +231,11 @@ class ArkPy:
                 "flags": ["--verbose", "-verbose"],
                 "description": "Print full commands(CXX, CC, LINK ...) called by ninja during compilation.",
             },
+            "keep-going": {
+                "flags": ["--keep-going=*", "-keep-going=*"],
+                "description": "Keep running unittest etc. until errors occured less than N times"
+                " (use 0 to ignore all errors).",
+            },
         },
         "help": {
             "flags": ["help", "--help", "--h", "-help", "-h"],
@@ -245,6 +251,7 @@ class ArkPy:
     has_cleaned = False
     enable_verbose = False
     enable_keepdepfile = False
+    ignore_errors = 1
 
     def get_binaries(self):
         host_os = sys.platform
@@ -397,7 +404,9 @@ class ArkPy:
         (" -d keepdepfile" if self.enable_keepdepfile else "") + \
         " -d keeprsp" + \
         " -C {}".format(out_path) + \
-        " {}".format(" ".join(arg_list))
+        " {}".format(" ".join(arg_list)) + \
+        " -k {}".format(self.ignore_errors)
+        print(ninja_cmd)
         code = call_with_output(ninja_cmd, build_log_path)
         if code != 0:
             print("=== ninja failed! ===\n")
@@ -609,6 +618,17 @@ class ArkPy:
             elif self.is_dict_flags_match_arg(self.ARG_DICT["option"]["verbose"], arg):
                 if not self.enable_verbose:
                     self.enable_verbose = True
+            # match [option][keep-going] flag
+            elif self.is_dict_flags_match_arg(self.ARG_DICT["option"]["keep-going"], arg):
+                if self.ignore_errors == 1:
+                    input_value = arg[(arg.find("=") + 1):]
+                    try:
+                        self.ignore_errors = int(input_value)
+                    except Exception as _:
+                        print("\033[92mIllegal value \"{}\" for \"--keep-going\" argument.\033[0m\n".format(
+                            input_value
+                        ))
+                        sys.exit(0)
             # make a new list with flag that do not match any flag in [option]
             else:
                 arg_list_ret.append(arg)
