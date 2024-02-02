@@ -38,7 +38,7 @@ public:
             static_cast<JsVariableFirstTestChannel *>(channel_)->Initial(vm_, runtime_);
             runtime_->Enable();
             // 306: breakpointer line
-            int32_t lineNumber = 306;
+            int32_t lineNumber = 314;
             location_ = TestUtil::GetLocation(sourceFile.c_str(), lineNumber, 0, pandaFile.c_str());
             ASSERT_TRUE(location_.GetMethodId().IsValid());
             TestUtil::SuspendUntilContinue(DebugEvent::LOAD_MODULE);
@@ -476,6 +476,10 @@ private:
                             "f", "f", "25", "string", " ", " ", "26", "string", "f", "f", "27", "string", "u", "u",
                             "28", "string", "n", "n", "29", "string", "t", "t", "30", "string", "i", "i", "31",
                             "string", "o", "o", "32", "string", "n", "n", "length", "number", "33", "33" } },
+            { "string22", { "string", "�", "�" } },
+            { "string23", { "string", "🙂", "🙂" } },
+            { "string24", { "string", "�", "�" } },
+            { "string25", { "string", "👨‍👨‍👧‍👦", "👨‍👨‍👧‍👦" } },
             { "bigint1", { "bigint", "9007199254740991n", "9007199254740991" } },
             { "bigint2", { "bigint", "9007199254740991n", "9007199254740991" } },
             { "bigint3", { "bigint", "9007199254740991n", "9007199254740991" } },
