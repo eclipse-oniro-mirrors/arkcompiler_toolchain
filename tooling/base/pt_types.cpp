@@ -280,7 +280,7 @@ PrimitiveRemoteObject::PrimitiveRemoteObject(const EcmaVM *ecmaVm, Local<JSValue
 
 StringRemoteObject::StringRemoteObject([[maybe_unused]] const EcmaVM *ecmaVm, Local<StringRef> tagged)
 {
-    std::string description = tagged->ToString();
+    std::string description = tagged->DebuggerToString();
     SetType(RemoteObject::TypeName::String)
         .SetValue(tagged)
         .SetUnserializableValue(description)

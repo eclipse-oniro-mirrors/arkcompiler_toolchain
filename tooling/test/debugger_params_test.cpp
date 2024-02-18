@@ -1000,20 +1000,22 @@ HWTEST_F_L0(DebuggerParamsTest, CallFunctionOnParamsCreateTest)
     objectData = CallFunctionOnParams::Create(DispatchRequest(msg).GetParams());
     EXPECT_EQ(objectData, nullptr);
 
-    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"functionDeclaration":true, "objectId":1,
-        "arguments":[{"unserializableValue":1, "objectId":10}, {"unserializableValue":2, "objectId":20}],
-        "silent":"true", "returnByValue":"true", "generatePreview":"true", "userGesture":"true", "awaitPromise":"true",
-        "executionContextId":"1", "objectGroup":2, "throwOnSideEffect":"true"}})";
+    msg = std::string() + R"({"id":0, "method":"Debugger.Test", "params":{"callFrameId":0, "functionDeclaration":true,
+        "objectId":1, "arguments":[{"unserializableValue":1, "objectId":10}, {"unserializableValue":2, "objectId":20}],
+        "silent":"true", "returnByValue":"true", "generatePreview":"true", "userGesture":"true",
+        "awaitPromise":"true", "executionContextId":"1", "objectGroup":2, "throwOnSideEffect":"true"}})";
     objectData = CallFunctionOnParams::Create(DispatchRequest(msg).GetParams());
     EXPECT_EQ(objectData, nullptr);
 
-    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"functionDeclaration":"testFunction",
-        "objectId":"1", "arguments":[{"unserializableValue":"testValue1", "objectId":"10"},
+    msg = std::string() + R"({"id":0, "method":"Debugger.Test", "params":{"callFrameId":"0",
+        "functionDeclaration":"testFunction", "objectId":"1",
+        "arguments":[{"unserializableValue":"testValue1", "objectId":"10"},
         {"unserializableValue":"testValue2", "objectId":"20"}], "silent":true, "returnByValue":true,
         "generatePreview":true, "userGesture":true, "awaitPromise":true, "executionContextId":1,
         "objectGroup":"testGrp", "throwOnSideEffect":true}})";
     objectData = CallFunctionOnParams::Create(DispatchRequest(msg).GetParams());
     ASSERT_NE(objectData, nullptr);
+    EXPECT_EQ(objectData->GetCallFrameId(), 0);
     EXPECT_EQ(objectData->GetFunctionDeclaration(), "testFunction");
     EXPECT_EQ(objectData->GetObjectId(), 1);
     const std::vector<std::unique_ptr<CallArgument>> *callArgument = objectData->GetArguments();

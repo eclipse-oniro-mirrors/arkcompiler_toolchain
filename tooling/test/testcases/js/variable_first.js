@@ -301,6 +301,14 @@ var o = {
                 reject(new Error("The promise is rejected"));
             }
         });
+        var string22 = "\uD83D";
+        var string23 = string22 + "\uDE42";
+        var string24 = "\u{1F468}";
+        var string25 = string24 + "\u200D\u{1F468}\u200D\u{1F467}\u200D\u{1F466}\u200D";
+        print(string22);
+        print(string23);
+        print(string24);
+        print(string25);
 
         function resolveHandler(result) {
             let a = promiseFulfilled;

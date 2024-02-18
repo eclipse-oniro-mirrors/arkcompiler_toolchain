@@ -18,6 +18,7 @@ musl_libs("soft_libs") {
 
 group("musl_headers") {
   deps = [
+    ":FreeBSD_copy",
     ":copy_uapi_file",
     ":create_alltypes_h_file",
     ":create_syscall_h_file",
@@ -300,5 +301,15 @@ copy("musl_copy_inc_netpacket_file") {
   }
   outputs =
       [ "${target_out_dir}/${musl_inc_out_dir}/netpacket/{{source_file_part}}" ]
+  deps = [ ":create_porting_src" ]
+}
+
+group("FreeBSD_copy") {
+  deps = [ ":FreeBSD_sys_headers" ]
+}
+
+copy("FreeBSD_sys_headers") {
+  sources = freebsd_sys_headers
+  outputs = [ "${target_out_dir}/${musl_inc_out_dir}/sys/{{source_file_part}}" ]
   deps = [ ":create_porting_src" ]
 }

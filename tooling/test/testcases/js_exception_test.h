@@ -35,7 +35,7 @@ public:
             // break on start
             {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
             // set first breakpoint
-            {SocketAction::SEND, "b " DEBUGGER_JS_DIR "exception.js 23"},
+            {SocketAction::SEND, "b " DEBUGGER_JS_DIR "exception.js 24"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
 
             // hit breakpoint after resume first time
@@ -66,7 +66,7 @@ public:
                 std::string breakpoint;
                 breakpoint = hitBreakpoints->Get(0)->GetString();
                 if (ret != Result::SUCCESS || breakpoint.find(sourceFile_) == std::string::npos ||
-                    breakpoint.find("22") == std::string::npos) {
+                    breakpoint.find("23") == std::string::npos) {
                     return false;
                 }
 

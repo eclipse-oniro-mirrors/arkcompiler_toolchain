@@ -24,12 +24,12 @@ using namespace panda::ecmascript::tooling;
 namespace OHOS {
     void PtTypesPrimitiveRemoteObjectFuzzTest(const uint8_t* data, size_t size)
     {
-        if (size <= 0 || data == NULL) {
-            return;
-        }
         RuntimeOption option;
         option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
         auto vm = JSNApi::CreateJSVM(option);
+        if (size <= 0 || data == NULL) {
+            return;
+        }
         PrimitiveRemoteObject obj(vm, StringRef::NewFromUtf8(vm, (const char*)data, size));
         JSNApi::DestroyJSVM(vm);
     }

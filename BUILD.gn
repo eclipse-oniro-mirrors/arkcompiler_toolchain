@@ -188,46 +188,43 @@ config("toolchain_test_config") {
 
   configs = [ ":ark_toolchain_common_config" ]
 
-  ldflags = [ "-Wl,-rpath=\$ORIGIN/" ]
+  if (!is_mac) {
+    ldflags = [ "-Wl,-rpath=\$ORIGIN/" ]
+  }
 }
 
 group("ark_toolchain_packages") {
   deps = []
-  if (host_os != "mac") {
-    deps += [
-      "./inspector:ark_debugger",
-      "./inspector:connectserver_debugger",
-      "./tooling:libark_ecma_debugger",
-      "./tooling/client:libark_client",
-      "./tooling/client/ark_cli:arkdb",
-    ]
-  }
+  deps += [
+    "./inspector:ark_debugger",
+    "./inspector:connectserver_debugger",
+    "./tooling:libark_ecma_debugger",
+    "./tooling/client:libark_client",
+    "./tooling/client/ark_cli:arkdb",
+  ]
 }
 
 group("ark_toolchain_unittest") {
   testonly = true
   deps = []
-  if (host_os != "mac") {
-    deps += [
-      "//arkcompiler/toolchain/tooling/test:unittest",
-      "//arkcompiler/toolchain/websocket/test:unittest",
-    ]
-    if (is_ohos && is_standard_system) {
-      deps += [ "//arkcompiler/toolchain/test/fuzztest:fuzztest" ]
-    }
+  deps += [
+    "./tooling/test:unittest",
+    "./websocket/test:unittest",
+  ]
+  if (is_ohos && is_standard_system) {
+    deps += [ "./test/fuzztest:fuzztest" ]
   }
 }
 
 group("ark_toolchain_host_unittest") {
   testonly = true
   deps = []
-  if (host_os != "mac" && !is_debug) {
-    # js unittest
-    deps += [
-      "//arkcompiler/toolchain/tooling/test:host_unittest",
-      "//arkcompiler/toolchain/websocket/test:host_unittest",
-    ]
-  }
+
+  # js unittest
+  deps += [
+    "./tooling/test:host_unittest",
+    "./websocket/test:host_unittest",
+  ]
 }
 
 group("ark_js_host_unittest") {

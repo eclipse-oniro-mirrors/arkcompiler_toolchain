@@ -118,6 +118,9 @@ void ResetService()
 void StartServerForSocketPair(int socketfd)
 {
     LOGI("StartServerForSocketPair, socketfd = %{private}d", socketfd);
+    if (g_inspector == nullptr) {
+        g_inspector = std::make_unique<ConnectInspector>();
+    }
     g_inspector->connectServer_ = std::make_unique<ConnectServer>(socketfd,
         std::bind(&OnMessage, std::placeholders::_1));
 
@@ -155,6 +158,9 @@ void StopServer([[maybe_unused]] const std::string& componentName)
 void StoreMessage(int32_t instanceId, const std::string& message)
 {
     std::lock_guard<std::mutex> lock(g_connectMutex);
+    if (g_inspector == nullptr) {
+        g_inspector = std::make_unique<ConnectInspector>();
+    }
     if (g_inspector->infoBuffer_.count(instanceId) == 1) {
         LOGE("The message with the current instance id has existed.");
         return;

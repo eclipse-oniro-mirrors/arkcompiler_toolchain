@@ -24,12 +24,12 @@ using namespace panda::ecmascript::tooling;
 namespace OHOS {
     void PtTypesExceptionDetailsUrlFuzzTest(const uint8_t* data, size_t size)
     {
-        if (size <= 0 || data == NULL) {
-            return;
-        }
         RuntimeOption option;
         option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
         auto vm = JSNApi::CreateJSVM(option);
+        if (size <= 0 || data == NULL) {
+            return;
+        }
         ExceptionDetails details;
         details.SetUrl(std::string((const char*)data, size));
         details.GetUrl();

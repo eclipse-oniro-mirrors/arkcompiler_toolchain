@@ -32,10 +32,6 @@ public:
     DispatchResponse Enable();
     DispatchResponse Disable();
     DispatchResponse RunIfWaitingForDebugger();
-    DispatchResponse CallFunctionOn(
-        const CallFunctionOnParams &params,
-        std::unique_ptr<RemoteObject> *outRemoteObject,
-        std::optional<std::unique_ptr<ExceptionDetails>> *outExceptionDetails);
     DispatchResponse GetHeapUsage(double *usedSize, double *totalSize);
     DispatchResponse GetProperties(
         const GetPropertiesParams &params,
@@ -55,7 +51,6 @@ public:
         void Enable(const DispatchRequest &request);
         void RunIfWaitingForDebugger(const DispatchRequest &request);
         void GetProperties(const DispatchRequest &request);
-        void CallFunctionOn(const DispatchRequest &request);
         void GetHeapUsage(const DispatchRequest &request);
 
     private:

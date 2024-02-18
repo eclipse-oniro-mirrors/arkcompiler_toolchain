@@ -24,12 +24,12 @@ using namespace panda::ecmascript::tooling;
 namespace OHOS {
     void PtTypesExceptionDetailsExceptionFuzzTest(const uint8_t* data, size_t size)
     {
-        if (size <= 0 || data == NULL) {
-            return;
-        }
         RuntimeOption option;
         option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
         auto vm = JSNApi::CreateJSVM(option);
+        if (size <= 0 || data == NULL) {
+            return;
+        }
         ExceptionDetails details;
         std::unique_ptr<RemoteObject> obj = std::make_unique<RemoteObject>();
         details.SetException(std::move(obj));

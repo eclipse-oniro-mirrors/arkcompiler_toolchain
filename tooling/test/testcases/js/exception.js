@@ -20,5 +20,9 @@ function exception_func() {
 }
 
 print("exception test begin")
-exception_func()
+try {
+    exception_func()
+} catch (e) {
+    print("exception test ok")
+}
 print("exception test end")

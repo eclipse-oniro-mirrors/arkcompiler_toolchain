@@ -672,7 +672,12 @@ public:
 
     static std::unique_ptr<CallFunctionOnParams> Create(const PtJson &params);
 
-    const std::string &GetFunctionDeclaration()
+    CallFrameId GetCallFrameId() const
+    {
+        return callFrameId_;
+    }
+
+    const std::string &GetFunctionDeclaration() const
     {
         return functionDeclaration_;
     }
@@ -797,6 +802,7 @@ private:
     NO_COPY_SEMANTIC(CallFunctionOnParams);
     NO_MOVE_SEMANTIC(CallFunctionOnParams);
 
+    CallFrameId callFrameId_ {};
     std::string functionDeclaration_ {};
     std::optional<RemoteObjectId> objectId_ {};
     std::optional<std::vector<std::unique_ptr<CallArgument>>> arguments_ {};

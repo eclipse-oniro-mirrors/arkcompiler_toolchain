@@ -26,9 +26,11 @@ function countThrowException() {
     } 
     return sum;
 }
-print("begin");
-print(countThrowException());
-print("end");
 
-
-
+print("ThrowException test begin")
+try {
+    countThrowException()
+} catch (e) {
+    print("ThrowException test ok")
+}
+print("ThrowException test end")

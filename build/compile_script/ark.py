@@ -135,6 +135,22 @@ class ArkPy:
                 "gn_args": ["target_os=\"ohos\"", "target_cpu=\"mipsel\""],
                 "prefix_of_name_of_out_dir_of_second_level": "mipsel",
             },
+            "mac_arm64": {
+                "flags": ["mac_arm64", "arm64"],
+                "description":
+                    "Build for arkcompiler target of target-operating-system linux and "
+                    "target-central-processing-unit arm64.",
+                "gn_args": ["target_os=\"mac\"", "target_cpu=\"arm64\""],
+                "prefix_of_name_of_out_dir_of_second_level": "mac_arm64",
+            },
+            "mac_x86": {
+                "flags": ["mac_x86", "x86"],
+                "description":
+                    "Build for arkcompiler target of target-operating-system mac and "
+                    "target-central-processing-unit x86.",
+                "gn_args": ["target_os=\"mac\"", "target_cpu=\"x86\""],
+                "prefix_of_name_of_out_dir_of_second_level": "mac_x86",
+            },
         },
         "mode": {
             "release": {
@@ -160,6 +176,7 @@ class ArkPy:
                 "flags": ["unittest", "ut"],
                 "description":
                     "Compile and run unittest of arkcompiler target. "
+                    "Add --keep-going=N to keep running unittest when errors occured less than N. "
                     "Add --gn-args=\"run_with_qemu=true\" to command when running unittest of non-host type with qemu.",
                 "gn_targets_depend_on": ["unittest_packages"],
             },
@@ -214,6 +231,11 @@ class ArkPy:
                 "flags": ["--verbose", "-verbose"],
                 "description": "Print full commands(CXX, CC, LINK ...) called by ninja during compilation.",
             },
+            "keep-going": {
+                "flags": ["--keep-going=*", "-keep-going=*"],
+                "description": "Keep running unittest etc. until errors occured less than N times"
+                " (use 0 to ignore all errors).",
+            },
         },
         "help": {
             "flags": ["help", "--help", "--h", "-help", "-h"],
@@ -229,6 +251,7 @@ class ArkPy:
     has_cleaned = False
     enable_verbose = False
     enable_keepdepfile = False
+    ignore_errors = 1
 
     def get_binaries(self):
         host_os = sys.platform
@@ -334,7 +357,9 @@ class ArkPy:
             "  python3 ark.py \033[92mx64.release workload\033[0m\n"
             "  python3 ark.py \033[92mx64.release workload report\033[0m\n"
             "  python3 ark.py \033[92mx64.release workload report dev\033[0m\n"
-            "  python3 ark.py \033[92mx64.release workload report dev -20\033[0m\n")
+            "  python3 ark.py \033[92mx64.release workload report dev -20\033[0m\n"
+            "  python3 ark.py \033[92mx64.release workload report dev -20 10\033[0m\n"
+            "  python3 ark.py \033[92mx64.release workload report dev -20 10 weekly_workload\033[0m\n")
         # Arguments
         help_msg += "\033[32mArguments:\033[0m\n{}".format(
             self.get_help_msg_of_dict(
@@ -379,7 +404,9 @@ class ArkPy:
         (" -d keepdepfile" if self.enable_keepdepfile else "") + \
         " -d keeprsp" + \
         " -C {}".format(out_path) + \
-        " {}".format(" ".join(arg_list))
+        " {}".format(" ".join(arg_list)) + \
+        " -k {}".format(self.ignore_errors)
+        print(ninja_cmd)
         code = call_with_output(ninja_cmd, build_log_path)
         if code != 0:
             print("=== ninja failed! ===\n")
@@ -414,7 +441,7 @@ class ArkPy:
             self.build_for_gn_target(
                 x64_out_path, ['target_os="linux"', 'target_cpu="x64"', 'is_debug=false'],
                 self.ARG_DICT["target"]["test262"]["gn_targets_depend_on"], log_file_name)
-        
+
         self.build_for_gn_target(
             out_path, gn_args, self.ARG_DICT["target"]["test262"]["gn_targets_depend_on"], log_file_name)
         test262_cmd = self.get_test262_cmd(gn_args, out_path, x64_out_path, aot_mode, run_pgo, args_to_test262_cmd)
@@ -459,7 +486,8 @@ class ArkPy:
             if any('target_cpu="arm64"' in arg for arg in gn_args):
                 if run_pgo:
                     test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout 180000" \
-                          " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu:../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                          " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu:" \
+                          "../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
                           " --ark-arch aarch64" \
                           " --ark-arch-root=../../{1}/common/common/libc/" \
                           " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
@@ -524,7 +552,8 @@ class ArkPy:
         regress_test_cmd = "python3 arkcompiler/ets_runtime/test/regresstest/run_regress_test.py" \
                       " --ark-tool ./{0}/arkcompiler/ets_runtime/ark_js_vm" \
                       " --ark-frontend-binary ./{0}/arkcompiler/ets_frontend/es2abc" \
-                      " --LD_LIBRARY_PATH ./{0}/arkcompiler/ets_runtime:./{0}/thirdparty/icu:./prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                      " --LD_LIBRARY_PATH ./{0}/arkcompiler/ets_runtime:./{0}/thirdparty/icu:" \
+                      "./prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
                       " --out-dir ./{0}/ {1}".format(out_path, args_to_regress_test_cmd)
         regress_test_log_path = os.path.join(out_path, log_file_name)
         str_to_test_log = "============\n regresstest_time: {0}\nregresstest_target: {1}\n\n".format(
@@ -589,6 +618,17 @@ class ArkPy:
             elif self.is_dict_flags_match_arg(self.ARG_DICT["option"]["verbose"], arg):
                 if not self.enable_verbose:
                     self.enable_verbose = True
+            # match [option][keep-going] flag
+            elif self.is_dict_flags_match_arg(self.ARG_DICT["option"]["keep-going"], arg):
+                if self.ignore_errors == 1:
+                    input_value = arg[(arg.find("=") + 1):]
+                    try:
+                        self.ignore_errors = int(input_value)
+                    except Exception as _:
+                        print("\033[92mIllegal value \"{}\" for \"--keep-going\" argument.\033[0m\n".format(
+                            input_value
+                        ))
+                        sys.exit(0)
             # make a new list with flag that do not match any flag in [option]
             else:
                 arg_list_ret.append(arg)
@@ -599,19 +639,27 @@ class ArkPy:
         report = False
         tools = 'dev'
         boundary_value = '-10'
+        run_count = '10'
+        code_v = ''
         if len(arg_list) >= 2 and arg_list[1] == 'report':
             report = True
         if len(arg_list) >= 3 and arg_list[2]:
             tools = arg_list[2]
         if len(arg_list) >= 4 and arg_list[3]:
             boundary_value = arg_list[3]
+        if len(arg_list) >= 5 and arg_list[4]:
+            run_count = arg_list[4]
+        if len(arg_list) >= 6 and arg_list[5]:
+            code_v = arg_list[5]
         self.build_for_gn_target(out_path, gn_args, ["default"], self.GN_TARGET_LOG_FILE_NAME)
         workload_cmd = "cd arkcompiler/ets_runtime/test/workloadtest/ && python3 work_load.py" \
           " --code-path {0}" \
           " --report {1}" \
           " --tools-type {2}" \
           " --boundary-value {3}" \
-          .format(root_dir, report, tools, boundary_value)
+          " --run-count {4}" \
+          " --code-v {5}" \
+          .format(root_dir, report, tools, boundary_value, run_count, code_v)
         workload_log_path = os.path.join(out_path, log_file_name)
         str_to_workload_log = "================================\nwokload_time: {0}\nwokload_target: {1}\n\n".format(
             str_of_time_now(), 'file')
@@ -625,7 +673,7 @@ class ArkPy:
         return
 
     def start_for_matched_os_cpu_mode(self, os_cpu_key: str, mode_key: str, arg_list: list):
-        # get binary gn and ninja 
+        # get binary gn and ninja
         self.get_binaries()
         # get out_path
         name_of_out_dir_of_second_level = \
