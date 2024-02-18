@@ -32,8 +32,8 @@ public:
             ASSERT_TRUE(callFrames.size() > 0);
             auto jsLocation = callFrames[0]->GetLocation();
             ASSERT_TRUE(jsLocation != nullptr);
-            ASSERT_EQ(jsLocation->GetLine(), 28); // 28: breakpoint line
-            ASSERT_EQ(jsLocation->GetColumn(), 0); // 0: breakpoint column
+            ASSERT_EQ(jsLocation->GetLine(), 31); // 31: breakpoint line
+            ASSERT_EQ(jsLocation->GetColumn(), 4); // 4: breakpoint column
             TestUtil::SuspendUntilContinue(DebugEvent::BREAKPOINT, location);
             return true;
         };
@@ -57,8 +57,8 @@ public:
 
         loadModule = [this](std::string_view moduleName) {
             runtime_->Enable();
-            // 28: breakpointer line
-            location_ = TestUtil::GetLocation(sourceFile_.c_str(), 28, 0, pandaFile_.c_str());
+            // 31: breakpointer line
+            location_ = TestUtil::GetLocation(sourceFile_.c_str(), 31, 0, pandaFile_.c_str());
             std::cout<<"vmStart1"<<std::endl;
             ASSERT_TRUE(location_.GetMethodId().IsValid());
             std::cout<<"vmStart2"<<std::endl;
