@@ -16,7 +16,6 @@
 #include "connect_inspector.h"
 #include <mutex>
 #include "common/log_wrapper.h"
-
 namespace OHOS::ArkCompiler::Toolchain {
 std::mutex g_connectMutex;
 std::unique_ptr<ConnectInspector> g_inspector = nullptr;
@@ -25,6 +24,7 @@ static constexpr char OPEN_MESSAGE[] = "layoutOpen";
 static constexpr char CLOSE_MESSAGE[] = "layoutClose";
 static constexpr char REQUEST_MESSAGE[] = "tree";
 static constexpr char STOPDEBUGGER_MESSAGE[] = "stopDebugger";
+std::function<void(bool)> g_SetConnectCallBack;
 
 void* HandleDebugManager(void* const server)
 {
@@ -55,6 +55,7 @@ void OnMessage(const std::string& message)
         g_inspector->ideMsgQueue_.push(message);
         if (message.find(CONNECTED_MESSAGE, 0) != std::string::npos) {
             g_inspector->waitingForDebugger_ = false;
+            g_SetConnectCallBack(true);
             for (auto& info : g_inspector->infoBuffer_) {
                 g_inspector->connectServer_->SendMessage(info.second);
             }
@@ -66,6 +67,7 @@ void OnMessage(const std::string& message)
             }
         }
         if (message.find(CLOSE_MESSAGE, 0) != std::string::npos) {
+            g_SetConnectCallBack(false);
             if (g_inspector->setSwitchStatus_ != nullptr) {
                 LOGI("layoutClose start");
                 g_inspector->setSwitchStatus_(false);
@@ -96,6 +98,11 @@ void SetSwitchCallBack(const std::function<void(bool)>& setSwitchStatus,
         g_inspector->createLayoutInfo_ = createLayoutInfo;
         g_inspector->instanceId_ = instanceId;
     }
+}
+
+void SetConnectCallback(const std::function<void(bool)>& callback)
+{
+    g_SetConnectCallBack = callback;
 }
 
 // stop debugger but the application continues to run
