@@ -42,6 +42,8 @@ void StoreMessage(int32_t instanceId, const std::string& message);
 
 void SendLayoutMessage(const std::string& message);
 
+void SetConnectCallBack(const std::function<void(bool)>& callback);
+
 void StoreInspectorInfo(const std::string& jsonTreeStr,  const std::string& jsonSnapshotStr);
 
 void RemoveMessage(int32_t instanceId);
