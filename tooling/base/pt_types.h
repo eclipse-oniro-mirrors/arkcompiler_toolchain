@@ -256,6 +256,7 @@ public:
     std::unique_ptr<PtJson> ToJson() const override;
     static void AppendingHashToDescription(const EcmaVM *ecmaVM, Local<JSValueRef> tagged,
         std::string &description);
+    static std::string ResolveClassNameToDescription(const EcmaVM *ecmaVM, Local<JSValueRef> tagged);
     /*
      * @see {#ObjectType}
      */
