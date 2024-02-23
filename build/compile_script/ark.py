@@ -38,6 +38,13 @@ def _call(cmd: str):
 
 
 def _write(filename: str, content: str, mode: str):
+    if os.path.exists(filename):
+        with open(filename, 'r') as src_file:
+            src_content = src_file.read()
+
+        with open(filename[:-4] + "_last.log", mode) as dst_file:
+            dst_file.write(src_content)
+
     with open(filename, mode) as f:
         f.write(content)
 
@@ -50,7 +57,7 @@ def call_with_output(cmd: str, file: str):
             build_data = host.stdout.readline().decode('utf-8')
             sys.stdout.flush()
             print(build_data)
-            _write(file, build_data, "a")
+            _write(file, build_data, "w")
         except OSError as error:
             if error == errno.ENOENT:
                 print("no such file")
@@ -383,7 +390,7 @@ class ArkPy:
         build_log_path = os.path.join(out_path, log_file_name)
         str_to_build_log = "================================\nbuild_time: {0}\nbuild_target: {1}\n\n".format(
             str_of_time_now(), " ".join(arg_list))
-        _write(build_log_path, str_to_build_log, "a")
+        _write(build_log_path, str_to_build_log, "w")
         # gn command
         print("=== gn gen start ===")
         code = call_with_output(
@@ -448,7 +455,7 @@ class ArkPy:
         test262_log_path = os.path.join(out_path, log_file_name)
         str_to_test262_log = "================================\ntest262_time: {0}\ntest262_target: {1}\n\n".format(
             str_of_time_now(), args_to_test262_cmd)
-        _write(test262_log_path, str_to_test262_log, "a")
+        _write(test262_log_path, str_to_test262_log, "w")
         if aot_mode:
             self.generate_lib_ark_builtins_abc(run_pgo, gn_args, out_path, x64_out_path, test262_log_path)
         print("=== test262 start ===")
@@ -558,7 +565,7 @@ class ArkPy:
         regress_test_log_path = os.path.join(out_path, log_file_name)
         str_to_test_log = "============\n regresstest_time: {0}\nregresstest_target: {1}\n\n".format(
             str_of_time_now(), regress_test_cmd)
-        _write(regress_test_log_path, str_to_test_log, "a")
+        _write(regress_test_log_path, str_to_test_log, "w")
         print("=== regresstest start ===")
         code = call_with_output(regress_test_cmd, regress_test_log_path)
         if code != 0:
@@ -663,7 +670,7 @@ class ArkPy:
         workload_log_path = os.path.join(out_path, log_file_name)
         str_to_workload_log = "================================\nwokload_time: {0}\nwokload_target: {1}\n\n".format(
             str_of_time_now(), 'file')
-        _write(workload_log_path, str_to_workload_log, "a")
+        _write(workload_log_path, str_to_workload_log, "w")
         print("=== workload start ===")
         code = call_with_output(workload_cmd, workload_log_path)
         if code != 0:
