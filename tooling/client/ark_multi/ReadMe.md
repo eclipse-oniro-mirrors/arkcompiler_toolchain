@@ -6,7 +6,7 @@ Can start a specified number of threads, each thread starts the virtual machine 
 
 ## Command Help ##
 
-ark_multi [number of threads] [execution file, internal record of abc that needs to be run, one per line] [parameter, same as Ark_js_vm]
+ark_multi [number of threads] [execution file, internal record of abc that needs to be run, one per line] [parameter, same as ark_js_vm]
 
 ### Example ###
 
@@ -14,17 +14,17 @@ ark_multi [number of threads] [execution file, internal record of abc that needs
 
 ```
 
-a. abc
+a.abc
 
-a. abc
+a.abc
 
-b. abc
+b.abc
 
-b. abc
+b.abc
 
-c. abc
+c.abc
 
-c. abc
+c.abc
 
 ```
 
@@ -42,7 +42,7 @@ ark_multi 3 input.txt --icu-data-path "third_party/icu/ohos_icu4j/data"
 
 ```
 
-Python 3 ark. py x64. debug test262
+Python 3 ark.py x64.debug test262
 
 ```
 
