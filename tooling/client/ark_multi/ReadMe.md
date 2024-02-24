@@ -1,18 +1,14 @@
-#Ark multithreading command line#
+# Ark multithreading command line #
 
-##Function Introduction##
+## Function Introduction ##
 
 Can start a specified number of threads, each thread starts the virtual machine and executes the test case simultaneously, used to test the garbage collection mechanism of shared memory.
 
-
-
-##Command Help##
+## Command Help ##
 
 ark_multi [number of threads] [execution file, internal record of abc that needs to be run, one per line] [parameter, same as Ark_js_vm]
 
-
-
-###Example###
+### Example ###
 
 #### Execute the content of the input.txt file
 
@@ -38,7 +34,7 @@ ark_multi 3 input.txt --icu-data-path "third_party/icu/ohos_icu4j/data"
 
 
 
-##Execute test262##
+## Execute test262 ##
 
 - #### Using standalone build
 
@@ -63,7 +59,7 @@ LD_LIBRARY_PATH=out/x64.debug/arkcompiler/ets_runtime/:out/x64.debug/thirdparty/
 
 
 
-##Execute local ts##
+## Execute local ts ##
 
 1. Write the local abc path into input.txt
 
