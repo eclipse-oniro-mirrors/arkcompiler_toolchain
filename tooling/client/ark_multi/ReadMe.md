@@ -42,7 +42,7 @@ ark_multi 3 input.txt --icu-data-path "third_party/icu/ohos_icu4j/data"
 
 ```
 
-Python 3 ark.py x64.debug test262
+python3 ark.py x64.debug test262
 
 ```
 
