@@ -32,7 +32,7 @@ public:
             ASSERT_TRUE(callFrames.size() > 0);
             auto jsLocation = callFrames[0]->GetLocation();
             ASSERT_TRUE(jsLocation != nullptr);
-            ASSERT_EQ(jsLocation->GetLine(), 20); // 22: breakpoint line
+            ASSERT_EQ(jsLocation->GetLine(), 20); // 20: breakpoint line
             ASSERT_EQ(jsLocation->GetColumn(), 0); // 0: breakpoint column
             TestUtil::SuspendUntilContinue(DebugEvent::BREAKPOINT, location);
             return true;
