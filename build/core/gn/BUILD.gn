@@ -71,6 +71,7 @@ group("ets_frontend") {
 
 group("runtime_core") {
   deps = [
+    "$ark_root:ark_host_defectscanaux_tools",
     "$ark_root/assembler:ark_asm",
     "$ark_root/disassembler:ark_disasm",
   ]
