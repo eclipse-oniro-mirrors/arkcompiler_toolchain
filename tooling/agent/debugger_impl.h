@@ -195,15 +195,16 @@ private:
     void SaveCallFrameHandler(const FrameHandler *frameHandler);
     std::unique_ptr<Scope> GetLocalScopeChain(const FrameHandler *frameHandler,
         std::unique_ptr<RemoteObject> *thisObj);
-    std::unique_ptr<Scope> GetModuleScopeChain();
-    std::unique_ptr<Scope> GetGlobalScopeChain();
+    std::unique_ptr<Scope> GetModuleScopeChain(const FrameHandler *frameHandler);
+    std::unique_ptr<Scope> GetGlobalScopeChain(const FrameHandler *frameHandler);
     std::vector<std::unique_ptr<Scope>> GetClosureScopeChains(const FrameHandler *frameHandler,
         std::unique_ptr<RemoteObject> *thisObj);
     void GetLocalVariables(const FrameHandler *frameHandler, panda_file::File::EntityId methodId,
         const JSPandaFile *jsPandaFile, Local<JSValueRef> &thisVal, Local<ObjectRef> &localObj);
     void CleanUpOnPaused();
     void CleanUpRuntimeProperties();
-    void UpdateScopeObject(const FrameHandler *frameHandler, std::string_view varName, Local<JSValueRef> newVal);
+    void UpdateScopeObject(const FrameHandler *frameHandler, std::string_view varName,
+        Local<JSValueRef> newVal, std::string_view scope);
     void ClearSingleStepper();
     Local<JSValueRef> ConvertToLocal(const std::string &varValue);
     bool DecodeAndCheckBase64(const std::string &src, std::vector<uint8_t> &dest);
@@ -269,7 +270,8 @@ private:
 
     bool nativeOutPause_ {false};
     std::vector<NativeRange> nativeRanges_ {};
-    std::unordered_map<JSTaggedType *, RemoteObjectId> scopeObjects_ {};
+    std::unordered_map<JSTaggedType *, std::unordered_map<std::string_view,
+        std::vector<RemoteObjectId>>> scopeObjects_ {};
     std::vector<std::shared_ptr<FrameHandler>> callFrameHandlers_;
     JsDebuggerManager::ObjectUpdaterFunc updaterFunc_ {nullptr};
     JsDebuggerManager::SingleStepperFunc stepperFunc_ {nullptr};
