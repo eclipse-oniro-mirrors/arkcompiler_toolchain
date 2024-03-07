@@ -17,10 +17,6 @@ function rangeErrorException() {
     let a = new Array(-1);
 }
 
-print("rangeError test begin")
-try {
-    rangeErrorException()
-} catch (e) {
-    print("rangeError test ok")
-}
-print("rangeError test end")
+print("begin");
+rangeErrorException();
+print("end");

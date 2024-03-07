@@ -24,11 +24,6 @@ function countSyntaxException() {
     } 
     return sum;
 }
-
-print("SyntaxException test begin")
-try {
-    countSyntaxException()
-} catch (e) {
-    print("SyntaxException test ok")
-}
-print("SyntaxException test end")
+print("begin");
+countSyntaxException();
+print("end");
