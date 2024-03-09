@@ -180,8 +180,11 @@ host_unittest_action("DebuggerTest") {
     "debugger_service_test.cpp",
     "debugger_types_test.cpp",
     "dispatcher_test.cpp",
+    "dom_impl_test.cpp",
     "heapprofiler_impl_test.cpp",
     "js_pt_hooks_test.cpp",
+    "overlay_impl_test.cpp",
+    "page_impl_test.cpp",
     "profiler_impl_test.cpp",
     "protocol_handler_test.cpp",
     "pt_base64_test.cpp",
@@ -190,6 +193,7 @@ host_unittest_action("DebuggerTest") {
     "pt_returns_test.cpp",
     "pt_types_test.cpp",
     "runtime_impl_test.cpp",
+    "target_impl_test.cpp",
     "tracing_impl_test.cpp",
   ]
 
