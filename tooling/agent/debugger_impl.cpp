@@ -1691,7 +1691,7 @@ std::unique_ptr<Scope> DebuggerImpl::GetGlobalScopeChain(const FrameHandler *fra
 }
 
 void DebuggerImpl::UpdateScopeObject(const FrameHandler *frameHandler,
-    std::string_view varName, Local<JSValueRef> newVal, std::string_view scope)
+    std::string_view varName, Local<JSValueRef> newVal, const std::string& scope)
 {
     auto *sp = DebuggerApi::GetSp(frameHandler);
     auto iter = scopeObjects_.find(sp);

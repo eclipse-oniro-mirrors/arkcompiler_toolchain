@@ -204,7 +204,7 @@ private:
     void CleanUpOnPaused();
     void CleanUpRuntimeProperties();
     void UpdateScopeObject(const FrameHandler *frameHandler, std::string_view varName,
-        Local<JSValueRef> newVal, std::string_view scope);
+        Local<JSValueRef> newVal, const std::string& scope);
     void ClearSingleStepper();
     Local<JSValueRef> ConvertToLocal(const std::string &varValue);
     bool DecodeAndCheckBase64(const std::string &src, std::vector<uint8_t> &dest);
@@ -270,7 +270,7 @@ private:
 
     bool nativeOutPause_ {false};
     std::vector<NativeRange> nativeRanges_ {};
-    std::unordered_map<JSTaggedType *, std::unordered_map<std::string_view,
+    std::unordered_map<JSTaggedType *, std::unordered_map<std::string,
         std::vector<RemoteObjectId>>> scopeObjects_ {};
     std::vector<std::shared_ptr<FrameHandler>> callFrameHandlers_;
     JsDebuggerManager::ObjectUpdaterFunc updaterFunc_ {nullptr};
