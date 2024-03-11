@@ -123,6 +123,49 @@ var o = {
         weakSet2.add(p2);
         weakSet2.add(weakSet1);
 
+        class Parent {
+            name;
+            age;
+            constructor(name, age) {
+                this.name = name;
+                this.age = age;
+            }
+            print() {
+                print(this.name + " " + this.age);
+            }
+        }
+
+        class Child extends Parent {
+            idNumber;
+            constructor(name, age, idNumber) {
+                super(name, age);
+                this.idNumber = idNumber;
+            }
+            print() {
+                print(this.name + " " + this.age + " " + this.idNumber);
+            }
+        }
+        let parent = new Parent("parent", 50);
+        let child = new Child("child", 15, "1234");
+        parent.print();
+        child.print();
+
+        function customClass(a, b, child) {
+            this._a = a;
+            this._b = b;
+            this.child = child;
+            this.print = function() {
+                print("customClass print is called");
+            }
+        }
+        let class1 = new customClass(1, 2, child);
+        class1.print();
+
+        let class2 = {
+            name: "class2"
+        }
+        print(class2.name);
+
         var nop = undefined;
     }
 }
