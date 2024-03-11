@@ -69,6 +69,13 @@ def call_with_output(cmd: str, file: str):
     host.wait()
     return host.returncode
 
+def enable_ccache():
+    try:
+        ccache_path = subprocess.check_output(['which', 'ccache']).strip().decode()
+    except subprocess.CalledProcessError:
+        print("Error: ccache not found.")
+        return
+    os.environ['CCACHE_EXEC'] = ccache_path
 
 class ArkPy:
     # constants determined by designer of this class
@@ -698,6 +705,7 @@ class ArkPy:
         return
 
     def __main__(self, arg_list: list):
+        enable_ccache()
         # delete duplicate arg in arg_list
         arg_list = list(dict.fromkeys(arg_list))
         # match [help] flag

@@ -49,7 +49,7 @@ DebuggerImpl::DebuggerImpl(const EcmaVM *vm, ProtocolChannel *channel, RuntimeIm
     DebuggerApi::RegisterHooks(jsDebugger_, hooks_.get());
 
     DebuggerExecutor::Initialize(vm_);
-    updaterFunc_ = std::bind(&DebuggerImpl::UpdateScopeObject, this, _1, _2, _3);
+    updaterFunc_ = std::bind(&DebuggerImpl::UpdateScopeObject, this, _1, _2, _3, _4);
     stepperFunc_ = std::bind(&DebuggerImpl::ClearSingleStepper, this);
     returnNative_ = std::bind(&DebuggerImpl::NotifyReturnNative, this);
     vm_->GetJsDebuggerManager()->SetLocalScopeUpdater(&updaterFunc_);
@@ -1434,10 +1434,10 @@ bool DebuggerImpl::GenerateCallFrame(CallFrame *callFrame, const FrameHandler *f
         if (jsPandaFile != nullptr && !jsPandaFile->IsBundlePack() && jsPandaFile->IsNewVersion()) {
             JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm_));
             if (currentModule->IsSourceTextModule()) { // CJS module is string
-                scopeChain.emplace_back(GetModuleScopeChain());
+                scopeChain.emplace_back(GetModuleScopeChain(frameHandler));
             }
         }
-        scopeChain.emplace_back(GetGlobalScopeChain());
+        scopeChain.emplace_back(GetGlobalScopeChain(frameHandler));
     }
 
     callFrame->SetCallFrameId(callFrameId)
@@ -1470,7 +1470,7 @@ std::unique_ptr<Scope> DebuggerImpl::GetLocalScopeChain(const FrameHandler *fram
         .SetClassName(ObjectClassName::Object)
         .SetDescription(RemoteObject::ObjectDescription);
     auto *sp = DebuggerApi::GetSp(frameHandler);
-    scopeObjects_[sp] = runtime_->curObjectId_;
+    scopeObjects_[sp][Scope::Type::Local()].push_back(runtime_->curObjectId_);
     DebuggerApi::AddInternalProperties(vm_, localObj, ArkInternalValueType::Scope,  runtime_->internalObjects_);
     runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, localObj);
 
@@ -1584,6 +1584,8 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
                 closureScope->SetType(Scope::Type::Closure()).SetObject(std::move(closure));
                 DebuggerApi::AddInternalProperties(
                     vm_, closureScopeObj, ArkInternalValueType::Scope,  runtime_->internalObjects_);
+                auto *sp = DebuggerApi::GetSp(frameHandler);
+                scopeObjects_[sp][Scope::Type::Closure()].push_back(runtime_->curObjectId_);
                 runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, closureScopeObj);
                 closureScopes.emplace_back(std::move(closureScope));
             }
@@ -1594,7 +1596,7 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
     return closureScopes;
 }
 
-std::unique_ptr<Scope> DebuggerImpl::GetModuleScopeChain()
+std::unique_ptr<Scope> DebuggerImpl::GetModuleScopeChain(const FrameHandler *frameHandler)
 {
     auto moduleScope = std::make_unique<Scope>();
 
@@ -1606,6 +1608,8 @@ std::unique_ptr<Scope> DebuggerImpl::GetModuleScopeChain()
         .SetDescription(RemoteObject::ObjectDescription);
     moduleScope->SetType(Scope::Type::Module()).SetObject(std::move(module));
     DebuggerApi::AddInternalProperties(vm_, moduleObj, ArkInternalValueType::Scope,  runtime_->internalObjects_);
+    auto *sp = DebuggerApi::GetSp(frameHandler);
+    scopeObjects_[sp][Scope::Type::Module()].push_back(runtime_->curObjectId_);
     runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, moduleObj);
     JSThread *thread = vm_->GetJSThread();
     JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm_));
@@ -1667,7 +1671,7 @@ bool DebuggerImpl::IsVariableSkipped(const std::string &varName)
     return varName == "4newTarget" || varName == "0this" || varName == "0newTarget" || varName == "0funcObj";
 }
 
-std::unique_ptr<Scope> DebuggerImpl::GetGlobalScopeChain()
+std::unique_ptr<Scope> DebuggerImpl::GetGlobalScopeChain(const FrameHandler *frameHandler)
 {
     auto globalScope = std::make_unique<Scope>();
 
@@ -1680,12 +1684,14 @@ std::unique_ptr<Scope> DebuggerImpl::GetGlobalScopeChain()
     globalScope->SetType(Scope::Type::Global()).SetObject(std::move(global));
     globalObj = JSNApi::GetGlobalObject(vm_);
     DebuggerApi::AddInternalProperties(vm_, globalObj, ArkInternalValueType::Scope,  runtime_->internalObjects_);
+    auto *sp = DebuggerApi::GetSp(frameHandler);
+    scopeObjects_[sp][Scope::Type::Global()].push_back(runtime_->curObjectId_);
     runtime_->properties_[runtime_->curObjectId_++] = Global<JSValueRef>(vm_, globalObj);
     return globalScope;
 }
 
 void DebuggerImpl::UpdateScopeObject(const FrameHandler *frameHandler,
-    std::string_view varName, Local<JSValueRef> newVal)
+    std::string_view varName, Local<JSValueRef> newVal, const std::string& scope)
 {
     auto *sp = DebuggerApi::GetSp(frameHandler);
     auto iter = scopeObjects_.find(sp);
@@ -1694,16 +1700,17 @@ void DebuggerImpl::UpdateScopeObject(const FrameHandler *frameHandler,
         return;
     }
 
-    auto objectId = iter->second;
-    Local<ObjectRef> localObj = runtime_->properties_[objectId].ToLocal(vm_);
-    Local<JSValueRef> name = StringRef::NewFromUtf8(vm_, varName.data());
-    if (localObj->Has(vm_, name)) {
-        LOG_DEBUGGER(DEBUG) << "UpdateScopeObject: set new value";
-        PropertyAttribute descriptor(newVal, true, true, true);
-        localObj->DefineProperty(vm_, name, descriptor);
-    } else {
-        LOG_DEBUGGER(ERROR) << "UpdateScopeObject: not found " << varName;
+    for (auto objectId : scopeObjects_[sp][scope]) {
+        Local<ObjectRef> localObj = runtime_->properties_[objectId].ToLocal(vm_);
+        Local<JSValueRef> name = StringRef::NewFromUtf8(vm_, varName.data());
+        if (localObj->Has(vm_, name)) {
+            LOG_DEBUGGER(DEBUG) << "UpdateScopeObject: set new value";
+            PropertyAttribute descriptor(newVal, true, true, true);
+            localObj->DefineProperty(vm_, name, descriptor);
+            return;
+        }
     }
+    LOG_DEBUGGER(ERROR) << "UpdateScopeObject: not found " << varName;
 }
 
 void DebuggerImpl::ClearSingleStepper()

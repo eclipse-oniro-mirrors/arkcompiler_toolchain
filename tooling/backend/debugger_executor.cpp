@@ -17,6 +17,7 @@
 
 #include "ecmascript/debugger/debugger_api.h"
 #include "ecmascript/debugger/js_debugger_manager.h"
+#include "tooling/base/pt_types.h"
 
 namespace panda::ecmascript::tooling {
 void DebuggerExecutor::Initialize(const EcmaVM *vm)
@@ -158,7 +159,7 @@ bool DebuggerExecutor::SetLocalValue(const EcmaVM *vm, FrameHandler *frameHandle
     }
 
     DebuggerApi::SetVRegValue(frameHandler, index, value);
-    vm->GetJsDebuggerManager()->NotifyLocalScopeUpdated(varName, value);
+    vm->GetJsDebuggerManager()->NotifyScopeUpdated(varName, value, Scope::Type::Local());
     return true;
 }
 
@@ -186,7 +187,7 @@ bool DebuggerExecutor::SetLexicalValue(const EcmaVM *vm, const FrameHandler *fra
     }
 
     DebuggerApi::SetProperties(vm, frameHandler, level, slot, value);
-    vm->GetJsDebuggerManager()->NotifyLocalScopeUpdated(varName, value);
+    vm->GetJsDebuggerManager()->NotifyScopeUpdated(varName, value, Scope::Type::Closure());
     return true;
 }
 
@@ -197,6 +198,8 @@ Local<JSValueRef> DebuggerExecutor::GetGlobalValue(const EcmaVM *vm, Local<Strin
 
 bool DebuggerExecutor::SetGlobalValue(const EcmaVM *vm, Local<StringRef> name, Local<JSValueRef> value)
 {
+    std::string varName = name->ToString();
+    vm->GetJsDebuggerManager()->NotifyScopeUpdated(varName, value, Scope::Type::Global());
     return DebuggerApi::SetGlobalValue(vm, name, value);
 }
 
@@ -231,6 +234,7 @@ bool DebuggerExecutor::SetModuleValue(const EcmaVM *vm, const FrameHandler *fram
     JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm));
     if (currentModule->IsSourceTextModule()) {
         DebuggerApi::SetModuleValue(vm, currentModule, varName, value);
+        vm->GetJsDebuggerManager()->NotifyScopeUpdated(varName, value, Scope::Type::Module());
     }
     return true;
 }
