@@ -72,9 +72,9 @@ def enable_ccache():
     os.environ['CCACHE_EXEC'] = ccache_path
 
 
-def backup(file: str,  mode: str):
+def backup(file: str, mode: str):
     if os.path.exists(file):
-        with open(file, 'r') as src_file:
+        with open(file, 'r+') as src_file:
             src_content = src_file.read()
             src_file.seek(0)
             src_file.truncate()
