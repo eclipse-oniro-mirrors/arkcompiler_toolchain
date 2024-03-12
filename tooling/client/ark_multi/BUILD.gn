@@ -23,23 +23,19 @@ ohos_executable("ark_multi") {
     "../../../inspector",
     "../../../tooling",
     "../../../websocket",
-    "//third_party/cJSON",
-    "//third_party/libuv/include",
   ]
 
-
-  deps = [
-    "$ark_third_party_root/libuv:uv",
-    sdk_libc_secshared_dep,
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "ets_runtime:libark_jsruntime",
+    "libuv:uv",
   ]
-
-  external_deps = [ "ets_runtime:libark_jsruntime" ]
 
   # hiviewdfx libraries
   external_deps += hiviewdfx_ext_deps
-  deps += hiviewdfx_deps
+  deps = hiviewdfx_deps
 
-  configs = [ "../../..:ark_toolchain_common_config" ]
+  configs = [ "../..:ark_ecma_debugger_config" ]
 
   install_enable = false
 
