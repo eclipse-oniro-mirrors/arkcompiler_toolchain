@@ -22,12 +22,14 @@
         "ram": "",
         "deps": {
             "components": [
+                "bounds_checking_function",
                 "ets_runtime",
                 "runtime_core",
                 "faultloggerd",
                 "init",
                 "hitrace",
-                "hilog"
+                "hilog",
+                "libuv"
             ],
             "third_party": [
                 "bounds_checking_function",
