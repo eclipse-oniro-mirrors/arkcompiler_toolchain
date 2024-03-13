@@ -174,7 +174,8 @@ int Main(const int argc, const char **argv)
         uv_stop(loop);
     });
 
-    for (int i = 0; i < g_threadCount; i++) {
+    int threadCountLocal = g_threadCount;
+    for (int i = 0; i < threadCountLocal; i++) {
         StartThread(loop);
     }
 
