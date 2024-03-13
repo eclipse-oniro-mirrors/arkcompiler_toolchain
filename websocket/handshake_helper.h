@@ -16,9 +16,9 @@
 #ifndef ARKCOMPILER_TOOLCHAIN_WEBSOCKET_HANDSHAKE_HELPER_H
 #define ARKCOMPILER_TOOLCHAIN_WEBSOCKET_HANDSHAKE_HELPER_H
 
-#include "websocket/define.h"
-#include "websocket/http.h"
-#include "websocket/network.h"
+#include "define.h"
+#include "http.h"
+#include "network.h"
 
 #include <array>
 #include <string_view>

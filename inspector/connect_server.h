@@ -16,24 +16,23 @@
 #ifndef ARKCOMPILER_TOOLCHAIN_CONNECT_SERVER_CONNECT_SERVER_H
 #define ARKCOMPILER_TOOLCHAIN_CONNECT_SERVER_CONNECT_SERVER_H
 
+#include <atomic>
 #include <functional>
 #include <iostream>
 #include <memory>
-#include "websocket/server/websocket_server.h"
 #ifdef WINDOWS_PLATFORM
 #include <pthread.h>
 #endif
+#include <string>
 
 namespace OHOS::ArkCompiler::Toolchain {
+class WebSocketServer;
+
 class ConnectServer {
 public:
-    ConnectServer(int socketfd, std::function<void(std::string&&)> onMessage)
-        : socketfd_(socketfd), wsOnMessage_(std::move(onMessage))
-    {}
-    ConnectServer(const std::string& bundleName, std::function<void(std::string&&)> onMessage)
-        : bundleName_(bundleName), wsOnMessage_(std::move(onMessage))
-    {}
-    ~ConnectServer() = default;
+    ConnectServer(int socketfd, std::function<void(std::string&&)> onMessage);
+    ConnectServer(const std::string& bundleName, std::function<void(std::string&&)> onMessage);
+    ~ConnectServer();
     void RunServer();
     void StopServer();
     void SendMessage(const std::string& message) const;

@@ -21,10 +21,13 @@
 #include "tooling/client/domain/debugger_client.h"
 #include "tooling/client/domain/runtime_client.h"
 #include "tooling/client/manager/domain_manager.h"
-#include "websocket/client/websocket_client.h"
 #include "ecmascript/jspandafile/js_pandafile_manager.h"
 #include "ecmascript/debugger/js_debugger.h"
 #include "os/mutex.h"
+
+namespace OHOS::ArkCompiler::Toolchain {
+class WebSocketClient;
+} // namespace OHOS::ArkCompiler::Toolchain
 
 namespace panda::ecmascript::tooling::test {
 template<class Key, class T, class Hash = std::hash<Key>, class KeyEqual = std::equal_to<Key>>

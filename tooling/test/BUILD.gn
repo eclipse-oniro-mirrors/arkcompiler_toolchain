@@ -27,6 +27,7 @@ config("debug_api_test") {
   configs = [ "//arkcompiler/toolchain:toolchain_test_config" ]
 
   include_dirs = [
+    "$toolchain_root/websocket",
     "//arkcompiler/ets_runtime",
     "../..",
     "//third_party/cJSON",

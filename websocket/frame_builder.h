@@ -16,7 +16,7 @@
 #ifndef ARKCOMPILER_TOOLCHAIN_WEBSOCKET_FRAME_BUILDER_H
 #define ARKCOMPILER_TOOLCHAIN_WEBSOCKET_FRAME_BUILDER_H
 
-#include "websocket/web_socket_frame.h"
+#include "web_socket_frame.h"
 
 #include <string>
 
