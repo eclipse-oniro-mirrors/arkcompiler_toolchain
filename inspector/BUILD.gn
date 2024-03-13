@@ -80,7 +80,10 @@ ohos_source_set("connectserver_debugger_static") {
     cflags = [ "-std=c++17" ]
   }
 
-  include_dirs = [ "$toolchain_root" ]
+  include_dirs = [
+    "$toolchain_root",
+    "$toolchain_root/websocket",
+  ]
 
   deps += [ "../websocket:websocket_server" ]
   sources = [

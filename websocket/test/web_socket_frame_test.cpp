@@ -14,7 +14,7 @@
  */
 
 #include "gtest/gtest.h"
-#include "websocket/web_socket_frame.h"
+#include "web_socket_frame.h"
 
 using namespace OHOS::ArkCompiler::Toolchain;
 

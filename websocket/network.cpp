@@ -14,8 +14,8 @@
  */
 
 #include "common/log_wrapper.h"
-#include "websocket/define.h"
-#include "websocket/network.h"
+#include "define.h"
+#include "network.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 bool Recv(int32_t client, std::string& buffer, int32_t flags)

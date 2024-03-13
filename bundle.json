@@ -40,7 +40,20 @@
             "sub_component": [
                 "//arkcompiler/toolchain:ark_toolchain_packages"
             ],
-            "inner_kits": [],
+            "inner_kits": [
+                {
+                    "name": "//arkcompiler/toolchain/websocket:libwebsocket_server",
+                    "header": {
+                        "header_files": [
+                            "http.h",
+                            "server/websocket_server.h",
+                            "web_socket_frame.h",
+                            "websocket_base.h"
+                        ],
+                        "header_base": "//arkcompiler/toolchain/websocket"
+                    }
+                }
+            ],
             "test": [
                 "//arkcompiler/toolchain:ark_toolchain_unittest"
             ]

@@ -15,10 +15,10 @@
 
 #include <fcntl.h>
 #include "common/log_wrapper.h"
-#include "websocket/frame_builder.h"
-#include "websocket/handshake_helper.h"
-#include "websocket/network.h"
-#include "websocket/server/websocket_server.h"
+#include "frame_builder.h"
+#include "handshake_helper.h"
+#include "network.h"
+#include "server/websocket_server.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 bool WebSocketServer::DecodeMessage(WebSocketFrame& wsFrame) const

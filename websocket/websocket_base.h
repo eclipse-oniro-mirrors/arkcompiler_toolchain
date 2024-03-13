@@ -16,8 +16,7 @@
 #ifndef ARKCOMPILER_TOOLCHAIN_WEBSOCKET_WEBSOCKET_BASE_H
 #define ARKCOMPILER_TOOLCHAIN_WEBSOCKET_WEBSOCKET_BASE_H
 
-#include "websocket/frame_builder.h"
-#include "websocket/web_socket_frame.h"
+#include "web_socket_frame.h"
 
 #include <atomic>
 #include <functional>
@@ -35,16 +34,6 @@ enum CloseStatusCode : uint16_t {
     MESSAGE_TOO_BIG = 1009,
     UNEXPECTED_ERROR = 1011,
 };
-
-inline std::string ToString(CloseStatusCode status)
-{
-    if (status == CloseStatusCode::NO_STATUS_CODE) {
-        return "";
-    }
-    std::string result;
-    PushNumberPerByte(result, EnumToNumber(status));
-    return result;
-}
 
 class WebSocketBase {
 public:
