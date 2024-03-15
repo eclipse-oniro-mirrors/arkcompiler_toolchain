@@ -32,9 +32,9 @@ void* HandleDebugManager(void* const server)
         return nullptr;
     }
 #if defined(IOS_PLATFORM) || defined(MAC_PLATFORM)
-    pthread_setname_np("DebugConnectThread");
+    pthread_setname_np("OS_DbgConThread");
 #else
-    pthread_setname_np(pthread_self(), "DebugConnectThread");
+    pthread_setname_np(pthread_self(), "OS_DbgConThread");
 #endif
 
     static_cast<ConnectServer*>(server)->RunServer();
