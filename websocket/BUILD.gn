@@ -13,13 +13,10 @@
 
 import("//arkcompiler/toolchain/toolchain.gni")
 
-config("websocket_config") {
+config("websocket_private_config") {
   defines = []
 
-  include_dirs = [
-    "$toolchain_root/inspector",
-    "//third_party/openssl/include",
-  ]
+  include_dirs = [ "//third_party/openssl/include" ]
 
   if (is_mingw || is_mac) {
     cflags = [ "-std=c++17" ]
@@ -31,7 +28,7 @@ config("websocket_config") {
 websocket_configs = [
   sdk_libc_secshared_config,
   "..:ark_toolchain_common_config",
-  ":websocket_config",
+  ":websocket_private_config",
 ]
 
 websocket_deps = [ sdk_libc_secshared_dep ]
@@ -70,10 +67,16 @@ ohos_source_set("websocket_base") {
   part_name = "toolchain"
 }
 
+config("websocket_public_config") {
+  visibility = [ ":*" ]
+  include_dirs = [ "$toolchain_root/websocket" ]
+}
+
 ohos_source_set("websocket_server") {
   stack_protector_ret = false
 
   configs = websocket_configs
+  public_configs = [ ":websocket_public_config" ]
 
   external_deps = websocket_ext_deps
   deps = websocket_deps
@@ -89,10 +92,23 @@ ohos_source_set("websocket_server") {
   part_name = "toolchain"
 }
 
+# required for runtime_core ArkTS inspector
+ohos_static_library("libwebsocket_server") {
+  stack_protector_ret = false
+
+  public_configs = [ ":websocket_public_config" ]
+
+  deps = [ ":websocket_server" ]
+
+  subsystem_name = "arkcompiler"
+  part_name = "toolchain"
+}
+
 ohos_source_set("websocket_client") {
   stack_protector_ret = false
 
   configs = websocket_configs
+  public_configs = [ ":websocket_public_config" ]
 
   external_deps = websocket_ext_deps
   deps = websocket_deps

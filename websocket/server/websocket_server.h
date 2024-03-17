@@ -16,8 +16,8 @@
 #ifndef ARKCOMPILER_TOOLCHAIN_WEBSOCKET_SERVER_WEBSOCKET_SERVER_H
 #define ARKCOMPILER_TOOLCHAIN_WEBSOCKET_SERVER_WEBSOCKET_SERVER_H
 
-#include "websocket/http.h"
-#include "websocket/websocket_base.h"
+#include "http.h"
+#include "websocket_base.h"
 
 #include <functional>
 

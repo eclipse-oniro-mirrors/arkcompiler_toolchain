@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "websocket/frame_builder.h"
+#include "frame_builder.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 ServerFrameBuilder& ServerFrameBuilder::SetFinal(bool fin)

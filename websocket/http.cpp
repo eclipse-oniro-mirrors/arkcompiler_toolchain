@@ -14,7 +14,7 @@
  */
 
 #include "common/log_wrapper.h"
-#include "websocket/http.h"
+#include "http.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 /* static */

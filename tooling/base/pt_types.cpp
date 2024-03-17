@@ -251,6 +251,16 @@ void RemoteObject::AppendingHashToDescription(const EcmaVM *ecmaVM, Local<JSValu
     }
 }
 
+std::string RemoteObject::ResolveClassNameToDescription(const EcmaVM *ecmaVM, Local<JSValueRef> tagged)
+{
+    std::string description = RemoteObject::ObjectDescription;
+    if (!tagged->IsObject()) {
+        return description;
+    }
+    DebuggerApi::GetObjectClassName(ecmaVM, tagged, description);
+    return description.empty() ? RemoteObject::ObjectDescription : description;
+}
+
 PrimitiveRemoteObject::PrimitiveRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged)
 {
     if (tagged->IsNull()) {
@@ -494,7 +504,7 @@ std::string ObjectRemoteObject::DescriptionForObject(const EcmaVM *ecmaVm, Local
     if (tagged->IsNativePointer()) {
         return DescriptionForNativePointer(Local<NativePointerRef>(tagged));
     }
-    return RemoteObject::ObjectDescription;
+    return ResolveClassNameToDescription(ecmaVm, tagged);
 }
 
 std::string ObjectRemoteObject::DescriptionForNativePointer(const Local<NativePointerRef> &tagged)

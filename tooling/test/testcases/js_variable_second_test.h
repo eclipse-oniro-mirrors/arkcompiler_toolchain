@@ -37,8 +37,9 @@ public:
             std::string sourceFile = DEBUGGER_JS_DIR "variable_second.js";
             static_cast<JsVariableSecondTestChannel *>(channel_)->Initial(vm_, runtime_);
             runtime_->Enable();
-            // 125: breakpointer line
-            location_ = TestUtil::GetLocation(sourceFile.c_str(), 125, 0, panfaFile.c_str());
+            // 166: breakpointer line
+            int32_t line = 166;
+            location_ = TestUtil::GetLocation(sourceFile.c_str(), line, 0, panfaFile.c_str());
             ASSERT_TRUE(location_.GetMethodId().IsValid());
             TestUtil::SuspendUntilContinue(DebugEvent::LOAD_MODULE);
             ASSERT_EQ(moduleName, panfaFile);
@@ -223,15 +224,16 @@ private:
                                 "[[Int8Array]]", "object", "Object", "Int8Array(24)",
                                 "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", "[[Uint8Array]]", "object",
                                 "Object", "Uint8Array(24)", "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0",
-                                "[[Uint8ClampedArray]]", "object", "Object", "Object",
+                                "[[Uint8ClampedArray]]", "object", "Object", "Uint8ClampedArray",
                                 "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", "[[Int16Array]]", "object",
                                 "Object", "Int16Array(12)", "0,0,0,0,0,0,0,0,0,0,0,0", "[[Uint16Array]]", "object",
-                                "Object", "Object", "0,0,0,0,0,0,0,0,0,0,0,0", "[[Int32Array]]", "object", "Object",
-                                "Int32Array(6)", "0,0,0,0,0,0", "[[Uint32Array]]", "object", "Object", "Object",
-                                "0,0,0,0,0,0", "[[Float32Array]]", "object", "Object", "Object", "0,0,0,0,0,0",
-                                "[[Float64Array]]", "object", "Object", "Object", "0,0,0", "[[BigInt64Array]]",
-                                "object", "Object", "Object", "0,0,0", "[[BigUint64Array]]", "object", "Object",
-                                "Object", "0,0,0" } },
+                                "Object", "Uint16Array", "0,0,0,0,0,0,0,0,0,0,0,0",
+                                "[[Int32Array]]", "object", "Object",
+                                "Int32Array(6)", "0,0,0,0,0,0", "[[Uint32Array]]", "object", "Object", "Uint32Array",
+                                "0,0,0,0,0,0", "[[Float32Array]]", "object", "Object", "Float32Array", "0,0,0,0,0,0",
+                                "[[Float64Array]]", "object", "Object", "Float64Array", "0,0,0", "[[BigInt64Array]]",
+                                "object", "Object", "BigInt64Array", "0,0,0", "[[BigUint64Array]]", "object", "Object",
+                                "BigUint64Array", "0,0,0" } },
             { "function0", { "function", "Function", "function function0( { [js code] }",
                              "Cannot get source code of funtion" } },
             { "generator0", { "function", "Generator", "function* generator0( { [js code] }",
@@ -324,15 +326,15 @@ private:
                            "number", "3", "3" } },
             { "array21", { "string", "banana", "banana" } },
             { "typedarray1", { "object", "Object", "Int8Array(0)", "", "none" } },
-            { "typedarray2", { "object", "Object", "Object", "", "none" } },
+            { "typedarray2", { "object", "Object", "Uint8ClampedArray", "", "none" } },
             { "typedarray3", { "object", "Object", "Int16Array(0)", "", "none" } },
-            { "typedarray4", { "object", "Object", "Object", "", "none" } },
+            { "typedarray4", { "object", "Object", "Uint16Array", "", "none" } },
             { "typedarray5", { "object", "Object", "Int32Array(0)", "", "none" } },
-            { "typedarray6", { "object", "Object", "Object", "", "none" } },
-            { "typedarray7", { "object", "Object", "Object", "", "none" } },
-            { "typedarray8", { "object", "Object", "Object", "", "none" } },
-            { "typedarray9", { "object", "Object", "Object", "", "none" } },
-            { "typedarray10", { "object", "Object", "Object", "", "none" } },
+            { "typedarray6", { "object", "Object", "Uint32Array", "", "none" } },
+            { "typedarray7", { "object", "Object", "Float32Array", "", "none" } },
+            { "typedarray8", { "object", "Object", "Float64Array", "", "none" } },
+            { "typedarray9", { "object", "Object", "BigInt64Array", "", "none" } },
+            { "typedarray10", { "object", "Object", "BigUint64Array", "", "none" } },
             { "typedarray11", { "object", "Object", "Uint8Array(1)", "0", "0", "number", "0", "0" } },
             { "iterator1", { "function", "Function", "function values( { [native code] }",
                              "function values() { [native code] }" } },
@@ -394,6 +396,20 @@ private:
             { "weakSet2", { "object", "weakset", "Weakset", "WeakSet(2) {Object, Object}", "[object WeakSet]",
                             "[[Entries]]", "object", "array", "Array", "Array(2)",
                             "[object Object],[object Object]" } },
+            { "Parent", { "function", "Function", "function Parent( { [js code] }",
+                          "Cannot get source code of funtion" } },
+            { "class1", { "object", "Object", "customClass", "[object Object]", "_a", "number", "1", "1",
+                          "_b", "number", "2", "2", "child", "object", "Object", "Child", "[object Object]", "print",
+                          "function", "Function", "function ( { [js code] }", "Cannot get source code of funtion" } },
+            { "parent", { "object", "Object", "Parent", "[object Object]", "name", "string", "parent", "parent",
+                          "age", "number", "50", "50" } },
+            { "customClass", { "function", "Function", "function customClass( { [js code] }",
+                               "Cannot get source code of funtion" } },
+            { "child", { "object", "Object", "Child", "[object Object]", "name", "string", "child", "child",
+                         "age", "number", "15", "15", "idNumber", "string", "1234", "1234" } },
+            { "class2", { "object", "Object", "Object", "[object Object]", "name", "string", "class2", "class2" } },
+            { "Child", { "function", "Function", "function Child( { [js code] }",
+                         "Cannot get source code of funtion" } },
         };
 
         int32_t index_ {0};

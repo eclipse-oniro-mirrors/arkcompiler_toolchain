@@ -14,9 +14,10 @@
  */
 
 #include "common/log_wrapper.h"
-#include "websocket/define.h"
-#include "websocket/network.h"
-#include "websocket/websocket_base.h"
+#include "define.h"
+#include "frame_builder.h"
+#include "network.h"
+#include "websocket_base.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 // if the data is too large, it will be split into multiple frames, the first frame will be marked as 0x0
@@ -180,6 +181,16 @@ void WebSocketBase::SendPongFrame(std::string payload)
     }
 }
 
+static std::string ToString(CloseStatusCode status)
+{
+    if (status == CloseStatusCode::NO_STATUS_CODE) {
+        return "";
+    }
+    std::string result;
+    PushNumberPerByte(result, EnumToNumber(status));
+    return result;
+}
+
 void WebSocketBase::SendCloseFrame(CloseStatusCode status)
 {
     auto frame = CreateFrame(true, FrameType::CLOSE, ToString(status));
@@ -206,7 +217,7 @@ bool WebSocketBase::IsDecodeDisconnectMsg(const std::string& message)
 bool WebSocketBase::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
 {
     if (timeoutLimit > 0) {
-        struct timeval timeout = {timeoutLimit, 0};
+        struct timeval timeout = {static_cast<time_t>(timeoutLimit), 0};
         if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO,
             reinterpret_cast<char *>(&timeout), sizeof(timeout)) != SOCKET_SUCCESS) {
             LOGE("SetWebSocketTimeOut setsockopt SO_SNDTIMEO failed, errno = %{public}d", errno);
@@ -225,7 +236,7 @@ bool WebSocketBase::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
 bool WebSocketBase::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
 {
     if (timeoutLimit > 0) {
-        struct timeval timeout = {timeoutLimit, 0};
+        struct timeval timeout = {static_cast<time_t>(timeoutLimit), 0};
         if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)) != SOCKET_SUCCESS) {
             LOGE("SetWebSocketTimeOut setsockopt SO_SNDTIMEO failed, errno = %{public}d", errno);
             return false;

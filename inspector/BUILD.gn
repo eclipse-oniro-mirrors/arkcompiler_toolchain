@@ -60,6 +60,7 @@ ohos_shared_library("ark_debugger") {
     ]
   }
 
+  innerapi_tags = [ "platformsdk" ]
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
 }
@@ -79,7 +80,10 @@ ohos_source_set("connectserver_debugger_static") {
     cflags = [ "-std=c++17" ]
   }
 
-  include_dirs = [ "$toolchain_root" ]
+  include_dirs = [
+    "$toolchain_root",
+    "$toolchain_root/websocket",
+  ]
 
   deps += [ "../websocket:websocket_server" ]
   sources = [
@@ -104,6 +108,7 @@ ohos_source_set("connectserver_debugger_static") {
 ohos_shared_library("connectserver_debugger") {
   deps = [ ":connectserver_debugger_static" ]
 
+  innerapi_tags = [ "platformsdk" ]
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
 }

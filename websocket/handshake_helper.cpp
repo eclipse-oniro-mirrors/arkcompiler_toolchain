@@ -14,7 +14,7 @@
  */
 
 #include "common/log_wrapper.h"
-#include "websocket/handshake_helper.h"
+#include "handshake_helper.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 /* static */
