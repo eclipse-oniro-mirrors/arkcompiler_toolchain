@@ -105,11 +105,13 @@ def main():
             target_name = dep.split(":")[1]
             deps.append(get_full_path_from_target_name(config_info, target_name))
         elif dep.startswith("libuv"):
-            config_info = read_json_file("{}arkcompiler/toolchain/build/third_party_gn/libuv/dummy_bundle.json".format(args.root_src_dir))
+            config_info = read_json_file("{}arkcompiler/toolchain/build/" \
+              "third_party_gn/libuv/dummy_bundle.json".format(args.root_src_dir))
             target_name = dep.split(":")[1]
             deps.append(get_full_path_from_target_name(config_info, target_name))
         elif dep.startswith("bounds_checking_function"):
-            config_info = read_json_file("{}arkcompiler/toolchain/build/third_party_gn/bounds_checking_function/dummy_bundle.json".format(args.root_src_dir))
+            config_info = read_json_file("{}arkcompiler/toolchain/build/third_party_gn/" \
+                    "bounds_checking_function/dummy_bundle.json".format(args.root_src_dir))
             target_name = dep.split(":")[1]
             deps.append(get_full_path_from_target_name(config_info, target_name))
         else:
