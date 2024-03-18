@@ -55,7 +55,9 @@ void OnMessage(const std::string& message)
         g_inspector->ideMsgQueue_.push(message);
         if (message.find(CONNECTED_MESSAGE, 0) != std::string::npos) {
             g_inspector->waitingForDebugger_ = false;
-            g_SetConnectCallBack(true);
+            if (g_SetConnectCallBack != nullptr) {
+                g_SetConnectCallBack(true);
+            }
             for (auto& info : g_inspector->infoBuffer_) {
                 g_inspector->connectServer_->SendMessage(info.second);
             }
@@ -67,7 +69,9 @@ void OnMessage(const std::string& message)
             }
         }
         if (message.find(CLOSE_MESSAGE, 0) != std::string::npos) {
-            g_SetConnectCallBack(false);
+            if (g_SetConnectCallBack != nullptr) {
+                g_SetConnectCallBack(false);
+            }
             if (g_inspector->setSwitchStatus_ != nullptr) {
                 LOGI("layoutClose start");
                 g_inspector->setSwitchStatus_(false);
