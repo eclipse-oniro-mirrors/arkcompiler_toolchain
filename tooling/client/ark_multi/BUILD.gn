@@ -13,7 +13,7 @@
 
 import("//arkcompiler/toolchain/toolchain.gni")
 
-ohos_executable("arkdb") {
+ohos_executable("ark_multi") {
   sources = [ "main.cpp" ]
 
   include_dirs = [
@@ -25,13 +25,15 @@ ohos_executable("arkdb") {
     "../../../websocket",
   ]
 
-  deps = [ "../:libark_client_set" ]
-
-  external_deps = [ "ets_runtime:libark_jsruntime" ]
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "ets_runtime:libark_jsruntime",
+    "libuv:uv",
+  ]
 
   # hiviewdfx libraries
   external_deps += hiviewdfx_ext_deps
-  deps += hiviewdfx_deps
+  deps = hiviewdfx_deps
 
   configs = [ "../..:ark_ecma_debugger_config" ]
 

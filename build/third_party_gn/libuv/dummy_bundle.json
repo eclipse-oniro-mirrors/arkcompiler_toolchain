@@ -1,0 +1,15 @@
+{
+    "component": {
+        "build": {
+            "inner_kits": [
+                {
+                  "name": "//arkcompiler/toolchain/build/third_party_gn/libuv:uv",
+                  "header": {
+                    "header_files": [],
+                    "header_base": "//third_party/libuv/include"
+                  }
+                }
+            ]
+        }
+    }
+}
