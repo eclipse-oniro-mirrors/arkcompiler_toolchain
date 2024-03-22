@@ -213,8 +213,7 @@ void SourceManager::ListSourceCodeWithParameters(int startLine, int endLine)
             return;
         }
         if (startLine > static_cast<int>(it->second.second.size()) ||
-            endLine > static_cast<int>(it->second.second.size()) ||
-            startLine < 1) {
+            endLine > static_cast<int>(it->second.second.size()) || startLine < 1) {
             std::cout << "Line number out of range, this file has " <<
             static_cast<int>(it->second.second.size()) << " lines" << std::endl;
             return;

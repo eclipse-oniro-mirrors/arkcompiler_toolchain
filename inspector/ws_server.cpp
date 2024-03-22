@@ -72,6 +72,10 @@ void WsServer::RunServer()
         }
 #endif
     }
+    ContinueRunserver();
+}
+void WsServer::ContinueRunserver()
+{
     while (!terminateExecution_) {
 #if !defined(OHOS_PLATFORM)
         if (!webSocket_->AcceptNewConnection()) {
