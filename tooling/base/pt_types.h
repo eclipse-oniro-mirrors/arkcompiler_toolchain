@@ -373,6 +373,23 @@ public:
         return objectId_.has_value();
     }
 
+    bool HasPreviewValue() const
+    {
+        return previewValue_.has_value();
+    }
+
+    const std::string &GetPreviewValue() const
+    {
+        ASSERT(HasPreviewValue());
+        return previewValue_.value();
+    }
+
+    RemoteObject &SetPreviewValue(const std::string &value)
+    {
+        previewValue_ = value;
+        return *this;
+    }
+
     struct TypeName {
         static const std::string Object;     // NOLINT (readability-identifier-naming)
         static const std::string Function;   // NOLINT (readability-identifier-naming)
@@ -490,6 +507,7 @@ private:
     std::optional<UnserializableValue> unserializableValue_ {};
     std::optional<std::string> description_ {};
     std::optional<RemoteObjectId> objectId_ {};
+    std::optional<std::string> previewValue_ {};
 };
 
 class PrimitiveRemoteObject final : public RemoteObject {
