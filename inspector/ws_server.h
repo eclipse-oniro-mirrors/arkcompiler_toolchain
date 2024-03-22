@@ -40,6 +40,7 @@ public:
     WsServer(const DebugInfo& debugInfo, const std::function<void(std::string&&)>& onMessage);
     ~WsServer();
     void RunServer();
+    void ContinueRunserver();
     void StopServer();
     void SendReply(const std::string& message) const;
 
