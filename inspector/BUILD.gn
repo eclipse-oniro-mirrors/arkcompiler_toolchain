@@ -59,7 +59,9 @@ ohos_shared_library("ark_debugger") {
       "-lws2_32",
     ]
   }
-
+  if (enable_hilog) {
+    external_deps = [ "hilog:libhilog" ]
+  }
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
@@ -107,7 +109,9 @@ ohos_source_set("connectserver_debugger_static") {
 
 ohos_shared_library("connectserver_debugger") {
   deps = [ ":connectserver_debugger_static" ]
-
+  if (enable_hilog) {
+    external_deps = [ "hilog:libhilog" ]
+  }
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "arkcompiler"
   part_name = "toolchain"

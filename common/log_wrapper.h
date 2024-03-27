@@ -19,8 +19,17 @@
 #include "common/macros.h"
 
 #if defined(ENABLE_HILOG)
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
+#endif
 #include "hilog/log.h"
 #endif
+#undef LOG_DOMAIN
+#define LOG_DOMAIN 0xD003F00
+#undef LOG_TAG
+#define LOG_TAG "ArkCompiler"
 
 namespace OHOS::ArkCompiler::Toolchain {
 #ifdef LOGF
@@ -57,12 +66,6 @@ public:
 
     static void PrintLog(LogLevel level, const char* fmt, ...);
 };
-#else
-static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {
-    LOG_CORE,
-    0xD003F00,
-    "ArkCompiler"
-};
 #endif
 
 #pragma clang diagnostic push
@@ -74,11 +77,11 @@ static constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {
 #define LOGI(fmt, ...) StdLog::PrintLog(LogLevel::INFO, fmt, ##__VA_ARGS__)
 #define LOGD(fmt, ...) StdLog::PrintLog(LogLevel::DEBUG, fmt, ##__VA_ARGS__)
 #else
-#define LOGF(fmt, ...) OHOS::HiviewDFX::HiLog::Fatal(LABEL, fmt, ##__VA_ARGS__)
-#define LOGE(fmt, ...) OHOS::HiviewDFX::HiLog::Error(LABEL, fmt, ##__VA_ARGS__)
-#define LOGW(fmt, ...) OHOS::HiviewDFX::HiLog::Warn(LABEL, fmt, ##__VA_ARGS__)
-#define LOGI(fmt, ...) OHOS::HiviewDFX::HiLog::Info(LABEL, fmt, ##__VA_ARGS__)
-#define LOGD(fmt, ...) OHOS::HiviewDFX::HiLog::Debug(LABEL, fmt, ##__VA_ARGS__)
+#define LOGF(fmt, ...) HILOG_FATAL(LOG_CORE, fmt, ##__VA_ARGS__)
+#define LOGE(fmt, ...) HILOG_ERROR(LOG_CORE, fmt, ##__VA_ARGS__)
+#define LOGW(fmt, ...) HILOG_WARN(LOG_CORE, fmt, ##__VA_ARGS__)
+#define LOGI(fmt, ...) HILOG_INFO(LOG_CORE, fmt, ##__VA_ARGS__)
+#define LOGD(fmt, ...) HILOG_DEBUG(LOG_CORE, fmt, ##__VA_ARGS__)
 #endif
 #pragma clang diagnostic pop
 } // namespace OHOS::ArkCompiler::Toolchain

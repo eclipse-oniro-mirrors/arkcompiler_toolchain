@@ -91,7 +91,9 @@ ohos_shared_library("debugger_entry") {
   foreach(file, test_js_files) {
     deps += [ ":gen_${file}_abc" ]
   }
-
+  if (enable_hilog) {
+    external_deps = [ "hilog:libhilog" ]
+  }
   install_enable = false
   output_extension = "so"
   subsystem_name = "test"
