@@ -72,7 +72,9 @@ ohos_shared_library("libark_client") {
   if (!is_mingw && !is_mac) {
     output_extension = "so"
   }
-
+  if (enable_hilog) {
+    external_deps = [ "hilog:libhilog" ]
+  }
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
 }
