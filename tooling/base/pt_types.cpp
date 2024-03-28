@@ -131,7 +131,7 @@ std::unique_ptr<RemoteObject> RemoteObject::FromTagged(const EcmaVM *ecmaVm, Loc
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Proxy, ObjectSubType::Proxy);
     }
     if (tagged->IsGeneratorFunction()) {
-        return std::make_unique<GeneratorFunctionRemoteObject>(ecmaVm, Local<SymbolRef>(tagged));
+        return std::make_unique<GeneratorFunctionRemoteObject>(ecmaVm, tagged);
     }
     if (tagged->IsFunction()) {
         return std::make_unique<FunctionRemoteObject>(ecmaVm, tagged);
@@ -264,25 +264,30 @@ std::string RemoteObject::ResolveClassNameToDescription(const EcmaVM *ecmaVM, Lo
 PrimitiveRemoteObject::PrimitiveRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged)
 {
     if (tagged->IsNull()) {
-        SetType(ObjectType::Object).SetSubType(ObjectSubType::Null);
+        SetType(ObjectType::Object)
+            .SetSubType(ObjectSubType::Null)
+            .SetPreviewValue(ObjectSubType::Null);
     } else if (tagged->IsBoolean()) {
         std::string description = tagged->IsTrue() ? "true" : "false";
         SetType(ObjectType::Boolean)
             .SetValue(tagged)
+            .SetPreviewValue(description)
             .SetUnserializableValue(description)
             .SetDescription(description);
     } else if (tagged->IsUndefined()) {
-        SetType(ObjectType::Undefined);
+        SetType(ObjectType::Undefined).SetPreviewValue(ObjectType::Undefined);
     } else if (tagged->IsNumber()) {
         std::string description = tagged->ToString(ecmaVm)->ToString();
         SetType(ObjectType::Number)
             .SetValue(tagged)
+            .SetPreviewValue(description)
             .SetUnserializableValue(description)
             .SetDescription(description);
     } else if (tagged->IsBigInt()) {
         std::string description = tagged->ToString(ecmaVm)->ToString() + "n";  // n : BigInt literal postfix
         SetType(ObjectType::Bigint)
             .SetValue(tagged)
+            .SetPreviewValue(description)
             .SetUnserializableValue(description)
             .SetDescription(description);
     }
@@ -293,6 +298,7 @@ StringRemoteObject::StringRemoteObject([[maybe_unused]] const EcmaVM *ecmaVm, Lo
     std::string description = tagged->DebuggerToString();
     SetType(RemoteObject::TypeName::String)
         .SetValue(tagged)
+        .SetPreviewValue(description)
         .SetUnserializableValue(description)
         .SetDescription(description);
 }
@@ -300,6 +306,7 @@ StringRemoteObject::StringRemoteObject([[maybe_unused]] const EcmaVM *ecmaVm, Lo
 SymbolRemoteObject::SymbolRemoteObject(const EcmaVM *ecmaVm, Local<SymbolRef> tagged)
 {
     std::string description = DescriptionForSymbol(ecmaVm, tagged);
+    SetPreviewValue(description);
     AppendingHashToDescription(ecmaVm, tagged, description);
     SetType(RemoteObject::TypeName::Symbol)
         .SetValue(tagged)
@@ -314,6 +321,7 @@ FunctionRemoteObject::FunctionRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRe
     SetType(RemoteObject::TypeName::Function)
         .SetClassName(RemoteObject::ClassName::Function)
         .SetValue(tagged)
+        .SetPreviewValue(RemoteObject::ClassName::Function)
         .SetUnserializableValue(description)
         .SetDescription(description);
 }
@@ -325,6 +333,7 @@ GeneratorFunctionRemoteObject::GeneratorFunctionRemoteObject(const EcmaVM *ecmaV
     SetType(RemoteObject::TypeName::Function)
         .SetClassName(RemoteObject::ClassName::Generator)
         .SetValue(tagged)
+        .SetPreviewValue(RemoteObject::ClassName::Generator)
         .SetUnserializableValue(description)
         .SetDescription(description);
 }
@@ -333,6 +342,7 @@ ObjectRemoteObject::ObjectRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> t
                                        const std::string &classname)
 {
     std::string description = DescriptionForObject(ecmaVm, tagged);
+    SetPreviewValue(description);
     AppendingHashToDescription(ecmaVm, tagged, description);
     SetType(RemoteObject::TypeName::Object)
         .SetClassName(classname)
@@ -345,6 +355,7 @@ ObjectRemoteObject::ObjectRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> t
                                        const std::string &classname, const std::string &subtype)
 {
     std::string description = DescriptionForObject(ecmaVm, tagged);
+    SetPreviewValue(description);
     AppendingHashToDescription(ecmaVm, tagged, description);
     SetType(RemoteObject::TypeName::Object)
         .SetSubType(subtype)
@@ -734,7 +745,7 @@ std::string ObjectRemoteObject::DescriptionForMapIterator()
 std::string ObjectRemoteObject::DescriptionForArrayBuffer(const EcmaVM *ecmaVm, Local<ArrayBufferRef> tagged)
 {
     int32_t len = tagged->ByteLength(ecmaVm);
-    std::string description = ("ArrayBuffer(" + std::to_string(len) + ")");
+    std::string description = ObjectClassName::Arraybuffer + "(" + std::to_string(len) + ")";
     return description;
 }
 

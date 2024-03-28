@@ -322,7 +322,7 @@ private:
             "Boolean{[[PrimitiveValue]]: false}"} },
         { "number0", { "number", "1", "1" } },
         { "obj0", { "object", "Object", "Object", "Object"} },
-        { "arraybuffer0", { "object", "arraybuffer", "Arraybuffer", "ArrayBuffer(24)", "ArrayBuffer(24)"} },
+        { "arraybuffer0", { "object", "arraybuffer", "Arraybuffer", "Arraybuffer(24)", "Arraybuffer(24)"} },
         { "function0", { "function", "Function", "function function0( { [js code] }",
             "function function0( { [js code] }" } },
         { "generator0", { "function", "Generator", "function* generator0( { [js code] }",
@@ -345,7 +345,7 @@ private:
             "Boolean{[[PrimitiveValue]]: false}"} },
         { "number1", { "number", "11", "11" } },
         { "obj1", { "object", "Object", "Object", "Object"} },
-        { "arraybuffer1", { "object", "arraybuffer", "Arraybuffer", "ArrayBuffer(24)", "ArrayBuffer(24)"} },
+        { "arraybuffer1", { "object", "arraybuffer", "Arraybuffer", "Arraybuffer(24)", "Arraybuffer(24)"} },
         { "function1", { "function", "Function", "function function1( { [js code] }",
             "function function1( { [js code] }" } },
         { "generator1", { "function", "Generator", "function* generator1( { [js code] }",
@@ -367,7 +367,7 @@ private:
             "Boolean{[[PrimitiveValue]]: false}"} },
         { "number2", { "number", "111", "111" } },
         { "obj2", { "object", "Object", "Object", "Object"} },
-        { "arraybuffer2", { "object", "arraybuffer", "Arraybuffer", "ArrayBuffer(24)", "ArrayBuffer(24)"} },
+        { "arraybuffer2", { "object", "arraybuffer", "Arraybuffer", "Arraybuffer(24)", "Arraybuffer(24)"} },
         { "function2", { "function", "Function", "function function2( { [js code] }",
             "function function2( { [js code] }" } },
         { "generator2", { "function", "Generator", "function* generator2( { [js code] }",
@@ -392,7 +392,7 @@ private:
         { "boolean6", { "object", "Object", "Boolean{[[PrimitiveValue]]: true}", "Boolean{[[PrimitiveValue]]: true}"} },
         { "number6", { "number", "6", "6" } },
         { "obj6", { "object", "Object", "Object", "Object"} },
-        { "arraybuffer6", { "object", "arraybuffer", "Arraybuffer", "ArrayBuffer(24)", "ArrayBuffer(24)"} },
+        { "arraybuffer6", { "object", "arraybuffer", "Arraybuffer", "Arraybuffer(24)", "Arraybuffer(24)"} },
         { "function6", { "function", "Function", "function function6( { [js code] }",
             "function function6( { [js code] }" } },
         { "generator6", { "function", "Generator", "function* generator6( { [js code] }",
@@ -409,7 +409,7 @@ private:
         { "boolean7", { "object", "Object", "Boolean{[[PrimitiveValue]]: true}", "Boolean{[[PrimitiveValue]]: true}"} },
         { "number7", { "number", "6", "6" } },
         { "obj7", { "object", "Object", "Object", "Object"} },
-        { "arraybuffer7", { "object", "arraybuffer", "Arraybuffer", "ArrayBuffer(24)", "ArrayBuffer(24)"} },
+        { "arraybuffer7", { "object", "arraybuffer", "Arraybuffer", "Arraybuffer(24)", "Arraybuffer(24)"} },
         { "function7", { "function", "Function", "function function6( { [js code] }",
             "function function6( { [js code] }" } },
         { "generator7", { "function", "Generator", "function* generator6( { [js code] }",
@@ -427,7 +427,7 @@ private:
             "Boolean{[[PrimitiveValue]]: false}"} },
         { "number9", { "number", "111", "111" } },
         { "obj9", { "object", "Object", "Object", "Object"} },
-        { "arraybuffer9", { "object", "arraybuffer", "Arraybuffer", "ArrayBuffer(24)", "ArrayBuffer(24)"} },
+        { "arraybuffer9", { "object", "arraybuffer", "Arraybuffer", "Arraybuffer(24)", "Arraybuffer(24)"} },
         { "function9", { "function", "Function", "function function8( { [js code] }",
             "function function8( { [js code] }" } },
         { "generator9", { "function", "Generator", "function* generator8( { [js code] }",
@@ -446,7 +446,7 @@ private:
         { "string10", { "string", "helloworld11", "helloworld11" } },
         { "number10", { "number", "111", "111" } },
         { "obj10", { "object", "Object", "Object", "Object"} },
-        { "arraybuffer10", { "object", "arraybuffer", "Arraybuffer", "ArrayBuffer(24)", "ArrayBuffer(24)"} },
+        { "arraybuffer10", { "object", "arraybuffer", "Arraybuffer", "Arraybuffer(24)", "Arraybuffer(24)"} },
         { "function10", { "function", "Function", "function function8( { [js code] }",
             "function function8( { [js code] }" } },
         { "generator10", { "function", "Generator", "function* generator8( { [js code] }",
@@ -536,8 +536,8 @@ private:
         "\"configurable\":false,\"enumerable\":false,\"isOwn\":false}]}}",
 
         "{\"id\":14,\"result\":{\"result\":[{\"name\":\"buffer\",\"value\":{\"type\":\"object\",\"subtype\":"
-        "\"arraybuffer\",\"className\":\"Arraybuffer\",\"unserializableValue\":\"ArrayBuffer(24)\",\"description\":"
-        "\"ArrayBuffer(24)\",\"objectId\":\"113\"},\"writable\":false,\"configurable\":false,\"enumerable\":false,"
+        "\"arraybuffer\",\"className\":\"Arraybuffer\",\"unserializableValue\":\"Arraybuffer(24)\",\"description\":"
+        "\"Arraybuffer(24)\",\"objectId\":\"113\"},\"writable\":false,\"configurable\":false,\"enumerable\":false,"
         "\"isOwn\":false},{\"name\":\"byteLength\",\"value\":{\"type\":\"number\",\"unserializableValue\":\"24\","
         "\"description\":\"24\",\"objectId\":\"114\"},\"writable\":false,\"configurable\":false,\"enumerable\":false,"
         "\"isOwn\":false},{\"name\":\"byteOffset\",\"value\":{\"type\":\"number\",\"unserializableValue\":\"0\","
