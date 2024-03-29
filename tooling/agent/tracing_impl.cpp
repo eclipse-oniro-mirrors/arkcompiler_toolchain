@@ -172,9 +172,12 @@ DispatchResponse TracingImpl::Start(std::unique_ptr<StartParams> params)
         uv_timer_init(loop, &handle_);
         handle_.data = this;
         uv_timer_start(&handle_, TracingBufferUsageReport, 0, params->GetBufferUsageReportingInterval());
-
-        uv_work_t *work = new uv_work_t;
-        uv_queue_work(loop, work, [](uv_work_t *) { }, [](uv_work_t *work, int32_t) { delete work; });
+        if (DebuggerApi::IsMainThread()) {
+            uv_async_send(&loop->wq_async);
+        } else {
+            uv_work_t *work = new uv_work_t;
+            uv_queue_work(loop, work, [](uv_work_t *) { }, [](uv_work_t *work, int32_t) { delete work; });
+        }
     }
 #endif
     return DispatchResponse::Ok();
