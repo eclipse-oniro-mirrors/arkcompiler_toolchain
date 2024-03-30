@@ -56,6 +56,10 @@ test_js_files = [
   "local_variable_scope",
   "container",
   "closure_scope",
+  "branch",
+  "common_func",
+  "watch_variable",
+  "smart_stepInto",
 ]
 
 foreach(file, test_js_files) {

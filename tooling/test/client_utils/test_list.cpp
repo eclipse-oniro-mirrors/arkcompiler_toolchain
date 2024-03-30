@@ -24,14 +24,59 @@
 #include "tooling/test/testcases/js_closure_scope_test.h"
 #include "tooling/test/testcases/js_container_test.h"
 #include "tooling/test/testcases/js_exception_test.h"
+#include "tooling/test/testcases/js_heapsampling_loop_test.h"
 #include "tooling/test/testcases/js_heapsampling_test.h"
 #include "tooling/test/testcases/js_local_variable_scope_test.h"
 #include "tooling/test/testcases/js_module_variable_test.h"
 #include "tooling/test/testcases/js_source_test.h"
 #include "tooling/test/testcases/js_tracing_test.h"
 #include "tooling/test/testcases/js_watch_test.h"
+#include "tooling/test/testcases/js_heapdump_loop_test.h"
 #include "tooling/test/testcases/js_heapdump_test.h"
+#include "tooling/test/testcases/js_allocationtrack_loop_test.h"
+#include "tooling/test/testcases/js_allocationtrack_recursion_test.h"
 #include "tooling/test/testcases/js_allocationtrack_test.h"
+#include "tooling/test/testcases/js_stepinto_test.h"
+#include "tooling/test/testcases/js_stepout_test.h"
+#include "tooling/test/testcases/js_stepover_test.h"
+#include "tooling/test/testcases/js_stepinto_and_stepout_test.h"
+#include "tooling/test/testcases/js_stepout_before_function_test.h"
+#include "tooling/test/testcases/js_special_location_breakpoint_test.h"
+#include "tooling/test/testcases/js_multiple_common_breakpoint_test.h"
+#include "tooling/test/testcases/js_multiple_breakpoint_in_function_test.h"
+#include "tooling/test/testcases/js_breakpoint_cannot_hit_test.h"
+#include "tooling/test/testcases/js_breakpoint_in_different_branch.h"
+#include "tooling/test/testcases/js_watch_variable_test.h"
+#include "tooling/test/testcases/js_stepinto_arrow_test.h"
+#include "tooling/test/testcases/js_stepinto_async_test.h"
+#include "tooling/test/testcases/js_stepout_arrow_test.h"
+#include "tooling/test/testcases/js_stepout_async_test.h"
+#include "tooling/test/testcases/js_cpuprofile_test.h"
+#include "tooling/test/testcases/js_cpuprofile_async_test.h"
+#include "tooling/test/testcases/js_cpuprofile_step_test.h"
+#include "tooling/test/testcases/js_heapusage_test.h"
+#include "tooling/test/testcases/js_heapusage_async_test.h"
+#include "tooling/test/testcases/js_heapusage_step_test.h"
+#include "tooling/test/testcases/js_watch_basic_type_test.h"
+#include "tooling/test/testcases/js_watch_set_type_test.h"
+#include "tooling/test/testcases/js_watch_other_type_test.h"
+#include "tooling/test/testcases/js_stepinto_loop_test.h"
+#include "tooling/test/testcases/js_stepinto_recursion_test.h"
+#include "tooling/test/testcases/js_stepinto_switch_test.h"
+#include "tooling/test/testcases/js_stepover_loop_test.h"
+#include "tooling/test/testcases/js_stepover_recursion_test.h"
+#include "tooling/test/testcases/js_stepover_switch_test.h"
+#include "tooling/test/testcases/js_stepout_loop_test.h"
+#include "tooling/test/testcases/js_stepout_recursion_test.h"
+#include "tooling/test/testcases/js_stepout_switch_test.h"
+#include "tooling/test/testcases/js_breakpoint_loop_test.h"
+#include "tooling/test/testcases/js_breakpoint_recursion_test.h"
+#include "tooling/test/testcases/js_breakpoint_switch_test.h"
+#include "tooling/test/testcases/js_cpuprofile_loop_test.h"
+#include "tooling/test/testcases/js_cpuprofile_recursion_test.h"
+#include "tooling/test/testcases/js_heapusage_loop_test.h"
+#include "tooling/test/testcases/js_heapusage_recursion_test.h"
+#include "tooling/test/testcases/js_smart_stepInto_test.h"
 
 namespace panda::ecmascript::tooling::test {
 static std::string g_currentTestName = "";
@@ -53,6 +98,51 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsWatchTest", GetJsWatchTest());
     TestUtil::RegisterTest("JsHeapdumpTest", GetJsHeapdumpTest());
     TestUtil::RegisterTest("JsAllocationtrackTest", GetJsAllocationtrackTest());
+    TestUtil::RegisterTest("JsStepintoTest", GetJsStepintoTest());
+    TestUtil::RegisterTest("JsStepoutTest", GetJsStepoutTest());
+    TestUtil::RegisterTest("JsStepoverTest", GetJsStepoverTest());
+    TestUtil::RegisterTest("JsStepintoAndStepoutTest", GetJsStepintoAndStepoutTest());
+    TestUtil::RegisterTest("JsStepoutBeforeFunctiontTest", GetJsStepoutBeforeFunctionTest());
+    TestUtil::RegisterTest("JsSpecialLocationBreakpointTest", GetJsSpecialLocationBreakpointTest());
+    TestUtil::RegisterTest("JsMultipleCommonBreakpointTest", GetJsMultipleCommonBreakpointTest());
+    TestUtil::RegisterTest("JsMultipleBreakpointInFunctionTest", GetJsMultipleBreakpointInFunctionTest());
+    TestUtil::RegisterTest("JsBreakpointCannotHitTest", GetJsBreakpointCannotHitTest());
+    TestUtil::RegisterTest("JsBreakpointInDifferentBranchTest", GetJsBreakpointInDifferentBranchTest());
+    TestUtil::RegisterTest("JsWatchVariableTest", GetJsWatchVariableTest());
+    TestUtil::RegisterTest("JsStepintoArrowTest", GetJsStepintoArrowTest());
+    TestUtil::RegisterTest("JsStepintoAsyncTest", GetJsStepintoAsyncTest());
+    TestUtil::RegisterTest("JsStepoutArrowTest", GetJsStepoutArrowTest());
+    TestUtil::RegisterTest("JsStepoutAsyncTest", GetJsStepoutAsyncTest());
+    TestUtil::RegisterTest("JsCpuprofileTest", GetJsCpuprofileTest());
+    TestUtil::RegisterTest("JsCpuprofileAsyncTest", GetJsCpuprofileAsyncTest());
+    TestUtil::RegisterTest("JsCpuprofileStepTest", GetJsCpuprofileStepTest());
+    TestUtil::RegisterTest("JsHeapusageTest", GetJsHeapusageTest());
+    TestUtil::RegisterTest("JsHeapusageAsyncTest", GetJsHeapusageAsyncTest());
+    TestUtil::RegisterTest("JsHeapusageStepTest", GetJsHeapusageStepTest());
+    TestUtil::RegisterTest("JsHeapdumpLoopTest", GetJsHeapdumpLoopTest());
+    TestUtil::RegisterTest("JsAllocationTrackLoopTest", GetJsAllocationTrackLoopTest());
+    TestUtil::RegisterTest("JsAllocationTrackRecursionTest", GetJsAllocationTrackRecursionTest());
+    TestUtil::RegisterTest("JsHeapSamplingLoopTest", GetJsHeapSamplingLoopTest());
+    TestUtil::RegisterTest("JsJsWatchBasicTypeTest", GetJsWatchBasicTypeTest());
+    TestUtil::RegisterTest("JsJsWatchSetTypeTest", GetJsWatchSetTypeTest());
+    TestUtil::RegisterTest("JsJsWatchOtherTypeTest", GetJsWatchOtherTypeTest());
+    TestUtil::RegisterTest("JsStepintoLoopTest", GetJsStepintoLoopTest());
+    TestUtil::RegisterTest("JsStepintoRecursionTest", GetJsStepintoRecursionTest());
+    TestUtil::RegisterTest("JsStepintoSwitchTest", GetJsStepintoSwitchTest());
+    TestUtil::RegisterTest("JsStepoverLoopTest", GetJsStepoverLoopTest());
+    TestUtil::RegisterTest("JsStepoverRecursionTest", GetJsStepoverRecursionTest());
+    TestUtil::RegisterTest("JsStepoverSwitchTest", GetJsStepoverSwitchTest());
+    TestUtil::RegisterTest("JsStepoutLoopTest", GetJsStepoutLoopTest());
+    TestUtil::RegisterTest("JsStepoutRecursionTest", GetJsStepoutRecursionTest());
+    TestUtil::RegisterTest("JsStepoutSwitchTest", GetJsStepoutSwitchTest());
+    TestUtil::RegisterTest("JsBreakpointLoopTest", GetJsBreakpointLoopTest());
+    TestUtil::RegisterTest("JsBreakpointRecursionTest", GetJsBreakpointRecursionTest());
+    TestUtil::RegisterTest("JsBreakpointSwitchTest", GetJsBreakpointSwitchTest());
+    TestUtil::RegisterTest("JsCpuprofileLoopTest", GetJsCpuprofileLoopTest());
+    TestUtil::RegisterTest("JsCpuprofileRecursionTest", GetJsCpuprofileRecursionTest());
+    TestUtil::RegisterTest("JsHeapusageLoopTest", GetJsHeapusageLoopTest());
+    TestUtil::RegisterTest("JsHeapusageRecursionTest", GetJsHeapusageRecursionTest());
+    TestUtil::RegisterTest("JsSmartStepoutTest", GetJsSmartStepoutTest());
 }
 
 std::vector<const char *> GetTestList()

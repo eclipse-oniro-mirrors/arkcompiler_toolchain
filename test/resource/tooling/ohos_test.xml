@@ -32,6 +32,10 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/container.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/local_variable_scope.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/closure_scope.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/branch.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/common_func.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/watch_variable.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/smart_stepInto.abc -> /data/test" src="out"/>
             <option name="push" value="test/test/libjsdebugtest.so -> /data/test" src="out"/>
             <option name="push" value="test/test/libdebugger_entry.so -> /data/test" src="out"/>
             <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
@@ -58,6 +62,10 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/container.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/local_variable_scope.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/closure_scope.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/branch.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/common_func.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/watch_variable.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/smart_stepInto.abc -> /data/test" src="out"/>
             <option name="push" value="test/test/libjsdebugtest.so -> /data/test" src="out"/>
             <option name="push" value="test/test/libdebugger_entry.so -> /data/test" src="out"/>
             <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
@@ -83,6 +91,10 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/container.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/local_variable_scope.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/closure_scope.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/branch.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/common_func.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/watch_variable.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/smart_stepInto.abc -> /data/test" src="out"/>
         </preparer>
     </target>
     <target name="DebuggerCIntClientTest">
@@ -104,6 +116,10 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/container.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/local_variable_scope.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/closure_scope.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/branch.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/common_func.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/watch_variable.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/smart_stepInto.abc -> /data/test" src="out"/>
         </preparer>
     </target>
     <target name="DebuggerTest">
