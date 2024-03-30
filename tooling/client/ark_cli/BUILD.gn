@@ -20,6 +20,7 @@ ohos_executable("arkdb") {
     "./",
     "../",
     "../../base",
+    "../../../",
     "../../../inspector",
     "../../../tooling",
     "../../../websocket",
@@ -27,7 +28,10 @@ ohos_executable("arkdb") {
 
   deps = [ "../:libark_client_set" ]
 
-  external_deps = [ "ets_runtime:libark_jsruntime" ]
+  external_deps = [
+    "ets_runtime:libark_jsruntime",
+    "libuv:uv",
+  ]
 
   # hiviewdfx libraries
   external_deps += hiviewdfx_ext_deps

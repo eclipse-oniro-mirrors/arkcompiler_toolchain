@@ -35,7 +35,6 @@ host_unittest_action("WebSocketTest") {
   deps = [
     "$toolchain_root/websocket:websocket_client",
     "$toolchain_root/websocket:websocket_server",
-    sdk_libc_secshared_dep,
   ]
 
   if (is_arkui_x && target_os == "ios") {
@@ -46,6 +45,7 @@ host_unittest_action("WebSocketTest") {
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
+  external_deps += [ "bounds_checking_function:libsec_shared" ]
   deps += hiviewdfx_deps
 }
 
