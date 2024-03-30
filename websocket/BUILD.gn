@@ -31,7 +31,7 @@ websocket_configs = [
   ":websocket_private_config",
 ]
 
-websocket_deps = [ sdk_libc_secshared_dep ]
+websocket_deps = []
 if (is_arkui_x && target_os == "ios") {
   websocket_deps += [ "$ark_third_party_root/openssl:libcrypto_static" ]
 } else if (is_mingw) {
@@ -42,6 +42,7 @@ if (is_arkui_x && target_os == "ios") {
 
 # hiviewdfx libraries
 websocket_ext_deps = hiviewdfx_ext_deps
+websocket_ext_deps += [ "bounds_checking_function:libsec_shared" ]
 
 ohos_source_set("websocket_base") {
   stack_protector_ret = false

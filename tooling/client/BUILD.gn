@@ -48,14 +48,16 @@ ohos_source_set("libark_client_set") {
 
   deps += [
     "$ark_third_party_root/cJSON:cjson_static",
-    "$ark_third_party_root/libuv:uv",
     "$ark_third_party_root/openssl:libcrypto_shared",
     "$toolchain_root/websocket:websocket_client",
     "..:libark_ecma_debugger",
-    sdk_libc_secshared_dep,
   ]
 
-  external_deps += [ "ets_runtime:libark_jsruntime" ]
+  external_deps += [
+    "bounds_checking_function:libsec_shared",
+    "ets_runtime:libark_jsruntime",
+    "libuv:uv",
+  ]
 
   configs += [ "../..:ark_toolchain_common_config" ]
 
