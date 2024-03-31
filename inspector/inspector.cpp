@@ -388,6 +388,9 @@ void StopOldDebug(int tid, const std::string& componentName)
 {
     LOGI("StopDebug start, componentName = %{private}s, tid = %{private}d", componentName.c_str(), tid);
     void* vm = GetEcmaVM(tid);
+    if (vm == nullptr) {
+        return;
+    }
     std::unique_lock<std::shared_mutex> lock(g_mutex);
     auto iter = g_inspectors.find(vm);
     if (iter == g_inspectors.end() || iter->second == nullptr) {
