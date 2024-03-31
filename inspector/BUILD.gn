@@ -15,8 +15,6 @@ import("//arkcompiler/toolchain/toolchain.gni")
 
 ohos_source_set("ark_debugger_static") {
   stack_protector_ret = false
-  deps = [ sdk_libc_secshared_dep ]
-  configs = [ sdk_libc_secshared_config ]
   defines = []
 
   if (is_mingw || is_mac) {
@@ -32,7 +30,7 @@ ohos_source_set("ark_debugger_static") {
     libs = [ "log" ]
   }
 
-  deps += [ "../websocket:websocket_server" ]
+  deps = [ "../websocket:websocket_server" ]
   sources = [
     "../common/log_wrapper.cpp",
     "inspector.cpp",
@@ -42,9 +40,10 @@ ohos_source_set("ark_debugger_static") {
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
+  external_deps += [ "bounds_checking_function:libsec_shared" ]
   deps += hiviewdfx_deps
 
-  configs += [ "..:ark_toolchain_common_config" ]
+  configs = [ "..:ark_toolchain_common_config" ]
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
 }
@@ -69,8 +68,6 @@ ohos_shared_library("ark_debugger") {
 
 ohos_source_set("connectserver_debugger_static") {
   stack_protector_ret = false
-  deps = [ sdk_libc_secshared_dep ]
-  configs = [ sdk_libc_secshared_config ]
   defines = []
 
   if (is_mingw || is_mac) {
@@ -87,7 +84,7 @@ ohos_source_set("connectserver_debugger_static") {
     "$toolchain_root/websocket",
   ]
 
-  deps += [ "../websocket:websocket_server" ]
+  deps = [ "../websocket:websocket_server" ]
   sources = [
     "../common/log_wrapper.cpp",
     "connect_inspector.cpp",
@@ -100,9 +97,10 @@ ohos_source_set("connectserver_debugger_static") {
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
+  external_deps += [ "bounds_checking_function:libsec_shared" ]
   deps += hiviewdfx_deps
 
-  configs += [ "..:ark_toolchain_common_config" ]
+  configs = [ "..:ark_toolchain_common_config" ]
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
 }

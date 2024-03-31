@@ -56,6 +56,10 @@ test_js_files = [
   "local_variable_scope",
   "container",
   "closure_scope",
+  "branch",
+  "common_func",
+  "watch_variable",
+  "smart_stepInto",
 ]
 
 foreach(file, test_js_files) {
@@ -210,11 +214,11 @@ host_unittest_action("DebuggerTest") {
     "$ark_third_party_root/icu/icu4c:shared_icuuc",
     "$js_root:libark_jsruntime_test",
     "$toolchain_root/tooling:libark_ecma_debugger_test",
-    sdk_libc_secshared_dep,
   ]
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
+  external_deps += [ "bounds_checking_function:libsec_shared" ]
   deps += hiviewdfx_deps
 }
 
