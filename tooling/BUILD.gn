@@ -111,6 +111,9 @@ ohos_shared_library("libark_ecma_debugger") {
 
   # hiviewdfx libraries
   external_deps += hiviewdfx_ext_deps
+  if (enable_hilog) {
+    external_deps += [ "hilog:libhilog" ]
+  }
   if (!is_arkui_x) {
     external_deps += [ "ets_runtime:libark_jsruntime" ]
   } else {
@@ -150,7 +153,9 @@ ohos_shared_library("libark_ecma_debugger_test") {
   # hiviewdfx libraries
   external_deps += hiviewdfx_ext_deps
   deps += hiviewdfx_deps
-
+  if (enable_hilog) {
+    external_deps += [ "hilog:libhilog" ]
+  }
   install_enable = false
 
   if (!is_mingw && !is_mac) {

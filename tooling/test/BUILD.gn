@@ -139,7 +139,9 @@ ohos_shared_library("jsdebugtest") {
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
   deps += hiviewdfx_deps
-
+  if (enable_hilog) {
+    external_deps += [ "hilog:libhilog" ]
+  }
   install_enable = false
   output_extension = "so"
   subsystem_name = "test"
