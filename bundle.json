@@ -30,11 +30,13 @@
                 "hitrace",
                 "hilog",
 		"hisysevent",
-                "libuv"
+                "libuv",
+                "zlib"
             ],
             "third_party": [
                 "cJSON",
-                "openssl"
+                "openssl",
+                "zlib"
             ]
         },
         "build": {
