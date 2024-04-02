@@ -70,6 +70,7 @@ def enable_ccache():
         print("Error: ccache not found.")
         return
     os.environ['CCACHE_EXEC'] = ccache_path
+    os.environ['USE_CCACHE'] = "1"
 
 
 def backup(file: str, mode: str):
