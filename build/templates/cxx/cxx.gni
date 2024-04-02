@@ -341,6 +341,9 @@ template("ohos_source_set") {
       configs -= invoker.remove_configs
     }
     if (defined(invoker.external_deps) && invoker.external_deps != []) {
+      if (!defined(deps)) {
+        deps = []
+      }
       external_deps_temp_file =
           "$target_gen_dir/${part_name}__${target_name}_external_deps_temp.json"
       arguments = [
