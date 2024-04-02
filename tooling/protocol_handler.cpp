@@ -54,6 +54,7 @@ void ProtocolHandler::ProcessCommand()
 {
     std::queue<std::string> dispatchingQueue;
     do {
+        DebuggerApi::SwitchThreadStateRunningOrNative(vm_, ThreadState::NATIVE);
         {
             std::unique_lock<std::mutex> queueLock(requestLock_);
             if (requestQueue_.empty()) {
@@ -66,6 +67,7 @@ void ProtocolHandler::ProcessCommand()
         }
 
         isDispatchingMessage_ = true;
+        DebuggerApi::SwitchThreadStateRunningOrNative(vm_, ThreadState::RUNNING);
         while (!dispatchingQueue.empty()) {
             std::string msg = std::move(dispatchingQueue.front());
             dispatchingQueue.pop();
