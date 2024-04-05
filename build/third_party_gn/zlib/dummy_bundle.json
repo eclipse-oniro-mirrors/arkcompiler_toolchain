@@ -1,0 +1,22 @@
+{
+    "component": {
+        "build": {
+            "inner_kits": [
+                {
+                    "header": {
+                        "header_base": "//third_party/zlib",
+                        "header_files": ""
+                    },
+                    "name": "//arkcompiler/toolchain/build/third_party_gn/zlib:libz"
+                },
+                {
+                    "header": {
+                        "header_base": "//third_party/zlib",
+                        "header_files": ""
+                    },
+                    "name": "//arkcompiler/toolchain/build/third_party_gn/zlib:shared_libz"
+                }
+            ]
+        }
+    }
+}
