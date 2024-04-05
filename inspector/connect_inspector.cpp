@@ -191,6 +191,9 @@ void StoreInspectorInfo(const std::string& jsonTreeStr, const std::string& jsonS
 void RemoveMessage(int32_t instanceId)
 {
     std::lock_guard<std::mutex> lock(g_connectMutex);
+    if (g_inspector == nullptr) {
+        return;
+    }
     if (g_inspector->infoBuffer_.count(instanceId) != 1) {
         LOGE("The message with the current instance id does not exist.");
         return;
