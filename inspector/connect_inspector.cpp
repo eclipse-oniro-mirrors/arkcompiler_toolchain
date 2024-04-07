@@ -144,11 +144,11 @@ void StartServerForSocketPair(int socketfd)
     }
 }
 
-void StartServer([[maybe_unused]] const std::string& componentName)
+void StartServer(const std::string& componentName)
 {
-#ifdef PANDA_TARGET_ARM32
     LOGI("StartServer, componentName = %{private}s", componentName.c_str());
     g_inspector = std::make_unique<ConnectInspector>();
+#ifdef PANDA_TARGET_ARM32
     g_inspector->connectServer_ = std::make_unique<ConnectServer>(componentName,
         std::bind(&OnMessage, std::placeholders::_1));
 
