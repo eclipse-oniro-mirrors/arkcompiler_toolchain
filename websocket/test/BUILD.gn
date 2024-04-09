@@ -37,14 +37,14 @@ host_unittest_action("WebSocketTest") {
     "$toolchain_root/websocket:websocket_server",
   ]
 
-  if (is_arkui_x && target_os == "ios") {
-    deps += [ "$ark_third_party_root/openssl:libcrypto_static" ]
-  } else {
-    deps += [ "$ark_third_party_root/openssl:libcrypto_shared" ]
-  }
-
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
+  if (is_arkui_x && target_os == "ios") {
+    external_deps += [ "openssl:libcrypto_static" ]
+  } else {
+    external_deps += [ "openssl:libcrypto_shared" ]
+  }
+
   external_deps += [ "bounds_checking_function:libsec_shared" ]
   deps += hiviewdfx_deps
 }

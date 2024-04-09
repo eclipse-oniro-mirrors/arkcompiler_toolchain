@@ -16,8 +16,6 @@ import("//arkcompiler/toolchain/toolchain.gni")
 config("websocket_private_config") {
   defines = []
 
-  include_dirs = [ "//third_party/openssl/include" ]
-
   if (is_mingw || is_mac) {
     cflags = [ "-std=c++17" ]
   }
@@ -26,22 +24,23 @@ config("websocket_private_config") {
 }
 
 websocket_configs = [
-  sdk_libc_secshared_config,
   "..:ark_toolchain_common_config",
   ":websocket_private_config",
 ]
 
 websocket_deps = []
-if (is_arkui_x && target_os == "ios") {
-  websocket_deps += [ "$ark_third_party_root/openssl:libcrypto_static" ]
-} else if (is_mingw) {
-  websocket_deps += [ "$ark_third_party_root/openssl:libcrypto_restool" ]
-} else {
-  websocket_deps += [ "$ark_third_party_root/openssl:libcrypto_shared" ]
-}
 
 # hiviewdfx libraries
 websocket_ext_deps = hiviewdfx_ext_deps
+
+if (is_arkui_x && target_os == "ios") {
+  websocket_ext_deps += [ "openssl:libcrypto_static" ]
+} else if (is_mingw) {
+  websocket_deps += [ "$ark_third_party_root/openssl:libcrypto_restool" ]
+} else {
+  websocket_ext_deps += [ "openssl:libcrypto_shared" ]
+}
+
 websocket_ext_deps += [ "bounds_checking_function:libsec_shared" ]
 
 ohos_source_set("websocket_base") {
@@ -100,7 +99,10 @@ ohos_static_library("libwebsocket_server") {
   public_configs = [ ":websocket_public_config" ]
 
   deps = [ ":websocket_server" ]
-
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "openssl:libcrypto_shared",
+  ]
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
 }

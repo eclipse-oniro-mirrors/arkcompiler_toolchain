@@ -194,12 +194,7 @@ config("ark_toolchain_public_config") {
     ]
   }
 
-  include_dirs = [
-    # Dependent on runtime_core include
-    "$ark_root",
-    "$js_root",
-    ".",
-  ]
+  include_dirs = [ "." ]
 }
 
 # ecmascript unit testcase config

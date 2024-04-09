@@ -30,15 +30,16 @@ ohos_fuzztest("HeapprofilerStopTrackingHeapObjectsFuzzTest") {
 
   configs = [ "//arkcompiler/toolchain:toolchain_test_config" ]
 
-  deps = [
-    "//arkcompiler/ets_runtime:libark_jsruntime_test",
-    "//arkcompiler/toolchain/tooling:libark_ecma_debugger_set",
-    "//third_party/libuv:uv",
-    sdk_libc_secshared_dep,
-  ]
+  deps = [ "../../../../../tooling:libark_ecma_debugger_set" ]
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
+  external_deps += [
+    "cJSON:cjson",
+    "ets_runtime:libark_jsruntime",
+    "libuv:uv",
+    sdk_libc_secshared_dep,
+  ]
   deps += hiviewdfx_deps
 }
 

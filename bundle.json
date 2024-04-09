@@ -29,13 +29,12 @@
                 "init",
                 "hitrace",
                 "hilog",
-		"hisysevent",
-                "libuv"
-            ],
-            "third_party": [
+		        "hisysevent",
+                "libuv",
                 "cJSON",
                 "openssl"
-            ]
+            ],
+            "third_party": []
         },
         "build": {
             "sub_component": [

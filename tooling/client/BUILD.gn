@@ -17,7 +17,6 @@ ohos_source_set("libark_client_set") {
   stack_protector_ret = false
   defines = []
   deps = []
-  configs = [ sdk_libc_secshared_config ]
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
@@ -26,7 +25,6 @@ ohos_source_set("libark_client_set") {
   include_dirs = [
     "..",
     "$toolchain_root/websocket",
-    "//third_party/cJSON",
   ]
 
   sources = [
@@ -47,19 +45,19 @@ ohos_source_set("libark_client_set") {
   ]
 
   deps += [
-    "$ark_third_party_root/cJSON:cjson_static",
-    "$ark_third_party_root/openssl:libcrypto_shared",
     "$toolchain_root/websocket:websocket_client",
     "..:libark_ecma_debugger",
   ]
 
   external_deps += [
     "bounds_checking_function:libsec_shared",
+    "cJSON:cjson_static",
     "ets_runtime:libark_jsruntime",
     "libuv:uv",
+    "openssl:libcrypto_shared",
   ]
 
-  configs += [ "../..:ark_toolchain_common_config" ]
+  configs = [ "../..:ark_toolchain_common_config" ]
 
   cflags_cc = [ "-Wno-vla-extension" ]
 
@@ -74,9 +72,15 @@ ohos_shared_library("libark_client") {
   if (!is_mingw && !is_mac) {
     output_extension = "so"
   }
+  external_deps = []
+  external_deps += [
+    "bounds_checking_function:libsec_shared",
+    "cJSON:cjson_static",
+  ]
   if (enable_hilog) {
-    external_deps = [ "hilog:libhilog" ]
+    external_deps += [ "hilog:libhilog" ]
   }
+
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
 }
