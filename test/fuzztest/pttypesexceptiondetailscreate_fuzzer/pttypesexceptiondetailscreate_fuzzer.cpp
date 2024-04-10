@@ -30,7 +30,10 @@ namespace OHOS {
         if (size <= 0 || data == NULL) {
             return;
         }
-        cJSON* cjson = cJSON_ParseWithLength((const char*)data, size);
+        // if data: "{\"\":1,"
+        // cJSON_ParseWithLength will heap-buffer-overflow
+        // https://github.com/DaveGamble/cJSON/issues/804
+        cJSON* cjson = NULL;
         if (cjson != NULL) {
             PtJson pjson(cjson);
             auto details = ExceptionDetails::Create(pjson);
