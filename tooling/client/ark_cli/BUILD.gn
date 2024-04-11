@@ -31,6 +31,7 @@ ohos_executable("arkdb") {
   external_deps = [
     "ets_runtime:libark_jsruntime",
     "libuv:uv",
+    "zlib:libz",
   ]
 
   # hiviewdfx libraries
