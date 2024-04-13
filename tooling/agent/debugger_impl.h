@@ -63,7 +63,8 @@ public:
     DispatchResponse Resume(const ResumeParams &params);
     DispatchResponse SetAsyncCallStackDepth();
     DispatchResponse SetBreakpointByUrl(const SetBreakpointByUrlParams &params, std::string *outId,
-                                        std::vector<std::unique_ptr<Location>> *outLocations);
+                                        std::vector<std::unique_ptr<Location>> *outLocations,
+                                        bool isSmartBreakpoint = false);
     DispatchResponse SetBreakpointsActive(const SetBreakpointsActiveParams &params);
     DispatchResponse GetPossibleAndSetBreakpointByUrl(const GetPossibleAndSetBreakpointParams &params,
         std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
@@ -72,6 +73,7 @@ public:
     DispatchResponse SetNativeRange(const SetNativeRangeParams &params);
     DispatchResponse ResetSingleStepper(const ResetSingleStepperParams &params);
     DispatchResponse StepInto(const StepIntoParams &params);
+    DispatchResponse SmartStepInto(const SmartStepIntoParams &params);
     DispatchResponse StepOut();
     DispatchResponse StepOver(const StepOverParams &params);
     DispatchResponse SetBlackboxPatterns();
@@ -164,6 +166,7 @@ public:
         void SetNativeRange(const DispatchRequest &request);
         void ResetSingleStepper(const DispatchRequest &request);
         void StepInto(const DispatchRequest &request);
+        void SmartStepInto(const DispatchRequest &request);
         void StepOut(const DispatchRequest &request);
         void StepOver(const DispatchRequest &request);
         void SetMixedDebugEnabled(const DispatchRequest &request);
