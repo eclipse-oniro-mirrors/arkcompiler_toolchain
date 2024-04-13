@@ -471,6 +471,27 @@ private:
     std::optional<std::list<std::unique_ptr<LocationRange>>> skipList_ {};
 };
 
+class SmartStepIntoParams : public PtBaseParams {
+public:
+    SmartStepIntoParams() = default;
+    ~SmartStepIntoParams() override = default;
+
+    static std::unique_ptr<SmartStepIntoParams> Create(const PtJson &params);
+
+    SetBreakpointByUrlParams *GetSetBreakpointByUrlParams() const
+    {
+        return sbpParams_.get();
+    }
+
+private:
+    NO_COPY_SEMANTIC(SmartStepIntoParams);
+    NO_MOVE_SEMANTIC(SmartStepIntoParams);
+
+    static void AddRequireParams(PtJson &params);
+
+    std::unique_ptr<SetBreakpointByUrlParams> sbpParams_ {nullptr};
+};
+
 class StepOverParams : public PtBaseParams {
 public:
     StepOverParams() = default;

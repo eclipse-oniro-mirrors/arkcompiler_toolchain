@@ -374,6 +374,7 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         { "setPauseOnExceptions", &DebuggerImpl::DispatcherImpl::SetPauseOnExceptions },
         { "setSkipAllPauses", &DebuggerImpl::DispatcherImpl::SetSkipAllPauses },
         { "stepInto", &DebuggerImpl::DispatcherImpl::StepInto },
+        { "smartStepInto", &DebuggerImpl::DispatcherImpl::SmartStepInto},
         { "stepOut", &DebuggerImpl::DispatcherImpl::StepOut },
         { "stepOver", &DebuggerImpl::DispatcherImpl::StepOver },
         { "setMixedDebugEnabled", &DebuggerImpl::DispatcherImpl::SetMixedDebugEnabled },
@@ -604,6 +605,17 @@ void DebuggerImpl::DispatcherImpl::StepInto(const DispatchRequest &request)
         return;
     }
     DispatchResponse response = debugger_->StepInto(*params);
+    SendResponse(request, response);
+}
+
+void DebuggerImpl::DispatcherImpl::SmartStepInto(const DispatchRequest &request)
+{
+    std::unique_ptr<SmartStepIntoParams> params = SmartStepIntoParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+    DispatchResponse response = debugger_->SmartStepInto(*params);
     SendResponse(request, response);
 }
 
@@ -969,7 +981,8 @@ DispatchResponse DebuggerImpl::SetAsyncCallStackDepth()
 
 DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams &params,
                                                   std::string *outId,
-                                                  std::vector<std::unique_ptr<Location>> *outLocations)
+                                                  std::vector<std::unique_ptr<Location>> *outLocations,
+                                                  bool isSmartBreakpoint)
 {
     if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
         return DispatchResponse::Fail("SetBreakpointByUrl: debugger agent is not enabled");
@@ -996,7 +1009,7 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
             continue;
         }
 
-        auto callbackFunc = [this, &condition](const JSPtLocation &location) -> bool {
+        auto callbackFunc = [this, &condition, &isSmartBreakpoint](const JSPtLocation &location) -> bool {
             LOG_DEBUGGER(INFO) << "set breakpoint location: " << location.ToString();
             Local<FunctionRef> condFuncRef = FunctionRef::Undefined(vm_);
             if (condition.has_value() && !condition.value().empty()) {
@@ -1006,7 +1019,7 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
                     return false;
                 }
             }
-            return DebuggerApi::SetBreakpoint(jsDebugger_, location, condFuncRef);
+            return DebuggerApi::SetBreakpoint(jsDebugger_, location, condFuncRef, isSmartBreakpoint);
         };
         if (!extractor->MatchWithLocation(callbackFunc, lineNumber, columnNumber, url, GetRecordName(url))) {
             LOG_DEBUGGER(ERROR) << "failed to set breakpoint location number: "
@@ -1142,6 +1155,16 @@ DispatchResponse DebuggerImpl::StepInto([[maybe_unused]] const StepIntoParams &p
     frontend_.Resumed(vm_);
     debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
+}
+
+DispatchResponse DebuggerImpl::SmartStepInto(const SmartStepIntoParams &params)
+{
+    if (debuggerState_ != DebuggerState::PAUSED) {
+        return DispatchResponse::Fail("Can only perform operation while paused");
+    }
+    [[maybe_unused]] std::string outId;
+    [[maybe_unused]] std::vector<std::unique_ptr<Location>> outLocations;
+    return SetBreakpointByUrl(*(params.GetSetBreakpointByUrlParams()), &outId, &outLocations, true);
 }
 
 DispatchResponse DebuggerImpl::StepOut()
