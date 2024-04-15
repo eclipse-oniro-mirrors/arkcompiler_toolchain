@@ -505,6 +505,35 @@ std::unique_ptr<StepIntoParams> StepIntoParams::Create(const PtJson &params)
     return paramsObject;
 }
 
+std::unique_ptr<SmartStepIntoParams> SmartStepIntoParams::Create(const PtJson &params)
+{
+    auto paramsObject = std::make_unique<SmartStepIntoParams>();
+    auto sbpObject = std::make_unique<SetBreakpointByUrlParams>();
+    PtJson ptJson(params.GetJson());
+    AddRequireParams(ptJson);
+    if (!(sbpObject = SetBreakpointByUrlParams::Create(ptJson))) {
+        return nullptr;
+    }
+    paramsObject->sbpParams_ = std::move(sbpObject);
+    return paramsObject;
+}
+
+void SmartStepIntoParams::AddRequireParams(PtJson &params)
+{
+    if (!params.Contains("urlRegex")) {
+        params.Add("urlRegex", "");
+    }
+    if (!params.Contains("scriptHash")) {
+        params.Add("scriptHash", "");
+    }
+    if (!params.Contains("columnNumber")) {
+        params.Add("columnNumber", 0);
+    }
+    if (!params.Contains("condition")) {
+        params.Add("condition", "");
+    }
+}
+
 std::unique_ptr<StepOverParams> StepOverParams::Create(const PtJson &params)
 {
     auto paramsObject = std::make_unique<StepOverParams>();

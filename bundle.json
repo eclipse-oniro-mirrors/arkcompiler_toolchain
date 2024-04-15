@@ -29,10 +29,11 @@
                 "init",
                 "hitrace",
                 "hilog",
-		        "hisysevent",
+                "hisysevent",
                 "libuv",
                 "cJSON",
-                "openssl"
+                "openssl",
+		"zlib"
             ],
             "third_party": []
         },

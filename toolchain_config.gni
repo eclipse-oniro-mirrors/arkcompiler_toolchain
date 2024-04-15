@@ -24,7 +24,6 @@ if (!ark_standalone_build) {
   ark_third_party_root = "//third_party"
   import("$build_root/ohos.gni")
 } else {
-  build_root = "build"
   ark_third_party_root = "//arkcompiler/toolchain/build/third_party_gn"
   import("$build_root/ark.gni")
 }

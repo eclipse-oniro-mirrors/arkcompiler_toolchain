@@ -69,6 +69,11 @@ ohos_source_set("libark_ecma_debugger_set") {
     external_deps += [ "cJSON:cjson" ]
   }
   external_deps += [ "libuv:uv" ]
+  if (!ark_standalone_build) {
+    public_external_deps = [ "zlib:libz" ]
+  } else {
+    external_deps += [ "zlib:libz" ]
+  }
 
   # hiviewdfx libraries
   external_deps += hiviewdfx_ext_deps
@@ -93,6 +98,11 @@ ohos_shared_library("libark_ecma_debugger") {
   stack_protector_ret = false
   deps = [ ":libark_ecma_debugger_set" ]
   external_deps = [ "libuv:uv" ]
+  if (!ark_standalone_build) {
+    public_external_deps = [ "zlib:libz" ]
+  } else {
+    external_deps += [ "zlib:libz" ]
+  }
   if (is_mac) {
     external_deps += [ "cJSON:cjson_static" ]
   }
@@ -132,11 +142,13 @@ ohos_shared_library("libark_ecma_debugger_test") {
 
   defines = [ "OHOS_UNIT_TEST" ]
 
-  deps = []
-  external_deps = [
-    "ets_runtime:libark_jsruntime",
-    "libuv:uv",
-  ]
+  deps = [ "$js_root:libark_jsruntime_test" ]
+  external_deps = [ "libuv:uv" ]
+  if (!ark_standalone_build) {
+    public_external_deps = [ "zlib:libz" ]
+  } else {
+    external_deps += [ "zlib:libz" ]
+  }
   if ((is_arkui_x && target_os == "ios") || target_os == "mac") {
     external_deps += [ "cJSON:cjson_static" ]
   } else {
