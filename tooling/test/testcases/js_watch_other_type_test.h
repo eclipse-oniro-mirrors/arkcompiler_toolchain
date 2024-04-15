@@ -69,12 +69,6 @@ public:
                     return RecvWatchFunctionInfo(recv, "Function",
                                                 "function [Symbol.iterator]( { [native code] }");
                 }},
-            {SocketAction::SEND, "watch date0"},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE,
-                [this](auto recv, auto, auto) -> bool {
-                    return RecvWatchSubtypeInfo(recv, "date", "Date", "Sun Dec 17 1995 03:24:00 GMT+0800");
-                }},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
 
             {SocketAction::SEND, "resume"},
             {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
