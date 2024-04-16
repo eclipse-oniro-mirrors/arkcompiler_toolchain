@@ -194,6 +194,30 @@ private:
     BreakpointId breakpointId_ {};
 };
 
+class RemoveBreakpointsByUrlParams : public PtBaseParams {
+public:
+    RemoveBreakpointsByUrlParams() = default;
+    ~RemoveBreakpointsByUrlParams() override = default;
+
+    static std::unique_ptr<RemoveBreakpointsByUrlParams> Create(const PtJson &params);
+
+    const std::string &GetUrl() const
+    {
+        ASSERT(HasUrl());
+        return url_.value();
+    }
+
+    bool HasUrl() const
+    {
+        return url_.has_value();
+    }
+private:
+    NO_COPY_SEMANTIC(RemoveBreakpointsByUrlParams);
+    NO_MOVE_SEMANTIC(RemoveBreakpointsByUrlParams);
+
+    std::optional<std::string> url_ {};
+};
+
 class ResumeParams : public PtBaseParams {
 public:
     ResumeParams() = default;

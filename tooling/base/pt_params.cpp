@@ -234,6 +234,28 @@ std::unique_ptr<RemoveBreakpointParams> RemoveBreakpointParams::Create(const PtJ
     return paramsObject;
 }
 
+std::unique_ptr<RemoveBreakpointsByUrlParams> RemoveBreakpointsByUrlParams::Create(const PtJson &params)
+{
+    auto paramsObject = std::make_unique<RemoveBreakpointsByUrlParams>();
+    std::string error;
+    Result ret;
+
+    std::string url;
+    ret = params.GetString("url", &url);
+    if (ret == Result::SUCCESS) {
+        paramsObject->url_ = std::move(url);
+    } else {
+        error += "Wrong or unknown type of 'url'";
+    }
+
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "RemoveBreakpointByUrlParams::Create " << error;
+        return nullptr;
+    }
+
+    return paramsObject;
+}
+
 std::unique_ptr<ResumeParams> ResumeParams::Create(const PtJson &params)
 {
     auto paramsObject = std::make_unique<ResumeParams>();

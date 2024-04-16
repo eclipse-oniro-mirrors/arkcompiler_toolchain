@@ -60,6 +60,7 @@ public:
     DispatchResponse GetScriptSource(const GetScriptSourceParams &params, std::string *source);
     DispatchResponse Pause();
     DispatchResponse RemoveBreakpoint(const RemoveBreakpointParams &params);
+    DispatchResponse RemoveBreakpointsByUrl(const RemoveBreakpointsByUrlParams &params);
     DispatchResponse Resume(const ResumeParams &params);
     DispatchResponse SetAsyncCallStackDepth();
     DispatchResponse SetBreakpointByUrl(const SetBreakpointByUrlParams &params, std::string *outId,
@@ -157,6 +158,7 @@ public:
         void GetScriptSource(const DispatchRequest &request);
         void Pause(const DispatchRequest &request);
         void RemoveBreakpoint(const DispatchRequest &request);
+        void RemoveBreakpointsByUrl(const DispatchRequest &request);
         void Resume(const DispatchRequest &request);
         void SetAsyncCallStackDepth(const DispatchRequest &request);
         void SetBreakpointByUrl(const DispatchRequest &request);
