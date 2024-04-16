@@ -49,6 +49,10 @@ void WaitForDebugger(const ::panda::ecmascript::EcmaVM *vm)
 
 void OnMessage(const ::panda::ecmascript::EcmaVM *vm, std::string &&message)
 {
+    if (vm == nullptr || vm->GetJsDebuggerManager() == nullptr) {
+        LOG_DEBUGGER(DEBUG) << "VM has already been destroyed";
+        return;
+    }
     ProtocolHandler *handler = vm->GetJsDebuggerManager()->GetDebuggerHandler();
     if (LIKELY(handler != nullptr)) {
         handler->DispatchCommand(std::move(message));
