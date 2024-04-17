@@ -131,7 +131,9 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_Enable__002)
     DispatchRequest request(msg);
     dispatcherImpl->Dispatch(request);
 
-    EXPECT_STREQ(outStrForCallbackCheck.c_str(), R"({"id":0,"result":{"debuggerId":"0"}})");
+    bool condition = outStrForCallbackCheck.find("protocols") != std::string::npos &&
+        outStrForCallbackCheck.find("debuggerId") != std::string::npos;
+    EXPECT_TRUE(condition);
     EXPECT_TRUE(ecmaVm->GetJsDebuggerManager()->IsDebugMode());
     if (protocolChannel) {
         delete protocolChannel;

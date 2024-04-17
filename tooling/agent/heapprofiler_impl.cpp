@@ -18,6 +18,14 @@
 namespace panda::ecmascript::tooling {
 static constexpr int32_t MILLI_TO_MICRO = 1000;
 static constexpr double INTERVAL = 0.2;
+// Whenever adding a new protocol which is not a standard CDP protocol,
+// must add its methodName to the heapProfilerProtocolList
+void HeapProfilerImpl::InitializeExtendedProtocolsList()
+{
+    std::vector<std::string> heapProfilerProtocolList {};
+    heapProfilerExtendedProtocols_ = std::move(heapProfilerProtocolList);
+}
+
 void HeapProfilerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
     static std::unordered_map<std::string, AgentHandler> dispatcherTable {
@@ -65,7 +73,9 @@ void HeapProfilerImpl::DispatcherImpl::CollectGarbage(const DispatchRequest &req
 void HeapProfilerImpl::DispatcherImpl::Enable(const DispatchRequest &request)
 {
     DispatchResponse response = heapprofiler_->Enable();
-    SendResponse(request, response);
+    heapprofiler_->InitializeExtendedProtocolsList();
+    EnableReturns result(heapprofiler_->heapProfilerExtendedProtocols_);
+    SendResponse(request, response, result);
 }
 
 void HeapProfilerImpl::DispatcherImpl::Disable(const DispatchRequest &request)

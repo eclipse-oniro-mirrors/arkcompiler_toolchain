@@ -87,8 +87,11 @@ private:
     NO_COPY_SEMANTIC(ProfilerImpl);
     NO_MOVE_SEMANTIC(ProfilerImpl);
 
+    void InitializeExtendedProtocolsList();
+
     const EcmaVM *vm_ {nullptr};
     [[maybe_unused]] Frontend frontend_;
+    std::vector<std::string> profilerExtendedProtocols_ {};
 };
 }  // namespace panda::ecmascript::tooling
 #endif

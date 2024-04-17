@@ -220,7 +220,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplEnable)
     std::string msg = std::string() + R"({"id":0,"method":"HeapProfiler.enable","params":{}})";
     DispatchRequest request(msg);
     dispatcherImpl->Enable(request);
-    ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
+    ASSERT_TRUE(result.find("protocols") != std::string::npos);
     if (channel) {
         delete channel;
         channel = nullptr;

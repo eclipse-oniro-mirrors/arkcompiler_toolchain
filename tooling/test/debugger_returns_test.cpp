@@ -61,9 +61,10 @@ protected:
     JSThread *thread {nullptr};
 };
 
-HWTEST_F_L0(DebuggerReturnsTest, EnableReturnsToJsonTest)
+HWTEST_F_L0(DebuggerReturnsTest, DebuggerEnableReturnsToJsonTest)
 {
-    std::unique_ptr<EnableReturns> enableReturns = std::make_unique<EnableReturns>(100U);
+    std::vector<std::string> list {};
+    std::unique_ptr<DebuggerEnableReturns> enableReturns = std::make_unique<DebuggerEnableReturns>(100U, list);
     ASSERT_NE(enableReturns, nullptr);
 
     std::string debuggerId;

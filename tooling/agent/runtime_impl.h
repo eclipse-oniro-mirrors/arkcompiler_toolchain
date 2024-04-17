@@ -145,6 +145,7 @@ private:
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
     void GetPromiseValue(Local<JSValueRef> value,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+    void InitializeExtendedProtocolsList();
 
     class Frontend {
     public:
@@ -165,6 +166,7 @@ private:
     RemoteObjectId curObjectId_ {0};
     std::unordered_map<RemoteObjectId, Global<JSValueRef>> properties_ {};
     Global<MapRef> internalObjects_;
+    std::vector<std::string> runtimeExtendedProtocols_ {};
 
     friend class DebuggerImpl;
 };

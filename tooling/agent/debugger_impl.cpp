@@ -356,6 +356,25 @@ void DebuggerImpl::NotifyHandleProtocolCommand()
     handler->ProcessCommand();
 }
 
+// Whenever adding a new protocol which is not a standard CDP protocol,
+// must add its methodName to the debuggerProtocolsList
+void DebuggerImpl::InitializeExtendedProtocolsList()
+{
+    std::vector<std::string> debuggerProtocolList {
+        "removeBreakpointsByUrl",
+        "setMixedDebugEnabled",
+        "replyNativeCalling",
+        "getPossibleAndSetBreakpointByUrl",
+        "dropFrame",
+        "setNativeRange",
+        "resetSingleStepper",
+        "callFunctionOn",
+        "smartStepInto",
+        "callFunctionOn"
+    };
+    debuggerExtendedProtocols_ = std::move(debuggerProtocolList);
+}
+
 void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
     static std::unordered_map<std::string, AgentHandler> dispatcherTable {
@@ -421,7 +440,8 @@ void DebuggerImpl::DispatcherImpl::Enable(const DispatchRequest &request)
     UniqueDebuggerId id;
     DispatchResponse response = debugger_->Enable(*params, &id);
 
-    EnableReturns result(id);
+    debugger_->InitializeExtendedProtocolsList();
+    DebuggerEnableReturns result(id, debugger_->debuggerExtendedProtocols_);
     SendResponse(request, response, result);
 }
 

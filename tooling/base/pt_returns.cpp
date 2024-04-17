@@ -16,11 +16,30 @@
 #include "tooling/base/pt_returns.h"
 
 namespace panda::ecmascript::tooling {
-std::unique_ptr<PtJson> EnableReturns::ToJson() const
+std::unique_ptr<PtJson> DebuggerEnableReturns::ToJson() const
 {
     std::unique_ptr<PtJson> result = PtJson::CreateObject();
 
     result->Add("debuggerId", std::to_string(debuggerId_).c_str());
+    std::unique_ptr<PtJson> array = PtJson::CreateArray();
+    size_t len = protocols_.size();
+    for (size_t i = 0; i < len; i++) {
+        array->Push(protocols_[i].c_str());
+    }
+    result->Add("protocols", array);
+
+    return result;
+}
+
+std::unique_ptr<PtJson> EnableReturns::ToJson() const
+{
+    std::unique_ptr<PtJson> result = PtJson::CreateObject();
+    std::unique_ptr<PtJson> array = PtJson::CreateArray();
+    size_t len = protocols_.size();
+    for (size_t i = 0; i < len; i++) {
+        array->Push(protocols_[i].c_str());
+    }
+    result->Add("protocols", array);
 
     return result;
 }

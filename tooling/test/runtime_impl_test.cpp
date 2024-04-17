@@ -66,7 +66,7 @@ HWTEST_F_L0(RuntimeImplTest, DispatcherImplDispatch)
     msg = std::string() + R"({"id":0,"method":"Rumtime.enable","params":{}})";
     DispatchRequest request1(msg);
     dispatcherImpl->Dispatch(request1);
-    ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
+    ASSERT_TRUE(result.find("protocols") != std::string::npos);
     if (channel != nullptr) {
         delete channel;
         channel = nullptr;
@@ -85,7 +85,7 @@ HWTEST_F_L0(RuntimeImplTest, DispatcherImplEnable)
     std::string msg = std::string() + R"({"id":0,"method":"Rumtime.enable","params":{}})";
     DispatchRequest request1(msg);
     dispatcherImpl->Enable(request1);
-    ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
+    ASSERT_TRUE(result.find("protocols") != std::string::npos);
     if (channel != nullptr) {
         delete channel;
         channel = nullptr;

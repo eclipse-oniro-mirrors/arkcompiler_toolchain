@@ -33,9 +33,26 @@ private:
     NO_MOVE_SEMANTIC(PtBaseReturns);
 };
 
+class DebuggerEnableReturns : public PtBaseReturns {
+public:
+    explicit DebuggerEnableReturns(UniqueDebuggerId id, std::vector<std::string> list)
+        : debuggerId_(id), protocols_(list) {}
+    ~DebuggerEnableReturns() override = default;
+
+    std::unique_ptr<PtJson> ToJson() const override;
+
+private:
+    DebuggerEnableReturns() = default;
+    NO_COPY_SEMANTIC(DebuggerEnableReturns);
+    NO_MOVE_SEMANTIC(DebuggerEnableReturns);
+
+    UniqueDebuggerId debuggerId_ {};
+    std::vector<std::string> protocols_ {};
+};
+
 class EnableReturns : public PtBaseReturns {
 public:
-    explicit EnableReturns(UniqueDebuggerId id) : debuggerId_(id) {}
+    explicit EnableReturns(std::vector<std::string> list) : protocols_(list) {}
     ~EnableReturns() override = default;
 
     std::unique_ptr<PtJson> ToJson() const override;
@@ -45,7 +62,7 @@ private:
     NO_COPY_SEMANTIC(EnableReturns);
     NO_MOVE_SEMANTIC(EnableReturns);
 
-    UniqueDebuggerId debuggerId_ {};
+    std::vector<std::string> protocols_ {};
 };
 
 class SetBreakpointByUrlReturns : public PtBaseReturns {
