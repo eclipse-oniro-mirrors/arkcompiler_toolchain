@@ -29,6 +29,8 @@ ohos_executable("arkdb") {
   deps = [ "../:libark_client_set" ]
 
   external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "cJSON:cjson",
     "ets_runtime:libark_jsruntime",
     "libuv:uv",
     "zlib:libz",

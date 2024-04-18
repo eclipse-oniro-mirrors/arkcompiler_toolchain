@@ -20,14 +20,7 @@ config("ark_ecma_debugger_config") {
     "//arkcompiler/ets_runtime:ark_jsruntime_public_config",
   ]
 
-  include_dirs = [
-    ".",
-    "//third_party/cJSON",
-    "//third_party/libuv/include",
-  ]
-  if (!is_mingw && target_os != "ios") {
-    include_dirs += [ "//third_party/libuv/include" ]
-  }
+  include_dirs = [ "." ]
 }
 
 debugger_sources = [
@@ -68,14 +61,14 @@ ohos_source_set("libark_ecma_debugger_set") {
   public_configs = [ ":ark_ecma_debugger_config" ]
 
   deps = []
-
+  external_deps = []
   if (is_arkui_x && target_os == "ios") {
     sources -= [ "../common/log_wrapper.cpp" ]
-    deps += [ "$ark_third_party_root/cJSON:cjson_static" ]
+    external_deps += [ "cJSON:cjson_static" ]
   } else {
-    deps += [ "$ark_third_party_root/cJSON:cjson" ]
+    external_deps += [ "cJSON:cjson" ]
   }
-  external_deps = [ "libuv:uv" ]
+  external_deps += [ "libuv:uv" ]
   if (!ark_standalone_build) {
     public_external_deps = [ "zlib:libz" ]
   } else {
@@ -84,11 +77,8 @@ ohos_source_set("libark_ecma_debugger_set") {
 
   # hiviewdfx libraries
   external_deps += hiviewdfx_ext_deps
-  if (!is_arkui_x) {
-    external_deps += [ "runtime_core:libarkfile_static" ]
-  } else {
-    deps += [ "$ark_root/libpandafile:libarkfile_static" ]
-  }
+
+  external_deps += [ "runtime_core:libarkfile_static" ]
   deps += hiviewdfx_deps
 
   if (enable_leak_check) {
@@ -114,7 +104,7 @@ ohos_shared_library("libark_ecma_debugger") {
     external_deps += [ "zlib:libz" ]
   }
   if (is_mac) {
-    deps += [ "$ark_third_party_root/cJSON:cjson_static" ]
+    external_deps += [ "cJSON:cjson_static" ]
   }
 
   install_enable = true
@@ -160,9 +150,9 @@ ohos_shared_library("libark_ecma_debugger_test") {
     external_deps += [ "zlib:libz" ]
   }
   if ((is_arkui_x && target_os == "ios") || target_os == "mac") {
-    deps += [ "$ark_third_party_root/cJSON:cjson_static" ]
+    external_deps += [ "cJSON:cjson_static" ]
   } else {
-    deps += [ "$ark_third_party_root/cJSON:cjson" ]
+    external_deps += [ "cJSON:cjson" ]
   }
 
   # hiviewdfx libraries

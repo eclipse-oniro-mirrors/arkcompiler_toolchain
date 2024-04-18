@@ -349,7 +349,7 @@ crypto_config_common_private_include_dirs = [
   "${openssl_selected_platform_full_path}/providers/common/include/prov",
 ]
 crypto_config_common_public_include_dirs = [
-  "include",
+  "//third_party/openssl/include",
   "${openssl_selected_platform_full_path}/include",
 ]
 

@@ -30,8 +30,6 @@ config("debug_api_test") {
     "$toolchain_root/websocket",
     "//arkcompiler/ets_runtime",
     "../..",
-    "//third_party/cJSON",
-    "//third_party/libuv/include",
   ]
 }
 
@@ -95,9 +93,14 @@ ohos_shared_library("debugger_entry") {
   foreach(file, test_js_files) {
     deps += [ ":gen_${file}_abc" ]
   }
+  external_deps = []
   if (enable_hilog) {
-    external_deps = [ "hilog:libhilog" ]
+    external_deps += [ "hilog:libhilog" ]
   }
+  external_deps += [
+    "cJSON:cjson_static",
+    "libuv:uv",
+  ]
   install_enable = false
   output_extension = "so"
   subsystem_name = "test"
@@ -142,6 +145,11 @@ ohos_shared_library("jsdebugtest") {
   if (enable_hilog) {
     external_deps += [ "hilog:libhilog" ]
   }
+
+  external_deps += [
+    "cJSON:cjson_static",
+    "libuv:uv",
+  ]
   install_enable = false
   output_extension = "so"
   subsystem_name = "test"
@@ -164,14 +172,18 @@ host_unittest_action("DebuggerEntryTest") {
   deps = [
     ":debugger_entry_resource",
     ":jsdebugtest",
-    "$ark_third_party_root/icu/icu4c:shared_icui18n",
-    "$ark_third_party_root/icu/icu4c:shared_icuuc",
     "$js_root:libark_jsruntime_test",
     "$toolchain_root/tooling:libark_ecma_debugger_test",
   ]
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
+  external_deps += [
+    "cJSON:cjson_static",
+    "icu:shared_icui18n",
+    "icu:shared_icuuc",
+    "libuv:uv",
+  ]
   deps += hiviewdfx_deps
 }
 
@@ -209,16 +221,20 @@ host_unittest_action("DebuggerTest") {
   configs = [ "//arkcompiler/toolchain:toolchain_test_config" ]
 
   deps = [
-    "$ark_third_party_root/cJSON:cjson",
-    "$ark_third_party_root/icu/icu4c:shared_icui18n",
-    "$ark_third_party_root/icu/icu4c:shared_icuuc",
     "$js_root:libark_jsruntime_test",
     "$toolchain_root/tooling:libark_ecma_debugger_test",
   ]
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
-  external_deps += [ "bounds_checking_function:libsec_shared" ]
+  external_deps += [
+    "bounds_checking_function:libsec_shared",
+    "cJSON:cjson",
+    "icu:shared_icui18n",
+    "icu:shared_icuuc",
+    "libuv:uv",
+    "runtime_core:libarkbase_static",
+  ]
   deps += hiviewdfx_deps
 }
 
@@ -239,14 +255,18 @@ host_unittest_action("DebuggerCInterpTest") {
   deps = [
     ":debugger_entry_resource",
     ":jsdebugtest",
-    "$ark_third_party_root/icu/icu4c:shared_icui18n",
-    "$ark_third_party_root/icu/icu4c:shared_icuuc",
     "$js_root:libark_jsruntime_test",
     "$toolchain_root/tooling:libark_ecma_debugger_test",
   ]
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
+  external_deps += [
+    "cJSON:cjson_static",
+    "icu:shared_icui18n",
+    "icu:shared_icuuc",
+    "libuv:uv",
+  ]
   deps += hiviewdfx_deps
 }
 
@@ -279,14 +299,18 @@ host_unittest_action("DebuggerClientTest") {
 
   deps = [
     ":debugger_client_resource",
-    "$ark_third_party_root/icu/icu4c:shared_icui18n",
-    "$ark_third_party_root/icu/icu4c:shared_icuuc",
     "$toolchain_root/tooling:libark_ecma_debugger",
     "../client:libark_client",
   ]
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
+  external_deps += [
+    "cJSON:cjson_static",
+    "icu:shared_icui18n",
+    "icu:shared_icuuc",
+    "libuv:uv",
+  ]
   deps += hiviewdfx_deps
 
   external_deps += [ "ets_runtime:libark_jsruntime" ]
@@ -321,14 +345,18 @@ host_unittest_action("DebuggerCIntClientTest") {
 
   deps = [
     ":debugger_client_resource",
-    "$ark_third_party_root/icu/icu4c:shared_icui18n",
-    "$ark_third_party_root/icu/icu4c:shared_icuuc",
     "$toolchain_root/tooling:libark_ecma_debugger",
     "../client:libark_client",
   ]
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
+  external_deps += [
+    "cJSON:cjson_static",
+    "icu:shared_icui18n",
+    "icu:shared_icuuc",
+    "libuv:uv",
+  ]
   deps += hiviewdfx_deps
 
   external_deps += [ "ets_runtime:libark_jsruntime" ]

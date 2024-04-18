@@ -1,0 +1,14 @@
+{
+    "component": {
+        "build": {
+            "inner_kits": [
+                {
+                  "name": "//arkcompiler/toolchain/build/third_party_gn/cJSON:cjson"
+                },
+                {
+                  "name": "//arkcompiler/toolchain/build/third_party_gn/cJSON:cjson_static"
+                }
+            ]
+        }
+    }
+}

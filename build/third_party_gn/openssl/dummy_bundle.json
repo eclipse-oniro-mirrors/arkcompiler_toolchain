@@ -1,0 +1,17 @@
+{
+    "component": {
+        "build": {
+            "inner_kits": [
+                {
+                    "name": "//arkcompiler/toolchain/build/third_party_gn/openssl:libcrypto_shared"
+                },
+                {
+                    "name": "//arkcompiler/toolchain/build/third_party_gn/openssl:libcrypto_static"
+                },
+                {
+                    "name": "//arkcompiler/toolchain/build/third_party_gn/openssl:libcrypto_restool"
+                }
+            ]
+        }
+    }
+}
