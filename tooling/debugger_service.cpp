@@ -24,6 +24,10 @@ namespace panda::ecmascript::tooling {
 void InitializeDebugger(::panda::ecmascript::EcmaVM *vm,
                         const std::function<void(const void *, const std::string &)> &onResponse)
 {
+    if (vm == nullptr || vm->GetJsDebuggerManager() == nullptr) {
+        LOG_DEBUGGER(DEBUG) << "VM has already been destroyed";
+        return;
+    }
     ProtocolHandler *handler = vm->GetJsDebuggerManager()->GetDebuggerHandler();
     if (handler != nullptr) {
         LOG_DEBUGGER(ERROR) << "JS debugger was initialized";
@@ -34,6 +38,10 @@ void InitializeDebugger(::panda::ecmascript::EcmaVM *vm,
 
 void UninitializeDebugger(::panda::ecmascript::EcmaVM *vm)
 {
+    if (vm == nullptr || vm->GetJsDebuggerManager() == nullptr) {
+        LOG_DEBUGGER(DEBUG) << "VM has already been destroyed";
+        return;
+    }
     ProtocolHandler *handler = vm->GetJsDebuggerManager()->GetDebuggerHandler();
     delete handler;
     vm->GetJsDebuggerManager()->SetDebuggerHandler(nullptr);
@@ -41,6 +49,10 @@ void UninitializeDebugger(::panda::ecmascript::EcmaVM *vm)
 
 void WaitForDebugger(const ::panda::ecmascript::EcmaVM *vm)
 {
+    if (vm == nullptr || vm->GetJsDebuggerManager() == nullptr) {
+        LOG_DEBUGGER(DEBUG) << "VM has already been destroyed";
+        return;
+    }
     ProtocolHandler *handler = vm->GetJsDebuggerManager()->GetDebuggerHandler();
     if (LIKELY(handler != nullptr)) {
         handler->WaitForDebugger();
@@ -61,6 +73,10 @@ void OnMessage(const ::panda::ecmascript::EcmaVM *vm, std::string &&message)
 
 void ProcessMessage(const ::panda::ecmascript::EcmaVM *vm)
 {
+    if (vm == nullptr || vm->GetJsDebuggerManager() == nullptr) {
+        LOG_DEBUGGER(DEBUG) << "VM has already been destroyed";
+        return;
+    }
     ProtocolHandler *handler = vm->GetJsDebuggerManager()->GetDebuggerHandler();
     if (LIKELY(handler != nullptr)) {
         handler->ProcessCommand();
@@ -69,6 +85,10 @@ void ProcessMessage(const ::panda::ecmascript::EcmaVM *vm)
 
 int32_t GetDispatchStatus(const ::panda::ecmascript::EcmaVM *vm)
 {
+    if (vm == nullptr || vm->GetJsDebuggerManager() == nullptr) {
+        LOG_DEBUGGER(DEBUG) << "VM has already been destroyed";
+        return ProtocolHandler::DispatchStatus::UNKNOWN;
+    }
     ProtocolHandler *handler = vm->GetJsDebuggerManager()->GetDebuggerHandler();
     if (LIKELY(handler != nullptr)) {
         return handler->GetDispatchStatus();

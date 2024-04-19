@@ -317,6 +317,10 @@ bool StartDebugForSocketpair(int tid, int socketfd)
 {
     LOGI("StartDebugForSocketpair, tid = %{private}d, socketfd = %{private}d", tid, socketfd);
     void* vm = GetEcmaVM(tid);
+    if (vm == nullptr) {
+        LOGD("VM has already been destroyed");
+        return false;
+    }
     g_vm = vm;
     if (!InitializeDebuggerForSocketpair(vm)) {
         return false;
@@ -370,17 +374,22 @@ void WaitForDebugger(void* vm)
     g_waitForDebugger(vm);
 }
 
-void StopDebug(const std::string& componentName)
+void StopDebug(void* vm)
 {
-    LOGI("StopDebug start, componentName = %{private}s", componentName.c_str());
+    LOGI("StopDebug start, vm is %{private}p", vm);
     std::unique_lock<std::shared_mutex> lock(g_mutex);
-    auto iter = g_inspectors.find(g_vm);
+    auto iter = g_inspectors.find(vm);
     if (iter == g_inspectors.end() || iter->second == nullptr) {
         return;
     }
-
-    g_uninitializeDebugger(g_vm);
-    ResetServiceLocked(g_vm, true);
+    uint32_t tid = g_inspectors[vm]->tid_;
+    LOGI("StopDebug tid is %{private}d", tid);
+    auto debuggerInfo = g_debuggerInfo.find(tid);
+    if (debuggerInfo != g_debuggerInfo.end()) {
+        g_debuggerInfo.erase(debuggerInfo);
+    }
+    g_uninitializeDebugger(vm);
+    ResetServiceLocked(vm, true);
     LOGI("StopDebug end");
 }
 
