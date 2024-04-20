@@ -471,8 +471,6 @@ class ArkPy:
         str_to_test262_log = "================================\ntest262_time: {0}\ntest262_target: {1}\n\n".format(
             str_of_time_now(), args_to_test262_cmd)
         _write(test262_log_path, str_to_test262_log, "a")
-        if aot_mode:
-            self.generate_lib_ark_builtins_abc(run_pgo, gn_args, out_path, x64_out_path, test262_log_path)
         print("=== test262 start ===")
         code = call_with_output(test262_cmd, test262_log_path)
         if code != 0:
@@ -480,26 +478,6 @@ class ArkPy:
             sys.exit(code)
         print("=== test262 success! ===\n")
         return
-
-    @staticmethod
-    def generate_lib_ark_builtins_abc(run_pgo, gn_args, out_path, x64_out_path, test262_log_path):
-        generate_abc_cmd = ""
-        root_dir = os.path.dirname(os.path.abspath(__file__))
-        if run_pgo:
-            generate_abc_cmd = "{root_dir}/{out_path}/arkcompiler/ets_frontend/es2abc" \
-                        " {root_dir}/arkcompiler/ets_runtime/ecmascript/ts_types/lib_ark_builtins.d.ts" \
-                        " --type-extractor" \
-                        " --type-dts-builtin" \
-                        " --module" \
-                        " --merge-abc" \
-                        " --extension=ts" \
-                        " --output" \
-                        " {root_dir}/arkcompiler/ets_runtime/ecmascript/ts_types/lib_ark_builtins.d.abc"
-            if any('target_cpu="arm64"' in arg for arg in gn_args):
-                generate_abc_cmd = generate_abc_cmd.format(root_dir=root_dir, out_path=x64_out_path)
-            else:
-                generate_abc_cmd = generate_abc_cmd.format(root_dir=root_dir, out_path=out_path)
-        call_with_output(generate_abc_cmd, test262_log_path)
 
     @staticmethod
     def get_test262_cmd(gn_args, out_path, x64_out_path, aot_mode, run_pgo, args_to_test262_cmd):
