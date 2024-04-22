@@ -748,6 +748,36 @@ HWTEST_F_L0(DebuggerParamsTest, RemoveBreakpointParamsCreateTest)
     EXPECT_EQ(objectData->GetBreakpointId(), "10");
 }
 
+HWTEST_F_L0(DebuggerParamsTest, RemoveBreakpointsByUrlParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<RemoveBreakpointsByUrlParams> objectData;
+
+    // abnormal params of null msg
+    msg = std::string() + R"({})";
+    objectData = RemoveBreakpointsByUrlParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of unexist key params
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test"})";
+    objectData = RemoveBreakpointsByUrlParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    // abnormal params of null params.sub-key
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    objectData = RemoveBreakpointsByUrlParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"url":10}})";
+    objectData = RemoveBreakpointsByUrlParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(objectData, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"url":"10"}})";
+    objectData = RemoveBreakpointsByUrlParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(objectData, nullptr);
+    EXPECT_EQ(objectData->GetUrl(), "10");
+}
+
 HWTEST_F_L0(DebuggerParamsTest, ResumeParamsCreateTest)
 {
     std::string msg;

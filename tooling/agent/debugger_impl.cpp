@@ -386,6 +386,7 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         { "getScriptSource", &DebuggerImpl::DispatcherImpl::GetScriptSource },
         { "pause", &DebuggerImpl::DispatcherImpl::Pause },
         { "removeBreakpoint", &DebuggerImpl::DispatcherImpl::RemoveBreakpoint },
+        { "removeBreakpointsByUrl", &DebuggerImpl::DispatcherImpl::RemoveBreakpointsByUrl },
         { "resume", &DebuggerImpl::DispatcherImpl::Resume },
         { "setAsyncCallStackDepth", &DebuggerImpl::DispatcherImpl::SetAsyncCallStackDepth },
         { "setBreakpointByUrl", &DebuggerImpl::DispatcherImpl::SetBreakpointByUrl },
@@ -509,6 +510,17 @@ void DebuggerImpl::DispatcherImpl::RemoveBreakpoint(const DispatchRequest &reque
         return;
     }
     DispatchResponse response = debugger_->RemoveBreakpoint(*params);
+    SendResponse(request, response);
+}
+
+void DebuggerImpl::DispatcherImpl::RemoveBreakpointsByUrl(const DispatchRequest &request)
+{
+    std::unique_ptr<RemoveBreakpointsByUrlParams> params = RemoveBreakpointsByUrlParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+    DispatchResponse response = debugger_->RemoveBreakpointsByUrl(*params);
     SendResponse(request, response);
 }
 
@@ -981,6 +993,24 @@ DispatchResponse DebuggerImpl::RemoveBreakpoint(const RemoveBreakpointParams &pa
     }
 
     LOG_DEBUGGER(INFO) << "remove breakpoint line number:" << metaData.line_;
+    return DispatchResponse::Ok();
+}
+
+DispatchResponse DebuggerImpl::RemoveBreakpointsByUrl(const RemoveBreakpointsByUrlParams &params)
+{
+    std::string url = params.GetUrl();
+    auto scriptMatchCallback = [](PtScript *) -> bool {
+        return true;
+    };
+    if (!MatchScripts(scriptMatchCallback, url, ScriptMatchType::URL)) {
+        LOG_DEBUGGER(ERROR) << "RemoveBreakpointByUrl: Unknown url: " << url;
+        return DispatchResponse::Fail("Unknown url");
+    }
+    if (!DebuggerApi::RemoveBreakpointsByUrl(jsDebugger_, url)) {
+        return DispatchResponse::Fail("RemoveBreakpointByUrl failed");
+    }
+
+    LOG_DEBUGGER(INFO) << "All breakpoints on " << url << " are removed";
     return DispatchResponse::Ok();
 }
 
