@@ -21,6 +21,18 @@
 #include "ecmascript/napi/include/dfx_jsnapi.h"
 
 namespace panda::ecmascript::tooling {
+// Whenever adding a new protocol which is not a standard CDP protocol,
+// must add its methodName to the profilerProtocolList
+void ProfilerImpl::InitializeExtendedProtocolsList()
+{
+    std::vector<std::string> profilerProtocolList {
+        "startTypeProfile",
+        "stopTypeProfile",
+        "takeTypeProfile"
+    };
+    profilerExtendedProtocols_ = std::move(profilerProtocolList);
+}
+
 void ProfilerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
     static std::unordered_map<std::string, AgentHandler> dispatcherTable {
@@ -57,7 +69,9 @@ void ProfilerImpl::DispatcherImpl::Disable(const DispatchRequest &request)
 void ProfilerImpl::DispatcherImpl::Enable(const DispatchRequest &request)
 {
     DispatchResponse response = profiler_->Enable();
-    SendResponse(request, response);
+    profiler_->InitializeExtendedProtocolsList();
+    EnableReturns result(profiler_->profilerExtendedProtocols_);
+    SendResponse(request, response, result);
 }
 
 void ProfilerImpl::DispatcherImpl::Start(const DispatchRequest &request)

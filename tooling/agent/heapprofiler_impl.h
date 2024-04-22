@@ -172,9 +172,12 @@ private:
         Frontend *frontend_ {nullptr};
     };
 
+    void InitializeExtendedProtocolsList();
+
     const EcmaVM *vm_ {nullptr};
     Frontend frontend_;
     HeapProfilerStream stream_;
+    std::vector<std::string> heapProfilerExtendedProtocols_ {};
 #if defined(ECMASCRIPT_SUPPORT_HEAPPROFILER)
     uv_timer_t handle_ {};
 #endif

@@ -196,7 +196,7 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplEnable)
         delete channel;
         channel = nullptr;
     }
-    ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
+    ASSERT_TRUE(result.find("protocols") != std::string::npos);
 }
 
 HWTEST_F_L0(ProfilerImplTest, DispatcherImplDisable)

@@ -23,6 +23,14 @@
 #include "ecmascript/napi/include/dfx_jsnapi.h"
 
 namespace panda::ecmascript::tooling {
+// Whenever adding a new protocol which is not a standard CDP protocol,
+// must add its methodName to the runtimeProtocolsList
+void RuntimeImpl::InitializeExtendedProtocolsList()
+{
+    std::vector<std::string> runtimeProtocolList {};
+    runtimeExtendedProtocols_ = std::move(runtimeProtocolList);
+}
+
 void RuntimeImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
     static std::unordered_map<std::string, AgentHandler> dispatcherTable {
@@ -48,7 +56,9 @@ void RuntimeImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 void RuntimeImpl::DispatcherImpl::Enable(const DispatchRequest &request)
 {
     DispatchResponse response = runtime_->Enable();
-    SendResponse(request, response);
+    runtime_->InitializeExtendedProtocolsList();
+    EnableReturns result(runtime_->runtimeExtendedProtocols_);
+    SendResponse(request, response, result);
 }
 
 void RuntimeImpl::DispatcherImpl::Disable(const DispatchRequest &request)

@@ -218,6 +218,7 @@ private:
         std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
     bool IsVariableSkipped(const std::string &varName);
     Local<FunctionRef> CheckAndGenerateCondFunc(const std::optional<std::string> &condition);
+    void InitializeExtendedProtocolsList();
 
     const std::unordered_set<std::string> &GetRecordName(const std::string &url)
     {
@@ -279,6 +280,7 @@ private:
     JsDebuggerManager::ObjectUpdaterFunc updaterFunc_ {nullptr};
     JsDebuggerManager::SingleStepperFunc stepperFunc_ {nullptr};
     JsDebuggerManager::ReturnNativeFunc returnNative_ {nullptr};
+    std::vector<std::string> debuggerExtendedProtocols_ {};
 
     friend class JSPtHooks;
     friend class test::TestHooks;
