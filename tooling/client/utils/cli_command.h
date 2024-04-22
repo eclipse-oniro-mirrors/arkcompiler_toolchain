@@ -52,6 +52,7 @@ public:
     ErrCode OnCommand();
     ErrCode ExecCommand();
     void CreateCommandMap();
+    void CreateOtherCommandMap();
     ErrCode HeapProfilerCommand(const std::string &cmd);
     ErrCode DebuggerCommand(const std::string &cmd);
     ErrCode CpuProfileCommand(const std::string &cmd);
