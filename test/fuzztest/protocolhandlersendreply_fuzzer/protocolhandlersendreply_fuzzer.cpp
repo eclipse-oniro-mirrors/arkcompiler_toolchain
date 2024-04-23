@@ -35,8 +35,10 @@ namespace OHOS {
             ProtoHandler ph = [data, size]([[maybe_unused]] const void *d,
                 [[maybe_unused]] const std::string &s) -> void { d = data + size; };
             ProtocolHandler handler(ph, vm);
+            std::string str((const char*)data, size);
+            DispatchRequest req(str);
             std::unique_ptr<PtJson> reply = PtJson::CreateObject();
-            reply->Add("id", 13);
+            reply->Add("id", req.GetCallId());
             handler.SendReply(*reply);
         }
         JSNApi::DestroyJSVM(vm);

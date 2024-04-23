@@ -28,7 +28,7 @@ ohos_fuzztest("ProtocolHandlerCreateErrorReplyFuzzTest") {
 
   sources = [ "protocolhandlercreateerrorreply_fuzzer.cpp" ]
 
-  configs = [ "//arkcompiler/toolchain:toolchain_test_config" ]
+  configs = [ "../../../:toolchain_test_config" ]
 
   deps = [ "../../../tooling:libark_ecma_debugger_set" ]
 
