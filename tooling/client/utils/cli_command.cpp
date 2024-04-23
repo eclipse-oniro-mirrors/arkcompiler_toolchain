@@ -183,6 +183,12 @@ void CliCommand::CreateCommandMap()
         {std::make_pair("enable", "enable"), std::bind(&CliCommand::DebuggerCommand, this, "enable")},
         {std::make_pair("finish", "fin"), std::bind(&CliCommand::DebuggerCommand, this, "finish")},
         {std::make_pair("frame", "f"), std::bind(&CliCommand::DebuggerCommand, this, "frame")},
+    };
+    CreateOtherCommandMap();
+}
+void CliCommand::CreateOtherCommandMap()
+{
+    commandMap_.insert({
         {std::make_pair("help", "h"), std::bind(&CliCommand::ExecHelpCommand, this)},
         {std::make_pair("ignore", "ig"), std::bind(&CliCommand::DebuggerCommand, this, "ignore")},
         {std::make_pair("infobreakpoints", "infob"), std::bind(&CliCommand::DebuggerCommand, this, "infobreakpoints")},
@@ -215,8 +221,8 @@ void CliCommand::CreateCommandMap()
         {std::make_pair("success", "success"),
             std::bind(&CliCommand::TestCommand, this, "success")},
         {std::make_pair("fail", "fail"),
-            std::bind(&CliCommand::TestCommand, this, "fail")}
-    };
+            std::bind(&CliCommand::TestCommand, this, "fail")},
+    });
 }
 
 ErrCode CliCommand::HeapProfilerCommand(const std::string &cmd)
