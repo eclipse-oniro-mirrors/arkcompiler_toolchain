@@ -916,7 +916,7 @@ DispatchResponse DebuggerImpl::GetPossibleBreakpoints(const GetPossibleBreakpoin
     std::vector<DebugInfoExtractor *> extractors = GetExtractors(url);
     for (auto extractor : extractors) {
         if (extractor == nullptr) {
-            LOG_DEBUGGER(ERROR) << "GetPossibleBreakpoints: extractor is null";
+            LOG_DEBUGGER(DEBUG) << "GetPossibleBreakpoints: extractor is null";
             continue;
         }
 
@@ -977,7 +977,7 @@ DispatchResponse DebuggerImpl::RemoveBreakpoint(const RemoveBreakpointParams &pa
     std::vector<DebugInfoExtractor *> extractors = GetExtractors(metaData.url_);
     for (auto extractor : extractors) {
         if (extractor == nullptr) {
-            LOG_DEBUGGER(ERROR) << "RemoveBreakpoint: extractor is null";
+            LOG_DEBUGGER(DEBUG) << "RemoveBreakpoint: extractor is null";
             continue;
         }
 
@@ -1055,7 +1055,7 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
     std::vector<DebugInfoExtractor *> extractors = GetExtractors(url);
     for (auto extractor : extractors) {
         if (extractor == nullptr) {
-            LOG_DEBUGGER(ERROR) << "SetBreakpointByUrl: extractor is null";
+            LOG_DEBUGGER(DEBUG) << "SetBreakpointByUrl: extractor is null";
             continue;
         }
 
@@ -1131,7 +1131,7 @@ bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
     std::vector<DebugInfoExtractor *> extractors = GetExtractors(url);
     for (auto extractor : extractors) {
         if (extractor == nullptr) {
-            LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: extractor is null";
+            LOG_DEBUGGER(DEBUG) << "GetPossibleAndSetBreakpointByUrl: extractor is null";
             continue;
         }
         // decode and convert condition to function before doing matchWithLocation
@@ -1311,7 +1311,7 @@ DispatchResponse DebuggerImpl::ClientDisconnect()
 {
     DeviceDisconnectCallback cb = vm_->GetDeviceDisconnectCallback();
     if (cb == nullptr) {
-        LOG_DEBUGGER(ERROR) << "DebuggerImpl::ClientDisconnect callback is nullptr";
+        LOG_DEBUGGER(DEBUG) << "DebuggerImpl::ClientDisconnect callback is nullptr";
     } else {
         cb();
     }
@@ -1410,7 +1410,7 @@ std::vector<DebugInfoExtractor *> DebuggerImpl::GetExtractors(const std::string 
         }
         DebugInfoExtractor *extractor = JSPandaFileManager::GetInstance()->GetJSPtExtractor(jsPandaFile);
         if (extractor == nullptr) {
-            LOG_DEBUGGER(ERROR) << "GetPossibleBreakpoints: extractor is null";
+            LOG_DEBUGGER(DEBUG) << "GetPossibleBreakpoints: extractor is null";
             continue;
         }
         extractors.emplace_back(extractor);
@@ -1459,7 +1459,7 @@ bool DebuggerImpl::GenerateCallFrame(CallFrame *callFrame, const FrameHandler *f
     const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
     DebugInfoExtractor *extractor = GetExtractor(jsPandaFile);
     if (extractor == nullptr) {
-        LOG_DEBUGGER(ERROR) << "GenerateCallFrame: extractor is null";
+        LOG_DEBUGGER(DEBUG) << "GenerateCallFrame: extractor is null";
         return false;
     }
 
@@ -1595,7 +1595,7 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
     JSMutableHandle<JSTaggedValue> valueHandle = JSMutableHandle<JSTaggedValue>(thread, JSTaggedValue::Hole());
     JSTaggedValue currentEnv = envHandle.GetTaggedValue();
     if (!currentEnv.IsTaggedArray()) {
-        LOG_DEBUGGER(ERROR) << "GetClosureScopeChains: currentEnv is invalid";
+        LOG_DEBUGGER(DEBUG) << "GetClosureScopeChains: currentEnv is invalid";
         return closureScopes;
     }
     // check if GetLocalScopeChain has already found and set 'this' value
