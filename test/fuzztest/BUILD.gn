@@ -29,6 +29,8 @@ group("fuzztest") {
     "protocolhandlerprocess_fuzzer:fuzztest",
     "protocolhandlerresponse_fuzzer:fuzztest",
     "protocolhandlerrun_fuzzer:fuzztest",
+    "protocolhandlersendreply_fuzzer:fuzztest",
+    "protocolhandlercreateerrorreply_fuzzer:fuzztest",
     "pttypesbreakpointparseid_fuzzer:fuzztest",
     "pttypesbreakpointtostring_fuzzer:fuzztest",
     "pttypesexceptiondetails_fuzzer:fuzztest",
