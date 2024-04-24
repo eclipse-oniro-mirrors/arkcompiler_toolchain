@@ -382,7 +382,11 @@ void StopDebug(void* vm)
     if (iter == g_inspectors.end() || iter->second == nullptr) {
         return;
     }
-    auto tid = g_inspectors[vm]->tid_;
+#ifdef PANDA_TARGET_MACOS
+    uint32_t tid = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(g_inspectors[vm]->tid_));
+#else
+    uint32_t tid = g_inspectors[vm]->tid_;
+#endif
     auto debuggerInfo = g_debuggerInfo.find(tid);
     if (debuggerInfo != g_debuggerInfo.end()) {
         g_debuggerInfo.erase(debuggerInfo);
