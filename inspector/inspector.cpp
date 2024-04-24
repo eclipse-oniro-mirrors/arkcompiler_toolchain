@@ -382,8 +382,7 @@ void StopDebug(void* vm)
     if (iter == g_inspectors.end() || iter->second == nullptr) {
         return;
     }
-    uint32_t tid = g_inspectors[vm]->tid_;
-    LOGI("StopDebug tid is %{private}d", tid);
+    auto tid = g_inspectors[vm]->tid_;
     auto debuggerInfo = g_debuggerInfo.find(tid);
     if (debuggerInfo != g_debuggerInfo.end()) {
         g_debuggerInfo.erase(debuggerInfo);
