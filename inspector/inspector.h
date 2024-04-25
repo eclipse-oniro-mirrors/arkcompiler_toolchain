@@ -39,7 +39,7 @@ bool StartDebugForSocketpair(int tid, int socketfd);
 
 bool InitializeDebuggerForSocketpair(void* vm);
 
-void StopDebug(const std::string& componentName);
+void StopDebug(void* vm);
 
 void StopOldDebug(int tid, const std::string& componentName);
 

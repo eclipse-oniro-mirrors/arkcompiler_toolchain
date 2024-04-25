@@ -42,6 +42,8 @@ void StoreMessage(int32_t instanceId, const std::string& message);
 
 void SendLayoutMessage(const std::string& message);
 
+void SendProfilerMessage(const std::string &message);
+
 void SetConnectCallback(const std::function<void(bool)>& callback);
 
 void StoreInspectorInfo(const std::string& jsonTreeStr,  const std::string& jsonSnapshotStr);
@@ -54,6 +56,8 @@ void SetDebugModeCallBack(const std::function<void()>& setDebugMode);
 
 void SetSwitchCallBack(const std::function<void(bool)>& setSwitchStatus,
     const std::function<void(int32_t)>& createLayoutInfo, int32_t instanceId);
+
+void SetProfilerCallback(const std::function<void(bool)> &setArkUIStateProfilerStatus);
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -78,6 +82,7 @@ public:
     std::atomic<bool> waitingForDebugger_ = true;
     std::queue<std::string> ideMsgQueue_;
     std::function<void(bool)> setSwitchStatus_;
+    std::function<void(bool)> setArkUIStateProfilerStatus_;
     std::function<void(int32_t)> createLayoutInfo_;
     std::function<void()> setDebugMode_;
     int32_t instanceId_ = -1;

@@ -74,8 +74,8 @@ template("host_unittest_action") {
     outputs = [ "$target_out_dir/${_target_name_}/" ]
   }
   if (ark_standalone_build && host_os == "linux" && target_os == "ohos") {
-    import("../build/config/qemu/config.gni")
-    import("../build/third_party_gn/musl/musl_template.gni")
+    import("$ark_third_party_root/musl/musl_template.gni")
+    import("$build_root/config/qemu/config.gni")
 
     action("${_target_name_}ActionWithQemu") {
       testonly = true
@@ -86,7 +86,7 @@ template("host_unittest_action") {
       _root_out_dir_ = get_label_info(_host_test_target_, "root_out_dir")
 
       deps = [
-        "../build/third_party_gn/musl:soft_create_linker_for_qemu",
+        "$ark_third_party_root/musl:soft_create_linker_for_qemu",
         _host_test_target_,
       ]
 

@@ -24,6 +24,8 @@ static constexpr char OPEN_MESSAGE[] = "layoutOpen";
 static constexpr char CLOSE_MESSAGE[] = "layoutClose";
 static constexpr char REQUEST_MESSAGE[] = "tree";
 static constexpr char STOPDEBUGGER_MESSAGE[] = "stopDebugger";
+static constexpr char OPEN_ARKUI_STATE_PROFILER[] = "ArkUIStateProfilerOpen";
+static constexpr char CLOSE_ARKUI_STATE_PROFILER[] = "ArkUIStateProfilerClose";
 std::function<void(bool)> g_SetConnectCallBack;
 
 void* HandleDebugManager(void* const server)
@@ -75,6 +77,18 @@ void OnMessage(const std::string& message)
             if (g_inspector->setSwitchStatus_ != nullptr) {
                 LOGI("layoutClose start");
                 g_inspector->setSwitchStatus_(false);
+            }
+        }
+        if (message.find(OPEN_ARKUI_STATE_PROFILER, 0) != std::string::npos) {
+            if (g_inspector->setArkUIStateProfilerStatus_ != nullptr) {
+                LOGI("state profiler open");
+                g_inspector->setArkUIStateProfilerStatus_(true);
+            }
+        }
+        if (message.find(CLOSE_ARKUI_STATE_PROFILER, 0) != std::string::npos) {
+            if (g_inspector->setArkUIStateProfilerStatus_ != nullptr) {
+                LOGI("state profiler close");
+                g_inspector->setArkUIStateProfilerStatus_(false);
             }
         }
         if (message.find(REQUEST_MESSAGE, 0) != std::string::npos) {
@@ -223,4 +237,23 @@ bool WaitForConnection()
     }
     return g_inspector->waitingForDebugger_;
 }
+
+// profiler methods
+
+void SendProfilerMessage(const std::string &message)
+{
+    LOGI("SendStateProfilerMessage start to send message");
+    if (g_inspector != nullptr && g_inspector->connectServer_ != nullptr) {
+        g_inspector->connectServer_->SendMessage(message);
+    }
+}
+
+void SetProfilerCallback(const std::function<void(bool)> &setArkUIStateProfilerStatus)
+{
+    std::lock_guard<std::mutex> lock(g_connectMutex);
+    if (g_inspector != nullptr) {
+        g_inspector->setArkUIStateProfilerStatus_ = setArkUIStateProfilerStatus;
+    }
+}
+
 } // OHOS::ArkCompiler::Toolchain
