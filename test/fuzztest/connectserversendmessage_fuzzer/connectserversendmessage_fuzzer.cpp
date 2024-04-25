@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "connectserver_fuzzer.h"
+#include "connectserversendmessage_fuzzer.h"
 #include "ecmascript/napi/include/jsnapi.h"
 #include "inspector/connect_server.h"
 
@@ -22,19 +22,21 @@ using namespace panda::ecmascript;
 using namespace OHOS::ArkCompiler::Toolchain;
 
 namespace OHOS {
-    void TestFun([[maybe_unused]]std::string &&message)
+    void TestFunction([[maybe_unused]]std::string &&message)
     {
         return;
     }
-    void ConnectServerFuzzTest(const uint8_t* data, size_t size)
+    void ConnectServerSendMessageFuzzTest(const uint8_t* data, size_t size)
     {
+        RuntimeOption option;
+        option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
         if (size <= 0) {
             return;
         }
-        RuntimeOption option;
-        option.SetLogLevel(RuntimeOption::LOG_LEVEL::ERROR);
-        std::function<void(std::string&&)> fun = TestFun;
-        ConnectServer connectServer("com.example.myapplication", fun);
+        std::function<void(std::string&&)> testFunction = TestFunction;
+        ConnectServer connectServer("com.example.myapplication", testFunction);
+        std::string message(data, data + size);
+        connectServer.SendMessage(message);
     }
 }
 
@@ -42,6 +44,6 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     // Run your code on data.
-    OHOS::ConnectServerFuzzTest(data, size);
+    OHOS::ConnectServerSendMessageFuzzTest(data, size);
     return 0;
 }
