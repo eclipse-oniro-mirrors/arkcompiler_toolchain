@@ -30,6 +30,7 @@ config("debug_api_test") {
     "$toolchain_root/websocket",
     "//arkcompiler/ets_runtime",
     "../..",
+    "//third_party/libuv/include",
   ]
 }
 
@@ -97,10 +98,7 @@ ohos_shared_library("debugger_entry") {
   if (enable_hilog) {
     external_deps += [ "hilog:libhilog" ]
   }
-  external_deps += [
-    "cJSON:cjson_static",
-    "libuv:uv",
-  ]
+  external_deps += [ "cJSON:cjson_static" ]
   install_enable = false
   output_extension = "so"
   subsystem_name = "test"
@@ -146,10 +144,7 @@ ohos_shared_library("jsdebugtest") {
     external_deps += [ "hilog:libhilog" ]
   }
 
-  external_deps += [
-    "cJSON:cjson_static",
-    "libuv:uv",
-  ]
+  external_deps += [ "cJSON:cjson_static" ]
   install_enable = false
   output_extension = "so"
   subsystem_name = "test"
@@ -182,7 +177,6 @@ host_unittest_action("DebuggerEntryTest") {
     "cJSON:cjson_static",
     "icu:shared_icui18n",
     "icu:shared_icuuc",
-    "libuv:uv",
   ]
   deps += hiviewdfx_deps
 }
@@ -218,7 +212,7 @@ host_unittest_action("DebuggerTest") {
     "tracing_impl_test.cpp",
   ]
 
-  configs = [ "//arkcompiler/toolchain:toolchain_test_config" ]
+  configs = [ ":debug_api_test" ]
 
   deps = [
     "$js_root:libark_jsruntime_test",
@@ -232,7 +226,6 @@ host_unittest_action("DebuggerTest") {
     "cJSON:cjson",
     "icu:shared_icui18n",
     "icu:shared_icuuc",
-    "libuv:uv",
     "runtime_core:libarkbase_static",
   ]
   deps += hiviewdfx_deps
@@ -265,7 +258,6 @@ host_unittest_action("DebuggerCInterpTest") {
     "cJSON:cjson_static",
     "icu:shared_icui18n",
     "icu:shared_icuuc",
-    "libuv:uv",
   ]
   deps += hiviewdfx_deps
 }
@@ -309,7 +301,6 @@ host_unittest_action("DebuggerClientTest") {
     "cJSON:cjson_static",
     "icu:shared_icui18n",
     "icu:shared_icuuc",
-    "libuv:uv",
   ]
   deps += hiviewdfx_deps
 
@@ -355,7 +346,6 @@ host_unittest_action("DebuggerCIntClientTest") {
     "cJSON:cjson_static",
     "icu:shared_icui18n",
     "icu:shared_icuuc",
-    "libuv:uv",
   ]
   deps += hiviewdfx_deps
 
