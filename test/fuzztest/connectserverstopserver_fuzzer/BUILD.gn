@@ -20,7 +20,7 @@ import("//build/test.gni")
 ohos_fuzztest("ConnectServerStopServerFuzzTest") {
   module_out_path = toolchain_output_path
 
-  fuzz_config_file = 
+  fuzz_config_file =
       "$toolchain_root/test/fuzztest/connectserverstopserver_fuzzer"
 
   sources = [ "connectserverstopserver_fuzzer.cpp" ]
