@@ -23,11 +23,10 @@
 
 #include "tooling/client/utils/cli_command.h"
 #include "tooling/client/session/session.h"
+#include "tooling/client/tcpServer/tcpServer.h"
 #include "manager/message_manager.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
-uv_async_t* g_inputSignal;
-uv_async_t* g_releaseHandle;
 uv_loop_t* g_loop;
 
 void ReleaseHandle([[maybe_unused]] uv_async_t *releaseHandle)
@@ -86,8 +85,12 @@ void InputOnMessage(uv_async_t *handle)
         InputMessageInSession(sessionId, cliCmdStr);
     }
 
-    std::cout << ">>> ";
-    fflush(stdout);
+    if (TcpServer::getInstance().IsServerActive()) {
+        TcpServer::getInstance().TcpServerWrite("InputOnMessage");
+    } else {
+        std::cout << ">>> ";
+        fflush(stdout);
+    }
 }
 
 void GetInputCommand([[maybe_unused]] void *arg)
@@ -137,6 +140,10 @@ void SocketOnMessage([[maybe_unused]] uv_async_t *handle)
 
         session->ProcSocketMsg(const_cast<char *>(message.c_str()));
     }
+
+    if (TcpServer::getInstance().IsServerActive()) {
+        TcpServer::getInstance().TcpServerWrite("SocketOnMessage");
+    }
 }
 
 int Main(const int argc, const char** argv)
@@ -163,8 +170,15 @@ int Main(const int argc, const char** argv)
         g_releaseHandle = new uv_async_t;
         uv_async_init(g_loop, g_releaseHandle, reinterpret_cast<uv_async_cb>(ReleaseHandle));
 
-        uv_thread_t inputTid;
-        uv_thread_create(&inputTid, GetInputCommand, nullptr);
+        if (argc == 3) { // 3: three parameters
+            if (TcpServer::getInstance().CreateTcpServer(argv)) {
+                LOGE("arkdb create TcpServer failed");
+                return -1;
+            }
+        } else {
+            uv_thread_t inputTid;
+            uv_thread_create(&inputTid, GetInputCommand, nullptr);
+        }
 
         uv_run(g_loop, UV_RUN_DEFAULT);
     }
