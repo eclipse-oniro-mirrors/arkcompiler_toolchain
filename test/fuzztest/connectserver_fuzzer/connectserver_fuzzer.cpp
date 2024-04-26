@@ -26,7 +26,7 @@ namespace OHOS {
     {
         return;
     }
-    void ConnectServerFuzzTest(const uint8_t* data, size_t size)
+    void ConnectServerFuzzTest([[maybe_unused]]const uint8_t* data, size_t size)
     {
         if (size <= 0) {
             return;
