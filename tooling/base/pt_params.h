@@ -1345,5 +1345,30 @@ private:
     std::optional<std::string> perfettoConfig_ {};
     std::optional<TracingBackend> tracingBackend_ {};
 };
+
+class SeriliazationTimeoutCheckEnableParams : public PtBaseParams {
+public:
+    SeriliazationTimeoutCheckEnableParams() = default;
+    ~SeriliazationTimeoutCheckEnableParams() override = default;
+
+    static std::unique_ptr<SeriliazationTimeoutCheckEnableParams> Create(const PtJson &params);
+
+    int32_t GetThreshold() const
+    {
+        return threshold_;
+    }
+
+    SeriliazationTimeoutCheckEnableParams &SetThreshold(int32_t threshold)
+    {
+        threshold_ = threshold;
+        return *this;
+    }
+
+private:
+    NO_COPY_SEMANTIC(SeriliazationTimeoutCheckEnableParams);
+    NO_MOVE_SEMANTIC(SeriliazationTimeoutCheckEnableParams);
+    static constexpr int32_t DEFAULT_THRESHOLD = 8;
+    int32_t threshold_ { DEFAULT_THRESHOLD };
+};
 }  // namespace panda::ecmascript::tooling
 #endif

@@ -100,6 +100,25 @@ HWTEST_F_L0(ProfilerImplTest, SetSamplingInterval)
     ASSERT_TRUE(response.IsOk());
 }
 
+HWTEST_F_L0(ProfilerImplTest, EnableSerializationTimeoutCheck)
+{
+    ProtocolChannel *channel = nullptr;
+    SeriliazationTimeoutCheckEnableParams params;
+    auto profiler = std::make_unique<ProfilerImpl>(ecmaVm, channel);
+    DispatchResponse response = profiler->EnableSerializationTimeoutCheck(params);
+    ASSERT_TRUE(response.GetMessage() == "");
+    ASSERT_TRUE(response.IsOk());
+}
+
+HWTEST_F_L0(ProfilerImplTest, DisableSerializationTimeoutCheck)
+{
+    ProtocolChannel *channel = nullptr;
+    auto profiler = std::make_unique<ProfilerImpl>(ecmaVm, channel);
+    DispatchResponse response = profiler->DisableSerializationTimeoutCheck();
+    ASSERT_TRUE(response.GetMessage() == "");
+    ASSERT_TRUE(response.IsOk());
+}
+
 HWTEST_F_L0(ProfilerImplTest, GetBestEffortCoverage)
 {
     ProtocolChannel *channel = nullptr;

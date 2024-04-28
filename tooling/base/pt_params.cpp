@@ -1263,4 +1263,26 @@ std::unique_ptr<StartParams> StartParams::Create(const PtJson &params)
 
     return startParams;
 }
+
+std::unique_ptr<SeriliazationTimeoutCheckEnableParams> SeriliazationTimeoutCheckEnableParams::Create
+    (const PtJson &params)
+{
+    auto paramsObject = std::make_unique<SeriliazationTimeoutCheckEnableParams>();
+    std::string error;
+    Result ret;
+
+    int32_t threshold = 0;
+    ret = params.GetInt("threshold", &threshold);
+    if (ret == Result::SUCCESS) {
+        paramsObject->threshold_ = threshold;
+    } else {
+        error += "Unknown or wrong type of 'threshold';";
+    }
+
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "SeriliazationTimeoutCheckEnableParams::Create " << error;
+        return nullptr;
+    }
+    return paramsObject;
+}
 }  // namespace panda::ecmascript::tooling

@@ -41,6 +41,8 @@ public:
     DispatchResponse StartTypeProfile();
     DispatchResponse StopTypeProfile();
     DispatchResponse TakeTypeProfile();
+    DispatchResponse EnableSerializationTimeoutCheck(const SeriliazationTimeoutCheckEnableParams &params);
+    DispatchResponse DisableSerializationTimeoutCheck();
 
     class DispatcherImpl final : public DispatcherBase {
     public:
@@ -61,6 +63,8 @@ public:
         void StartTypeProfile(const DispatchRequest &request);
         void StopTypeProfile(const DispatchRequest &request);
         void TakeTypeProfile(const DispatchRequest &request);
+        void EnableSerializationTimeoutCheck(const DispatchRequest &request);
+        void DisableSerializationTimeoutCheck(const DispatchRequest &request);
 
     private:
         NO_COPY_SEMANTIC(DispatcherImpl);

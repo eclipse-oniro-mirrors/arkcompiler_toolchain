@@ -17,6 +17,7 @@
 
 #include "tooling/base/pt_events.h"
 #include "protocol_channel.h"
+#include "ecmascript/debugger/debugger_api.h"
 
 #include "ecmascript/napi/include/dfx_jsnapi.h"
 
@@ -28,7 +29,9 @@ void ProfilerImpl::InitializeExtendedProtocolsList()
     std::vector<std::string> profilerProtocolList {
         "startTypeProfile",
         "stopTypeProfile",
-        "takeTypeProfile"
+        "takeTypeProfile",
+        "enableSerializationTimeoutCheck",
+        "disableSerializationTimeoutCheck"
     };
     profilerExtendedProtocols_ = std::move(profilerProtocolList);
 }
@@ -47,7 +50,9 @@ void ProfilerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         { "startPreciseCoverage", &ProfilerImpl::DispatcherImpl::StartPreciseCoverage },
         { "startTypeProfile", &ProfilerImpl::DispatcherImpl::StartTypeProfile },
         { "stopTypeProfile", &ProfilerImpl::DispatcherImpl::StopTypeProfile },
-        { "takeTypeProfile", &ProfilerImpl::DispatcherImpl::TakeTypeProfile }
+        { "takeTypeProfile", &ProfilerImpl::DispatcherImpl::TakeTypeProfile },
+        { "enableSerializationTimeoutCheck", &ProfilerImpl::DispatcherImpl::EnableSerializationTimeoutCheck },
+        { "disableSerializationTimeoutCheck", &ProfilerImpl::DispatcherImpl::DisableSerializationTimeoutCheck }
     };
 
     const std::string &method = request.GetMethod();
@@ -91,6 +96,24 @@ void ProfilerImpl::DispatcherImpl::Stop(const DispatchRequest &request)
 
     StopReturns result(std::move(profile));
     SendResponse(request, response, result);
+}
+
+void ProfilerImpl::DispatcherImpl::EnableSerializationTimeoutCheck(const DispatchRequest &request)
+{
+    std::unique_ptr<SeriliazationTimeoutCheckEnableParams> params =
+        SeriliazationTimeoutCheckEnableParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+    DispatchResponse response = profiler_->EnableSerializationTimeoutCheck(*params);
+    SendResponse(request, response);
+}
+
+void ProfilerImpl::DispatcherImpl::DisableSerializationTimeoutCheck(const DispatchRequest &request)
+{
+    DispatchResponse response = profiler_->DisableSerializationTimeoutCheck();
+    SendResponse(request, response);
 }
 
 void ProfilerImpl::DispatcherImpl::SetSamplingInterval(const DispatchRequest &request)
@@ -192,6 +215,19 @@ DispatchResponse ProfilerImpl::Stop(std::unique_ptr<Profile> *profile)
     }
     *profile = Profile::FromProfileInfo(*profileInfo);
     panda::JSNApi::SetProfilerState(vm_, false);
+    return DispatchResponse::Ok();
+}
+
+DispatchResponse ProfilerImpl::EnableSerializationTimeoutCheck(const SeriliazationTimeoutCheckEnableParams &params)
+{
+    int32_t threshhold = params.GetThreshold();
+    panda::DFXJSNApi::EnableSeriliazationTimeoutCheck(vm_, threshhold);
+    return DispatchResponse::Ok();
+}
+
+DispatchResponse ProfilerImpl::DisableSerializationTimeoutCheck()
+{
+    panda::DFXJSNApi::DisableSeriliazationTimeoutCheck(vm_);
     return DispatchResponse::Ok();
 }
 
