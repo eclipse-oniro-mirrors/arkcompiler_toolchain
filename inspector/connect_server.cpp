@@ -41,7 +41,7 @@ void ConnectServer::RunServer()
     tid_ = pthread_self();
 #if defined(OHOS_PLATFORM)
     int runSeverInOldProcess = -2; // run sever in old process.
-    int appPid = getpid();
+    int appPid = getprocpid();
     std::string pidStr = std::to_string(appPid);
     std::string sockName = pidStr + bundleName_;
     if (socketfd_ == runSeverInOldProcess) {
