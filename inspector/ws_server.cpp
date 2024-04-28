@@ -51,7 +51,7 @@ void WsServer::RunServer()
 #else
         int runSeverInOldProcess = -2;
         if (debugInfo_.socketfd == runSeverInOldProcess) {
-            int appPid = getpid();
+            int appPid = getprocpid();
             std::string pidStr = std::to_string(appPid);
             std::string instanceIdStr("");
 
