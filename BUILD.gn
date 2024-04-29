@@ -218,7 +218,6 @@ group("ark_toolchain_packages") {
     "./inspector:ark_debugger",
     "./inspector:connectserver_debugger",
     "./tooling:libark_ecma_debugger",
-    "./tooling/client:libark_client",
     "./tooling/client/ark_cli:arkdb",
     "./tooling/client/ark_multi:ark_multi",
   ]
