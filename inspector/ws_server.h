@@ -43,11 +43,11 @@ public:
     void ContinueRunserver();
     void StopServer();
     void SendReply(const std::string& message) const;
+    void NotifyDisconnectEvent() const;
 
     pthread_t tid_ {0};
 
 private:
-    void NotifyDisconnectEvent() const;
 
     std::atomic<bool> terminateExecution_ { false };
     std::mutex wsMutex_;
