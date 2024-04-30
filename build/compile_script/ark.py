@@ -274,6 +274,24 @@ class ArkPy:
     enable_keepdepfile = False
     ignore_errors = 1
 
+    def __main__(self, arg_list: list):
+        enable_ccache()
+        # delete duplicate arg in arg_list
+        arg_list = list(dict.fromkeys(arg_list))
+        # match [help] flag
+        if len(arg_list) == 0 or (
+            True in [self.is_dict_flags_match_arg(self.ARG_DICT["help"], arg) for arg in arg_list]):
+            print(self.get_help_msg_of_all())
+            return
+        # match [[os_cpu].[mode]] flag
+        [match_success, key_to_dict_in_os_cpu, key_to_dict_in_mode] = self.dict_in_os_cpu_mode_match_arg(arg_list[0])
+        if match_success:
+            self.start_for_matched_os_cpu_mode(key_to_dict_in_os_cpu, key_to_dict_in_mode, arg_list[1:])
+        else:
+            print("\033[92mThe command is not supported! Help message shows below.\033[0m\n{}".format(
+                self.get_help_msg_of_all()))
+        return
+
     def get_binaries(self):
         host_os = sys.platform
         host_cpu = platform.machine()
@@ -690,23 +708,6 @@ class ArkPy:
         self.build(out_path, gn_args, arg_list)
         return
 
-    def __main__(self, arg_list: list):
-        enable_ccache()
-        # delete duplicate arg in arg_list
-        arg_list = list(dict.fromkeys(arg_list))
-        # match [help] flag
-        if len(arg_list) == 0 or (
-            True in [self.is_dict_flags_match_arg(self.ARG_DICT["help"], arg) for arg in arg_list]):
-            print(self.get_help_msg_of_all())
-            return
-        # match [[os_cpu].[mode]] flag
-        [match_success, key_to_dict_in_os_cpu, key_to_dict_in_mode] = self.dict_in_os_cpu_mode_match_arg(arg_list[0])
-        if match_success:
-            self.start_for_matched_os_cpu_mode(key_to_dict_in_os_cpu, key_to_dict_in_mode, arg_list[1:])
-        else:
-            print("\033[92mThe command is not supported! Help message shows below.\033[0m\n{}".format(
-                self.get_help_msg_of_all()))
-        return
 
 
 if __name__ == "__main__":
