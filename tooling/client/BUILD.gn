@@ -69,7 +69,8 @@ ohos_source_set("libark_client_set") {
 ohos_shared_library("libark_client") {
   stack_protector_ret = false
   deps = [ ":libark_client_set" ]
-  testonly = true
+
+  install_enable = false
   if (!is_mingw && !is_mac) {
     output_extension = "so"
   }
@@ -82,5 +83,6 @@ ohos_shared_library("libark_client") {
     external_deps += [ "hilog:libhilog" ]
   }
 
-  subsystem_name = "test"
+  subsystem_name = "arkcompiler"
+  part_name = "toolchain"
 }
