@@ -17,14 +17,17 @@ import("//build/ohos.gni")
 import("//build/test.gni")
 
 ####################################fuzztest##################################
-ohos_fuzztest("WsServerFuzzTest") {
+ohos_fuzztest("WsServerStopServerFuzzTest") {
   module_out_path = toolchain_output_path
 
-  fuzz_config_file = "$toolchain_root/test/fuzztest/wsserver_fuzzer"
+  fuzz_config_file =
+      "$toolchain_root/test/fuzztest/wsserver/wsserverstopserver_fuzzer"
 
-  sources = [ "wsserver_fuzzer.cpp" ]
+  resource_config_file = "$toolchain_root/test/resource/tooling/ohos_test.xml"
 
-  configs = [ "$toolchain_root:toolchain_test_config" ]
+  sources = [ "wsserverstopserver_fuzzer.cpp" ]
+
+  configs = [ "../../../../:toolchain_test_config" ]
 
   deps = [
     "$toolchain_root/inspector:ark_debugger",
@@ -46,5 +49,5 @@ ohos_fuzztest("WsServerFuzzTest") {
 group("fuzztest") {
   testonly = true
   deps = []
-  deps += [ ":WsServerFuzzTest" ]
+  deps += [ ":WsServerStopServerFuzzTest" ]
 }

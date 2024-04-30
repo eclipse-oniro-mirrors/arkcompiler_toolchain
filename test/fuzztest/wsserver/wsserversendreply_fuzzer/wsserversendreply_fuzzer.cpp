@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "wsserver_fuzzer.h"
+#include "wsserversendreply_fuzzer.h"
 #include "ecmascript/napi/include/jsnapi.h"
 #include "inspector/ws_server.h"
 
@@ -26,7 +26,7 @@ namespace OHOS {
     {
         return;
     }
-    void WsServerFuzzTest(const uint8_t* data, size_t size)
+    void WsServerSendReplyFuzzTest(const uint8_t* data, size_t size)
     {
         if (size <= 0) {
             return;
@@ -39,7 +39,6 @@ namespace OHOS {
         int fd = -2; // -2 : old debug process
         DebugInfo debugInfo = {fd, "toolchain", instanceId, port};
         WsServer wsServer(debugInfo, fun);
-        wsServer.RunServer();
         std::string message(data, data + size);
         wsServer.SendReply(message);
     }
@@ -49,6 +48,6 @@ namespace OHOS {
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     // Run your code on data.
-    OHOS::WsServerFuzzTest(data, size);
+    OHOS::WsServerSendReplyFuzzTest(data, size);
     return 0;
 }
