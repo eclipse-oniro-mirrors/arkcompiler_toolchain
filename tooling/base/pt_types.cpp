@@ -251,6 +251,13 @@ void RemoteObject::AppendingHashToDescription(const EcmaVM *ecmaVM, Local<JSValu
     }
 }
 
+void RemoteObject::AppendingSendableDescription(Local<JSValueRef> tagged, std::string &description)
+{
+    if (JSNApiHelper::ToJSTaggedValue(*tagged).IsInSharedHeap()) {
+        description += " [Sendable]";
+    }
+}
+
 std::string RemoteObject::ResolveClassNameToDescription(const EcmaVM *ecmaVM, Local<JSValueRef> tagged)
 {
     std::string description = RemoteObject::ObjectDescription;
@@ -308,6 +315,7 @@ SymbolRemoteObject::SymbolRemoteObject(const EcmaVM *ecmaVm, Local<SymbolRef> ta
     std::string description = DescriptionForSymbol(ecmaVm, tagged);
     SetPreviewValue(description);
     AppendingHashToDescription(ecmaVm, tagged, description);
+    AppendingSendableDescription(tagged, description);
     SetType(RemoteObject::TypeName::Symbol)
         .SetValue(tagged)
         .SetUnserializableValue(description)
@@ -318,6 +326,7 @@ FunctionRemoteObject::FunctionRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRe
 {
     std::string description = DescriptionForFunction(ecmaVm, tagged);
     AppendingHashToDescription(ecmaVm, tagged, description);
+    AppendingSendableDescription(tagged, description);
     SetType(RemoteObject::TypeName::Function)
         .SetClassName(RemoteObject::ClassName::Function)
         .SetValue(tagged)
@@ -330,6 +339,7 @@ GeneratorFunctionRemoteObject::GeneratorFunctionRemoteObject(const EcmaVM *ecmaV
 {
     std::string description = DescriptionForGeneratorFunction(ecmaVm, tagged);
     AppendingHashToDescription(ecmaVm, tagged, description);
+    AppendingSendableDescription(tagged, description);
     SetType(RemoteObject::TypeName::Function)
         .SetClassName(RemoteObject::ClassName::Generator)
         .SetValue(tagged)
@@ -344,6 +354,7 @@ ObjectRemoteObject::ObjectRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> t
     std::string description = DescriptionForObject(ecmaVm, tagged);
     SetPreviewValue(description);
     AppendingHashToDescription(ecmaVm, tagged, description);
+    AppendingSendableDescription(tagged, description);
     SetType(RemoteObject::TypeName::Object)
         .SetClassName(classname)
         .SetValue(tagged)
@@ -357,6 +368,7 @@ ObjectRemoteObject::ObjectRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> t
     std::string description = DescriptionForObject(ecmaVm, tagged);
     SetPreviewValue(description);
     AppendingHashToDescription(ecmaVm, tagged, description);
+    AppendingSendableDescription(tagged, description);
     SetType(RemoteObject::TypeName::Object)
         .SetSubType(subtype)
         .SetClassName(classname)
