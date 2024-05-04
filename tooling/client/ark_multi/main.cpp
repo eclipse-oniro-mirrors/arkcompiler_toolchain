@@ -77,11 +77,7 @@ bool StartThread(uv_loop_t *loop)
                 g_mutex.Unlock();
                 break;
             }
-            std::string fileName = *g_iter;
-            std::string fileAbc = fileName.substr(fileName.find_last_of('/') + 1);
-            std::string entry = fileAbc.substr(0, fileAbc.size() - 4);
-            g_iter++;
-            g_runningCount++;
+            auto [fileName, entry] = GetNextPara();
             g_mutex.Unlock();
             panda::ecmascript::EcmaVM *vm = panda::JSNApi::CreateEcmaVM(g_runtimeOptions);
             if (vm == nullptr) {
@@ -114,6 +110,15 @@ bool StartThread(uv_loop_t *loop)
         }
     }, loop);
     return ret != 0;
+}
+
+std::pair<std::string, std::string> GetNextPara() {
+    std::string fileName = *g_iter;
+    std::string fileAbc = fileName.substr(fileName.find_last_of('/') + 1);
+    std::string entry = fileAbc.substr(0, fileAbc.size() - 4);
+    g_iter++;
+    g_runningCount++;
+    return {fileName, entry};
 }
 
 int Main(const int argc, const char **argv)
