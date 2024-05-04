@@ -83,7 +83,6 @@ bool StartThread(uv_loop_t *loop)
             g_iter++;
             g_runningCount++;
             g_mutex.Unlock();
-
             panda::ecmascript::EcmaVM *vm = panda::JSNApi::CreateEcmaVM(g_runtimeOptions);
             if (vm == nullptr) {
                 std::cerr << "Cannot create vm." << std::endl;
