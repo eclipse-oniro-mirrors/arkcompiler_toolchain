@@ -91,8 +91,11 @@ std::string HttpResponse::DecodeStatus(const std::string& response, std::string:
         auto statusStartPos = response.find_first_not_of(' ', versionEndPos);
         if (statusStartPos != std::string::npos) {
             auto statusEndPos = response.find(' ', statusStartPos);
-            if (statusEndPos != std::string::npos ||
-                (statusEndPos = response.find(EOL, statusStartPos)) != std::string::npos) {
+            auto tmpStatusEndPos = response.find(EOL, statusStartPos);
+            if (statusEndPos != std::string::npos || tmpStatusEndPos != std::string::npos) {
+                if (statusEndPos == std::string::npos) {
+                    statusEndPos = tmpStatusEndPos;
+                }
                 return response.substr(statusStartPos, statusEndPos - statusStartPos);
             }
         }
