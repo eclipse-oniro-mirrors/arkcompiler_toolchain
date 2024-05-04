@@ -92,7 +92,7 @@ bool StartThread(uv_loop_t *loop)
             panda::JSNApi::SetBundle(vm, !g_runtimeOptions.GetMergeAbc());
             bool ret = ExecutePandaFile(vm, g_runtimeOptions, fileName, entry);
             panda::JSNApi::DestroyJSVM(vm);
-            
+
             auto loop = static_cast<uv_loop_t *>(arg);
             auto work = new uv_work_t;
             std::string msg;
