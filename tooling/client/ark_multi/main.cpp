@@ -112,7 +112,8 @@ bool StartThread(uv_loop_t *loop)
     return ret != 0;
 }
 
-std::pair<std::string, std::string> GetNextPara() {
+std::pair<std::string, std::string> GetNextPara()
+{
     std::string fileName = *g_iter;
     std::string fileAbc = fileName.substr(fileName.find_last_of('/') + 1);
     std::string entry = fileAbc.substr(0, fileAbc.size() - 4);
