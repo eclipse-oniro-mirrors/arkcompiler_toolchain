@@ -194,8 +194,9 @@ int Main(const int argc, const char **argv)
             .count();
 
     g_mutex.Lock();
+    const long long time_unit = 1000'000'000;
     std::cerr << "Run end, total file count: " << g_runningCount << ", used: "
-	      << ((endTime - startTime) / 1000'000'000) << "s." << std::endl;
+	      << ((endTime - startTime) / time_unit) << "s." << std::endl;
     g_mutex.Unlock();
     return 0;
 }
