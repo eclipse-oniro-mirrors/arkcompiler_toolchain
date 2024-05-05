@@ -107,7 +107,7 @@ std::list<JSPtStepRange> SingleStepper::GetStepRanges(DebugInfoExtractor *extrac
 }
 
 std::unique_ptr<SingleStepper> SingleStepper::GetStepper(const EcmaVM *ecmaVm,
-     SingleStepper::Type type)
+    SingleStepper::Type type)
 {
     std::unique_ptr<PtMethod> ptMethod = DebuggerApi::GetMethod(ecmaVm);
     ASSERT(ptMethod != nullptr);

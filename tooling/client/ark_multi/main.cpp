@@ -63,6 +63,16 @@ bool ExecutePandaFile(panda::ecmascript::EcmaVM *vm,
     return ret;
 }
 
+std::pair<std::string, std::string> GetNextPara()
+{
+    std::string fileName = *g_iter;
+    std::string fileAbc = fileName.substr(fileName.find_last_of('/') + 1);
+    std::string entry = fileAbc.substr(0, fileAbc.size() - 4);
+    g_iter++;
+    g_runningCount++;
+    return {fileName, entry};
+}
+
 bool StartThread(uv_loop_t *loop)
 {
     uv_thread_t tid = 0;
@@ -77,13 +87,8 @@ bool StartThread(uv_loop_t *loop)
                 g_mutex.Unlock();
                 break;
             }
-            std::string fileName = *g_iter;
-            std::string fileAbc = fileName.substr(fileName.find_last_of('/') + 1);
-            std::string entry = fileAbc.substr(0, fileAbc.size() - 4);
-            g_iter++;
-            g_runningCount++;
+            auto [fileName, entry] = GetNextPara();
             g_mutex.Unlock();
-
             panda::ecmascript::EcmaVM *vm = panda::JSNApi::CreateEcmaVM(g_runtimeOptions);
             if (vm == nullptr) {
                 std::cerr << "Cannot create vm." << std::endl;
@@ -92,7 +97,6 @@ bool StartThread(uv_loop_t *loop)
             panda::JSNApi::SetBundle(vm, !g_runtimeOptions.GetMergeAbc());
             bool ret = ExecutePandaFile(vm, g_runtimeOptions, fileName, entry);
             panda::JSNApi::DestroyJSVM(vm);
-
             auto loop = static_cast<uv_loop_t *>(arg);
             auto work = new uv_work_t;
             std::string msg;
@@ -104,6 +108,8 @@ bool StartThread(uv_loop_t *loop)
             }
             work->data = new char[msg.size() + 1];
             if (strncpy_s(static_cast<char*>(work->data), msg.size() + 1, msg.data(), msg.size()) != EOK) {
+                delete static_cast<char*>(work->data);
+                delete work;
                 std::abort();
             }
             uv_queue_work(loop, work, [] (uv_work_t*) {}, [] (uv_work_t* work, int) {
@@ -194,8 +200,9 @@ int Main(const int argc, const char **argv)
             .count();
 
     g_mutex.Lock();
+    const long long timeUnit = 1000'000'000;
     std::cerr << "Run end, total file count: " << g_runningCount << ", used: "
-	      << ((endTime - startTime) / 1000'000'000) << "s." << std::endl;
+	      << ((endTime - startTime) / timeUnit) << "s." << std::endl;
     g_mutex.Unlock();
     return 0;
 }

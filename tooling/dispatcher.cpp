@@ -65,8 +65,7 @@ DispatchRequest::DispatchRequest(const std::string &message)
         return;
     }
     std::string::size_type length = wholeMethod.length();
-    std::string::size_type indexPoint;
-    indexPoint = wholeMethod.find_first_of('.', 0);
+    std::string::size_type indexPoint = wholeMethod.find_first_of('.', 0);
     if (indexPoint == std::string::npos || indexPoint == 0 || indexPoint == length - 1) {
         code_ = RequestCode::METHOD_FORMAT_ERROR;
         LOG_DEBUGGER(ERROR) << "method format error: " << wholeMethod;
