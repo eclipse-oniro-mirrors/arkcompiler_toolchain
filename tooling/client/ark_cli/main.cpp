@@ -118,6 +118,7 @@ void GetInputCommand([[maybe_unused]] void *arg)
                     if (uv_is_active(reinterpret_cast<uv_handle_t*>(g_releaseHandle))) {
                         uv_async_send(g_releaseHandle);
                     }
+                    free(msg);
                     break;
                 }
                 g_inputSignal->data = std::move(msg);

@@ -1854,7 +1854,7 @@ Local<JSValueRef> DebuggerImpl::ConvertToLocal(const std::string &varValue)
         taggedValue = JSValueRef::True(vm_);
     } else if (varValue == "undefined") {
         taggedValue = JSValueRef::Undefined(vm_);
-    } else if (varValue[0] == '\"' && varValue[varValue.length() - 1] == '\"') {
+    } else if (!varValue.empty() && varValue[0] == '\"' && varValue[varValue.length() - 1] == '\"') {
         // 2 : 2 means length
         taggedValue = StringRef::NewFromUtf8(vm_, varValue.substr(1, varValue.length() - 2).c_str());
     } else {

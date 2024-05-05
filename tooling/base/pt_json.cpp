@@ -73,6 +73,7 @@ bool PtJson::Add(const char *key, bool value) const
         return false;
     }
 
+    cJSON_Delete(node);
     return true;
 }
 
@@ -106,6 +107,7 @@ bool PtJson::Add(const char *key, double value) const
         return false;
     }
 
+    cJSON_Delete(node);
     return true;
 }
 
@@ -124,6 +126,7 @@ bool PtJson::Add(const char *key, const char *value) const
         return false;
     }
 
+    cJSON_Delete(node);
     return true;
 }
 
@@ -157,6 +160,7 @@ bool PtJson::Push(bool value) const
         return false;
     }
 
+    cJSON_Delete(node);
     return true;
 }
 
@@ -188,6 +192,7 @@ bool PtJson::Push(double value) const
         return false;
     }
 
+    cJSON_Delete(node);
     return true;
 }
 
@@ -204,6 +209,7 @@ bool PtJson::Push(const char *value) const
         return false;
     }
 
+    cJSON_Delete(node);
     return true;
 }
 
