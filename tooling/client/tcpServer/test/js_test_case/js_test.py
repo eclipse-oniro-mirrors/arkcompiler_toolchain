@@ -17,7 +17,7 @@ import subprocess
 import unittest
 import os
 
-from JsTestBase import JsTestBase
+from js_test_base import JsTestBase
 class JsTestCase(JsTestBase):
     repeat_time = 3
     @classmethod

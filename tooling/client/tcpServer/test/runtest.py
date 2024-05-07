@@ -42,7 +42,7 @@ class RunTest:
 
     def discover_cases(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        case_dir = current_dir + os.sep + 'JsTestCase'
+        case_dir = current_dir + os.sep + 'js_test_case'
         discover = self.loader.discover(case_dir, pattern = '*.py')
         self.suite.addTest(discover)
 
