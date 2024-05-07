@@ -79,6 +79,17 @@ private:
     std::unique_ptr<PtJson> params_ = std::make_unique<PtJson>();
     RequestCode code_ {RequestCode::OK};
     std::string errorMsg_ {};
+    void jsonParseError()
+    {
+        code_ = RequestCode::JSON_PARSE_ERROR;
+        LOG_DEBUGGER(ERROR) << "json parse error";
+    }
+    void jsonFormatError(std::unique_ptr<PtJson>& json)
+    {
+        code_ = RequestCode::PARAMS_FORMAT_ERROR;
+        LOG_DEBUGGER(ERROR) << "json parse format error";
+        json->ReleaseRoot();
+    }
 };
 
 class DispatchResponse {
