@@ -1849,6 +1849,7 @@ Local<JSValueRef> DebuggerImpl::ConvertToLocal(const std::string &varValue)
 {
     Local<JSValueRef> taggedValue;
     if (varValue.empty()) {
+        taggedValue = NumberRef::New(vm_, 0);
         return taggedValue;
     } else if (varValue == "Null") {
         taggedValue = JSValueRef::Null(vm_);
