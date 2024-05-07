@@ -86,6 +86,9 @@ private:
             LOG_DEBUGGER(ERROR) << "json parse error";
             return;
         }
+    }
+    void JsonFormatError(std::unique_ptr<PtJson>& json)
+    {
         if (!json->IsObject()) {
             code_ = RequestCode::PARAMS_FORMAT_ERROR;
             LOG_DEBUGGER(ERROR) << "json parse format error";
