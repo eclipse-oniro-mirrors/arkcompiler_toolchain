@@ -79,16 +79,19 @@ private:
     std::unique_ptr<PtJson> params_ = std::make_unique<PtJson>();
     RequestCode code_ {RequestCode::OK};
     std::string errorMsg_ {};
-    void jsonParseError()
+    void JsonParseError(std::unique_ptr<PtJson> json)
     {
-        code_ = RequestCode::JSON_PARSE_ERROR;
-        LOG_DEBUGGER(ERROR) << "json parse error";
-    }
-    void jsonFormatError(std::unique_ptr<PtJson>& json)
-    {
-        code_ = RequestCode::PARAMS_FORMAT_ERROR;
-        LOG_DEBUGGER(ERROR) << "json parse format error";
-        json->ReleaseRoot();
+        if (json == nullptr) {
+            code_ = RequestCode::JSON_PARSE_ERROR;
+            LOG_DEBUGGER(ERROR) << "json parse error";
+            return;
+        }
+        if (!json->IsObject()) {
+            code_ = RequestCode::PARAMS_FORMAT_ERROR;
+            LOG_DEBUGGER(ERROR) << "json parse format error";
+            json->ReleaseRoot();
+            return;
+        }
     }
 };
 
