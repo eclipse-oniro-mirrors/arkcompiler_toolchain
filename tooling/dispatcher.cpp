@@ -35,7 +35,14 @@ namespace panda::ecmascript::tooling {
 DispatchRequest::DispatchRequest(const std::string &message)
 {
     std::unique_ptr<PtJson> json = PtJson::Parse(message);
-    JsonParseError(json);
+    if (json == nullptr) {
+        JsonParseError(json);
+        return;
+    }
+    if (!json->IsObject()) {
+        JsonFormatError(json);
+        return;
+    }
 
     Result ret;
     int32_t callId;
