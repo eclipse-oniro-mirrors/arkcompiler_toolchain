@@ -22,7 +22,7 @@ import unittest
 
 class JsTestBase(unittest.TestCase):
     hdctool = None
-    tcpClientSocket = None
+    tcp_client_socket = None
     HOST = '127.0.0.1'
     PORT = 9999
     BUFSIZ = 1024
@@ -32,7 +32,7 @@ class JsTestBase(unittest.TestCase):
         self.hdctool = os.environ.get("HDCTool", "hdc")
 
     def connect_client_socket(self, dbg_name):
-        self.tcpClientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.tcp_client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         subprocess.run(
             [
                 self.hdctool,
@@ -61,7 +61,7 @@ class JsTestBase(unittest.TestCase):
                 if (sub_str.find('CONNECTED') != -1):
                     arkdb_server = True
             if arkdb_server == True:
-                self.tcpClientSocket.connect(self.ADDRESS)
+                self.tcp_client_socket.connect(self.ADDRESS)
                 break
             time.sleep(1)
             connection = connection + 1
@@ -69,21 +69,21 @@ class JsTestBase(unittest.TestCase):
             self.fail(self, "Not connect to arkdb server.")
 
     def close_client_socket(self):
-        self.tcpClientSocket.close()
+        self.tcp_client_socket.close()
 
     def send_command(self, command):
         if command == '':
             self.fail('Command is not vaild')
-        sent = self.tcpClientSocket.send(command.encode('utf-8'))
+        sent = self.tcp_client_socket.send(command.encode('utf-8'))
         if sent == 0:
             self.fail('Failed to send command: %s' % command)
         try:
-            self.tcpClientSocket.settimeout(15)
+            self.tcp_client_socket.settimeout(15)
             os.environ["isSkipped"] = "False"
-            data, ADDR = self.tcpClientSocket.recvfrom(self.BUFSIZ)
+            data, ADDR = self.tcp_client_socket.recvfrom(self.BUFSIZ)
             print("Recv: ", data.decode('utf-8'))
         except TimeoutError:
-            self.tcpClientSocket.close()
+            self.tcp_client_socket.close()
             os.environ["isSkipped"] = "True"
             self.fail("TimeoutError")
 
