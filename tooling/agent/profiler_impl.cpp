@@ -202,7 +202,11 @@ DispatchResponse ProfilerImpl::Enable()
 DispatchResponse ProfilerImpl::Start()
 {
     panda::JSNApi::SetProfilerState(vm_, true);
-    panda::DFXJSNApi::StartCpuProfilerForInfo(vm_);
+    bool result = panda::DFXJSNApi::StartCpuProfilerForInfo(vm_);
+    if (!result) {
+        LOG_DEBUGGER(ERROR) << "ProfilerImpl::Start failed";
+        return DispatchResponse::Fail("Start is failure");
+    }
     return DispatchResponse::Ok();
 }
 
