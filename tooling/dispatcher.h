@@ -81,20 +81,14 @@ private:
     std::string errorMsg_ {};
     void JsonParseError(std::unique_ptr<PtJson>& json)
     {
-        if (json == nullptr) {
-            code_ = RequestCode::JSON_PARSE_ERROR;
-            LOG_DEBUGGER(ERROR) << "json parse error";
-            return;
-        }
+        code_ = RequestCode::JSON_PARSE_ERROR;
+        LOG_DEBUGGER(ERROR) << "json parse error";
     }
     void JsonFormatError(std::unique_ptr<PtJson>& json)
     {
-        if (!json->IsObject()) {
-            code_ = RequestCode::PARAMS_FORMAT_ERROR;
-            LOG_DEBUGGER(ERROR) << "json parse format error";
-            json->ReleaseRoot();
-            return;
-        }
+        code_ = RequestCode::PARAMS_FORMAT_ERROR;
+        LOG_DEBUGGER(ERROR) << "json parse format error";
+        json->ReleaseRoot();
     }
 };
 
