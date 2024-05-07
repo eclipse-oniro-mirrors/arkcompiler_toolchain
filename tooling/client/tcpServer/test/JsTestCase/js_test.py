@@ -43,9 +43,9 @@ class JsTestCase(JsTestBase):
         )
         cls.run_arkdb_server(cls, dbg_name)
         cls.connect_client_socket(cls, dbg_name)
-        cls.tcpClientSocket.send("enable".encode('utf-8'))
-        data, ADDR = cls.tcpClientSocket.recvfrom(cls.BUFSIZ)
-        data, ADDR = cls.tcpClientSocket.recvfrom(cls.BUFSIZ)
+        cls.tcp_client_socket.send("enable".encode('utf-8'))
+        data, ADDR = cls.tcp_client_socket.recvfrom(cls.BUFSIZ)
+        data, ADDR = cls.tcp_client_socket.recvfrom(cls.BUFSIZ)
         print("recv: ", data.decode('utf-8'))
 
     @classmethod
