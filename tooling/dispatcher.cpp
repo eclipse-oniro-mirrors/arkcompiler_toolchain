@@ -36,14 +36,11 @@ DispatchRequest::DispatchRequest(const std::string &message)
 {
     std::unique_ptr<PtJson> json = PtJson::Parse(message);
     if (json == nullptr) {
-        code_ = RequestCode::JSON_PARSE_ERROR;
-        LOG_DEBUGGER(ERROR) << "json parse error";
+        jsonParseError();
         return;
     }
     if (!json->IsObject()) {
-        code_ = RequestCode::PARAMS_FORMAT_ERROR;
-        LOG_DEBUGGER(ERROR) << "json parse format error";
-        json->ReleaseRoot();
+        jsonFormatError(json);
         return;
     }
 
