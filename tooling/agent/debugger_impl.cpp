@@ -1848,7 +1848,11 @@ std::optional<std::string> DebuggerImpl::CmptEvaluateValue(CallFrameId callFrame
 Local<JSValueRef> DebuggerImpl::ConvertToLocal(const std::string &varValue)
 {
     Local<JSValueRef> taggedValue;
-    if (varValue == "false") {
+    if (varValue.empty()) {
+        return taggedValue;
+    } else if (varValue == "Null") {
+        taggedValue = JSValueRef::Null(vm_);
+    } else if (varValue == "false") {
         taggedValue = JSValueRef::False(vm_);
     } else if (varValue == "true") {
         taggedValue = JSValueRef::True(vm_);
