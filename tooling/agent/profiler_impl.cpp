@@ -222,12 +222,14 @@ DispatchResponse ProfilerImpl::EnableSerializationTimeoutCheck(const Seriliazati
 {
     int32_t threshhold = params.GetThreshold();
     panda::DFXJSNApi::EnableSeriliazationTimeoutCheck(vm_, threshhold);
+    LOG_DEBUGGER(DEBUG) << "Profiler Serialization timeout check is enabled with threshhold: " << threshhold;
     return DispatchResponse::Ok();
 }
 
 DispatchResponse ProfilerImpl::DisableSerializationTimeoutCheck()
 {
     panda::DFXJSNApi::DisableSeriliazationTimeoutCheck(vm_);
+    LOG_DEBUGGER(DEBUG) << "Profiler Serialization check is disabled";
     return DispatchResponse::Ok();
 }
 
