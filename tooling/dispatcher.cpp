@@ -36,7 +36,7 @@ DispatchRequest::DispatchRequest(const std::string &message)
 {
     std::unique_ptr<PtJson> json = PtJson::Parse(message);
     if (json == nullptr) {
-        JsonParseError(json);
+        JsonParseError();
         return;
     }
     if (!json->IsObject()) {
