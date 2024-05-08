@@ -79,7 +79,7 @@ private:
     std::unique_ptr<PtJson> params_ = std::make_unique<PtJson>();
     RequestCode code_ {RequestCode::OK};
     std::string errorMsg_ {};
-    void JsonParseError(std::unique_ptr<PtJson>& json)
+    void JsonParseError()
     {
         code_ = RequestCode::JSON_PARSE_ERROR;
         LOG_DEBUGGER(ERROR) << "json parse error";
