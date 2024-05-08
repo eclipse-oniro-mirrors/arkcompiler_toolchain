@@ -237,7 +237,7 @@ void HeapProfilerClient::RecvReply(std::unique_ptr<PtJson> json)
     std::string wholeMethod;
     std::string method;
     ret = json->GetString("method", &wholeMethod);
-    if (ret != Result::SUCCESS) {
+    if (ret != Result::SUCCESS || wholeMethod.empty()) {
         LOGE("find method error");
         return;
     }
