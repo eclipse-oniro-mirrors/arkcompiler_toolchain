@@ -292,6 +292,63 @@ class ArkPy:
                 self.get_help_msg_of_all()))
         return
 
+    @staticmethod
+    def is_dict_flags_match_arg(dict_to_match: dict, arg_to_match: str) -> bool:
+        for flag in dict_to_match["flags"]:
+            if fnmatch(arg_to_match, flag):
+                return True
+        return False
+    
+    @staticmethod
+    def get_test262_cmd(gn_args, out_path, x64_out_path, aot_mode, run_pgo, args_to_test262_cmd):
+        if aot_mode:
+            print("running test262 in AotMode\n")
+            if any('target_cpu="arm64"' in arg for arg in gn_args):
+                if run_pgo:
+                    test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout 180000" \
+                          " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu:" \
+                          "../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                          " --ark-arch aarch64" \
+                          " --ark-arch-root=../../{1}/common/common/libc/" \
+                          " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
+                          " --ark-aot-tool=../../{1}/arkcompiler/ets_runtime/ark_aot_compiler" \
+                          " --ark-frontend-binary=../../{2}/arkcompiler/ets_frontend/es2abc" \
+                          " --merge-abc-binary=../../{2}/arkcompiler/ets_frontend/merge_abc" \
+                          " --ark-aot" \
+                          " --ark-frontend=es2panda"\
+                          "{3}".format(args_to_test262_cmd, out_path, x64_out_path, " --run-pgo")
+                else:
+                    test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout 180000" \
+                          " --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib:../../{2}/thirdparty/icu/" \
+                          " --ark-arch aarch64" \
+                          " --ark-arch-root=../../{1}/common/common/libc/" \
+                          " --ark-aot" \
+                          " --ark-aot-tool=../../{2}/arkcompiler/ets_runtime/ark_aot_compiler" \
+                          " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
+                          " --ark-frontend-binary=../../{2}/arkcompiler/ets_frontend/es2abc" \
+                          " --merge-abc-binary=../../{2}/arkcompiler/ets_frontend/merge_abc" \
+                          " --ark-frontend=es2panda".format(args_to_test262_cmd, out_path, x64_out_path)
+            else:
+                test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout 180000" \
+                          " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu" \
+                          ":../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                          " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
+                          " --ark-aot-tool=../../{1}/arkcompiler/ets_runtime/ark_aot_compiler" \
+                          " --ark-frontend-binary=../../{1}/arkcompiler/ets_frontend/es2abc" \
+                          " --merge-abc-binary=../../{1}/arkcompiler/ets_frontend/merge_abc" \
+                          " --ark-aot" \
+                          " --ark-frontend=es2panda"\
+                          "{2}".format(args_to_test262_cmd, out_path, " --run-pgo" if run_pgo else "")
+        else:
+            print("running test262 in AsmMode\n")
+            test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout 180000" \
+                      " --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                      " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
+                      " --ark-frontend-binary=../../{1}/arkcompiler/ets_frontend/es2abc" \
+                      " --merge-abc-binary=../../{1}/arkcompiler/ets_frontend/merge_abc" \
+                      " --ark-frontend=es2panda".format(args_to_test262_cmd, out_path)
+        return test262_cmd
+
     def get_binaries(self):
         host_os = sys.platform
         host_cpu = platform.machine()
@@ -322,13 +379,6 @@ class ArkPy:
             "\nCheck \033[92mwhether gn binary and ninja binary are under directory prebuilts\033[0m!\n".format())
             sys.exit(0)
         return
-
-    @staticmethod
-    def is_dict_flags_match_arg(dict_to_match: dict, arg_to_match: str) -> bool:
-        for flag in dict_to_match["flags"]:
-            if fnmatch(arg_to_match, flag):
-                return True
-        return False
 
     def which_dict_flags_match_arg(self, dict_including_dicts_to_match: dict, arg_to_match: str) -> str:
         for key in dict_including_dicts_to_match.keys():
@@ -496,56 +546,6 @@ class ArkPy:
             sys.exit(code)
         print("=== test262 success! ===\n")
         return
-
-    @staticmethod
-    def get_test262_cmd(gn_args, out_path, x64_out_path, aot_mode, run_pgo, args_to_test262_cmd):
-        if aot_mode:
-            print("running test262 in AotMode\n")
-            if any('target_cpu="arm64"' in arg for arg in gn_args):
-                if run_pgo:
-                    test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout 180000" \
-                          " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu:" \
-                          "../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
-                          " --ark-arch aarch64" \
-                          " --ark-arch-root=../../{1}/common/common/libc/" \
-                          " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
-                          " --ark-aot-tool=../../{1}/arkcompiler/ets_runtime/ark_aot_compiler" \
-                          " --ark-frontend-binary=../../{2}/arkcompiler/ets_frontend/es2abc" \
-                          " --merge-abc-binary=../../{2}/arkcompiler/ets_frontend/merge_abc" \
-                          " --ark-aot" \
-                          " --ark-frontend=es2panda"\
-                          "{3}".format(args_to_test262_cmd, out_path, x64_out_path, " --run-pgo")
-                else:
-                    test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout 180000" \
-                          " --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib:../../{2}/thirdparty/icu/" \
-                          " --ark-arch aarch64" \
-                          " --ark-arch-root=../../{1}/common/common/libc/" \
-                          " --ark-aot" \
-                          " --ark-aot-tool=../../{2}/arkcompiler/ets_runtime/ark_aot_compiler" \
-                          " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
-                          " --ark-frontend-binary=../../{2}/arkcompiler/ets_frontend/es2abc" \
-                          " --merge-abc-binary=../../{2}/arkcompiler/ets_frontend/merge_abc" \
-                          " --ark-frontend=es2panda".format(args_to_test262_cmd, out_path, x64_out_path)
-            else:
-                test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout 180000" \
-                          " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu" \
-                          ":../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
-                          " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
-                          " --ark-aot-tool=../../{1}/arkcompiler/ets_runtime/ark_aot_compiler" \
-                          " --ark-frontend-binary=../../{1}/arkcompiler/ets_frontend/es2abc" \
-                          " --merge-abc-binary=../../{1}/arkcompiler/ets_frontend/merge_abc" \
-                          " --ark-aot" \
-                          " --ark-frontend=es2panda"\
-                          "{2}".format(args_to_test262_cmd, out_path, " --run-pgo" if run_pgo else "")
-        else:
-            print("running test262 in AsmMode\n")
-            test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout 180000" \
-                      " --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
-                      " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
-                      " --ark-frontend-binary=../../{1}/arkcompiler/ets_frontend/es2abc" \
-                      " --merge-abc-binary=../../{1}/arkcompiler/ets_frontend/merge_abc" \
-                      " --ark-frontend=es2panda".format(args_to_test262_cmd, out_path)
-        return test262_cmd
 
     def build_for_unittest(self, out_path: str, gn_args: list, log_file_name:str):
         self.build_for_gn_target(
