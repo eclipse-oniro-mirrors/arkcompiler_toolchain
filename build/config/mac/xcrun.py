@@ -27,5 +27,5 @@ if __name__ == '__main__':
     if rv == 0 and args.stamp:
         if os.path.exists(args.stamp):
             os.unlink(args.stamp)
-    with os.fdopen(os.open(args.stamp, flags, modes), 'w') as fp:
+    with os.fdopen(os.open(args.stamp, flags, modes), 'w+') as fp:
         sys.exit(rv)
