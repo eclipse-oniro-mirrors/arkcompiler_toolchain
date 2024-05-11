@@ -108,13 +108,13 @@ bool StartThread(uv_loop_t *loop)
             }
             work->data = new char[msg.size() + 1];
             if (strncpy_s(static_cast<char*>(work->data), msg.size() + 1, msg.data(), msg.size()) != EOK) {
-                delete static_cast<char*>(work->data);
+                delete[] static_cast<char*>(work->data);
                 delete work;
                 std::abort();
             }
             uv_queue_work(loop, work, [] (uv_work_t*) {}, [] (uv_work_t* work, int) {
                 std::cerr << static_cast<char*>(work->data) << std::endl;
-                delete static_cast<char*>(work->data);
+                delete[] static_cast<char*>(work->data);
                 delete work;
             });
         }

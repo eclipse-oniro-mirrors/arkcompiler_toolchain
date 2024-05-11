@@ -44,6 +44,29 @@ void* HandleDebugManager(void* const server)
     return nullptr;
 }
 
+void OnConnectedMessage(const std::string& message)
+{
+    if (message.find(CONNECTED_MESSAGE, 0) != std::string::npos) {
+        g_inspector->waitingForDebugger_ = false;
+        if (g_SetConnectCallBack != nullptr) {
+            g_SetConnectCallBack(true);
+        }
+        for (auto& info : g_inspector->infoBuffer_) {
+            g_inspector->connectServer_->SendMessage(info.second);
+        }
+    }
+}
+
+void OnOpenMessage(const std::string& message)
+{
+    if (message.find(OPEN_MESSAGE, 0) != std::string::npos) {
+        if (g_inspector->setSwitchStatus_ != nullptr) {
+            LOGI("layoutOpen start");
+            g_inspector->setSwitchStatus_(true);
+        }
+    }
+}
+
 void OnMessage(const std::string& message)
 {
     std::lock_guard<std::mutex> lock(g_connectMutex);
@@ -55,21 +78,9 @@ void OnMessage(const std::string& message)
     LOGI("ConnectServer OnMessage: %{public}s", message.c_str());
     if (g_inspector != nullptr && g_inspector->connectServer_ != nullptr) {
         g_inspector->ideMsgQueue_.push(message);
-        if (message.find(CONNECTED_MESSAGE, 0) != std::string::npos) {
-            g_inspector->waitingForDebugger_ = false;
-            if (g_SetConnectCallBack != nullptr) {
-                g_SetConnectCallBack(true);
-            }
-            for (auto& info : g_inspector->infoBuffer_) {
-                g_inspector->connectServer_->SendMessage(info.second);
-            }
-        }
-        if (message.find(OPEN_MESSAGE, 0) != std::string::npos) {
-            if (g_inspector->setSwitchStatus_ != nullptr) {
-                LOGI("layoutOpen start");
-                g_inspector->setSwitchStatus_(true);
-            }
-        }
+        OnConnectedMessage(message);
+
+        OnOpenMessage(message);
         if (message.find(CLOSE_MESSAGE, 0) != std::string::npos) {
             if (g_SetConnectCallBack != nullptr) {
                 g_SetConnectCallBack(false);
