@@ -254,7 +254,13 @@ void DebuggerImpl::NotifyPaused(std::optional<JSPtLocation> location, PauseReaso
 
     // Do something cleaning on paused
     CleanUpOnPaused();
+    GeneratePausedInfo(reason, hitBreakpoints, exception);
+}
 
+void DebuggerImpl::GeneratePausedInfo(PauseReason reason,
+                                      std::vector<std::string> &hitBreakpoints,
+                                      const Local<JSValueRef> &exception)
+{
     // Notify paused event
     std::vector<std::unique_ptr<CallFrame>> callFrames;
     if (!GenerateCallFrames(&callFrames, true)) {
@@ -1029,6 +1035,23 @@ DispatchResponse DebuggerImpl::SetAsyncCallStackDepth()
     return DispatchResponse::Fail("SetAsyncCallStackDepth not support now");
 }
 
+void DebuggerImpl::AddBreakpointDetail(const std::string &url,
+                                       int32_t lineNumber,
+                                       std::string *outId,
+                                       std::vector<std::unique_ptr<Location>> *outLocations)
+{
+    std::vector<PtScript *> ptScripts = MatchAllScripts(url);
+    for (auto ptScript : ptScripts) {
+        ScriptId scriptId = ptScript->GetScriptId();
+        std::unique_ptr<Location> location = std::make_unique<Location>();
+        location->SetScriptId(scriptId).SetLine(lineNumber).SetColumn(0);
+        outLocations->emplace_back(std::move(location));
+    }
+    BreakpointDetails metaData{lineNumber, 0, url};
+    *outId = BreakpointDetails::ToString(metaData);
+}
+
+
 DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams &params,
                                                   std::string *outId,
                                                   std::vector<std::unique_ptr<Location>> *outLocations,
@@ -1077,16 +1100,7 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
             return DispatchResponse::Fail("Breakpoint not found.");
         }
     }
-
-    std::vector<PtScript *> ptScripts = MatchAllScripts(url);
-    for (auto ptScript : ptScripts) {
-        ScriptId scriptId = ptScript->GetScriptId();
-        std::unique_ptr<Location> location = std::make_unique<Location>();
-        location->SetScriptId(scriptId).SetLine(lineNumber).SetColumn(0);
-        outLocations->emplace_back(std::move(location));
-    }
-    BreakpointDetails metaData{lineNumber, 0, url};
-    *outId = BreakpointDetails::ToString(metaData);
+    AddBreakpointDetail(url, lineNumber, outId, outLocations);
     return DispatchResponse::Ok();
 }
 
@@ -1490,13 +1504,28 @@ bool DebuggerImpl::GenerateCallFrame(CallFrame *callFrame, const FrameHandler *f
         LOG_DEBUGGER(ERROR) << "GenerateCallFrame: unknown offset: " << DebuggerApi::GetBytecodeOffset(frameHandler);
         return false;
     }
-
-    // scopeChain & this
     std::unique_ptr<RemoteObject> thisObj = std::make_unique<RemoteObject>();
-    thisObj->SetType(ObjectType::Undefined);
-
-    JSThread *thread = vm_->GetJSThread();
     std::vector<std::unique_ptr<Scope>> scopeChain;
+    DebuggerImpl::GenerateScopeChains(getScope, frameHandler, jsPandaFile, scopeChain, thisObj);
+    callFrame->SetCallFrameId(callFrameId)
+        .SetFunctionName(functionName)
+        .SetLocation(std::move(location))
+        .SetUrl(url)
+        .SetScopeChain(std::move(scopeChain))
+        .SetThis(std::move(thisObj));
+    return true;
+}
+    
+void DebuggerImpl::GenerateScopeChains(bool getScope,
+                                       const FrameHandler *frameHandler,
+                                       const JSPandaFile *jsPandaFile,
+                                       std::vector<std::unique_ptr<Scope>> &scopeChain,
+                                       std::unique_ptr<RemoteObject> &thisObj)
+{
+    // scopeChain & this
+    
+    thisObj->SetType(ObjectType::Undefined);
+    JSThread *thread = vm_->GetJSThread();
     if (getScope) {
         scopeChain.emplace_back(GetLocalScopeChain(frameHandler, &thisObj));
         // generate closure scopes
@@ -1512,14 +1541,6 @@ bool DebuggerImpl::GenerateCallFrame(CallFrame *callFrame, const FrameHandler *f
         }
         scopeChain.emplace_back(GetGlobalScopeChain(frameHandler));
     }
-
-    callFrame->SetCallFrameId(callFrameId)
-        .SetFunctionName(functionName)
-        .SetLocation(std::move(location))
-        .SetUrl(url)
-        .SetScopeChain(std::move(scopeChain))
-        .SetThis(std::move(thisObj));
-    return true;
 }
 
 std::unique_ptr<Scope> DebuggerImpl::GetLocalScopeChain(const FrameHandler *frameHandler,
