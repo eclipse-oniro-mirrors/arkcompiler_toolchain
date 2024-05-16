@@ -1128,6 +1128,16 @@ bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
     int32_t columnNumber = -1;
     auto condition = breakpoint.HasCondition() ? breakpoint.GetCondition() : std::optional<std::string> {};
 
+    ScriptId scriptId;
+    auto scriptFunc = [&scriptId](PtScript *script) -> bool {
+        scriptId = script->GetScriptId();
+        return true;
+    };
+    if (!MatchScripts(scriptFunc, url, ScriptMatchType::URL)) {
+        LOG_DEBUGGER(ERROR) << "GetPossibleAndSetBreakpointByUrl: Unknown url: " << url;
+        return false;
+    }
+
     std::vector<DebugInfoExtractor *> extractors = GetExtractors(url);
     for (auto extractor : extractors) {
         if (extractor == nullptr) {
@@ -1154,13 +1164,9 @@ bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
     
     BreakpointDetails bpMetaData {lineNumber, 0, url};
     std::string outId = BreakpointDetails::ToString(bpMetaData);
-    std::vector<PtScript *> ptScripts = MatchAllScripts(url);
-    for (auto ptScript : ptScripts) {
-        ScriptId scriptId = ptScript->GetScriptId();
-        std::unique_ptr<BreakpointReturnInfo> bpInfo = std::make_unique<BreakpointReturnInfo>();
-        bpInfo->SetScriptId(scriptId).SetLineNumber(lineNumber).SetColumnNumber(0).SetId(outId);
-        outLocations.emplace_back(std::move(bpInfo));
-    }
+    std::unique_ptr<BreakpointReturnInfo> bpInfo = std::make_unique<BreakpointReturnInfo>();
+    bpInfo->SetScriptId(scriptId).SetLineNumber(lineNumber).SetColumnNumber(0).SetId(outId);
+    outLocations.emplace_back(std::move(bpInfo));
 
     return true;
 }
