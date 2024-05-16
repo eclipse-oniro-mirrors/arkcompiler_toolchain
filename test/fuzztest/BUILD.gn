@@ -78,5 +78,6 @@ group("fuzztest") {
     "pttypesstringremoteobject_fuzzer:fuzztest",
     "pttypessymbolremoteobject_fuzzer:fuzztest",
     "wsserver:fuzztest",
+    "dispatcher:fuzztest",
   ]
 }
