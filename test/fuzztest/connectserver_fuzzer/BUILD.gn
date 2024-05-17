@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Copyright (c) 2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -21,6 +21,8 @@ ohos_fuzztest("ConnectServerFuzzTest") {
   module_out_path = toolchain_output_path
 
   fuzz_config_file = "$toolchain_root/test/fuzztest/connectserver_fuzzer"
+
+  resource_config_file = "$toolchain_root/test/resource/tooling/ohos_test.xml"
 
   sources = [ "connectserver_fuzzer.cpp" ]
 

@@ -17,15 +17,15 @@ import("//build/ohos.gni")
 import("//build/test.gni")
 
 ####################################fuzztest##################################
-ohos_fuzztest("ConnectServerStopServerFuzzTest") {
+ohos_fuzztest("ConnectServerRunServerSocketfd1FuzzTest") {
   module_out_path = toolchain_output_path
 
   fuzz_config_file =
-      "$toolchain_root/test/fuzztest/connectserverstopserver_fuzzer"
+      "$toolchain_root/test/fuzztest/connectserverrunserversocketfd1_fuzzer"
 
   resource_config_file = "$toolchain_root/test/resource/tooling/ohos_test.xml"
 
-  sources = [ "connectserverstopserver_fuzzer.cpp" ]
+  sources = [ "connectserverrunserversocketfd1_fuzzer.cpp" ]
 
   configs = [ "../../../:toolchain_test_config" ]
 
@@ -48,5 +48,5 @@ ohos_fuzztest("ConnectServerStopServerFuzzTest") {
 group("fuzztest") {
   testonly = true
   deps = []
-  deps += [ ":ConnectServerStopServerFuzzTest" ]
+  deps += [ ":ConnectServerRunServerSocketfd1FuzzTest" ]
 }

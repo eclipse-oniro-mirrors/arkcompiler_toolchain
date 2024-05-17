@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Copyright (c) 2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,27 +11,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+##################################hydra-fuzz###################################
 import("//arkcompiler/toolchain/test/test_helper.gni")
+import("//arkcompiler/toolchain/toolchain.gni")
 import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 
-####################################fuzztest##################################
-ohos_fuzztest("ConnectServerStopServerFuzzTest") {
+##################################fuzztest#####################################
+ohos_fuzztest("DispatcherDispatchFuzzTest") {
   module_out_path = toolchain_output_path
 
   fuzz_config_file =
-      "$toolchain_root/test/fuzztest/connectserverstopserver_fuzzer"
+      "$toolchain_root/test/fuzztest/dispatcher/dispatcherdispatch_fuzzer"
 
   resource_config_file = "$toolchain_root/test/resource/tooling/ohos_test.xml"
 
-  sources = [ "connectserverstopserver_fuzzer.cpp" ]
+  sources = [ "dispatcherdispatch_fuzzer.cpp" ]
 
-  configs = [ "../../../:toolchain_test_config" ]
+  configs = [ "../../../../:toolchain_test_config" ]
 
   deps = [
-    "../../../inspector:connectserver_debugger",
-    "../../../tooling:libark_ecma_debugger_set",
+    "$toolchain_root/inspector:ark_debugger",
+    "$toolchain_root/inspector:connectserver_debugger",
+    "$toolchain_root/tooling:libark_ecma_debugger_set",
   ]
 
   # hiviewdfx libraries
@@ -48,5 +51,5 @@ ohos_fuzztest("ConnectServerStopServerFuzzTest") {
 group("fuzztest") {
   testonly = true
   deps = []
-  deps += [ ":ConnectServerStopServerFuzzTest" ]
+  deps += [ ":DispatcherDispatchFuzzTest" ]
 }
