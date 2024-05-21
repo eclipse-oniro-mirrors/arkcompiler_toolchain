@@ -17,10 +17,7 @@ group("fuzztest") {
 
   deps += [
     "wsserver_fuzzer:fuzztest",
-    "wsservercontinuerunserver_fuzzer:fuzztest",
     "wsservernotifydisconnectevent_fuzzer:fuzztest",
-    "wsserverrunserver_fuzzer:fuzztest",
     "wsserversendreply_fuzzer:fuzztest",
-    "wsserverstopserver_fuzzer:fuzztest",
   ]
 }

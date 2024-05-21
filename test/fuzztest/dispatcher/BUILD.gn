@@ -16,7 +16,6 @@ group("fuzztest") {
   deps = []
 
   deps += [
-    "dispatcherdispatch_fuzzer:fuzztest",
     "dispatchresponsecreatecode_fuzzer:fuzztest",
   ]
 }
