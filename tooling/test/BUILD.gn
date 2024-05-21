@@ -262,96 +262,6 @@ host_unittest_action("DebuggerCInterpTest") {
   deps += hiviewdfx_deps
 }
 
-host_unittest_action("DebuggerClientTest") {
-  module_out_path = module_output_path
-
-  sources = [
-    # test file
-    "client_utils/test_list.cpp",
-    "client_utils/test_util.cpp",
-    "debugger_client_test.cpp",
-  ]
-
-  test_abc_dir = "/data/test/"
-  test_label = get_label_info(":${target_name}", "label_with_toolchain")
-  test_toolchain = get_label_info(test_label, "toolchain")
-  if (test_toolchain == host_toolchain || ark_standalone_build) {
-    test_abc_dir = rebase_path(target_out_dir)
-  }
-  test_js_dir = rebase_path(test_js_path)
-
-  defines = [
-    "DEBUGGER_ABC_DIR=\"${test_abc_dir}/\"",
-    "DEBUGGER_JS_DIR=\"${test_js_dir}\"",
-  ]
-
-  cflags_cc = [ "-Wno-gnu-zero-variadic-macro-arguments" ]
-
-  configs = [ ":debug_api_test" ]
-
-  deps = [
-    ":debugger_client_resource",
-    "$toolchain_root/tooling:libark_ecma_debugger",
-    "../client:libark_client",
-  ]
-
-  # hiviewdfx libraries
-  external_deps = hiviewdfx_ext_deps
-  external_deps += [
-    "cJSON:cjson_static",
-    "icu:shared_icui18n",
-    "icu:shared_icuuc",
-  ]
-  deps += hiviewdfx_deps
-
-  external_deps += [ "ets_runtime:libark_jsruntime" ]
-}
-
-host_unittest_action("DebuggerCIntClientTest") {
-  module_out_path = module_output_path
-
-  sources = [
-    # test file
-    "client_utils/test_list.cpp",
-    "client_utils/test_util.cpp",
-    "debugger_cint_client_test.cpp",
-  ]
-
-  cflags_cc = [ "-Wno-gnu-zero-variadic-macro-arguments" ]
-
-  test_abc_dir = "/data/test/"
-  test_label = get_label_info(":${target_name}", "label_with_toolchain")
-  test_toolchain = get_label_info(test_label, "toolchain")
-  if (test_toolchain == host_toolchain || ark_standalone_build) {
-    test_abc_dir = rebase_path(target_out_dir)
-  }
-  test_js_dir = rebase_path(test_js_path)
-
-  defines = [
-    "DEBUGGER_ABC_DIR=\"${test_abc_dir}/\"",
-    "DEBUGGER_JS_DIR=\"${test_js_dir}\"",
-  ]
-
-  configs = [ ":debug_api_test" ]
-
-  deps = [
-    ":debugger_client_resource",
-    "$toolchain_root/tooling:libark_ecma_debugger",
-    "../client:libark_client",
-  ]
-
-  # hiviewdfx libraries
-  external_deps = hiviewdfx_ext_deps
-  external_deps += [
-    "cJSON:cjson_static",
-    "icu:shared_icui18n",
-    "icu:shared_icuuc",
-  ]
-  deps += hiviewdfx_deps
-
-  external_deps += [ "ets_runtime:libark_jsruntime" ]
-}
-
 group("debugger_entry_resource") {
   testonly = true
 
@@ -375,9 +285,7 @@ group("unittest") {
 
   # deps file
   deps = [
-    ":DebuggerCIntClientTest",
     ":DebuggerCInterpTest",
-    ":DebuggerClientTest",
     ":DebuggerEntryTest",
     ":DebuggerTest",
   ]
@@ -388,9 +296,7 @@ group("host_unittest") {
 
   # deps file
   deps = [
-    ":DebuggerCIntClientTestAction",
     ":DebuggerCInterpTestAction",
-    ":DebuggerClientTestAction",
     ":DebuggerEntryTestAction",
     ":DebuggerTestAction",
   ]
