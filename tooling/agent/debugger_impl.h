@@ -232,6 +232,16 @@ private:
         return recordName;
     }
 
+    void RemoveUrlFromParsedSet(std::string &url)
+    {
+        parsedFileNames_.erase(url);
+    }
+
+    bool IsUrlFoundInParsedSet(std::string &url)
+    {
+        return parsedFileNames_.find(url) != parsedFileNames_.end();
+    }
+
     class Frontend {
     public:
         explicit Frontend(ProtocolChannel *channel) : channel_(channel) {}
@@ -283,6 +293,7 @@ private:
     JsDebuggerManager::SingleStepperFunc stepperFunc_ {nullptr};
     JsDebuggerManager::ReturnNativeFunc returnNative_ {nullptr};
     std::vector<std::string> debuggerExtendedProtocols_ {};
+    CUnorderedSet<std::string> parsedFileNames_ {};
 
     friend class JSPtHooks;
     friend class test::TestHooks;
