@@ -15,7 +15,5 @@ group("fuzztest") {
   testonly = true
   deps = []
 
-  deps += [
-    "dispatchresponsecreatecode_fuzzer:fuzztest",
-  ]
+  deps += [ "dispatchresponsecreatecode_fuzzer:fuzztest" ]
 }
