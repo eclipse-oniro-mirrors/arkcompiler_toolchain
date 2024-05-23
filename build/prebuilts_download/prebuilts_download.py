@@ -94,14 +94,12 @@ def _copy_url(args, task_id, url, local_file, code_dir, unzip_dir, unzip_filenam
     # download files
     download_buffer_size = 32768
     progress.console.log('Requesting {}'.format(url))
-    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-    modes = stat.S_IWUSR | stat.S_IRUSR
     try:
         response = urlopen(url)
     except urllib.error.HTTPError as e:
         progress.console.log("Failed to open {}, HTTPError: {}".format(url, e.code), style='red')
     progress.update(task_id, total=int(response.info()["Content-length"]))
-    with os.fdopen(os.open(local_file, flags, modes), 'wb') as dest_file:
+    with open(local_file, "wb") as dest_file:
         progress.start_task(task_id)
         for data in iter(partial(response.read, download_buffer_size), b""):
             dest_file.write(data)
