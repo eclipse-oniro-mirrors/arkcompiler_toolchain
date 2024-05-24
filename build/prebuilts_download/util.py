@@ -58,6 +58,8 @@ def read_file(input_file):
 # Write json file data
 def write_json_file(output_file, content, check_changes=False):
     file_dir = os.path.dirname(os.path.abspath(output_file))
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    modes = stat.S_IWUSR | stat.S_IRUSR
     if not os.path.exists(file_dir):
         os.makedirs(file_dir, exist_ok=True)
 
@@ -66,7 +68,7 @@ def write_json_file(output_file, content, check_changes=False):
     else:
         changed = True
     if changed is True:
-        with open(output_file, 'w') as output_f:
+        with os.fdopen(os.open(output_file, flags, modes), 'w') as output_f:
             json.dump(content, output_f, sort_keys=True, indent=2)
 
 
@@ -88,10 +90,12 @@ def __check_changes(output_file, content):
 # Write file data
 def write_file(output_file, content):
     file_dir = os.path.dirname(os.path.abspath(output_file))
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+    modes = stat.S_IWUSR | stat.S_IRUSR
     if not os.path.exists(file_dir):
         os.makedirs(file_dir, exist_ok=True)
 
-    with open(output_file, 'w') as output_f:
+    with os.fdopen(os.open(output_file, flags, modes), 'w') as output_f:
         output_f.write(content)
     if output_file.endswith('.gni') or output_file.endswith('.gn'):
         # Call gn format to make the output gn file prettier.
