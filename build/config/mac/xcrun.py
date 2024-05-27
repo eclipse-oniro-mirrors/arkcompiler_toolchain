@@ -22,8 +22,10 @@ if __name__ == '__main__':
         os.environ['DEVELOPER_DIR'] = args.developer_dir
 
     rv = subprocess.check_call(['xcrun'] + unknown_args)
+    flags = os.O_RDWR | os.O_CREAT | os.O_EXCL
+    modes = stat.S_IWUSR | stat.S_IRUSR
     if rv == 0 and args.stamp:
         if os.path.exists(args.stamp):
             os.unlink(args.stamp)
-    with open(args.stamp, 'w+') as fp:
+    with os.fdopen(os.open(args.stamp, flags, modes), 'w+') as fp:
         sys.exit(rv)
