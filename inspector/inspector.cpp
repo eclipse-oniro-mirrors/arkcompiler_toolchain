@@ -176,18 +176,9 @@ bool InitializeInspector(
     return true;
 }
 
-bool InitializeArkFunctions()
-{
-    // no need to initialize again in case of multi-instance
-    if (g_hasArkFuncsInited) {
-        return true;
-    }
-
-    std::unique_lock<std::shared_mutex> lock(g_mutex);
-    if (g_hasArkFuncsInited) {
-        return true;
-    }
 #if !defined(IOS_PLATFORM)
+bool InitializeArkFunctionsOthers()
+{
     g_initializeDebugger = reinterpret_cast<InitializeDebugger>(
         GetArkDynFunction("InitializeDebugger"));
     if (g_initializeDebugger == nullptr) {
@@ -224,7 +215,11 @@ bool InitializeArkFunctions()
         ResetServiceLocked(g_vm, true);
         return false;
     }
+    return true;
+}
 #else
+bool InitializeArkFunctionsIOS()
+{
     using namespace panda::ecmascript;
     g_initializeDebugger = reinterpret_cast<InitializeDebugger>(&tooling::InitializeDebugger);
     g_uninitializeDebugger = reinterpret_cast<UninitializeDebugger>(&tooling::UninitializeDebugger);
@@ -232,11 +227,33 @@ bool InitializeArkFunctions()
     g_onMessage = reinterpret_cast<OnMessage>(&tooling::OnMessage);
     g_getDispatchStatus = reinterpret_cast<GetDispatchStatus>(&tooling::GetDispatchStatus);
     g_processMessage = reinterpret_cast<ProcessMessage>(&tooling::ProcessMessage);
+    return true;
+}
+#endif
+
+bool InitializeArkFunctions()
+{
+    // no need to initialize again in case of multi-instance
+    if (g_hasArkFuncsInited) {
+        return true;
+    }
+
+    std::unique_lock<std::shared_mutex> lock(g_mutex);
+    if (g_hasArkFuncsInited) {
+        return true;
+    }
+#if !defined(IOS_PLATFORM)
+    if (!InitializeArkFunctionsOthers()) {
+        return false;
+    }
+#else
+    InitializeArkFunctionsIOS()
 #endif
 
     g_hasArkFuncsInited = true;
     return true;
 }
+
 } // namespace
 
 void Inspector::OnMessage(std::string&& msg)

@@ -42,6 +42,9 @@ public:
                             std::string_view entryPoint = "func_main_0");
     bool NotifySingleStep(const JSPtLocation &location);
     void NotifyPaused(std::optional<JSPtLocation> location, PauseReason reason);
+    void GeneratePausedInfo(PauseReason reason,
+                           std::vector<std::string> &hitBreakpoints,
+                           const Local<JSValueRef> &exception);
     bool NotifyNativeOut();
     void NotifyHandleProtocolCommand();
     void NotifyNativeCalling(const void *nativeAddress);
@@ -49,6 +52,8 @@ public:
     void NotifyReturnNative();
     bool IsUserCode(const void *nativeAddress);
     void SetDebuggerState(DebuggerState debuggerState);
+    void AddBreakpointDetail(const std::string &url, int32_t lineNumber,
+        std::string *outId, std::vector<std::unique_ptr<Location>> *outLocations);
 
     DispatchResponse ContinueToLocation(const ContinueToLocationParams &params);
     DispatchResponse Enable(const EnableParams &params, UniqueDebuggerId *id);
@@ -197,6 +202,8 @@ private:
     std::optional<std::string> CmptEvaluateValue(CallFrameId callFrameId, const std::string &expression,
         std::unique_ptr<RemoteObject> *result);
     bool GenerateCallFrame(CallFrame *callFrame, const FrameHandler *frameHandler, CallFrameId frameId, bool getScope);
+    void GenerateScopeChains(bool getScope, const FrameHandler *frameHandler, const JSPandaFile *jsPandaFile,
+        std::vector<std::unique_ptr<Scope>> &scopeChain, std::unique_ptr<RemoteObject> &thisObj);
     void SaveCallFrameHandler(const FrameHandler *frameHandler);
     std::unique_ptr<Scope> GetLocalScopeChain(const FrameHandler *frameHandler,
         std::unique_ptr<RemoteObject> *thisObj);
