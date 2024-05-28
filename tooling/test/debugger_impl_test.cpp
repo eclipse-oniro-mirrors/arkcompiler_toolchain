@@ -1225,13 +1225,13 @@ HWTEST_F_L0(DebuggerImplTest, DispatcherImplCallFunctionOn)
     auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
 
     std::string msg = std::string() + R"({"id":0,"method":"Debugger.callFunctionOn","params":{
-        "callFrameId":"0","functionDeclaration":0}})";
+        "callFrameId":"0", "functionDeclaration":0}})";
     DispatchRequest request(msg);
     dispatcherImpl->CallFunctionOn(request);
     ASSERT_TRUE(outStrForCallbackCheck.find("wrong params") != std::string::npos);
 
     msg = std::string() + R"({"id":0,"method":"Debugger.callFunctionOn","params":{
-        "callFrameId":"0","functionDeclaration":"test"}})";
+        "callFrameId":"0", "functionDeclaration":"test"}})";
     DispatchRequest request1(msg);
     dispatcherImpl->CallFunctionOn(request1);
     ASSERT_TRUE(outStrForCallbackCheck.find("Unsupport eval now") == std::string::npos);
