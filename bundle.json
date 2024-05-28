@@ -34,7 +34,8 @@
                 "libuv",
                 "cJSON",
                 "openssl",
-		"zlib"
+                "zlib",
+                "ffrt"
             ],
             "third_party": []
         },
