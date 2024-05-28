@@ -534,6 +534,8 @@ class ArkPy:
 
         self.build_for_gn_target(
             out_path, gn_args, self.ARG_DICT["target"]["test262"]["gn_targets_depend_on"], log_file_name)
+        if run_pgo and 'debug' in out_path:
+            args_to_test262_cmd += " --disenable-force-gc"
         test262_cmd = self.get_test262_cmd(gn_args, out_path, x64_out_path, aot_mode, run_pgo, args_to_test262_cmd)
         test262_log_path = os.path.join(out_path, log_file_name)
         str_to_test262_log = "================================\ntest262_time: {0}\ntest262_target: {1}\n\n".format(
