@@ -46,7 +46,6 @@ private:
     NO_MOVE_SEMANTIC(JSPtHooks);
 
     DebuggerImpl *debugger_ {nullptr};
-    bool firstTime_ {true};
 };
 }  // namespace panda::ecmascript::tooling
 #endif  // ECMASCRIPT_TOOLING_BACKEND_JS_PT_HOOKS_H
