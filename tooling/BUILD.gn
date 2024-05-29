@@ -60,6 +60,7 @@ ohos_source_set("libark_ecma_debugger_set") {
 
   public_configs = [ ":ark_ecma_debugger_config" ]
 
+  defines = []
   deps = []
   external_deps = []
   if (is_arkui_x && target_os == "ios") {
@@ -73,6 +74,11 @@ ohos_source_set("libark_ecma_debugger_set") {
     public_external_deps = [ "zlib:libz" ]
   } else {
     external_deps += [ "zlib:libz" ]
+  }
+
+  if (is_ohos && is_standard_system && !is_arkui_x) {
+    defines += [ "ENABLE_FFRT_INTERFACES" ]
+    external_deps += [ "ffrt:libffrt" ]
   }
 
   # hiviewdfx libraries
