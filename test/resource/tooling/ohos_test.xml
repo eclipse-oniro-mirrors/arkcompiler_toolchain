@@ -95,6 +95,7 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/common_func.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/watch_variable.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/smart_stepInto.abc -> /data/test" src="out"/>
+            <option name="push" value="test/test/libark_client.so -> /data/test" src="out"/>
         </preparer>
     </target>
     <target name="DebuggerCIntClientTest">
@@ -120,6 +121,7 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/common_func.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/watch_variable.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/smart_stepInto.abc -> /data/test" src="out"/>
+            <option name="push" value="test/test/libark_client.so -> /data/test" src="out"/>
         </preparer>
     </target>
     <target name="DebuggerTest">
