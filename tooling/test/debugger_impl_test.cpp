@@ -1175,7 +1175,8 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpoint__0
     DispatchRequest request(msg);
 
     dispatcherImpl->Dispatch(request);
-    EXPECT_STREQ(outStrForCallbackCheck.c_str(), R"({"id":0,"result":{"locations":[]}})");
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(),
+        R"({"id":0,"result":{"locations":[{"lineNumber":3,"columnNumber":20,"id":"invalid","scriptId":0}]}})");
     if (protocolChannel) {
         delete protocolChannel;
         protocolChannel = nullptr;
