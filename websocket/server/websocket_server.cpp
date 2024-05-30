@@ -172,7 +172,6 @@ bool WebSocketServer::InitTcpWebSocket(int port, uint32_t timeoutLimit)
         CloseServerSocket();
         return false;
     }
-    // set send and recv timeout
     if (!SetWebSocketTimeOut(serverFd_, timeoutLimit)) {
         LOGE("InitTcpWebSocket SetWebSocketTimeOut failed");
         CloseServerSocket();
@@ -182,13 +181,9 @@ bool WebSocketServer::InitTcpWebSocket(int port, uint32_t timeoutLimit)
     addrSin.sin_family = AF_INET;
     addrSin.sin_port = htons(port);
     addrSin.sin_addr.s_addr = INADDR_ANY;
-    if (bind(serverFd_, reinterpret_cast<struct sockaddr*>(&addrSin), sizeof(addrSin)) != SOCKET_SUCCESS) {
-        LOGE("InitTcpWebSocket bind failed, errno = %{public}d", errno);
-        CloseServerSocket();
-        return false;
-    }
-    if (listen(serverFd_, 1) != SOCKET_SUCCESS) {
-        LOGE("InitTcpWebSocket listen failed, errno = %{public}d", errno);
+    if (bind(serverFd_, reinterpret_cast<struct sockaddr*>(&addrSin), sizeof(addrSin)) != SOCKET_SUCCESS ||
+        listen(serverFd_, 1) != SOCKET_SUCCESS) {
+        LOGE("InitTcpWebSocket bind/listen failed, errno = %{public}d", errno);
         CloseServerSocket();
         return false;
     }
