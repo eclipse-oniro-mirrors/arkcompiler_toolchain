@@ -35,7 +35,7 @@ extern "C" {
 bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
     int32_t instanceId, const DebuggerPostTask& debuggerPostTask, int port);
 
-bool StartDebugForSocketpair(int tid, int socketfd, void* vm, const DebuggerPostTask& debuggerPostTask);
+bool StartDebugForSocketpair(int tid, int socketfd);
 
 bool InitializeDebuggerForSocketpair(void* vm);
 

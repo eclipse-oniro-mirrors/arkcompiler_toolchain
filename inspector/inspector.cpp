@@ -313,9 +313,10 @@ bool InitializeDebuggerForSocketpair(void* vm)
 }
 
 // for ohos platform.
-bool StartDebugForSocketpair(int tid, int socketfd, void* vm, const DebuggerPostTask& debuggerPostTask)
+bool StartDebugForSocketpair(int tid, int socketfd)
 {
     LOGI("StartDebugForSocketpair, tid = %{private}d, socketfd = %{private}d", tid, socketfd);
+    void* vm = GetEcmaVM(tid);
     if (vm == nullptr) {
         LOGD("VM has already been destroyed");
         return false;
@@ -324,7 +325,7 @@ bool StartDebugForSocketpair(int tid, int socketfd, void* vm, const DebuggerPost
     if (!InitializeDebuggerForSocketpair(vm)) {
         return false;
     }
-
+    const DebuggerPostTask &debuggerPostTask = GetDebuggerPostTask(tid);
     DebugInfo debugInfo = {socketfd};
     if (!InitializeInspector(vm, debuggerPostTask, debugInfo, tid)) {
         LOGE("Initialize inspector failed");
