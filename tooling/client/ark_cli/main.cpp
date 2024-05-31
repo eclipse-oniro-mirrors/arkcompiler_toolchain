@@ -33,8 +33,14 @@ void ReleaseHandle([[maybe_unused]] uv_async_t *releaseHandle)
 {
     uv_close(reinterpret_cast<uv_handle_t*>(g_inputSignal), [](uv_handle_t* handle) {
         if (handle != nullptr) {
-            delete reinterpret_cast<uv_async_t*>(handle);
-            handle = nullptr;
+            uv_async_t* asyncHandle = reinterpret_cast<uv_async_t*>(handle);
+            if (asyncHandle->data != nullptr) {
+                free(asyncHandle->data);
+                asyncHandle->data = nullptr;
+            }
+            delete asyncHandle;
+            asyncHandle = nullptr;
+            g_inputSignal = nullptr;
         }
     });
 
@@ -42,6 +48,7 @@ void ReleaseHandle([[maybe_unused]] uv_async_t *releaseHandle)
         if (handle != nullptr) {
             delete reinterpret_cast<uv_async_t*>(handle);
             handle = nullptr;
+            g_socketSignal = nullptr;
         }
     });
 
@@ -49,6 +56,7 @@ void ReleaseHandle([[maybe_unused]] uv_async_t *releaseHandle)
         if (handle != nullptr) {
             delete reinterpret_cast<uv_async_t*>(handle);
             handle = nullptr;
+            g_releaseHandle = nullptr;
         }
     });
 
