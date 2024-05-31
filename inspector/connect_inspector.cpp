@@ -122,11 +122,12 @@ void SetSwitchCallBack(const std::function<void(bool)>& setSwitchStatus,
     const std::function<void(int32_t)>& createLayoutInfo, int32_t instanceId)
 {
     std::lock_guard<std::mutex> lock(g_connectMutex);
-    if (g_inspector != nullptr) {
-        g_inspector->setSwitchStatus_ = setSwitchStatus;
-        g_inspector->createLayoutInfo_ = createLayoutInfo;
-        g_inspector->instanceId_ = instanceId;
+    if (g_inspector == nullptr) {
+        g_inspector = std::make_unique<ConnectInspector>();
     }
+    g_inspector->setSwitchStatus_ = setSwitchStatus;
+    g_inspector->createLayoutInfo_ = createLayoutInfo;
+    g_inspector->instanceId_ = instanceId;
 }
 
 void SetConnectCallback(const std::function<void(bool)>& callback)
@@ -262,9 +263,10 @@ void SendProfilerMessage(const std::string &message)
 void SetProfilerCallback(const std::function<void(bool)> &setArkUIStateProfilerStatus)
 {
     std::lock_guard<std::mutex> lock(g_connectMutex);
-    if (g_inspector != nullptr) {
-        g_inspector->setArkUIStateProfilerStatus_ = setArkUIStateProfilerStatus;
+    if (g_inspector == nullptr) {
+        g_inspector = std::make_unique<ConnectInspector>();
     }
+    g_inspector->setArkUIStateProfilerStatus_ = setArkUIStateProfilerStatus;
 }
 
 } // OHOS::ArkCompiler::Toolchain
