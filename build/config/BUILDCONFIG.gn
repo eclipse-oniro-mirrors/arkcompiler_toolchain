@@ -17,6 +17,7 @@ declare_args() {
   run_with_qemu = false
   so_dir_for_qemu = "common/common/libc"
   enable_lto_O0 = false
+  disable_force_gc = false
 }
 
 check_mac_system_and_cpu_script =
