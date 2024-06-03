@@ -198,7 +198,8 @@ class ArkPy:
                 "description":
                     "Compile and run unittest of arkcompiler target. "
                     "Add --keep-going=N to keep running unittest when errors occured less than N. "
-                    "Add --gn-args=\"run_with_qemu=true\" to command when running unittest of non-host type with qemu.",
+                    "Add --gn-args=\"run_with_qemu=true\" \
+                    \"disable_force_gc=true\" to command when running unittest of non-host type with qemu.",
                 "gn_targets_depend_on": ["unittest_packages"],
             },
             "workload": {
