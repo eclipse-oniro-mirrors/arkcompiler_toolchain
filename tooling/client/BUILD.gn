@@ -83,6 +83,5 @@ ohos_shared_library("libark_client") {
     external_deps += [ "hilog:libhilog" ]
   }
 
-  subsystem_name = "arkcompiler"
-  part_name = "toolchain"
+  subsystem_name = "test"
 }

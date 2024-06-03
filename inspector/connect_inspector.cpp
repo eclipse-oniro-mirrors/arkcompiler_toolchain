@@ -26,7 +26,7 @@ static constexpr char REQUEST_MESSAGE[] = "tree";
 static constexpr char STOPDEBUGGER_MESSAGE[] = "stopDebugger";
 static constexpr char OPEN_ARKUI_STATE_PROFILER[] = "ArkUIStateProfilerOpen";
 static constexpr char CLOSE_ARKUI_STATE_PROFILER[] = "ArkUIStateProfilerClose";
-std::function<void(bool)> g_SetConnectCallBack;
+std::function<void(bool)> g_setConnectCallBack;
 
 void* HandleDebugManager(void* const server)
 {
@@ -48,8 +48,8 @@ void OnConnectedMessage(const std::string& message)
 {
     if (message.find(CONNECTED_MESSAGE, 0) != std::string::npos) {
         g_inspector->waitingForDebugger_ = false;
-        if (g_SetConnectCallBack != nullptr) {
-            g_SetConnectCallBack(true);
+        if (g_setConnectCallBack != nullptr) {
+            g_setConnectCallBack(true);
         }
         for (auto& info : g_inspector->infoBuffer_) {
             g_inspector->connectServer_->SendMessage(info.second);
@@ -82,8 +82,8 @@ void OnMessage(const std::string& message)
 
         OnOpenMessage(message);
         if (message.find(CLOSE_MESSAGE, 0) != std::string::npos) {
-            if (g_SetConnectCallBack != nullptr) {
-                g_SetConnectCallBack(false);
+            if (g_setConnectCallBack != nullptr) {
+                g_setConnectCallBack(false);
             }
             if (g_inspector->setSwitchStatus_ != nullptr) {
                 LOGI("layoutClose start");
@@ -122,16 +122,17 @@ void SetSwitchCallBack(const std::function<void(bool)>& setSwitchStatus,
     const std::function<void(int32_t)>& createLayoutInfo, int32_t instanceId)
 {
     std::lock_guard<std::mutex> lock(g_connectMutex);
-    if (g_inspector != nullptr) {
-        g_inspector->setSwitchStatus_ = setSwitchStatus;
-        g_inspector->createLayoutInfo_ = createLayoutInfo;
-        g_inspector->instanceId_ = instanceId;
+    if (g_inspector == nullptr) {
+        g_inspector = std::make_unique<ConnectInspector>();
     }
+    g_inspector->setSwitchStatus_ = setSwitchStatus;
+    g_inspector->createLayoutInfo_ = createLayoutInfo;
+    g_inspector->instanceId_ = instanceId;
 }
 
 void SetConnectCallback(const std::function<void(bool)>& callback)
 {
-    g_SetConnectCallBack = callback;
+    g_setConnectCallBack = callback;
 }
 
 // stop debugger but the application continues to run
@@ -262,9 +263,10 @@ void SendProfilerMessage(const std::string &message)
 void SetProfilerCallback(const std::function<void(bool)> &setArkUIStateProfilerStatus)
 {
     std::lock_guard<std::mutex> lock(g_connectMutex);
-    if (g_inspector != nullptr) {
-        g_inspector->setArkUIStateProfilerStatus_ = setArkUIStateProfilerStatus;
+    if (g_inspector == nullptr) {
+        g_inspector = std::make_unique<ConnectInspector>();
     }
+    g_inspector->setArkUIStateProfilerStatus_ = setArkUIStateProfilerStatus;
 }
 
 } // OHOS::ArkCompiler::Toolchain
