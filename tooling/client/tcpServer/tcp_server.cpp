@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "tooling/client/tcpServer/tcpServer.h"
+#include "tooling/client/tcpServer/tcp_server.h"
 
 #include "tooling/client/utils/utils.h"
 

@@ -23,7 +23,7 @@
 
 #include "tooling/client/utils/cli_command.h"
 #include "tooling/client/session/session.h"
-#include "tooling/client/tcpServer/tcpServer.h"
+#include "tooling/client/tcpServer/tcp_server.h"
 #include "manager/message_manager.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
@@ -179,7 +179,7 @@ int Main(const int argc, const char** argv)
         g_releaseHandle = new uv_async_t;
         uv_async_init(g_loop, g_releaseHandle, reinterpret_cast<uv_async_cb>(ReleaseHandle));
 
-        if (argc == 3) { // 3: three parameters
+        if (argc > 2 && strcmp(argv[2], "server") == 0) { // 2: two parameters
             if (TcpServer::getInstance().CreateTcpServer(argv)) {
                 LOGE("arkdb create TcpServer failed");
                 return -1;

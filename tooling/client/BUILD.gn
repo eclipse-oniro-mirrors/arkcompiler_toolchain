@@ -40,7 +40,7 @@ ohos_source_set("libark_client_set") {
     "manager/variable_manager.cpp",
     "manager/watch_manager.cpp",
     "session/session.cpp",
-    "tcpServer/tcpServer.cpp",
+    "tcpServer/tcp_server.cpp",
     "utils/cli_command.cpp",
     "utils/utils.cpp",
   ]
