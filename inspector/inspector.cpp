@@ -124,7 +124,7 @@ void SendReply(const void* vm, const std::string& message)
     }
 }
 
-void ResetServiceLocked(void *vm, bool isCloseHandle)
+void ResetServiceLocked(void *vm, [[maybe_unused]]bool isCloseHandle)
 {
     auto iter = g_inspectors.find(vm);
     if (iter != g_inspectors.end() && iter->second != nullptr &&
@@ -385,12 +385,6 @@ bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
     return true;
 }
 
-void WaitForDebugger(void* vm)
-{
-    LOGI("WaitForDebugger");
-    g_waitForDebugger(vm);
-}
-
 void StopDebug(void* vm)
 {
     LOGI("StopDebug start, vm is %{private}p", vm);
@@ -402,7 +396,7 @@ void StopDebug(void* vm)
 #ifdef PANDA_TARGET_MACOS
     uint32_t tid = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(g_inspectors[vm]->tid_));
 #else
-    uint32_t tid = g_inspectors[vm]->tid_;
+    uint32_t tid = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(g_inspectors[vm]->tid_));
 #endif
     auto debuggerInfo = g_debuggerInfo.find(tid);
     if (debuggerInfo != g_debuggerInfo.end()) {
