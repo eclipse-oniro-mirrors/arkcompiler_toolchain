@@ -43,8 +43,6 @@ void StopDebug(void* vm);
 
 void StopOldDebug(int tid, const std::string& componentName);
 
-void WaitForDebugger(void* vm);
-
 void StoreDebuggerInfo(int tid, void* vm, const DebuggerPostTask& debuggerPostTask);
 
 #if __cplusplus

@@ -34,7 +34,10 @@ websocket_deps = []
 websocket_ext_deps = hiviewdfx_ext_deps
 
 if (is_arkui_x && target_os == "ios") {
-  websocket_ext_deps += [ "openssl:libcrypto_static" ]
+  websocket_deps += [
+    "$ark_third_party_root/openssl:libcrypto_static",
+    "$ark_third_party_root/bounds_checking_function:libsec_static",
+   ]
 } else if (is_mingw) {
   websocket_ext_deps += [ "openssl:libcrypto_restool" ]
 } else {
