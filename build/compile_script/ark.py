@@ -539,13 +539,16 @@ class ArkPy:
     def build_for_test262(self, out_path, gn_args: list, arg_list: list, log_file_name: str,
      aot_mode: bool, run_pgo=False, run_jit=False):
         args_to_test262_cmd = ""
+        if len(arg_list) >= 1 and "disable-force-gc" in arg_list[-1]:
+            args_to_test262_cmd += "--disable-force-gc "
+            arg_list.pop()
         if len(arg_list) == 0:
-            args_to_test262_cmd = "--es2021 all"
+            args_to_test262_cmd += "--es2021 all"
         elif len(arg_list) == 1:
             if ".js" in arg_list[0]:
-                args_to_test262_cmd = "--file test262/data/test_es2021/{}".format(arg_list[0])
+                args_to_test262_cmd += "--file test262/data/test_es2021/{}".format(arg_list[0])
             else:
-                args_to_test262_cmd = "--dir test262/data/test_es2021/{}".format(arg_list[0])
+                args_to_test262_cmd += "--dir test262/data/test_es2021/{}".format(arg_list[0])
         else:
             print("\033[92m\"test262\" not support multiple additional arguments.\033[0m\n".format())
             sys.exit(0)
