@@ -192,6 +192,7 @@ class ArkPy:
                 "flags": ["test262", "test-262", "test_262", "262test", "262-test", "262_test", "262"],
                 "description": "Compile arkcompiler target and run test262 with arkcompiler target.",
                 "gn_targets_depend_on": ["default"],
+                "arm64_gn_targets_depend_on": ["ark_js_packages"],
             },
             "unittest": {
                 "flags": ["unittest", "ut"],
@@ -565,9 +566,11 @@ class ArkPy:
             self.build_for_gn_target(
                 x64_out_path, ['target_os="linux"', 'target_cpu="x64"', 'is_debug=false'],
                 self.ARG_DICT["target"]["test262"]["gn_targets_depend_on"], log_file_name)
-
-        self.build_for_gn_target(
-            out_path, gn_args, self.ARG_DICT["target"]["test262"]["gn_targets_depend_on"], log_file_name)
+            self.build_for_gn_target(
+                out_path, gn_args, self.ARG_DICT["target"]["test262"]["arm64_gn_targets_depend_on"], log_file_name)
+        else:
+            self.build_for_gn_target(
+                out_path, gn_args, self.ARG_DICT["target"]["test262"]["gn_targets_depend_on"], log_file_name)
         if run_jit:
             test262_cmd = self.get_test262_jit_cmd(gn_args, out_path, x64_out_path, args_to_test262_cmd)
         else:
