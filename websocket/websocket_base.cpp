@@ -158,7 +158,6 @@ void WebSocketBase::CloseConnectionSocket(ConnectionCloseReason status, SocketSt
 #if defined(OHOS_PLATFORM)
     shutdown(connectionFd_, SHUT_RDWR);
 #endif
-    LOGI("connectionFd_ is %d", connectionFd_);
     close(connectionFd_);
     connectionFd_ = -1;
     socketState_ = newSocketState;
@@ -203,7 +202,6 @@ void WebSocketBase::SendCloseFrame(CloseStatusCode status)
 void WebSocketBase::CloseConnection(CloseStatusCode status, SocketState newSocketState)
 {
     LOGI("Close connection, status = %{public}d", static_cast<int>(status));
-    SendCloseFrame(status);
     // can close connection right after sending back close frame.
     CloseConnectionSocket(ConnectionCloseReason::CLOSE, newSocketState);
 }
