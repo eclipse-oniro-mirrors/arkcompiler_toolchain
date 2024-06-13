@@ -88,6 +88,7 @@ if (current_cpu == "arm64") {
   _binary_prefix = "aarch64-linux-android"
   aosp_toolchain_root = "$arm64_aosp_toolchain_root"
   aosp_libgcc_file = "$aosp_toolchain_root/lib/gcc/aarch64-linux-android/${_aosp_toolchain_detailed_version}/libgcc.a"
+  aosp_log_file = "$aosp_ndk_root/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/30/liblog.so"
 }
 
 aosp_libcpp_root = "$aosp_ndk_root/sources/cxx-stl/llvm-libc++"

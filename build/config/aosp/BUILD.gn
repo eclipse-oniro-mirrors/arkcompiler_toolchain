@@ -81,6 +81,7 @@ config("runtime_config") {
   # absolute because the linker will look inside the sysroot if it's not.
   libs += [
     rebase_path(aosp_libgcc_file),
+    rebase_path(aosp_log_file),
     "c",
   ]
 
