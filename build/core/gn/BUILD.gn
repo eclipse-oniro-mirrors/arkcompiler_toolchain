@@ -53,6 +53,7 @@ group("ets_runtime") {
       "$js_root/ecmascript/compiler:ark_aot_compiler",
       "$js_root/ecmascript/compiler:ark_stub_compiler",
       "$js_root/ecmascript/compiler:libark_jsoptimizer",
+      "$js_root/ecmascript/compiler:stub.an",
       "$js_root/ecmascript/pgo_profiler/prof_dump:profdump",
     ]
   }

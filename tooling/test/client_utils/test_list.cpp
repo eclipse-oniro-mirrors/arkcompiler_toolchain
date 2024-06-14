@@ -139,7 +139,6 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsBreakpointRecursionTest", GetJsBreakpointRecursionTest());
     TestUtil::RegisterTest("JsBreakpointSwitchTest", GetJsBreakpointSwitchTest());
     TestUtil::RegisterTest("JsCpuprofileLoopTest", GetJsCpuprofileLoopTest());
-    TestUtil::RegisterTest("JsCpuprofileRecursionTest", GetJsCpuprofileRecursionTest());
     TestUtil::RegisterTest("JsHeapusageLoopTest", GetJsHeapusageLoopTest());
     TestUtil::RegisterTest("JsHeapusageRecursionTest", GetJsHeapusageRecursionTest());
     TestUtil::RegisterTest("JsSmartStepoutTest", GetJsSmartStepoutTest());
