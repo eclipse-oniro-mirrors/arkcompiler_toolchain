@@ -281,7 +281,7 @@ void DebuggerImpl::GeneratePausedInfo(PauseReason reason,
     } else {
         paused.SetCallFrames(std::move(callFrames)).SetReason(reason).SetHitBreakpoints(std::move(hitBreakpoints));
     }
-    if (reason == EXCEPTION && exception->IsError()) {
+    if (reason == EXCEPTION && exception->IsError(vm_)) {
         std::unique_ptr<RemoteObject> tmpException = RemoteObject::FromTagged(vm_, exception);
         paused.SetData(std::move(tmpException));
     }
@@ -1750,7 +1750,7 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
         }
         Local<JSValueRef> name = JSValueRef::Undefined(vm_);
         if (varName == "4funcObj") {
-            if (value->IsFunction()) {
+            if (value->IsFunction(vm_)) {
                 auto funcName = Local<FunctionRef>(value)->GetName(vm_)->ToString();
                 name = StringRef::NewFromUtf8(vm_, funcName.c_str());
             } else {

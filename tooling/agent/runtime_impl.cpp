@@ -166,7 +166,7 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
         return DispatchResponse::Fail("Unknown object id");
     }
     Local<JSValueRef> value = Local<JSValueRef>(vm_, iter->second);
-    if (value.IsEmpty() || !value->IsObject()) {
+    if (value.IsEmpty() || !value->IsObject(vm_)) {
         LOG_DEBUGGER(ERROR) << "RuntimeImpl::GetProperties should a js object";
         return DispatchResponse::Fail("Not a object");
     }
@@ -178,86 +178,86 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
             skipProto = true;
         }
     }
-    if (value->IsArrayBuffer()) {
+    if (value->IsArrayBuffer(vm_)) {
         Local<ArrayBufferRef> arrayBufferRef(value);
         AddTypedArrayRefs(arrayBufferRef, outPropertyDesc);
-    } else if (value->IsSharedArrayBuffer()) {
+    } else if (value->IsSharedArrayBuffer(vm_)) {
         Local<ArrayBufferRef> arrayBufferRef(value);
         AddSharedArrayBufferRefs(arrayBufferRef, outPropertyDesc);
-    } else if (value->IsProxy()) {
+    } else if (value->IsProxy(vm_)) {
         GetProxyValue(value, outPropertyDesc);
         return DispatchResponse::Ok();
-    } else if (value->IsMapIterator()) {
+    } else if (value->IsMapIterator(vm_)) {
         GetMapIteratorValue(value, outPropertyDesc);
-    } else if (value->IsSetIterator()) {
+    } else if (value->IsSetIterator(vm_)) {
         GetSetIteratorValue(value, outPropertyDesc);
-    } else if (value->IsJSPrimitiveRef() && value->IsJSPrimitiveNumber()) {
+    } else if (value->IsJSPrimitiveRef(vm_) && value->IsJSPrimitiveNumber(vm_)) {
         GetPrimitiveNumberValue(value, outPropertyDesc);
-    } else if (value->IsJSPrimitiveRef() && value->IsJSPrimitiveString()) {
+    } else if (value->IsJSPrimitiveRef(vm_) && value->IsJSPrimitiveString(vm_)) {
         GetPrimitiveStringValue(value, outPropertyDesc);
-    } else if (value->IsJSPrimitiveRef() && value->IsJSPrimitiveBoolean()) {
+    } else if (value->IsJSPrimitiveRef(vm_) && value->IsJSPrimitiveBoolean(vm_)) {
         GetPrimitiveBooleanValue(value, outPropertyDesc);
-    } else if (value->IsGeneratorFunction()) {
+    } else if (value->IsGeneratorFunction(vm_)) {
         GetGeneratorFunctionValue(value, outPropertyDesc);
-    } else if (value->IsGeneratorObject()) {
+    } else if (value->IsGeneratorObject(vm_)) {
         GetGeneratorObjectValue(value, outPropertyDesc);
-    } else if (value->IsJSNumberFormat()) {
+    } else if (value->IsJSNumberFormat(vm_)) {
         GetNumberFormatValue(value, outPropertyDesc);
-    } else if (value->IsJSCollator()) {
+    } else if (value->IsJSCollator(vm_)) {
         GetCollatorValue(value, outPropertyDesc);
-    } else if (value->IsJSDateTimeFormat()) {
+    } else if (value->IsJSDateTimeFormat(vm_)) {
         GetDateTimeFormatValue(value, outPropertyDesc);
-    } else if (value->IsMap()) {
+    } else if (value->IsMap(vm_)) {
         GetMapValue(value, outPropertyDesc);
-    } else if (value->IsWeakMap()) {
+    } else if (value->IsWeakMap(vm_)) {
         GetWeakMapValue(value, outPropertyDesc);
-    } else if (value->IsRegExp()) {
+    } else if (value->IsRegExp(vm_)) {
         GetRegExpValue(value, outPropertyDesc);
-    } else if (value->IsSet()) {
+    } else if (value->IsSet(vm_)) {
         GetSetValue(value, outPropertyDesc);
-    } else if (value->IsWeakSet()) {
+    } else if (value->IsWeakSet(vm_)) {
         GetWeakSetValue(value, outPropertyDesc);
-    } else if (value->IsDataView()) {
+    } else if (value->IsDataView(vm_)) {
         GetDataViewValue(value, outPropertyDesc);
-    } else if (value->IsHashMap()) {
+    } else if (value->IsHashMap(vm_)) {
         GetHashMapValue(value, outPropertyDesc);
-    } else if (value->IsHashSet()) {
+    } else if (value->IsHashSet(vm_)) {
         GetHashSetValue(value, outPropertyDesc);
-    } else if (value->IsLightWeightMap()) {
+    } else if (value->IsLightWeightMap(vm_)) {
         GetLightWeightMapValue(value, outPropertyDesc);
-    } else if (value->IsLightWeightSet()) {
+    } else if (value->IsLightWeightSet(vm_)) {
         GetLightWeightSetValue(value, outPropertyDesc);
-    } else if (value->IsLinkedList()) {
+    } else if (value->IsLinkedList(vm_)) {
         GetLinkedListValue(value, outPropertyDesc);
-    } else if (value->IsList()) {
+    } else if (value->IsList(vm_)) {
         GetListValue(value, outPropertyDesc);
-    } else if (value->IsPlainArray()) {
+    } else if (value->IsPlainArray(vm_)) {
         GetPlainArrayValue(value, outPropertyDesc);
-    }  else if (value->IsTreeMap()) {
+    }  else if (value->IsTreeMap(vm_)) {
         GetTreeMapValue(value, outPropertyDesc);
-    } else if (value->IsTreeSet()) {
+    } else if (value->IsTreeSet(vm_)) {
         GetTreeSetValue(value, outPropertyDesc);
-    } else if (value->IsArrayList()) {
+    } else if (value->IsArrayList(vm_)) {
         GetArrayListValue(value, outPropertyDesc);
         GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
         return DispatchResponse::Ok();
-    } else if (value->IsDeque()) {
+    } else if (value->IsDeque(vm_)) {
         GetDequeValue(value, outPropertyDesc);
         GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
         return DispatchResponse::Ok();
-    } else if (value->IsQueue()) {
+    } else if (value->IsQueue(vm_)) {
         GetQueueValue(value, outPropertyDesc);
         GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
         return DispatchResponse::Ok();
-    } else if (value->IsStack()) {
+    } else if (value->IsStack(vm_)) {
         GetStackValue(value, outPropertyDesc);
         GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
         return DispatchResponse::Ok();
-    } else if (value->IsVector()) {
+    } else if (value->IsVector(vm_)) {
         GetVectorValue(value, outPropertyDesc);
         GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
         return DispatchResponse::Ok();
-    } else if (value->IsPromise()) {
+    } else if (value->IsPromise(vm_)) {
         GetPromiseValue(value, outPropertyDesc);
         GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
         return DispatchResponse::Ok();
@@ -286,7 +286,7 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
         }
         if (debuggerProperty->HasValue()) {
             Local<JSValueRef> vValue = jsProperty.GetValue(vm_);
-            if (vValue->IsObject()) {
+            if (vValue->IsObject(vm_)) {
                 debuggerProperty->GetValue()->SetObjectId(curObjectId_);
                 properties_[curObjectId_++] = Global<JSValueRef>(vm_, vValue);
             }
@@ -377,7 +377,7 @@ void RuntimeImpl::AddTypedArrayRef(Local<ArrayBufferRef> arrayBufferRef, int32_t
 
 void RuntimeImpl::CacheObjectIfNeeded(Local<JSValueRef> valRef, RemoteObject *remoteObj)
 {
-    if (valRef->IsObject()) {
+    if (valRef->IsObject(vm_)) {
         remoteObj->SetObjectId(curObjectId_);
         properties_[curObjectId_++] = Global<JSValueRef>(vm_, valRef);
     }
@@ -390,7 +390,7 @@ void RuntimeImpl::GetProtoOrProtoType(Local<JSValueRef> value, bool isOwn, bool 
         return;
     }
     // Get Function ProtoOrHClass
-    if (value->IsConstructor()) {
+    if (value->IsConstructor(vm_)) {
         Local<JSValueRef> prototype = Local<FunctionRef>(value)->GetFunctionPrototype(vm_);
         std::unique_ptr<RemoteObject> protoObj = RemoteObject::FromTagged(vm_, prototype);
         CacheObjectIfNeeded(prototype, protoObj.get());
@@ -428,7 +428,7 @@ void RuntimeImpl::GetAdditionalProperties(Local<JSValueRef> value,
     // JSObject::MAX_ELEMENT_INDEX which is equal to std::numeric_limits<uint32_t>::max(). (42,9496,7295)
     static const int32_t widthStrExprMaxElementIndex = 10;
 
-    if (value->IsTypedArray()) {
+    if (value->IsTypedArray(vm_)) {
         Local<TypedArrayRef> localTypedArrayRef(value);
         uint32_t lengthTypedArray = localTypedArrayRef->ArrayLength(vm_);
         if (lengthTypedArray > lengthTypedArrayLimit) {
@@ -529,7 +529,7 @@ void RuntimeImpl::GetGeneratorFunctionValue(Local<JSValueRef> value,
     Local<JSValueRef> jsValueRef;
     Local<GeneratorFunctionRef> genFuncRef = value->ToObject(vm_);
     if (!genFuncRef.IsEmpty()) {
-        jsValueRef = BooleanRef::New(vm_, genFuncRef->IsGenerator());
+        jsValueRef = BooleanRef::New(vm_, genFuncRef->IsGenerator(vm_));
         SetKeyValue(jsValueRef, outPropertyDesc, "[[IsGenerator]]");
     }
 }
@@ -609,7 +609,7 @@ void RuntimeImpl::GetWeakMapValue(Local<JSValueRef> value,
     Local<JSValueRef> jsValueRef = ArrayRef::New(vm_, size);
     for (int32_t i = 0; i < len; i++) {
         Local<JSValueRef> jsKey = weakMapRef->GetKey(vm_, i);
-        if (jsKey->IsHole() || !jsKey->IsObject()) {
+        if (jsKey->IsHole() || !jsKey->IsObject(vm_)) {
             continue;
         }
         Local<JSValueRef> jsValue = weakMapRef->GetValue(vm_, i);
@@ -637,7 +637,7 @@ void RuntimeImpl::GetSetValue(Local<JSValueRef> value,
         Local<JSValueRef> elementRef = setRef->GetValue(vm_, i);
         if (elementRef->IsHole()) {
             continue;
-        } else if (elementRef->IsObject()) {
+        } else if (elementRef->IsObject(vm_)) {
             Local<ObjectRef> objRef = ObjectRef::New(vm_);
             objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), elementRef);
             DebuggerApi::AddInternalProperties(vm_, objRef, ArkInternalValueType::Entry, internalObjects_);
@@ -703,7 +703,7 @@ void RuntimeImpl::GetRegExpValue(Local<JSValueRef> value,
     SetKeyValue(jsValueRef, outPropertyDesc, "unicode");
     jsValueRef = regExpRef->IsStick(vm_);
     SetKeyValue(jsValueRef, outPropertyDesc, "sticky");
-    std::string strFlags = regExpRef->GetOriginalFlags();
+    std::string strFlags = regExpRef->GetOriginalFlags(vm_);
     jsValueRef = StringRef::NewFromUtf8(vm_, strFlags.c_str());
     SetKeyValue(jsValueRef, outPropertyDesc, "flags");
     std::string strSource = regExpRef->GetOriginalSource(vm_)->ToString();
