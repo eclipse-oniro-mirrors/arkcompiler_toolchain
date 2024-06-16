@@ -38,7 +38,7 @@ Local<JSValueRef> DebuggerExecutor::DebuggerGetValue(JsiRuntimeCallInfo *runtime
         return JSValueRef::Undefined(vm);
     }
     Local<JSValueRef> name = runtimeCallInfo->GetCallArgRef(0);
-    if (!name->IsString()) {
+    if (!name->IsString(vm)) {
         return JSValueRef::Undefined(vm);
     }
     Local<JSValueRef> isThrow = runtimeCallInfo->GetCallArgRef(1);
@@ -69,7 +69,7 @@ Local<JSValueRef> DebuggerExecutor::DebuggerSetValue(JsiRuntimeCallInfo *runtime
         return JSValueRef::Undefined(vm);
     }
     Local<JSValueRef> name = runtimeCallInfo->GetCallArgRef(0);
-    if (!name->IsString()) {
+    if (!name->IsString(vm)) {
         return JSValueRef::Undefined(vm);
     }
     Local<JSValueRef> value = runtimeCallInfo->GetCallArgRef(1);

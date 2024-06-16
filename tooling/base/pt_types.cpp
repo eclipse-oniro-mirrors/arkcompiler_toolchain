@@ -117,119 +117,119 @@ std::unique_ptr<RemoteObject> RemoteObject::FromTagged(const EcmaVM *ecmaVm, Loc
 {
     if (tagged->IsNull() || tagged->IsUndefined() ||
         tagged->IsBoolean() || tagged->IsNumber() ||
-        tagged->IsBigInt()) {
+        tagged->IsBigInt(ecmaVm)) {
         return std::make_unique<PrimitiveRemoteObject>(ecmaVm, tagged);
     }
-    if (tagged->IsString()) {
+    if (tagged->IsString(ecmaVm)) {
         return std::make_unique<StringRemoteObject>(ecmaVm, Local<StringRef>(tagged));
     }
-    if (tagged->IsSymbol()) {
+    if (tagged->IsSymbol(ecmaVm)) {
         return std::make_unique<SymbolRemoteObject>(ecmaVm, Local<SymbolRef>(tagged));
     }
     // proxy must be placed in front of all object types
-    if (tagged->IsProxy()) {
+    if (tagged->IsProxy(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Proxy, ObjectSubType::Proxy);
     }
-    if (tagged->IsGeneratorFunction()) {
+    if (tagged->IsGeneratorFunction(ecmaVm)) {
         return std::make_unique<GeneratorFunctionRemoteObject>(ecmaVm, tagged);
     }
-    if (tagged->IsFunction()) {
+    if (tagged->IsFunction(ecmaVm)) {
         return std::make_unique<FunctionRemoteObject>(ecmaVm, tagged);
     }
     if (tagged->IsArray(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Array, ObjectSubType::Array);
     }
-    if (tagged->IsRegExp()) {
+    if (tagged->IsRegExp(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Regexp, ObjectSubType::Regexp);
     }
-    if (tagged->IsDate()) {
+    if (tagged->IsDate(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Date, ObjectSubType::Date);
     }
-    if (tagged->IsMap()) {
+    if (tagged->IsMap(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Map, ObjectSubType::Map);
     }
-    if (tagged->IsWeakMap()) {
+    if (tagged->IsWeakMap(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Weakmap, ObjectSubType::Weakmap);
     }
-    if (tagged->IsSet()) {
+    if (tagged->IsSet(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Set, ObjectSubType::Set);
     }
-    if (tagged->IsWeakSet()) {
+    if (tagged->IsWeakSet(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Weakset, ObjectSubType::Weakset);
     }
-    if (tagged->IsDataView()) {
+    if (tagged->IsDataView(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Dataview, ObjectSubType::Dataview);
     }
-    if (tagged->IsError()) {
+    if (tagged->IsError(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Error, ObjectSubType::Error);
     }
-    if (tagged->IsPromise()) {
+    if (tagged->IsPromise(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Promise, ObjectSubType::Promise);
     }
-    if (tagged->IsArrayBuffer()) {
+    if (tagged->IsArrayBuffer(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Arraybuffer,
             ObjectSubType::Arraybuffer);
     }
-    if (tagged->IsArrayIterator()) {
+    if (tagged->IsArrayIterator(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::ArrayIterator);
     }
-    if (tagged->IsStringIterator()) {
+    if (tagged->IsStringIterator(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::StringIterator);
     }
-    if (tagged->IsSetIterator()) {
+    if (tagged->IsSetIterator(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::SetIterator,
             ObjectSubType::Iterator);
     }
-    if (tagged->IsMapIterator()) {
+    if (tagged->IsMapIterator(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::MapIterator,
             ObjectSubType::Iterator);
     }
-    if (tagged->IsArrayList()) {
+    if (tagged->IsArrayList(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
-    if (tagged->IsDeque()) {
+    if (tagged->IsDeque(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
-    if (tagged->IsHashMap()) {
+    if (tagged->IsHashMap(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
-    if (tagged->IsHashSet()) {
+    if (tagged->IsHashSet(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
-    if (tagged->IsLightWeightMap()) {
+    if (tagged->IsLightWeightMap(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
-    if (tagged->IsLightWeightSet()) {
+    if (tagged->IsLightWeightSet(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
-    if (tagged->IsLinkedList()) {
+    if (tagged->IsLinkedList(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
-    if (tagged->IsList()) {
+    if (tagged->IsList(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
-    if (tagged->IsPlainArray()) {
+    if (tagged->IsPlainArray(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
-    if (tagged->IsQueue()) {
+    if (tagged->IsQueue(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
-    if (tagged->IsStack()) {
+    if (tagged->IsStack(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
-    if (tagged->IsTreeMap()) {
+    if (tagged->IsTreeMap(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
-    if (tagged->IsTreeSet()) {
+    if (tagged->IsTreeSet(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
-    if (tagged->IsVector()) {
+    if (tagged->IsVector(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
-    if (tagged->IsObject()) {
+    if (tagged->IsObject(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
-    if (tagged->IsNativePointer()) {
+    if (tagged->IsNativePointer(ecmaVm)) {
         return std::make_unique<ObjectRemoteObject>(ecmaVm, tagged, ObjectClassName::Object);
     }
     std::unique_ptr<RemoteObject> object = std::make_unique<RemoteObject>();
@@ -237,12 +237,12 @@ std::unique_ptr<RemoteObject> RemoteObject::FromTagged(const EcmaVM *ecmaVm, Loc
     return object;
 }
 
-void RemoteObject::AppendingHashToDescription(const EcmaVM *ecmaVM, Local<JSValueRef> tagged,
+void RemoteObject::AppendingHashToDescription(const EcmaVM *ecmaVm, Local<JSValueRef> tagged,
     std::string &description)
 {
-    if (ecmaVM->GetJsDebuggerManager() != nullptr && ecmaVM->GetJsDebuggerManager()->IsObjHashDisplayEnabled()) {
+    if (ecmaVm->GetJsDebuggerManager() != nullptr && ecmaVm->GetJsDebuggerManager()->IsObjHashDisplayEnabled()) {
         JSHandle<JSTaggedValue> valueHandle = JSNApiHelper::ToJSHandle(tagged);
-        int32_t hash = DebuggerApi::GetObjectHash(ecmaVM, valueHandle);
+        int32_t hash = DebuggerApi::GetObjectHash(ecmaVm, valueHandle);
         if (hash != 0) {
             std::stringstream stringstream;
             stringstream << std::hex << hash;
@@ -258,13 +258,13 @@ void RemoteObject::AppendingSendableDescription(Local<JSValueRef> tagged, std::s
     }
 }
 
-std::string RemoteObject::ResolveClassNameToDescription(const EcmaVM *ecmaVM, Local<JSValueRef> tagged)
+std::string RemoteObject::ResolveClassNameToDescription(const EcmaVM *ecmaVm, Local<JSValueRef> tagged)
 {
     std::string description = RemoteObject::ObjectDescription;
-    if (!tagged->IsObject()) {
+    if (!tagged->IsObject(ecmaVm)) {
         return description;
     }
-    DebuggerApi::GetObjectClassName(ecmaVM, tagged, description);
+    DebuggerApi::GetObjectClassName(ecmaVm, tagged, description);
     return description.empty() ? RemoteObject::ObjectDescription : description;
 }
 
@@ -290,7 +290,7 @@ PrimitiveRemoteObject::PrimitiveRemoteObject(const EcmaVM *ecmaVm, Local<JSValue
             .SetPreviewValue(description)
             .SetUnserializableValue(description)
             .SetDescription(description);
-    } else if (tagged->IsBigInt()) {
+    } else if (tagged->IsBigInt(ecmaVm)) {
         std::string description = tagged->ToString(ecmaVm)->ToString() + "n";  // n : BigInt literal postfix
         SetType(ObjectType::Bigint)
             .SetValue(tagged)
@@ -380,151 +380,151 @@ ObjectRemoteObject::ObjectRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> t
 std::string ObjectRemoteObject::DescriptionForObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged)
 {
     // proxy must be placed in front of all object types
-    if (tagged->IsProxy()) {
+    if (tagged->IsProxy(ecmaVm)) {
         return RemoteObject::ProxyDescription;
     }
     if (tagged->IsArray(ecmaVm)) {
         return DescriptionForArray(ecmaVm, Local<ArrayRef>(tagged));
     }
-    if (tagged->IsRegExp()) {
+    if (tagged->IsRegExp(ecmaVm)) {
         return DescriptionForRegexp(ecmaVm, Local<RegExpRef>(tagged));
     }
-    if (tagged->IsDate()) {
+    if (tagged->IsDate(ecmaVm)) {
         return DescriptionForDate(ecmaVm, Local<DateRef>(tagged));
     }
-    if (tagged->IsMap()) {
+    if (tagged->IsMap(ecmaVm)) {
         return DescriptionForMap(ecmaVm, Local<MapRef>(tagged));
     }
-    if (tagged->IsWeakMap()) {
+    if (tagged->IsWeakMap(ecmaVm)) {
         return DescriptionForWeakMap(ecmaVm, Local<WeakMapRef>(tagged));
     }
-    if (tagged->IsSet()) {
+    if (tagged->IsSet(ecmaVm)) {
         return DescriptionForSet(ecmaVm, Local<SetRef>(tagged));
     }
-    if (tagged->IsWeakSet()) {
+    if (tagged->IsWeakSet(ecmaVm)) {
         return DescriptionForWeakSet(ecmaVm, Local<WeakSetRef>(tagged));
     }
-    if (tagged->IsDataView()) {
+    if (tagged->IsDataView(ecmaVm)) {
         return DescriptionForDataView(Local<DataViewRef>(tagged));
     }
-    if (tagged->IsError()) {
+    if (tagged->IsError(ecmaVm)) {
         return DescriptionForError(ecmaVm, tagged);
     }
-    if (tagged->IsPromise()) {
+    if (tagged->IsPromise(ecmaVm)) {
         return RemoteObject::PromiseDescription;
     }
-    if (tagged->IsArrayIterator()) {
+    if (tagged->IsArrayIterator(ecmaVm)) {
         return DescriptionForArrayIterator();
     }
-    if (tagged->IsStringIterator()) {
+    if (tagged->IsStringIterator(ecmaVm)) {
         return RemoteObject::StringIteratorDescription;
     }
-    if (tagged->IsSetIterator()) {
+    if (tagged->IsSetIterator(ecmaVm)) {
         return DescriptionForSetIterator();
     }
-    if (tagged->IsMapIterator()) {
+    if (tagged->IsMapIterator(ecmaVm)) {
         return DescriptionForMapIterator();
     }
-    if (tagged->IsArrayBuffer()) {
+    if (tagged->IsArrayBuffer(ecmaVm)) {
         return DescriptionForArrayBuffer(ecmaVm, Local<ArrayBufferRef>(tagged));
     }
-    if (tagged->IsSharedArrayBuffer()) {
+    if (tagged->IsSharedArrayBuffer(ecmaVm)) {
         return DescriptionForSharedArrayBuffer(ecmaVm, Local<ArrayBufferRef>(tagged));
     }
-    if (tagged->IsUint8Array()) {
+    if (tagged->IsUint8Array(ecmaVm)) {
         return DescriptionForUint8Array(ecmaVm, Local<TypedArrayRef>(tagged));
     }
-    if (tagged->IsInt8Array()) {
+    if (tagged->IsInt8Array(ecmaVm)) {
         return DescriptionForInt8Array(ecmaVm, Local<TypedArrayRef>(tagged));
     }
-    if (tagged->IsInt16Array()) {
+    if (tagged->IsInt16Array(ecmaVm)) {
         return DescriptionForInt16Array(ecmaVm, Local<TypedArrayRef>(tagged));
     }
-    if (tagged->IsInt32Array()) {
+    if (tagged->IsInt32Array(ecmaVm)) {
         return DescriptionForInt32Array(ecmaVm, Local<TypedArrayRef>(tagged));
     }
-    if (tagged->IsJSPrimitiveRef() && tagged->IsJSPrimitiveNumber()) {
+    if (tagged->IsJSPrimitiveRef(ecmaVm) && tagged->IsJSPrimitiveNumber(ecmaVm)) {
         return DescriptionForPrimitiveNumber(ecmaVm, tagged);
     }
-    if (tagged->IsJSPrimitiveRef() && tagged->IsJSPrimitiveString()) {
+    if (tagged->IsJSPrimitiveRef(ecmaVm) && tagged->IsJSPrimitiveString(ecmaVm)) {
         return DescriptionForPrimitiveString(ecmaVm, tagged);
     }
-    if (tagged->IsJSPrimitiveRef() && tagged->IsJSPrimitiveBoolean()) {
+    if (tagged->IsJSPrimitiveRef(ecmaVm) && tagged->IsJSPrimitiveBoolean(ecmaVm)) {
         return DescriptionForPrimitiveBoolean(ecmaVm, tagged);
     }
-    if (tagged->IsGeneratorObject()) {
+    if (tagged->IsGeneratorObject(ecmaVm)) {
         return DescriptionForGeneratorObject(ecmaVm, tagged);
     }
-    if (tagged->IsWeakRef()) {
+    if (tagged->IsWeakRef(ecmaVm)) {
         return DescriptionForWeakRef();
     }
-    if (tagged->IsJSLocale()) {
+    if (tagged->IsJSLocale(ecmaVm)) {
         return DescriptionForJSLocale();
     }
-    if (tagged->IsJSDateTimeFormat()) {
+    if (tagged->IsJSDateTimeFormat(ecmaVm)) {
         return DescriptionForDateTimeFormat();
     }
-    if (tagged->IsJSRelativeTimeFormat()) {
+    if (tagged->IsJSRelativeTimeFormat(ecmaVm)) {
         return DescriptionForJSRelativeTimeFormat();
     }
-    if (tagged->IsJSIntl()) {
+    if (tagged->IsJSIntl(ecmaVm)) {
         return RemoteObject::JSIntlDescription;
     }
-    if (tagged->IsJSNumberFormat()) {
+    if (tagged->IsJSNumberFormat(ecmaVm)) {
         return DescriptionForNumberFormat();
     }
-    if (tagged->IsJSCollator()) {
+    if (tagged->IsJSCollator(ecmaVm)) {
         return DescriptionForCollator();
     }
-    if (tagged->IsJSPluralRules()) {
+    if (tagged->IsJSPluralRules(ecmaVm)) {
         return DescriptionForPluralRules();
     }
-    if (tagged->IsJSListFormat()) {
+    if (tagged->IsJSListFormat(ecmaVm)) {
         return DescriptionForJSListFormat();
     }
-    if (tagged->IsArrayList()) {
+    if (tagged->IsArrayList(ecmaVm)) {
         return DescriptionForArrayList();
     }
-    if (tagged->IsDeque()) {
+    if (tagged->IsDeque(ecmaVm)) {
         return DescriptionForDeque();
     }
-    if (tagged->IsHashMap()) {
+    if (tagged->IsHashMap(ecmaVm)) {
         return DescriptionForHashMap();
     }
-    if (tagged->IsHashSet()) {
+    if (tagged->IsHashSet(ecmaVm)) {
         return DescriptionForHashSet();
     }
-    if (tagged->IsLightWeightMap()) {
+    if (tagged->IsLightWeightMap(ecmaVm)) {
         return DescriptionForLightWeightMap();
     }
-    if (tagged->IsLightWeightSet()) {
+    if (tagged->IsLightWeightSet(ecmaVm)) {
         return DescriptionForLightWeightSet();
     }
-    if (tagged->IsLinkedList()) {
+    if (tagged->IsLinkedList(ecmaVm)) {
         return DescriptionForLinkedList();
     }
-    if (tagged->IsList()) {
+    if (tagged->IsList(ecmaVm)) {
         return DescriptionForList();
     }
-    if (tagged->IsPlainArray()) {
+    if (tagged->IsPlainArray(ecmaVm)) {
         return DescriptionForPlainArray();
     }
-    if (tagged->IsQueue()) {
+    if (tagged->IsQueue(ecmaVm)) {
         return DescriptionForQueue();
     }
-    if (tagged->IsStack()) {
+    if (tagged->IsStack(ecmaVm)) {
         return DescriptionForStack();
     }
-    if (tagged->IsTreeMap()) {
+    if (tagged->IsTreeMap(ecmaVm)) {
         return DescriptionForTreeMap();
     }
-    if (tagged->IsTreeSet()) {
+    if (tagged->IsTreeSet(ecmaVm)) {
         return DescriptionForTreeSet();
     }
-    if (tagged->IsVector()) {
+    if (tagged->IsVector(ecmaVm)) {
         return DescriptionForVector();
     }
-    if (tagged->IsNativePointer()) {
+    if (tagged->IsNativePointer(ecmaVm)) {
         return DescriptionForNativePointer(Local<NativePointerRef>(tagged));
     }
     return ResolveClassNameToDescription(ecmaVm, tagged);
@@ -547,7 +547,7 @@ std::string ObjectRemoteObject::DescriptionForArray(const EcmaVM *ecmaVm, Local<
 std::string ObjectRemoteObject::DescriptionForRegexp(const EcmaVM *ecmaVm, Local<RegExpRef> tagged)
 {
     std::string regExpSource = tagged->GetOriginalSource(ecmaVm)->ToString();
-    std::string regExpFlags = tagged->GetOriginalFlags();
+    std::string regExpFlags = tagged->GetOriginalFlags(ecmaVm);
     return "/" + regExpSource + "/" + regExpFlags;
 }
 
@@ -575,9 +575,9 @@ std::string ObjectRemoteObject::DescriptionForMap(const EcmaVM *ecmaVm, Local<Ma
         }
 
         Local<JSValueRef> jsVValue = tagged->GetValue(ecmaVm, i);
-        if (jsVKey->IsObject()) {
+        if (jsVKey->IsObject(ecmaVm)) {
             description += "Object";
-        } else if (jsVKey->IsString()) {
+        } else if (jsVKey->IsString(ecmaVm)) {
             description += cPre + jsVKey->ToString(ecmaVm)->ToString() + cPre;
         } else {
             description += jsVKey->ToString(ecmaVm)->ToString();
@@ -585,9 +585,9 @@ std::string ObjectRemoteObject::DescriptionForMap(const EcmaVM *ecmaVm, Local<Ma
 
         description += " => ";
         // add Value
-        if (jsVValue->IsObject()) {
+        if (jsVValue->IsObject(ecmaVm)) {
             description += "Object";
-        } else if (jsVValue->IsString()) {
+        } else if (jsVValue->IsString(ecmaVm)) {
             description += cPre + jsVValue->ToString(ecmaVm)->ToString() + cPre;
         } else {
             description += jsVValue->ToString(ecmaVm)->ToString();
@@ -619,9 +619,9 @@ std::string ObjectRemoteObject::DescriptionForWeakMap(const EcmaVM *ecmaVm, Loca
             continue;
         }
         Local<JSValueRef> jsVValue = tagged->GetValue(ecmaVm, i);
-        if (jsVKey->IsObject()) {
+        if (jsVKey->IsObject(ecmaVm)) {
             description += "Object";
-        } else if (jsVKey->IsString()) {
+        } else if (jsVKey->IsString(ecmaVm)) {
             description += cPre + jsVKey->ToString(ecmaVm)->ToString() + cPre;
         } else {
             description += jsVKey->ToString(ecmaVm)->ToString();
@@ -629,9 +629,9 @@ std::string ObjectRemoteObject::DescriptionForWeakMap(const EcmaVM *ecmaVm, Loca
 
         description += " => ";
 
-        if (jsVValue->IsObject()) {
+        if (jsVValue->IsObject(ecmaVm)) {
             description += "Object";
-        } else if (jsVValue->IsString()) {
+        } else if (jsVValue->IsString(ecmaVm)) {
             description += cPre + jsVValue->ToString(ecmaVm)->ToString() + cPre;
         } else {
             description += jsVValue->ToString(ecmaVm)->ToString();
@@ -664,9 +664,9 @@ std::string ObjectRemoteObject::DescriptionForSet(const EcmaVM *ecmaVm, Local<Se
             continue;
         }
         // add Value
-        if (jsValue->IsObject()) {
+        if (jsValue->IsObject(ecmaVm)) {
             description += "Object";
-        } else if (jsValue->IsString()) {
+        } else if (jsValue->IsString(ecmaVm)) {
             description += cPre + jsValue->ToString(ecmaVm)->ToString() + cPre;
         } else {
             description += jsValue->ToString(ecmaVm)->ToString();
@@ -697,9 +697,9 @@ std::string ObjectRemoteObject::DescriptionForWeakSet(const EcmaVM *ecmaVm, Loca
         if (jsValue->IsHole()) {
             continue;
         }
-        if (jsValue->IsObject()) {
+        if (jsValue->IsObject(ecmaVm)) {
             description += "Object";
-        } else if (jsValue->IsString()) {
+        } else if (jsValue->IsString(ecmaVm)) {
             description += cPre + jsValue->ToString(ecmaVm)->ToString() + cPre;
         } else {
             description += jsValue->ToString(ecmaVm)->ToString();
@@ -1337,7 +1337,7 @@ std::unique_ptr<PropertyDescriptor> PropertyDescriptor::FromProperty(const EcmaV
     std::unique_ptr<PropertyDescriptor> debuggerProperty = std::make_unique<PropertyDescriptor>();
 
     std::string nameStr;
-    if (name->IsSymbol()) {
+    if (name->IsSymbol(ecmaVm)) {
         Local<SymbolRef> symbol(name);
         nameStr = "Symbol(" + Local<SymbolRef>(name)->GetDescription(ecmaVm)->ToString() + ")";
         debuggerProperty->symbol_ = RemoteObject::FromTagged(ecmaVm, name);
