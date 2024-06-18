@@ -54,7 +54,7 @@ void ProtocolHandler::ProcessCommand()
 {
     std::queue<std::string> dispatchingQueue;
     do {
-        DebuggerApi::SwitchThreadStateRunningOrNative(vm_, ThreadState::NATIVE);
+        DebuggerApi::DebuggerNativeScope nativeScope(vm_);
         {
             std::unique_lock<std::mutex> queueLock(requestLock_);
             if (requestQueue_.empty()) {
@@ -67,15 +67,17 @@ void ProtocolHandler::ProcessCommand()
         }
 
         isDispatchingMessage_ = true;
-        DebuggerApi::SwitchThreadStateRunningOrNative(vm_, ThreadState::RUNNING);
-        while (!dispatchingQueue.empty()) {
-            std::string msg = std::move(dispatchingQueue.front());
-            dispatchingQueue.pop();
+        {
+            DebuggerApi::DebuggerManagedScope managedScope(vm_);
+            while (!dispatchingQueue.empty()) {
+                std::string msg = std::move(dispatchingQueue.front());
+                dispatchingQueue.pop();
 
-            [[maybe_unused]] LocalScope scope(vm_);
-            auto exception = DebuggerApi::GetAndClearException(vm_);
-            dispatcher_.Dispatch(DispatchRequest(msg));
-            DebuggerApi::SetException(vm_, exception);
+                [[maybe_unused]] LocalScope scope(vm_);
+                auto exception = DebuggerApi::GetAndClearException(vm_);
+                dispatcher_.Dispatch(DispatchRequest(msg));
+                DebuggerApi::SetException(vm_, exception);
+            }
         }
         isDispatchingMessage_ = false;
     } while (true);
