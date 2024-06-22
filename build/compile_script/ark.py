@@ -302,7 +302,7 @@ class ArkPy:
         return False
     
     @staticmethod
-    def get_test262_cmd(gn_args, out_path, x64_out_path, aot_mode, run_pgo, args_to_test262_cmd):
+    def get_test262_cmd(gn_args, out_path, x64_out_path, aot_mode, run_pgo, enable_litecg, args_to_test262_cmd):
         if aot_mode:
             print("running test262 in AotMode\n")
             if any('target_cpu="arm64"' in arg for arg in gn_args):
@@ -341,6 +341,8 @@ class ArkPy:
                           " --ark-aot" \
                           " --ark-frontend=es2panda"\
                           "{2}".format(args_to_test262_cmd, out_path, " --run-pgo" if run_pgo else "")
+            if enable_litecg:
+                test262_cmd = test262_cmd + " --enable-litecg"
         else:
             print("running test262 in AsmMode\n")
             test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout 180000" \
@@ -372,6 +374,39 @@ class ArkPy:
                 " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu" \
                 ":../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
                 " --run-jit" \
+                " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
+                " --ark-frontend-binary=../../{1}/arkcompiler/ets_frontend/es2abc" \
+                " --merge-abc-binary=../../{1}/arkcompiler/ets_frontend/merge_abc" \
+                " --ark-frontend=es2panda"\
+                "{2}".format(args_to_test262_cmd, out_path, x64_out_path)
+        return test262_cmd
+    
+    @staticmethod
+    def get_test262_baseline_jit_cmd(gn_args, out_path, x64_out_path, args_to_test262_cmd):
+        print("running test262 in baseline JIT mode\n")
+        if any('target_cpu="arm64"' in arg for arg in gn_args):
+                test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout 400000" \
+                    " --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                    ":../../{1}/thirdparty/icu" \
+                    ":../../prebuilts/clang/ohos/linux-x86_64/llvm/lib/aarch64-linux-ohos" \
+                    ":../../{1}/thirdparty/bounds_checking_function" \
+                    ":../../{1}/arkcompiler/ets_runtime" \
+                    ":../../{1}/common/common/libc/lib" \
+                    " --ark-arch aarch64" \
+                    " --run-baseline-jit" \
+                    " --ark-arch-root=../../{1}/common/common/libc/" \
+                    " --ark-aot-tool=../../{2}/arkcompiler/ets_runtime/ark_aot_compiler" \
+                    " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
+                    " --ark-frontend-binary=../../{2}/arkcompiler/ets_frontend/es2abc" \
+                    " --merge-abc-binary=../../{2}/arkcompiler/ets_frontend/merge_abc" \
+                    " --ark-frontend=es2panda".format(args_to_test262_cmd, out_path, x64_out_path)
+        else:
+            test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout 400000" \
+                " --libs-dir ../../{1}/lib.unstripped/arkcompiler/ets_runtime" \
+                ":../../{1}/lib.unstripped/thirdparty/icu" \
+                ":../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                ":../../{1}/lib.unstripped/thirdparty/bounds_checking_function/" \
+                " --run-baseline-jit" \
                 " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
                 " --ark-frontend-binary=../../{1}/arkcompiler/ets_frontend/es2abc" \
                 " --merge-abc-binary=../../{1}/arkcompiler/ets_frontend/merge_abc" \
@@ -458,8 +493,9 @@ class ArkPy:
         help_msg += "\033[32mCommand template:\033[0m\n{}\n\n".format(
             "  python3 ark.py \033[92m[os_cpu].[mode] [gn_target] [option]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --aot] " \
-              "[none or --pgo] [none, file or dir] [option]\033[0m\n"
+              "[none or --pgo] [none or --litecg] [none, file or dir] [option]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --jit]\033[0m\n"
+            "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --baseline-jit]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [unittest] [option]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [regresstest] [none, file or dir] [option]\033[0m\n")
         # Command examples
@@ -469,8 +505,9 @@ class ArkPy:
             "  python3 ark.py \033[92mx64.release ark_js_vm es2panda\033[0m\n"
             "  python3 ark.py \033[92mx64.release ark_js_vm es2panda --clean\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262\033[0m\n"
-            "  python3 ark.py \033[92mx64.release test262 --aot --pgo\033[0m\n"
+            "  python3 ark.py \033[92mx64.release test262 --aot --pgo --litecg\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262 --jit\033[0m\n"
+            "  python3 ark.py \033[92mx64.release test262 --baseline-jit\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262 built-ins/Array\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262 built-ins/Array/name.js\033[0m\n"
             "  python3 ark.py \033[92mx64.release unittest\033[0m\n"
@@ -538,7 +575,7 @@ class ArkPy:
         return
 
     def build_for_test262(self, out_path, gn_args: list, arg_list: list, log_file_name: str,
-     aot_mode: bool, run_pgo=False, run_jit=False):
+     aot_mode: bool, run_pgo=False, enable_litecg=False, run_jit=False, run_baseline_jit=False):
         args_to_test262_cmd = ""
         if len(arg_list) >= 1 and "disable-force-gc" in arg_list[-1]:
             args_to_test262_cmd += "--disable-force-gc "
@@ -573,9 +610,11 @@ class ArkPy:
                 out_path, gn_args, self.ARG_DICT["target"]["test262"]["gn_targets_depend_on"], log_file_name)
         if run_jit:
             test262_cmd = self.get_test262_jit_cmd(gn_args, out_path, x64_out_path, args_to_test262_cmd)
+        elif run_baseline_jit:
+            test262_cmd = self.get_test262_baseline_jit_cmd(gn_args, out_path, x64_out_path, args_to_test262_cmd)
         else:
             test262_cmd = self.get_test262_cmd(gn_args, out_path, x64_out_path, aot_mode, run_pgo,
-                                               args_to_test262_cmd)
+                                               enable_litecg, args_to_test262_cmd)
         test262_log_path = os.path.join(out_path, log_file_name)
         str_to_test262_log = "================================\ntest262_time: {0}\ntest262_target: {1}\n\n".format(
             str_of_time_now(), args_to_test262_cmd)
@@ -635,13 +674,30 @@ class ArkPy:
         elif self.is_dict_flags_match_arg(self.ARG_DICT["target"]["workload"], arg_list[0]):
             self.build_for_workload(arg_list, out_path, gn_args, 'workload.log')
         elif self.is_dict_flags_match_arg(self.ARG_DICT["target"]["test262"], arg_list[0]):
-            if len(arg_list) >= 2 and arg_list[1] == "--aot":
-                if len(arg_list) >= 3 and arg_list[2] == "--pgo":
+            run_aot_mode = len(arg_list) >= 2 and arg_list[1] == "--aot"
+            run_aot_pgo_litecg = len(arg_list) >= 4 and ((arg_list[2] == "--pgo" and arg_list[3] == "--litecg") or
+                                                         (arg_list[3] == "--pgo" and arg_list[2] == "--litecg"))
+            run_aot_pgo = len(arg_list) >= 3 and arg_list[2] == "--pgo"
+            run_aot_litecg = len(arg_list) >= 3 and arg_list[2] == "--litecg"
+            run_jit = len(arg_list) >= 2 and arg_list[1] == "--jit"
+            run_baseline_jit = len(arg_list) >= 2 and arg_list[1] == "--baseline-jit"
+            if run_aot_mode:
+                if run_aot_pgo_litecg:
+                    self.build_for_test262(out_path, gn_args, arg_list[4:], self.TEST262_LOG_FILE_NAME, True,
+                                           True, True)
+                elif run_aot_litecg:
+                    self.build_for_test262(out_path, gn_args, arg_list[3:], self.TEST262_LOG_FILE_NAME, True,
+                                           False, True)
+                elif run_aot_pgo:
                     self.build_for_test262(out_path, gn_args, arg_list[3:], self.TEST262_LOG_FILE_NAME, True, True)
                 else:
                     self.build_for_test262(out_path, gn_args, arg_list[2:], self.TEST262_LOG_FILE_NAME, True)
-            elif len(arg_list) >= 2 and arg_list[1] == "--jit":
-                self.build_for_test262(out_path, gn_args, arg_list[2:], self.TEST262_LOG_FILE_NAME, False, False, True)
+            elif run_jit:
+                self.build_for_test262(out_path, gn_args, arg_list[2:], self.TEST262_LOG_FILE_NAME, False, False,
+                                       False, True)
+            elif run_baseline_jit:
+                self.build_for_test262(out_path, gn_args, arg_list[2:], self.TEST262_LOG_FILE_NAME, False, False,
+                                       False, False, True)
             else:
                 self.build_for_test262(out_path, gn_args, arg_list[1:], self.TEST262_LOG_FILE_NAME, False)
         elif self.is_dict_flags_match_arg(self.ARG_DICT["target"]["unittest"], arg_list[0]):
