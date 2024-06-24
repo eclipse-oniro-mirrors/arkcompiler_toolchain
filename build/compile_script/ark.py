@@ -186,6 +186,12 @@ class ArkPy:
                 "gn_args": ["is_debug=true"],
                 "suffix_of_name_of_out_dir_of_second_level": "debug",
             },
+            "fastverify": {
+                "flags": ["fastverify", "fv"],
+                "description": "Build for arkcompiler target(executables and libraries) for fastverify.",
+                "gn_args": ["is_debug=true is_fastverify=true"],
+                "suffix_of_name_of_out_dir_of_second_level": "fastverify",
+            },
         },
         "target": {
             "test262": {
