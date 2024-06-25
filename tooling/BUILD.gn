@@ -65,7 +65,7 @@ ohos_source_set("libark_ecma_debugger_set") {
   external_deps = []
   if (is_arkui_x && target_os == "ios") {
     sources -= [ "../common/log_wrapper.cpp" ]
-    external_deps += [ "cJSON:cjson_static" ]
+    deps += [ "$ark_third_party_root/cJSON:cjson_static" ]
   } else {
     external_deps += [ "cJSON:cjson" ]
   }
