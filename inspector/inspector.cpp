@@ -247,7 +247,7 @@ bool InitializeArkFunctions()
         return false;
     }
 #else
-    InitializeArkFunctionsIOS()
+    InitializeArkFunctionsIOS();
 #endif
 
     g_hasArkFuncsInited = true;
