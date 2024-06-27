@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -498,7 +498,8 @@ class ArkPy:
             "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --jit]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --baseline-jit]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [unittest] [option]\033[0m\n"
-            "  python3 ark.py \033[92m[os_cpu].[mode] [regresstest] [none, file or dir] [option]\033[0m\n")
+            "  python3 ark.py \033[92m[os_cpu].[mode] [regresstest] [none, file or dir] " \
+              "[none or --processes=X]\033[0m\n")
         # Command examples
         help_msg += "\033[32mCommand examples:\033[0m\n{}\n\n".format(
             "  python3 ark.py \033[92mx64.release\033[0m\n"
@@ -513,6 +514,7 @@ class ArkPy:
             "  python3 ark.py \033[92mx64.release test262 built-ins/Array/name.js\033[0m\n"
             "  python3 ark.py \033[92mx64.release unittest\033[0m\n"
             "  python3 ark.py \033[92mx64.release regresstest\033[0m\n"
+            "  python3 ark.py \033[92mx64.release regresstest --processes=4\033[0m\n"
             "  python3 ark.py \033[92mx64.release workload\033[0m\n"
             "  python3 ark.py \033[92mx64.release workload report\033[0m\n"
             "  python3 ark.py \033[92mx64.release workload report dev\033[0m\n"
@@ -634,18 +636,29 @@ class ArkPy:
             log_file_name)
         return
 
-    def build_for_regress_test(self, out_path, gn_args: list, arg_list: list, log_file_name: str, timeout):
-        args_to_regress_test_cmd = ""
-        if len(arg_list) == 0:
-            args_to_regress_test_cmd = ""
-        elif len(arg_list) == 1:
-            if ".js" in arg_list[0]:
-                args_to_regress_test_cmd = "--test-file {}".format(arg_list[0])
+    @staticmethod
+    def build_args_to_regress_cmd(arg_list):
+        args_to_regress_cmd = []
+
+        processes = [arg for arg in arg_list if arg.startswith("--processes=")]
+        if processes:
+            args_to_regress_cmd.extend(processes)
+            arg_list.remove(processes[0])
+
+        if len(arg_list) == 1:
+            arg = arg_list[0]
+            if ".js" in arg:
+                args_to_regress_cmd.append(f"--test-file {arg}")
             else:
-                args_to_regress_test_cmd = "--test-dir {}".format(arg_list[0])
-        else:
+                args_to_regress_cmd.append(f"--test-dir {arg}")
+        elif len(arg_list) > 1:
             print("\033[92m\"regresstest\" not support multiple additional arguments.\033[0m\n".format())
             sys.exit(0)
+
+        return " ".join(args_to_regress_cmd)
+
+    def build_for_regress_test(self, out_path, gn_args: list, arg_list: list, log_file_name: str, timeout):
+        args_to_regress_test_cmd = self.build_args_to_regress_cmd(arg_list)
         self.build_for_gn_target(
             out_path, gn_args, self.ARG_DICT["target"]["regresstest"]["gn_targets_depend_on"], log_file_name)
         regress_test_cmd = "python3 arkcompiler/ets_runtime/test/regresstest/run_regress_test.py --timeout {2}" \
