@@ -48,7 +48,6 @@ DebuggerImpl::DebuggerImpl(const EcmaVM *vm, ProtocolChannel *channel, RuntimeIm
     jsDebugger_ = DebuggerApi::CreateJSDebugger(vm_);
     DebuggerApi::RegisterHooks(jsDebugger_, hooks_.get());
 
-    DebuggerExecutor::Initialize(vm_);
     updaterFunc_ = std::bind(&DebuggerImpl::UpdateScopeObject, this, _1, _2, _3, _4);
     stepperFunc_ = std::bind(&DebuggerImpl::ClearSingleStepper, this);
     returnNative_ = std::bind(&DebuggerImpl::NotifyReturnNative, this);
@@ -856,6 +855,7 @@ DispatchResponse DebuggerImpl::ContinueToLocation(const ContinueToLocationParams
 
 DispatchResponse DebuggerImpl::Enable([[maybe_unused]] const EnableParams &params, UniqueDebuggerId *id)
 {
+    DebuggerExecutor::Initialize(vm_);
     ASSERT(id != nullptr);
     *id = 0;
     vm_->GetJsDebuggerManager()->SetDebugMode(true);
