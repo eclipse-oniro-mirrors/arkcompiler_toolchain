@@ -633,7 +633,7 @@ class ArkPy:
             log_file_name)
         return
 
-    def build_for_regress_test(self, out_path, gn_args: list, arg_list: list, log_file_name: str):
+    def build_for_regress_test(self, out_path, gn_args: list, arg_list: list, log_file_name: str, timeout):
         args_to_regress_test_cmd = ""
         if len(arg_list) == 0:
             args_to_regress_test_cmd = ""
@@ -647,12 +647,12 @@ class ArkPy:
             sys.exit(0)
         self.build_for_gn_target(
             out_path, gn_args, self.ARG_DICT["target"]["regresstest"]["gn_targets_depend_on"], log_file_name)
-        regress_test_cmd = "python3 arkcompiler/ets_runtime/test/regresstest/run_regress_test.py" \
+        regress_test_cmd = "python3 arkcompiler/ets_runtime/test/regresstest/run_regress_test.py --timeout {2}" \
                       " --ark-tool ./{0}/arkcompiler/ets_runtime/ark_js_vm" \
                       " --ark-frontend-binary ./{0}/arkcompiler/ets_frontend/es2abc" \
                       " --LD_LIBRARY_PATH ./{0}/arkcompiler/ets_runtime:./{0}/thirdparty/icu:" \
                       "./prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
-                      " --out-dir ./{0}/ {1}".format(out_path, args_to_regress_test_cmd)
+                      " --out-dir ./{0}/ {1}".format(out_path, args_to_regress_test_cmd, timeout)
         regress_test_log_path = os.path.join(out_path, log_file_name)
         str_to_test_log = "============\n regresstest_time: {0}\nregresstest_target: {1}\n\n".format(
             str_of_time_now(), regress_test_cmd)
@@ -706,7 +706,20 @@ class ArkPy:
                 sys.exit(0)
             self.build_for_unittest(out_path, gn_args, self.UNITTEST_LOG_FILE_NAME)
         elif self.is_dict_flags_match_arg(self.ARG_DICT["target"]["regresstest"], arg_list[0]):
-            self.build_for_regress_test(out_path, gn_args, arg_list[1:], self.REGRESS_TEST_LOG_FILE_NAME)
+            timeout = 200000
+            if '--timeout' in arg_list:
+                timeout_index = arg_list.index('--timeout')
+                if len(arg_list) > timeout_index + 1:
+                    try:
+                        timeout = int(arg_list[timeout_index + 1])
+                        arg_list = arg_list[:timeout_index] + arg_list[timeout_index + 2:]
+                    except ValueError:
+                        print("Invalid timeout value.")
+                        sys.exit(1)
+                else:
+                    print("Missing timeout value.")
+                    sys.exit(1)
+            self.build_for_regress_test(out_path, gn_args, arg_list[1:], self.REGRESS_TEST_LOG_FILE_NAME, timeout)
         else:
             self.build_for_gn_target(out_path, gn_args, arg_list, self.GN_TARGET_LOG_FILE_NAME)
         return
