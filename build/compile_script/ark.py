@@ -682,19 +682,7 @@ class ArkPy:
             run_aot_litecg = len(arg_list) >= 3 and arg_list[2] == "--litecg"
             run_jit = len(arg_list) >= 2 and arg_list[1] == "--jit"
             run_baseline_jit = len(arg_list) >= 2 and arg_list[1] == "--baseline-jit"
-            timeout = 400000  
-            if '--timeout' in arg_list:
-                timeout_index = arg_list.index('--timeout')
-                if len(arg_list) > timeout_index + 1:
-                    try:
-                        timeout = int(arg_list[timeout_index + 1])
-                        arg_list = arg_list[:timeout_index] + arg_list[timeout_index + 2:]
-                    except ValueError:
-                        print("Invalid timeout value.")
-                        sys.exit(1)
-                else:
-                    print("Missing timeout value.")
-                    sys.exit(1)
+            timeout, arg_list = self.parse_timeout(arg_list)
             if run_aot_mode:
                 if run_aot_pgo_litecg:
                     self.build_for_test262(out_path, timeout, gn_args, arg_list[4:], self.TEST262_LOG_FILE_NAME, True,
@@ -703,14 +691,17 @@ class ArkPy:
                     self.build_for_test262(out_path, timeout, gn_args, arg_list[3:], self.TEST262_LOG_FILE_NAME, True,
                                            False, True)
                 elif run_aot_pgo:
-                    self.build_for_test262(out_path, timeout, gn_args, arg_list[3:], self.TEST262_LOG_FILE_NAME, True, True)
+                    self.build_for_test262(out_path, timeout, gn_args, arg_list[3:],
+                                           self.TEST262_LOG_FILE_NAME, True, True)
                 else:
                     self.build_for_test262(out_path, timeout, gn_args, arg_list[2:], self.TEST262_LOG_FILE_NAME, True)
             elif run_jit:
-                self.build_for_test262(out_path, timeout, gn_args, arg_list[2:], self.TEST262_LOG_FILE_NAME, False, False,
+                self.build_for_test262(out_path, timeout, gn_args, arg_list[2:],
+                                       self.TEST262_LOG_FILE_NAME, False, False,
                                        False, True)
             elif run_baseline_jit:
-                self.build_for_test262(out_path, timeout, gn_args, arg_list[2:], self.TEST262_LOG_FILE_NAME, False, False,
+                self.build_for_test262(out_path, timeout, gn_args, arg_list[2:],
+                                       self.TEST262_LOG_FILE_NAME, False, False,
                                        False, False, True)
             else:
                 self.build_for_test262(out_path, timeout, gn_args, arg_list[1:], self.TEST262_LOG_FILE_NAME, False)
@@ -724,6 +715,22 @@ class ArkPy:
         else:
             self.build_for_gn_target(out_path, gn_args, arg_list, self.GN_TARGET_LOG_FILE_NAME)
         return
+
+    def parse_timeout(self, arg_list):
+        timeout = 400000
+        if '--timeout' in arg_list:
+            timeout_index = arg_list.index('--timeout')
+            if len(arg_list) > timeout_index + 1:
+                try:
+                    timeout = int(arg_list[timeout_index + 1])
+                    arg_list = arg_list[:timeout_index] + arg_list[timeout_index + 2:]
+                except ValueError:
+                    print("Invalid timeout value.")
+                    sys.exit(1)
+            else:
+                print("Missing timeout value.")
+                sys.exit(1)
+        return timeout, arg_list
 
     def match_options(self, arg_list: list, out_path: str) -> [list, list]:
         arg_list_ret = []
