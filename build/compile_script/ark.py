@@ -611,7 +611,8 @@ class ArkPy:
         if run_jit:
             test262_cmd = self.get_test262_jit_cmd(gn_args, out_path, x64_out_path, args_to_test262_cmd, timeout)
         elif run_baseline_jit:
-            test262_cmd = self.get_test262_baseline_jit_cmd(gn_args, out_path, x64_out_path, args_to_test262_cmd, timeout)
+            test262_cmd = self.get_test262_baseline_jit_cmd(gn_args, out_path, x64_out_path,
+                                                            args_to_test262_cmd, timeout)
         else:
             test262_cmd = self.get_test262_cmd(gn_args, out_path, x64_out_path, aot_mode, run_pgo,
                                                enable_litecg, args_to_test262_cmd, timeout)
