@@ -345,4 +345,9 @@ void WebSocketServer::Close()
 #endif
     CloseServerSocket();
 }
+
+void WebSocketServer::CloseServerConnectionFdForTest()
+{
+    CloseConnectionSocket(ConnectionCloseReason::FAIL, SocketState::INITED);
+}
 } // namespace OHOS::ArkCompiler::Toolchain

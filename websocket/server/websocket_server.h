@@ -46,6 +46,8 @@ public:
     void SetOpenConnectionCallback(OpenConnectionCallback cb);
 
     void Close() override;
+    // only to be used in websocket test
+    void CloseServerConnectionFdForTest();
 
 private:
     static bool ValidateHandShakeMessage(const HttpRequest& req);

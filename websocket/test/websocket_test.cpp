@@ -119,6 +119,8 @@ HWTEST_F(WebSocketTest, ConnectWebSocketTest, testing::ext::TestSize.Level0)
         EXPECT_EQ(strcmp(recv.c_str(), ""), 0); // pong frame has no data
         retClient = clientSocket.SendReply(QUIT);
         EXPECT_TRUE(retClient);
+        // ensure response to be received by client
+        sleep(1);
         clientSocket.Close();
         exit(0);
     } else if (pid > 0) {
@@ -201,9 +203,7 @@ HWTEST_F(WebSocketTest, ReConnectWebSocketTest, testing::ext::TestSize.Level0)
             serverSocket.SendReply(HELLO_CLIENT + std::to_string(i));
             recv = serverSocket.Decode();
             EXPECT_EQ(strcmp(recv.c_str(), (CLIENT_OK + std::to_string(i)).c_str()), 0);
-            while (serverSocket.IsConnected()) {
-                serverSocket.Decode();
-            }
+            serverSocket.CloseServerConnectionFdForTest();
         } else {
             std::cerr << "ReConnectWebSocketTest::fork failed, error = "
                       << errno << ", desc = " << strerror(errno) << std::endl;
