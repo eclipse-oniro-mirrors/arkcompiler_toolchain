@@ -99,6 +99,9 @@ protected:
 
     int connectionFd_ {-1};
 
+    // Used by testframe to skip sendCloseFrame
+    bool needSendCloseFrame_ {true};
+
     // Callbacks used during different stages of connection lifecycle.
     CloseConnectionCallback closeCb_;
     FailConnectionCallback failCb_;

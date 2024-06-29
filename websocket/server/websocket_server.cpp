@@ -234,6 +234,7 @@ bool WebSocketServer::InitUnixWebSocket(const std::string& sockName, uint32_t ti
         return false;
     }
     socketState_ = SocketState::INITED;
+    needSendCloseFrame_ = false;
     return true;
 }
 
@@ -344,10 +345,5 @@ void WebSocketServer::Close()
     shutdown(serverFd_, SHUT_RDWR);
 #endif
     CloseServerSocket();
-}
-
-void WebSocketServer::CloseServerConnectionFdForTest()
-{
-    CloseConnectionSocket(ConnectionCloseReason::FAIL, SocketState::INITED);
 }
 } // namespace OHOS::ArkCompiler::Toolchain
