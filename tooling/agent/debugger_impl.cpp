@@ -81,6 +81,9 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
     if (!vm_->GetJsDebuggerManager()->IsDebugApp()) {
         return false;
     }
+    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+        return false;
+    }
 
     const JSPandaFile *jsPandaFile = JSPandaFileManager::GetInstance()->FindJSPandaFile(fileName.c_str()).get();
     if (jsPandaFile == nullptr) {
