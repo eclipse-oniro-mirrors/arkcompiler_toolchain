@@ -20,7 +20,11 @@ if (is_standard_system || ark_standalone_build) {
 } else {
   _icu_path_ = "global/i18n"
 }
-
+if (defined(timeout)) {
+  _timeout_ = timeout
+} else {
+  _timeout_ = 1200
+}
 template("host_unittest_action") {
   _target_name_ = "${target_name}"
 
@@ -65,7 +69,7 @@ template("host_unittest_action") {
           rebase_path(_root_out_dir_) + "/hiviewdfx/hilog:" +
           rebase_path("//prebuilts/clang/ohos/linux-x86_64/llvm/lib/"),
       "--timeout-limit",
-      "1200",
+      "${_timeout_}",
     ]
 
     inputs = [
@@ -107,7 +111,7 @@ template("host_unittest_action") {
         "--qemu-ld-prefix",
         rebase_path(musl_linker_so_out_dir, root_build_dir),
         "--timeout-limit",
-        "1200",
+        "${_timeout_}",
       ]
 
       inputs = [
