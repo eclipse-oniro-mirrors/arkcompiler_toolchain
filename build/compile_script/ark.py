@@ -675,6 +675,7 @@ class ArkPy:
         elif self.is_dict_flags_match_arg(self.ARG_DICT["target"]["workload"], arg_list[0]):
             self.build_for_workload(arg_list, out_path, gn_args, 'workload.log')
         elif self.is_dict_flags_match_arg(self.ARG_DICT["target"]["test262"], arg_list[0]):
+            timeout, arg_list = self.parse_timeout(arg_list)
             run_aot_mode = len(arg_list) >= 2 and arg_list[1] == "--aot"
             run_aot_pgo_litecg = len(arg_list) >= 4 and ((arg_list[2] == "--pgo" and arg_list[3] == "--litecg") or
                                                          (arg_list[3] == "--pgo" and arg_list[2] == "--litecg"))
@@ -682,7 +683,6 @@ class ArkPy:
             run_aot_litecg = len(arg_list) >= 3 and arg_list[2] == "--litecg"
             run_jit = len(arg_list) >= 2 and arg_list[1] == "--jit"
             run_baseline_jit = len(arg_list) >= 2 and arg_list[1] == "--baseline-jit"
-            timeout, arg_list = self.parse_timeout(arg_list)
             if run_aot_mode:
                 if run_aot_pgo_litecg:
                     self.build_for_test262(out_path, timeout, gn_args, arg_list[4:], self.TEST262_LOG_FILE_NAME, True,
