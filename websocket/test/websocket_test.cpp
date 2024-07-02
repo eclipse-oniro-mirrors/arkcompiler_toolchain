@@ -224,7 +224,7 @@ HWTEST_F(WebSocketTest, DISABLED_ReConnectWebSocketTest, testing::ext::TestSize.
 HWTEST_F(WebSocketTest, DISABLED_ClientAbnormalTest, testing::ext::TestSize.Level0)
 {
     WebSocketClient clientSocket;
-    ASSERT_STREQ(clientSocket.GetSocketStateString().c_str(), "uninited");
+    ASSERT_STREQ(clientSocket.GetSocketStateString().c_str(), "closed");
     ASSERT_FALSE(clientSocket.ClientSendWSUpgradeReq());
     ASSERT_FALSE(clientSocket.ClientRecvWSUpgradeRsp());
     ASSERT_FALSE(clientSocket.SendReply(HELLO_SERVER));

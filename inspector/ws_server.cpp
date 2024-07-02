@@ -116,9 +116,7 @@ void WsServer::StopServer()
             webSocket_->Close();
         }
     }
-#if defined(OHOS_PLATFORM)
     pthread_join(tid_, nullptr);
-#endif
     if (webSocket_ != nullptr) {
         webSocket_.reset();
     }
