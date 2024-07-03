@@ -711,7 +711,7 @@ class ArkPy:
                 sys.exit(0)
             self.build_for_unittest(out_path, gn_args, self.UNITTEST_LOG_FILE_NAME)
         elif self.is_dict_flags_match_arg(self.ARG_DICT["target"]["regresstest"], arg_list[0]):
-            timeout = 200000
+            timeout = 200
             if '--timeout' in arg_list:
                 timeout_index = arg_list.index('--timeout')
                 if len(arg_list) > timeout_index + 1:
