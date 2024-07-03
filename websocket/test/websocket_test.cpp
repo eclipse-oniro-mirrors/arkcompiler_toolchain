@@ -119,6 +119,8 @@ HWTEST_F(WebSocketTest, ConnectWebSocketTest, testing::ext::TestSize.Level0)
         EXPECT_EQ(strcmp(recv.c_str(), ""), 0); // pong frame has no data
         retClient = clientSocket.SendReply(QUIT);
         EXPECT_TRUE(retClient);
+        // ensure response to be received by client
+        sleep(1);
         clientSocket.Close();
         exit(0);
     } else if (pid > 0) {
