@@ -394,11 +394,16 @@ DispatchResponse HeapProfilerImpl::StopTrackingHeapObjects(const StopTrackingHea
 DispatchResponse HeapProfilerImpl::TakeHeapSnapshot(const StopTrackingHeapObjectsParams &params)
 {
     bool captureNumericValue = params.GetCaptureNumericValue();
+    DumpSnapShotOption dumpOption;
+    dumpOption.dumpFormat = DumpFormat::JSON;
+    dumpOption.isVmMode = true;
+    dumpOption.isPrivate = false;
+    dumpOption.captureNumericValue = captureNumericValue;
     if (params.GetReportProgress()) {
         HeapProfilerProgress progress(&frontend_);
-        panda::DFXJSNApi::DumpHeapSnapshot(vm_, 0, &stream_, &progress, true, false, captureNumericValue);
+        panda::DFXJSNApi::DumpHeapSnapshot(vm_, &stream_, dumpOption, &progress);
     } else {
-        panda::DFXJSNApi::DumpHeapSnapshot(vm_, 0, &stream_, nullptr, true, false, captureNumericValue);
+        panda::DFXJSNApi::DumpHeapSnapshot(vm_, &stream_, dumpOption);
     }
     return DispatchResponse::Ok();
 }
