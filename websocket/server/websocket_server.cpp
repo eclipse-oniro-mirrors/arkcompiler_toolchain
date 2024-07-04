@@ -188,6 +188,7 @@ bool WebSocketServer::InitTcpWebSocket(int port, uint32_t timeoutLimit)
         return false;
     }
     socketState_ = SocketState::INITED;
+    needSendCloseFrame_ = false;
     return true;
 }
 #else
