@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <csignal>
+
 #include "ecmascript/ecma_vm.h"
 #include "ecmascript/napi/include/jsnapi.h"
 #include "ecmascript/tests/test_helper.h"
@@ -27,6 +29,9 @@ public:
     static void SetUpTestCase()
     {
         GTEST_LOG_(INFO) << "SetUpTestCase";
+        if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+            GTEST_LOG_(ERROR) << "Reset SIGPIPE failed.";
+        }
     }
 
     static void TearDownTestCase()

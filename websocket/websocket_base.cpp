@@ -202,9 +202,7 @@ void WebSocketBase::SendCloseFrame(CloseStatusCode status)
 void WebSocketBase::CloseConnection(CloseStatusCode status, SocketState newSocketState)
 {
     LOGI("Close connection, status = %{public}d", static_cast<int>(status));
-    if (needSendCloseFrame_) {
-        SendCloseFrame(status);
-    }
+    SendCloseFrame(status);
     // can close connection right after sending back close frame.
     CloseConnectionSocket(ConnectionCloseReason::CLOSE, newSocketState);
 }
