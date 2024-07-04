@@ -17,4 +17,6 @@ declare_args() {
 
   # system package dir
   system_base_dir = "system"
+
+  device_name = ""
 }
