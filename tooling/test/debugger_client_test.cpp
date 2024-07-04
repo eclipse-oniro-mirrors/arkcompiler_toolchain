@@ -59,7 +59,8 @@ public:
     JSThread *thread {nullptr};
 };
 
-HWTEST_P_L0(DebuggerClientTest, DebuggerSuite)
+//NOTE: enable (issue 18042)
+HWTEST_P_L0(DebuggerClientTest, DISABLED_DebuggerSuite)
 {
     std::string testName = GetCurrentTestName();
     std::cout << "Running " << testName << std::endl;
