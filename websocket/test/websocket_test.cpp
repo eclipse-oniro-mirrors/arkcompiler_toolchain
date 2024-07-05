@@ -14,6 +14,7 @@
  */
 
 #include <arpa/inet.h>
+#include <csignal>
 #include <securec.h>
 #include <sys/un.h>
 
@@ -29,6 +30,9 @@ public:
     static void SetUpTestCase()
     {
         GTEST_LOG_(INFO) << "SetUpTestCase";
+        if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+            GTEST_LOG_(ERROR) << "Reset SIGPIPE failed.";
+        }
     }
 
     static void TearDownTestCase()
@@ -119,8 +123,6 @@ HWTEST_F(WebSocketTest, ConnectWebSocketTest, testing::ext::TestSize.Level0)
         EXPECT_EQ(strcmp(recv.c_str(), ""), 0); // pong frame has no data
         retClient = clientSocket.SendReply(QUIT);
         EXPECT_TRUE(retClient);
-        // ensure response to be received by client
-        sleep(1);
         clientSocket.Close();
         exit(0);
     } else if (pid > 0) {

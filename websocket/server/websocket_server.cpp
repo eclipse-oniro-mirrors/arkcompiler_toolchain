@@ -188,7 +188,6 @@ bool WebSocketServer::InitTcpWebSocket(int port, uint32_t timeoutLimit)
         return false;
     }
     socketState_ = SocketState::INITED;
-    needSendCloseFrame_ = false;
     return true;
 }
 #else
@@ -235,7 +234,6 @@ bool WebSocketServer::InitUnixWebSocket(const std::string& sockName, uint32_t ti
         return false;
     }
     socketState_ = SocketState::INITED;
-    needSendCloseFrame_ = false;
     return true;
 }
 
