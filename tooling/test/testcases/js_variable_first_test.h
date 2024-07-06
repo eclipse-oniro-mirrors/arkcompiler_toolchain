@@ -185,10 +185,10 @@ private:
             }
             if (value->HasValue()) {
                 std::cout << "type: " <<
-                    value->GetValue()->Typeof(vm_)->ToString() << std::endl;
+                    value->GetValue()->Typeof(vm_)->ToString(vm_) << std::endl;
                 std::cout << "tostring: " <<
-                    value->GetValue()->ToString(vm_)->ToString() << std::endl;
-                infos.push_back(value->GetValue()->ToString(vm_)->ToString());
+                    value->GetValue()->ToString(vm_)->ToString(vm_) << std::endl;
+                infos.push_back(value->GetValue()->ToString(vm_)->ToString(vm_));
             }
         }
 

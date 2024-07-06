@@ -1754,7 +1754,7 @@ void DebuggerImpl::GetLocalVariables(const FrameHandler *frameHandler, panda_fil
         Local<JSValueRef> name = JSValueRef::Undefined(vm_);
         if (varName == "4funcObj") {
             if (value->IsFunction(vm_)) {
-                auto funcName = Local<FunctionRef>(value)->GetName(vm_)->ToString();
+                auto funcName = Local<FunctionRef>(value)->GetName(vm_)->ToString(vm_);
                 name = StringRef::NewFromUtf8(vm_, funcName.c_str());
             } else {
                 continue;

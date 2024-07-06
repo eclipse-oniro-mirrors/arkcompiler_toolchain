@@ -157,7 +157,7 @@ private:
                                 if (truthVariableMap.count(name)) {
                                     auto value = property->GetValue();
                                     if (value->HasValue()) {
-                                        std::string valueStr = value->GetValue()->ToString(vm_)->ToString();
+                                        std::string valueStr = value->GetValue()->ToString(vm_)->ToString(vm_);
                                         std::cout << valueStr << std::endl;
                                         ASSERT_EQ(valueStr, truthVariableMap[name]);
                                     }

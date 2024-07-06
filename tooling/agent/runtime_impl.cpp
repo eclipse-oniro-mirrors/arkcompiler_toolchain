@@ -577,8 +577,8 @@ void RuntimeImpl::GetMapValue(Local<JSValueRef> value,
     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
     Local<MapRef> mapRef = value->ToObject(vm_);
-    int32_t size = mapRef->GetSize();
-    int32_t len = mapRef->GetTotalElements();
+    int32_t size = mapRef->GetSize(vm_);
+    int32_t len = mapRef->GetTotalElements(vm_);
     int32_t index = 0;
     Local<JSValueRef> jsValueRef = NumberRef::New(vm_, size);
     SetKeyValue(jsValueRef, outPropertyDesc, "size");
@@ -603,8 +603,8 @@ void RuntimeImpl::GetWeakMapValue(Local<JSValueRef> value,
     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
     Local<WeakMapRef> weakMapRef = value->ToObject(vm_);
-    int32_t size = weakMapRef->GetSize();
-    int32_t len = weakMapRef->GetTotalElements();
+    int32_t size = weakMapRef->GetSize(vm_);
+    int32_t len = weakMapRef->GetTotalElements(vm_);
     int32_t index = 0;
     Local<JSValueRef> jsValueRef = ArrayRef::New(vm_, size);
     for (int32_t i = 0; i < len; i++) {
@@ -627,8 +627,8 @@ void RuntimeImpl::GetSetValue(Local<JSValueRef> value,
     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
     Local<SetRef> setRef = value->ToObject(vm_);
-    int32_t size = setRef->GetSize();
-    int32_t len = setRef->GetTotalElements();
+    int32_t size = setRef->GetSize(vm_);
+    int32_t len = setRef->GetTotalElements(vm_);
     int32_t index = 0;
     Local<JSValueRef> jsValueRef = NumberRef::New(vm_, size);
     SetKeyValue(jsValueRef, outPropertyDesc, "size");
@@ -654,8 +654,8 @@ void RuntimeImpl::GetWeakSetValue(Local<JSValueRef> value,
     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
     Local<WeakSetRef> weakSetRef = value->ToObject(vm_);
-    int32_t size = weakSetRef->GetSize();
-    int32_t len = weakSetRef->GetTotalElements();
+    int32_t size = weakSetRef->GetSize(vm_);
+    int32_t len = weakSetRef->GetTotalElements(vm_);
     int32_t index = 0;
     Local<JSValueRef> jsValueRef = ArrayRef::New(vm_, size);
     for (int32_t i = 0; i < len; ++i) {
@@ -706,7 +706,7 @@ void RuntimeImpl::GetRegExpValue(Local<JSValueRef> value,
     std::string strFlags = regExpRef->GetOriginalFlags(vm_);
     jsValueRef = StringRef::NewFromUtf8(vm_, strFlags.c_str());
     SetKeyValue(jsValueRef, outPropertyDesc, "flags");
-    std::string strSource = regExpRef->GetOriginalSource(vm_)->ToString();
+    std::string strSource = regExpRef->GetOriginalSource(vm_)->ToString(vm_);
     jsValueRef = StringRef::NewFromUtf8(vm_, strSource.c_str());
     SetKeyValue(jsValueRef, outPropertyDesc, "source");
 }
