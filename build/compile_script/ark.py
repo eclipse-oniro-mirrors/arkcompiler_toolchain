@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -494,9 +494,9 @@ class ArkPy:
         help_msg += "\033[32mCommand template:\033[0m\n{}\n\n".format(
             "  python3 ark.py \033[92m[os_cpu].[mode] [gn_target] [option]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --aot] " \
-              "[none or --pgo] [none or --litecg] [none, file or dir] [option]\033[0m\n"
-            "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --jit]\033[0m\n"
-            "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --baseline-jit]\033[0m\n"
+              "[none or --pgo] [none or --litecg] [none, file or dir] [none or --threads=X] [option]\033[0m\n"
+            "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --jit] [none or --threads=X]\033[0m\n"
+            "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --baseline-jit] [none or --threads=X]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [unittest] [option]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [regresstest] [none, file or dir] [option]\033[0m\n")
         # Command examples
@@ -506,7 +506,9 @@ class ArkPy:
             "  python3 ark.py \033[92mx64.release ark_js_vm es2panda\033[0m\n"
             "  python3 ark.py \033[92mx64.release ark_js_vm es2panda --clean\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262\033[0m\n"
+            "  python3 ark.py \033[92mx64.release test262 --threads=16\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262 --aot --pgo --litecg\033[0m\n"
+            "  python3 ark.py \033[92mx64.release test262 --aot --pgo --litecg --threads=8\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262 --jit\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262 --baseline-jit\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262 built-ins/Array\033[0m\n"
@@ -575,22 +577,38 @@ class ArkPy:
             print("=== ninja success! ===\n")
         return
 
-    def build_for_test262(self, out_path, timeout, gn_args: list, arg_list: list, log_file_name: str,
-     aot_mode: bool, run_pgo=False, enable_litecg=False, run_jit=False, run_baseline_jit=False):
-        args_to_test262_cmd = ""
-        if len(arg_list) >= 1 and "disable-force-gc" in arg_list[-1]:
-            args_to_test262_cmd += "--disable-force-gc "
-            arg_list.pop()
+    @staticmethod
+    def build_args_to_test262_cmd(arg_list):
+        args_to_test262_cmd = []
+
+        disable_force_gc = [arg for arg in arg_list if "disable-force-gc" in arg]
+        if disable_force_gc:
+            args_to_test262_cmd.append("--disable-force-gc")
+            arg_list.remove(disable_force_gc[0])
+
+        threads = [arg for arg in arg_list if arg.startswith("--threads=")]
+        if threads:
+            args_to_test262_cmd.extend(threads)
+            arg_list.remove(threads[0])
+
         if len(arg_list) == 0:
-            args_to_test262_cmd += "--es2021 all"
+            args_to_test262_cmd.append("--es2021 all")
         elif len(arg_list) == 1:
-            if ".js" in arg_list[0]:
-                args_to_test262_cmd += "--file test262/data/test_es2021/{}".format(arg_list[0])
+            arg = arg_list[0]
+            if ".js" in arg:
+                args_to_test262_cmd.append("--file test262/data/test_es2021/{}".format(arg))
             else:
-                args_to_test262_cmd += "--dir test262/data/test_es2021/{}".format(arg_list[0])
+                args_to_test262_cmd.append("--dir test262/data/test_es2021/{}".format(arg))
         else:
             print("\033[92m\"test262\" not support multiple additional arguments.\033[0m\n".format())
             sys.exit(0)
+
+        return " ".join(args_to_test262_cmd)
+
+    def build_for_test262(self, out_path, timeout, gn_args: list, arg_list: list, log_file_name: str,
+                          aot_mode: bool, run_pgo=False, enable_litecg=False, run_jit=False,
+                          run_baseline_jit=False):
+        args_to_test262_cmd = self.build_args_to_test262_cmd(arg_list)
         x64_out_path = ""
         if any('target_cpu="arm64"' in arg for arg in gn_args):
             if 'release' in out_path:
