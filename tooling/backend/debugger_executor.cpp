@@ -56,7 +56,7 @@ Local<JSValueRef> DebuggerExecutor::DebuggerGetValue(JsiRuntimeCallInfo *runtime
         return JSValueRef::Undefined(vm);
     }
 
-    std::string varName = Local<StringRef>(name)->ToString();
+    std::string varName = Local<StringRef>(name)->ToString(vm);
     ThrowException(vm, varName + " is not defined");
     return Local<JSValueRef>();
 }
@@ -81,7 +81,7 @@ Local<JSValueRef> DebuggerExecutor::DebuggerSetValue(JsiRuntimeCallInfo *runtime
         return value;
     }
 
-    std::string varName = StringRef::Cast(*name)->ToString();
+    std::string varName = StringRef::Cast(*name)->ToString(vm);
     ThrowException(vm, varName + " is not defined");
     return Local<JSValueRef>();
 }
@@ -140,7 +140,7 @@ Local<JSValueRef> DebuggerExecutor::GetLocalValue(const EcmaVM *vm, const FrameH
 {
     Local<JSValueRef> result;
 
-    int32_t index = DebuggerApi::GetVregIndex(frameHandler, name->ToString());
+    int32_t index = DebuggerApi::GetVregIndex(frameHandler, name->ToString(vm));
     if (index == -1) {
         return result;
     }
@@ -152,7 +152,7 @@ Local<JSValueRef> DebuggerExecutor::GetLocalValue(const EcmaVM *vm, const FrameH
 bool DebuggerExecutor::SetLocalValue(const EcmaVM *vm, FrameHandler *frameHandler,
                                      Local<StringRef> name, Local<JSValueRef> value)
 {
-    std::string varName = name->ToString();
+    std::string varName = name->ToString(vm);
     int32_t index = DebuggerApi::GetVregIndex(frameHandler, varName);
     if (index == -1) {
         return false;
@@ -168,7 +168,7 @@ Local<JSValueRef> DebuggerExecutor::GetLexicalValue(const EcmaVM *vm, const Fram
 {
     Local<JSValueRef> result;
 
-    auto [level, slot] = DebuggerApi::GetLevelSlot(frameHandler, name->ToString());
+    auto [level, slot] = DebuggerApi::GetLevelSlot(frameHandler, name->ToString(vm));
     if (level == -1) {
         return result;
     }
@@ -180,7 +180,7 @@ Local<JSValueRef> DebuggerExecutor::GetLexicalValue(const EcmaVM *vm, const Fram
 bool DebuggerExecutor::SetLexicalValue(const EcmaVM *vm, const FrameHandler *frameHandler,
                                        Local<StringRef> name, Local<JSValueRef> value)
 {
-    std::string varName = name->ToString();
+    std::string varName = name->ToString(vm);
     auto [level, slot] = DebuggerApi::GetLevelSlot(frameHandler, varName);
     if (level == -1) {
         return false;
@@ -198,7 +198,7 @@ Local<JSValueRef> DebuggerExecutor::GetGlobalValue(const EcmaVM *vm, Local<Strin
 
 bool DebuggerExecutor::SetGlobalValue(const EcmaVM *vm, Local<StringRef> name, Local<JSValueRef> value)
 {
-    std::string varName = name->ToString();
+    std::string varName = name->ToString(vm);
     vm->GetJsDebuggerManager()->NotifyScopeUpdated(varName, value, Scope::Type::Global());
     return DebuggerApi::SetGlobalValue(vm, name, value);
 }
@@ -207,7 +207,7 @@ Local<JSValueRef> DebuggerExecutor::GetModuleValue(const EcmaVM *vm, const Frame
                                                    Local<StringRef> name)
 {
     Local<JSValueRef> result;
-    std::string varName = name->ToString();
+    std::string varName = name->ToString(vm);
     Method *method = DebuggerApi::GetMethod(frameHandler);
     const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
     if (jsPandaFile != nullptr && (jsPandaFile->IsBundlePack() || !jsPandaFile->IsNewVersion())) {
@@ -224,7 +224,7 @@ Local<JSValueRef> DebuggerExecutor::GetModuleValue(const EcmaVM *vm, const Frame
 bool DebuggerExecutor::SetModuleValue(const EcmaVM *vm, const FrameHandler *frameHandler,
                                       Local<StringRef> name, Local<JSValueRef> value)
 {
-    std::string varName = name->ToString();
+    std::string varName = name->ToString(vm);
     Method *method = DebuggerApi::GetMethod(frameHandler);
     const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
     if (jsPandaFile != nullptr && (jsPandaFile->IsBundlePack() || !jsPandaFile->IsNewVersion())) {
