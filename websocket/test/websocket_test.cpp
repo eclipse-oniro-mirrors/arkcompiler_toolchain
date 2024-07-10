@@ -127,6 +127,11 @@ HWTEST_F(WebSocketTest, ConnectWebSocketTest, testing::ext::TestSize.Level0)
         exit(0);
     } else if (pid > 0) {
         // mainprocess, handle server connect and recv/send message
+        auto openCallBack = []() -> void {
+            GTEST_LOG_(INFO) << "ConnectWebSocketTest connection is open.";
+        };
+        serverSocket.SetOpenConnectionCallback(openCallBack);
+
         ret = serverSocket.AcceptNewConnection();
         ASSERT_TRUE(ret);
         std::string recv = serverSocket.Decode();
@@ -214,5 +219,64 @@ HWTEST_F(WebSocketTest, ReConnectWebSocketTest, testing::ext::TestSize.Level0)
         }
     }
     serverSocket.Close();
+}
+
+HWTEST_F(WebSocketTest, ClientAbnormalTest, testing::ext::TestSize.Level0)
+{
+    WebSocketClient clientSocket;
+    ASSERT_STREQ(clientSocket.GetSocketStateString().c_str(), "uninited");
+    ASSERT_FALSE(clientSocket.ClientSendWSUpgradeReq());
+    ASSERT_FALSE(clientSocket.ClientRecvWSUpgradeRsp());
+    ASSERT_FALSE(clientSocket.SendReply(HELLO_SERVER));
+}
+
+HWTEST_F(WebSocketTest, ServerAbnormalTest, testing::ext::TestSize.Level0)
+{
+    WebSocketServer serverSocket;
+    // No connection established, the function returns directly.
+    serverSocket.Close();
+    ASSERT_FALSE(serverSocket.AcceptNewConnection());
+
+#if defined(OHOS_PLATFORM)
+    int appPid = getpid();
+    ASSERT_TRUE(serverSocket.InitUnixWebSocket(UNIX_DOMAIN_PATH + std::to_string(appPid), 5));
+#else
+    ASSERT_TRUE(serverSocket.InitTcpWebSocket(TCP_PORT, 5));
+#endif
+    pid_t pid = fork();
+    if (pid == 0) {
+        WebSocketClient clientSocket;
+        auto closeCallBack = []() -> void {
+            GTEST_LOG_(INFO) << "ServerAbnormalTest client connection is closed.";
+        };
+        clientSocket.SetCloseConnectionCallback(closeCallBack);
+
+#if defined(OHOS_PLATFORM)
+        ASSERT_TRUE(clientSocket.InitToolchainWebSocketForSockName(UNIX_DOMAIN_PATH + std::to_string(appPid), 5));
+        // state is not UNITED, the function returns directly.
+        ASSERT_TRUE(clientSocket.InitToolchainWebSocketForSockName(UNIX_DOMAIN_PATH + std::to_string(appPid), 5));
+#else
+        ASSERT_TRUE(clientSocket.InitToolchainWebSocketForPort(TCP_PORT, 5));
+        // state is not UNITED, the function returns directly.
+        ASSERT_TRUE(clientSocket.InitToolchainWebSocketForPort(TCP_PORT, 5));
+#endif
+        ASSERT_TRUE(clientSocket.ClientSendWSUpgradeReq());
+        ASSERT_FALSE(clientSocket.ClientRecvWSUpgradeRsp());
+        exit(0);
+    } else if (pid > 0) {
+        auto failCallBack = []() -> void {
+            GTEST_LOG_(INFO) << "ServerAbnormalTest server connection is failed.";
+        };
+        serverSocket.SetFailConnectionCallback(failCallBack);
+        auto notValidCallBack = [](const HttpRequest&) -> bool {
+            GTEST_LOG_(INFO) << "ServerAbnormalTest server connection request is not valid.";
+            return false;
+        };
+        serverSocket.SetValidateConnectionCallback(notValidCallBack);
+        ASSERT_FALSE(serverSocket.AcceptNewConnection());
+    } else {
+        std::cerr << "ServerAbnormalTest::fork failed, error = "
+                  << errno << ", desc = " << strerror(errno) << std::endl;
+    }
 }
 }  // namespace panda::test

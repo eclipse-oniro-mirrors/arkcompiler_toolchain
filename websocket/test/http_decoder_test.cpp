@@ -38,11 +38,23 @@ public:
         "Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n";
     std::string requestHeaders = std::string(REQUEST_HEADERS);
 
+    static constexpr std::string_view ERR_REQUEST_HEADERS = "GEY\r\n";
+    std::string errRequestHeaders = std::string(ERR_REQUEST_HEADERS);
+
+    static constexpr std::string_view NO_INFO_REQUEST_HEADERS = "GET\r\n";
+    std::string noInfoRequestHeaders = std::string(NO_INFO_REQUEST_HEADERS);
+
     static constexpr std::string_view RESPONSE_HEADERS = "HTTP/1.1 101 Switching Protocols\r\n"
         "Connection: Upgrade\r\n"
         "Upgrade: websocket\r\n"
         "Sec-WebSocket-Accept: AyuTxzyBTJJdViDskomT0Q==\r\n\r\n";
     std::string responseHeaders = std::string(RESPONSE_HEADERS);
+
+    static constexpr std::string_view ERR_RESPONSE_HEADERS = "HTTB\r\n";
+    std::string errResponseHeaders = std::string(ERR_RESPONSE_HEADERS);
+
+    static constexpr std::string_view NO_INFO_RESPONSE_HEADERS = "HTTP\r\n";
+    std::string noInfoResponseHeaders = std::string(NO_INFO_RESPONSE_HEADERS);
 
     static constexpr std::string_view EXPECTED_VERSION              = "HTTP/1.1";
     static constexpr std::string_view EXPECTED_STATUS               = "101";
@@ -63,6 +75,18 @@ HWTEST_F(HttpDecoderTest, TestRequestDecode, testing::ext::TestSize.Level0)
     ASSERT_EQ(parsed.secWebSocketKey, EXPECTED_SEC_WEBSOCKET_KEY);
 }
 
+HWTEST_F(HttpDecoderTest, TestAbnormalRequestDecode, testing::ext::TestSize.Level0)
+{
+    HttpRequest parsed;
+    ASSERT_FALSE(HttpRequest::Decode(errRequestHeaders, parsed));
+    ASSERT_TRUE(HttpRequest::Decode(noInfoRequestHeaders, parsed));
+
+    ASSERT_EQ(parsed.version, "");
+    ASSERT_EQ(parsed.connection, "");
+    ASSERT_EQ(parsed.upgrade, "");
+    ASSERT_EQ(parsed.secWebSocketKey, "");
+}
+
 HWTEST_F(HttpDecoderTest, TestResponseDecode, testing::ext::TestSize.Level0)
 {
     HttpResponse parsed;
@@ -75,4 +99,18 @@ HWTEST_F(HttpDecoderTest, TestResponseDecode, testing::ext::TestSize.Level0)
     ASSERT_EQ(parsed.upgrade, EXPECTED_UPGRADE);
     ASSERT_EQ(parsed.secWebSocketAccept, EXPECTED_SEC_WEBSOCKET_KEY);
 }
+
+HWTEST_F(HttpDecoderTest, TestAbnormalResponseDecode, testing::ext::TestSize.Level0)
+{
+    HttpResponse parsed;
+    ASSERT_FALSE(HttpResponse::Decode(errResponseHeaders, parsed));
+    ASSERT_TRUE(HttpResponse::Decode(noInfoResponseHeaders, parsed));
+
+    ASSERT_EQ(parsed.version, "");
+    ASSERT_EQ(parsed.status, "");
+    ASSERT_EQ(parsed.connection, "");
+    ASSERT_EQ(parsed.upgrade, "");
+    ASSERT_EQ(parsed.secWebSocketAccept, "");
+}
+
 }  // namespace panda::test
