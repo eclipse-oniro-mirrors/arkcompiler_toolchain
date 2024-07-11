@@ -35,6 +35,7 @@ public:
 #if !defined(OHOS_PLATFORM)
     // Initialize server socket, transition to `INITED` state.
     bool InitTcpWebSocket(int port, uint32_t timeoutLimit = 0);
+    bool BindAndListenTcpWebSocket(int port);
 #else
     // Initialize server socket, transition to `INITED` state.
     bool InitUnixWebSocket(const std::string& sockName, uint32_t timeoutLimit = 0);
@@ -74,6 +75,7 @@ private:
     OpenConnectionCallback openCb_;
 
     static constexpr std::string_view BAD_REQUEST_RESPONSE = "HTTP/1.1 400 Bad Request\r\n\r\n";
+    static constexpr int NET_SUCCESS = 1;
 };
 } // namespace OHOS::ArkCompiler::Toolchain
 
