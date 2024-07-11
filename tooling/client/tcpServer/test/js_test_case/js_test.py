@@ -18,8 +18,11 @@ import unittest
 import os
 
 from js_test_base import JsTestBase
+
+
 class JsTestCase(JsTestBase):
     repeat_time = 3
+
     @classmethod
     def setUpClass(cls):
         os.environ["isSkipped"] = "False"
@@ -44,8 +47,8 @@ class JsTestCase(JsTestBase):
         cls.run_arkdb_server(cls, dbg_name)
         cls.connect_client_socket(cls, dbg_name)
         cls.tcp_client_socket.send("enable".encode('utf-8'))
-        data, ADDR = cls.tcp_client_socket.recvfrom(cls.BUFSIZ)
-        data, ADDR = cls.tcp_client_socket.recvfrom(cls.BUFSIZ)
+        data, addr = cls.tcp_client_socket.recvfrom(cls.BUFSIZ)
+        data, addr = cls.tcp_client_socket.recvfrom(cls.BUFSIZ)
         print("recv: ", data.decode('utf-8'))
 
     @classmethod
@@ -124,27 +127,27 @@ class JsTestCase(JsTestBase):
         self.send_command("rt-enable")
         for line in breakpoint_lines:
             self.send_command("b entry/src/main/ets/pages/%s" % line)
-        subprocess.run( "%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("step-into")
         for i in range(self.repeat_time):
             self.send_command("resume")
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool,stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("resume")
         
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
 
         for i in range(self.repeat_time):
             self.send_command("step-into")
         for i in range(self.repeat_time):
             self.send_command("resume")
         
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("resume")
 
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
 
         for i in range(self.repeat_time):
             self.send_command("step-into")
@@ -154,7 +157,7 @@ class JsTestCase(JsTestBase):
         for i in breakpoint_lines:
             self.send_command("delete 1")
         
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("resume")
 
@@ -169,7 +172,7 @@ class JsTestCase(JsTestBase):
             self.send_command("b entry/src/main/ets/pages/%s" % line)
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         self.send_command("step-out")
         for i in range(self.repeat_time):
@@ -177,14 +180,14 @@ class JsTestCase(JsTestBase):
 
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
 
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         self.send_command("step-out")
         for i in range(self.repeat_time):
@@ -192,14 +195,14 @@ class JsTestCase(JsTestBase):
 
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
 
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         self.send_command("step-out")
         for i in range(self.repeat_time):
@@ -210,7 +213,7 @@ class JsTestCase(JsTestBase):
 
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -222,27 +225,27 @@ class JsTestCase(JsTestBase):
         self.send_command("rt-enable")
         for line in breakpoint_lines:
             self.send_command("b entry/src/main/ets/pages/%s" % line)
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("step-over")
         for i in range(self.repeat_time):
             self.send_command("resume")
 
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("resume")
 
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("step-over")
         for i in range(self.repeat_time):
             self.send_command("resume")
 
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("resume")
 
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("step-over")
         for i in range(self.repeat_time):
@@ -251,7 +254,7 @@ class JsTestCase(JsTestBase):
         for i in breakpoint_lines:
             self.send_command("delete 1")
 
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("resume")
 
@@ -262,29 +265,29 @@ class JsTestCase(JsTestBase):
         self.send_command("rt-enable")
         for line in breakpoint_lines:
             self.send_command("b entry/src/main/ets/pages/%s" % line)
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("step-into")
             self.send_command("step-over")
         for i in range(self.repeat_time):
             self.send_command("resume")
 
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("resume")
 
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("step-into")
             self.send_command("step-over")
         for i in range(self.repeat_time):
             self.send_command("resume")
 
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("resume")
 
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("step-into")
             self.send_command("step-over")
@@ -294,7 +297,7 @@ class JsTestCase(JsTestBase):
         for i in breakpoint_lines:
             self.send_command("delete 1")
 
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("resume")
 
@@ -309,7 +312,7 @@ class JsTestCase(JsTestBase):
             self.send_command("b entry/src/main/ets/pages/%s" % line)
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         self.send_command("watch a")
         for i in range(self.repeat_time):
@@ -320,7 +323,7 @@ class JsTestCase(JsTestBase):
 
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -332,29 +335,29 @@ class JsTestCase(JsTestBase):
         self.send_command("rt-enable")
         for line in breakpoint_lines:
             self.send_command("b entry/src/main/ets/pages/%s" % line)
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("step-over")
             self.send_command("watch a")
         for i in range(self.repeat_time):
             self.send_command("resume")
 
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("resume")
 
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("step-over")
             self.send_command("watch a")
         for i in range(self.repeat_time):
             self.send_command("resume")
 
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("resume")
 
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("step-over")
             self.send_command("watch a")
@@ -364,7 +367,7 @@ class JsTestCase(JsTestBase):
         for i in breakpoint_lines:
             self.send_command("delete 1")
 
-        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout = subprocess.PIPE)
+        subprocess.run("%s shell wukong special -t 600,600 -c 1" % self.hdctool, stdout=subprocess.PIPE)
         for i in range(self.repeat_time):
             self.send_command("resume")
 
@@ -379,7 +382,7 @@ class JsTestCase(JsTestBase):
             self.send_command("b entry/src/main/ets/pages/%s" % line)
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         self.send_command("print")
         self.send_command("print 2")
@@ -391,7 +394,7 @@ class JsTestCase(JsTestBase):
 
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -407,9 +410,9 @@ class JsTestCase(JsTestBase):
             self.send_command("b entry/src/main/ets/pages/%s" % line)
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
-        for i in range (self.repeat_time):
+        for i in range(self.repeat_time):
             self.send_command("print")
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -419,7 +422,7 @@ class JsTestCase(JsTestBase):
 
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -435,7 +438,7 @@ class JsTestCase(JsTestBase):
             self.send_command("b entry/src/main/ets/pages/%s" % line)
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("cpuprofile-enable")
@@ -451,7 +454,7 @@ class JsTestCase(JsTestBase):
 
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -467,14 +470,14 @@ class JsTestCase(JsTestBase):
             self.send_command("b entry/src/main/ets/pages/%s" % line)
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         self.send_command("heapprofiler-enable")
         self.send_command("heapdump")
         self.send_command("resume")
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -487,7 +490,7 @@ class JsTestCase(JsTestBase):
     
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -503,14 +506,14 @@ class JsTestCase(JsTestBase):
             self.send_command("b entry/src/main/ets/pages/%s" % line)
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         self.send_command("heapprofiler-enable")
         self.send_command("allocationtrack")
         self.send_command("resume")
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -523,7 +526,7 @@ class JsTestCase(JsTestBase):
     
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -539,7 +542,7 @@ class JsTestCase(JsTestBase):
             self.send_command("b entry/src/main/ets/pages/%s" % line)
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("heapprofiler-enable")
@@ -554,7 +557,7 @@ class JsTestCase(JsTestBase):
 
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -570,7 +573,7 @@ class JsTestCase(JsTestBase):
             self.send_command("b entry/src/main/ets/pages/%s" % line)
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("heapusage")
@@ -581,7 +584,7 @@ class JsTestCase(JsTestBase):
 
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -597,13 +600,13 @@ class JsTestCase(JsTestBase):
             self.send_command("b entry/src/main/ets/pages/%s" % line)
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         self.send_command("showstack")
         self.send_command("resume")
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -612,7 +615,7 @@ class JsTestCase(JsTestBase):
 
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -628,7 +631,7 @@ class JsTestCase(JsTestBase):
             self.send_command("b entry/src/main/ets/pages/%s" % line)
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
 
         self.send_command("step-into")
@@ -639,7 +642,7 @@ class JsTestCase(JsTestBase):
         self.send_command("sampling")
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -654,7 +657,7 @@ class JsTestCase(JsTestBase):
         self.send_command("showstack")
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -663,7 +666,7 @@ class JsTestCase(JsTestBase):
 
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -674,7 +677,7 @@ class JsTestCase(JsTestBase):
         self.send_command("rt-enable")
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("cpuprofile-enable")
@@ -686,7 +689,7 @@ class JsTestCase(JsTestBase):
 
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -697,13 +700,13 @@ class JsTestCase(JsTestBase):
         self.send_command("rt-enable")
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         self.send_command("heapprofiler-enable")
         self.send_command("heapdump")
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -713,7 +716,7 @@ class JsTestCase(JsTestBase):
     
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -724,13 +727,13 @@ class JsTestCase(JsTestBase):
         self.send_command("rt-enable")
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         self.send_command("heapprofiler-enable")
         self.send_command("allocationtrack")
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -741,7 +744,7 @@ class JsTestCase(JsTestBase):
     
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -752,7 +755,7 @@ class JsTestCase(JsTestBase):
         self.send_command("rt-enable")
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("heapprofiler-enable")
@@ -764,7 +767,7 @@ class JsTestCase(JsTestBase):
 
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -775,7 +778,7 @@ class JsTestCase(JsTestBase):
         self.send_command("rt-enable")
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("heapusage")
@@ -784,7 +787,7 @@ class JsTestCase(JsTestBase):
 
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
@@ -795,20 +798,20 @@ class JsTestCase(JsTestBase):
         self.send_command("rt-enable")
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         self.send_command("showstack")
         self.send_command("resume")
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")
 
         subprocess.run(
             "%s shell wukong special -t 600,600 -c 1" % self.hdctool,
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         for i in range(self.repeat_time):
             self.send_command("resume")

@@ -20,6 +20,7 @@ import subprocess
 import sys
 import unittest
 
+
 class JsTestBase(unittest.TestCase):
     hdctool = None
     tcp_client_socket = None
@@ -80,7 +81,7 @@ class JsTestBase(unittest.TestCase):
         try:
             self.tcp_client_socket.settimeout(15)
             os.environ["isSkipped"] = "False"
-            data, ADDR = self.tcp_client_socket.recvfrom(self.BUFSIZ)
+            data, addr = self.tcp_client_socket.recvfrom(self.BUFSIZ)
             print("Recv: ", data.decode('utf-8'))
         except TimeoutError:
             self.tcp_client_socket.close()

@@ -33,17 +33,17 @@ class RunTest:
         parser = argparse.ArgumentParser(description = 'Plugin test.')
         parser.add_argument(
             '-hdctool', 
-            action = 'store',
-            required = True,
-            default = None,
-            help = 'Remote connnection tool.'
+            action='store',
+            required=True,
+            default=None,
+            help='Remote connnection tool.'
         )
         self.args = parser.parse_args()
 
     def discover_cases(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
         case_dir = current_dir + os.sep + 'js_test_case'
-        discover = self.loader.discover(case_dir, pattern = '*.py')
+        discover = self.loader.discover(case_dir, pattern='*.py')
         self.suite.addTest(discover)
 
     def get_panda_list(self):
@@ -64,10 +64,10 @@ class RunTest:
             self.suite = unittest.TestSuite()
             self.discover_cases()
             os.environ["HapName"] = hap_name
-            runner = unittest.TextTestRunner(verbosity = 2)
+            runner = unittest.TextTestRunner(verbosity=2)
             runner.run(self.suite)
 
-main = RunTest
+Main = RunTest
 
 if __name__ == '__main__':
-    main()
+    Main()

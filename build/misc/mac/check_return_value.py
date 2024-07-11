@@ -5,7 +5,8 @@
 # found in the LICENSE file.
 
 """This program wraps an arbitrary command and prints "1" if the command ran
-successfully."""
+successfully.
+"""
 
 import os
 import subprocess
