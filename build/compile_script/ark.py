@@ -24,7 +24,7 @@ import os
 import platform
 import subprocess
 import sys
-from typing import List, Tuple, Union, Optional
+from typing import List, Any, Tuple, Union, Optional
 
 CURRENT_FILENAME = os.path.basename(__file__)
 
@@ -96,7 +96,7 @@ class ArkPy:
     REGRESS_TEST_LOG_FILE_NAME = "regresstest.log"
     PREBUILTS_DOWNLOAD_CONFIG_FILE_PATH = \
         "./arkcompiler/toolchain/build/prebuilts_download/prebuilts_download_config.json"
-    INDENTATION_STRING_PER_LEVEL = "  " # for help message
+    INDENTATION_STRING_PER_LEVEL = "  "  # for help message
     # In ARG_DICT, "flags" and "description" are must-keys for the leaf-dicts in it.
     # (Future designer need know.)
     ARG_DICT = {
@@ -221,14 +221,14 @@ class ArkPy:
                 "gn_targets_depend_on": ["default"],
             },
             "gn_target": {
-                "flags": ["<name of target in \"*.gn*\" file>"], # any other flags
+                "flags": ["<name of target in \"*.gn*\" file>"],  # any other flags
                 "description":
                     "Build for arkcompiler target assigned by user. Targets include group(ets_runtime), "
                     "ohos_executable(ark_js_vm), ohos_shared_library(libark_jsruntime), "
                     "ohos_static_library(static_icuuc), ohos_source_set(libark_jsruntime_set), "
                     "ohos_unittest(EcmaVm_001_Test), action(EcmaVm_001_TestAction) and other target of user-defined "
                     "template type in \"*.gn*\" file.",
-                "gn_targets_depend_on": [], # not need, depend on deps of itself in "*.gn*" file
+                "gn_targets_depend_on": [],  # not need, depend on deps of itself in "*.gn*" file
             },
         },
         "option": {
@@ -264,7 +264,7 @@ class ArkPy:
             "keep-going": {
                 "flags": ["--keep-going=*", "-keep-going=*"],
                 "description": "Keep running unittest etc. until errors occured less than N times"
-                " (use 0 to ignore all errors).",
+                               " (use 0 to ignore all errors).",
             },
         },
         "help": {
@@ -289,7 +289,7 @@ class ArkPy:
         arg_list = list(dict.fromkeys(arg_list))
         # match [help] flag
         if len(arg_list) == 0 or (
-            True in [self.is_dict_flags_match_arg(self.ARG_DICT["help"], arg) for arg in arg_list]):
+                True in [self.is_dict_flags_match_arg(self.ARG_DICT.get("help"), arg) for arg in arg_list]):
             print(self.get_help_msg_of_all())
             return
         # match [[os_cpu].[mode]] flag
@@ -307,135 +307,192 @@ class ArkPy:
             if fnmatch(arg_to_match, flag):
                 return True
         return False
-    
+
     @staticmethod
-    def get_test262_cmd(gn_args, out_path, x64_out_path, run_pgo, enable_litecg, args_to_test262_cmd,
-                        timeout):
-        
-        print("running test262 in AsmMode\n")
-        if any('target_cpu="arm64"' in arg for arg in gn_args):
-            test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout {3}" \
-                            " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu:" \
-                            "../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
-                            " --ark-arch aarch64" \
-                            " --ark-arch-root=../../{1}/common/common/libc/" \
-                            " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
-                            " --ark-frontend-binary=../../{2}/arkcompiler/ets_frontend/es2abc" \
-                            " --merge-abc-binary=../../{2}/arkcompiler/ets_frontend/merge_abc" \
-                            " --ark-frontend=es2panda".format(args_to_test262_cmd, out_path, x64_out_path)
+    def libs_dir(is_arm, is_aot, is_pgo, out_dir, x64_out_dir) -> str:
+        if is_arm and is_aot and is_pgo:
+            return (f"--libs-dir ../../{out_dir}/arkcompiler/ets_runtime:"
+                    f"../../{out_dir}/thirdparty/icu:"
+                    f"../../{out_dir}/third_party/icu:"
+                    f"../../thirdparty/zlib:"
+                    f"../../prebuilts/clang/ohos/linux-x86_64/llvm/lib")
+        if is_arm and is_aot and not is_pgo:
+            return ("--libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib"
+                    f":../../{x64_out_dir}/thirdparty/icu/")
+        if not is_arm and is_aot:
+            return (f"--libs-dir ../../{out_dir}/arkcompiler/ets_runtime"
+                    f":../../{out_dir}/thirdparty/icu:"
+                    f"../../{out_dir}/third_party/icu:"
+                    f"../../thirdparty/zlib:"
+                    f"../../prebuilts/clang/ohos/linux-x86_64/llvm/lib")
+        # not is_arm and not is_aot
+        return " --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib"
+
+    @staticmethod
+    def get_cmd(test_suite, test_script_name, test_script_path, gn_args, out_path, x64_out_path, aot_mode, run_pgo,
+                enable_litecg, args_to_cmd, timeout, ignore_list: Optional[str] = None):
+        cmd = [
+            f"cd {test_script_path}",
+            f"&& python3 {test_script_name} {args_to_cmd}",
+            f"--timeout {timeout}",
+            f"--ark-tool=../../{out_path}/arkcompiler/ets_runtime/ark_js_vm",
+            "--ark-frontend=es2panda"
+        ]
+        is_arm = any('target_cpu="arm64"' in arg for arg in gn_args)
+        if is_arm:
+            cmd.append("--ark-arch aarch64")
+            cmd.append(f"--ark-arch-root=../../{out_path}/common/common/libc/")
+            cmd.append(f"--ark-frontend-binary=../../{x64_out_path}/arkcompiler/ets_frontend/es2abc")
+            cmd.append(f"--merge-abc-binary=../../{x64_out_path}/arkcompiler/ets_frontend/merge_abc")
+            if aot_mode:
+                cmd.append(f"--ark-aot-tool=../../{x64_out_path}/arkcompiler/ets_runtime/ark_aot_compiler")
+                if test_suite == "regresstest":
+                    cmd.append(f"--stub-path=../../{x64_out_path}/gen/arkcompiler/ets_runtime/stub.an")
         else:
-            test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout {2}" \
-                    " --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
-                    " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
-                    " --ark-frontend-binary=../../{1}/arkcompiler/ets_frontend/es2abc" \
-                    " --merge-abc-binary=../../{1}/arkcompiler/ets_frontend/merge_abc" \
-                    " --ark-frontend=es2panda".format(args_to_test262_cmd, out_path, timeout)
-        return test262_cmd
+            cmd.append(f"--ark-frontend-binary=../../{out_path}/arkcompiler/ets_frontend/es2abc")
+            cmd.append(f"--merge-abc-binary=../../{out_path}/arkcompiler/ets_frontend/merge_abc")
+            if aot_mode:
+                cmd.append(f"--ark-aot-tool=../../{out_path}/arkcompiler/ets_runtime/ark_aot_compiler")
+                if test_suite == "regresstest":
+                    cmd.append(f"--stub-path=../../{out_path}/gen/arkcompiler/ets_runtime/stub.an")
+
+        cmd.append(ArkPy.libs_dir(
+            is_arm=is_arm,
+            is_aot=aot_mode,
+            is_pgo=run_pgo,
+            out_dir=out_path,
+            x64_out_dir=x64_out_path
+        ))
+
+        if aot_mode:
+            cmd.append("--ark-aot")
+            mode = ["AOT"]
+            if run_pgo:
+                cmd.append("--run-pgo")
+                mode.append("PGO")
+            if enable_litecg:
+                cmd.append("--enable-litecg")
+                mode.append("LiteCG")
+            mode_str = " ".join(mode)
+            print(f"Running {test_suite} in {mode_str} Mode\n")
+
+        if test_suite == "regresstest" and ignore_list:
+            cmd.append(f"--ignore-list {ignore_list}")
+
+        if test_suite == "regresstest":
+            cmd.append(f"--out-dir ../../{out_path}")
+
+        return " ".join(cmd)
 
     @staticmethod
     def get_test262_aot_cmd(gn_args, out_path, x64_out_path, run_pgo, enable_litecg, args_to_test262_cmd,
-                        timeout):
+                            timeout):
         print("running test262 in AotMode\n")
         if any('target_cpu="arm64"' in arg for arg in gn_args):
             if run_pgo:
                 test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout {4}" \
-                        " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu:" \
-                        "../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
-                        " --ark-arch aarch64" \
-                        " --ark-arch-root=../../{1}/common/common/libc/" \
-                        " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
-                        " --ark-aot-tool=../../{1}/arkcompiler/ets_runtime/ark_aot_compiler" \
-                        " --ark-frontend-binary=../../{2}/arkcompiler/ets_frontend/es2abc" \
-                        " --merge-abc-binary=../../{2}/arkcompiler/ets_frontend/merge_abc" \
-                        " --ark-aot" \
-                        " --ark-frontend=es2panda"\
-                        "{3}".format(args_to_test262_cmd, out_path, x64_out_path, " --run-pgo", timeout)
+                              " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu:" \
+                              "../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                              " --ark-arch aarch64" \
+                              " --ark-arch-root=../../{1}/common/common/libc/" \
+                              " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
+                              " --ark-aot-tool=../../{1}/arkcompiler/ets_runtime/ark_aot_compiler" \
+                              " --ark-frontend-binary=../../{2}/arkcompiler/ets_frontend/es2abc" \
+                              " --merge-abc-binary=../../{2}/arkcompiler/ets_frontend/merge_abc" \
+                              " --ark-aot" \
+                              " --ark-frontend=es2panda" \
+                              "{3}".format(args_to_test262_cmd, out_path, x64_out_path, " --run-pgo", timeout)
             else:
                 test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout {3}" \
-                        " --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib:../../{2}/thirdparty/icu/" \
-                        " --ark-arch aarch64" \
-                        " --ark-arch-root=../../{1}/common/common/libc/" \
-                        " --ark-aot" \
-                        " --ark-aot-tool=../../{2}/arkcompiler/ets_runtime/ark_aot_compiler" \
-                        " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
-                        " --ark-frontend-binary=../../{2}/arkcompiler/ets_frontend/es2abc" \
-                        " --merge-abc-binary=../../{2}/arkcompiler/ets_frontend/merge_abc" \
-                        " --ark-frontend=es2panda".format(args_to_test262_cmd, out_path, x64_out_path, timeout)
+                              " --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib:../../{2}/thirdparty/icu/" \
+                              " --ark-arch aarch64" \
+                              " --ark-arch-root=../../{1}/common/common/libc/" \
+                              " --ark-aot" \
+                              " --ark-aot-tool=../../{2}/arkcompiler/ets_runtime/ark_aot_compiler" \
+                              " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
+                              " --ark-frontend-binary=../../{2}/arkcompiler/ets_frontend/es2abc" \
+                              " --merge-abc-binary=../../{2}/arkcompiler/ets_frontend/merge_abc" \
+                              " --ark-frontend=es2panda".format(args_to_test262_cmd, out_path, x64_out_path, timeout)
         else:
             test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout {3}" \
-                        " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu" \
-                        ":../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
-                        " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
-                        " --ark-aot-tool=../../{1}/arkcompiler/ets_runtime/ark_aot_compiler" \
-                        " --ark-frontend-binary=../../{1}/arkcompiler/ets_frontend/es2abc" \
-                        " --merge-abc-binary=../../{1}/arkcompiler/ets_frontend/merge_abc" \
-                        " --ark-aot" \
-                        " --ark-frontend=es2panda"\
-                        "{2}".format(args_to_test262_cmd, out_path, " --run-pgo" if run_pgo else "", timeout)
+                          " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu" \
+                          ":../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                          " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
+                          " --ark-aot-tool=../../{1}/arkcompiler/ets_runtime/ark_aot_compiler" \
+                          " --ark-frontend-binary=../../{1}/arkcompiler/ets_frontend/es2abc" \
+                          " --merge-abc-binary=../../{1}/arkcompiler/ets_frontend/merge_abc" \
+                          " --ark-aot" \
+                          " --ark-frontend=es2panda" \
+                          "{2}".format(args_to_test262_cmd, out_path, " --run-pgo" if run_pgo else "", timeout)
         if enable_litecg:
             test262_cmd = test262_cmd + " --enable-litecg"
         return test262_cmd
 
     @staticmethod
-    def get_test262_jit_cmd(gn_args, out_path, x64_out_path, args_to_test262_cmd, timeout):
-        print("running test262 in JIT mode\n")
+    def get_jit_cmd(test_suite, test_script_name, test_script_path, gn_args, out_path, x64_out_path, args_to_cmd,
+                    timeout):
+        print(f"running {test_suite} in JIT mode\n")
         if any('target_cpu="arm64"' in arg for arg in gn_args):
-            test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout {3}" \
-                " --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib:../../{1}/thirdparty/icu/" \
-                ":../../{1}/thirdparty/bounds_checking_function" \
-                ":../../{1}/arkcompiler/ets_runtime:" \
-                " --ark-arch aarch64" \
-                " --run-jit" \
-                " --ark-arch-root=../../{1}/common/common/libc/" \
-                " --ark-aot-tool=../../{2}/arkcompiler/ets_runtime/ark_aot_compiler" \
-                " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
-                " --ark-frontend-binary=../../{2}/arkcompiler/ets_frontend/es2abc" \
-                " --merge-abc-binary=../../{2}/arkcompiler/ets_frontend/merge_abc" \
-                " --ark-frontend=es2panda".format(args_to_test262_cmd, out_path, x64_out_path, timeout)
+            cmd = "cd {5} && python3 {4} {0} --timeout {3}" \
+                  " --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib:../../{1}/thirdparty/icu/" \
+                  ":../../{1}/thirdparty/bounds_checking_function" \
+                  ":../../{1}/arkcompiler/ets_runtime:" \
+                  " --ark-arch aarch64" \
+                  " --run-jit" \
+                  " --ark-arch-root=../../{1}/common/common/libc/" \
+                  " --ark-aot-tool=../../{2}/arkcompiler/ets_runtime/ark_aot_compiler" \
+                  " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
+                  " --ark-frontend-binary=../../{2}/arkcompiler/ets_frontend/es2abc" \
+                  " --merge-abc-binary=../../{2}/arkcompiler/ets_frontend/merge_abc" \
+                  " --ark-frontend=es2panda".format(args_to_cmd, out_path, x64_out_path, timeout,
+                                                    test_script_name, test_script_path)
         else:
-            test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout {3}" \
-                " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu" \
-                ":../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
-                " --run-jit" \
-                " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
-                " --ark-frontend-binary=../../{1}/arkcompiler/ets_frontend/es2abc" \
-                " --merge-abc-binary=../../{1}/arkcompiler/ets_frontend/merge_abc" \
-                " --ark-frontend=es2panda"\
-                "{2}".format(args_to_test262_cmd, out_path, x64_out_path, timeout)
-        return test262_cmd
-    
+            cmd = "cd arkcompiler/ets_frontend && python3 {4} {0} --timeout {3}" \
+                  " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu" \
+                  ":../../{1}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                  " --run-jit" \
+                  " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
+                  " --ark-frontend-binary=../../{1}/arkcompiler/ets_frontend/es2abc" \
+                  " --merge-abc-binary=../../{1}/arkcompiler/ets_frontend/merge_abc" \
+                  " --ark-frontend=es2panda" \
+                  "{2}".format(args_to_cmd, out_path, x64_out_path, timeout, test_script_name)
+        return cmd
+
     @staticmethod
-    def get_test262_baseline_jit_cmd(gn_args, out_path, x64_out_path, args_to_test262_cmd, timeout):
-        print("running test262 in baseline JIT mode\n")
+    def get_baseline_jit_cmd(test_suite, test_script_name, test_script_path, gn_args, out_path, x64_out_path,
+                             args_to_test262_cmd, timeout):
+        print(f"running {test_suite} in baseline JIT mode\n")
         if any('target_cpu="arm64"' in arg for arg in gn_args):
-            test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout {3}" \
-                " --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
-                ":../../{1}/thirdparty/icu" \
-                ":../../prebuilts/clang/ohos/linux-x86_64/llvm/lib/aarch64-linux-ohos" \
-                ":../../{1}/thirdparty/bounds_checking_function" \
-                ":../../{1}/arkcompiler/ets_runtime" \
-                ":../../{1}/common/common/libc/lib" \
-                " --ark-arch aarch64" \
-                " --run-baseline-jit" \
-                " --ark-arch-root=../../{1}/common/common/libc/" \
-                " --ark-aot-tool=../../{2}/arkcompiler/ets_runtime/ark_aot_compiler" \
-                " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
-                " --ark-frontend-binary=../../{2}/arkcompiler/ets_frontend/es2abc" \
-                " --merge-abc-binary=../../{2}/arkcompiler/ets_frontend/merge_abc" \
-                " --ark-frontend=es2panda".format(args_to_test262_cmd, out_path, x64_out_path, timeout)
+            cmd = "cd {5} && python3 {4} {0} --timeout {3}" \
+                  " --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                  ":../../{1}/thirdparty/icu" \
+                  ":../../prebuilts/clang/ohos/linux-x86_64/llvm/lib/aarch64-linux-ohos" \
+                  ":../../{1}/thirdparty/bounds_checking_function" \
+                  ":../../{1}/arkcompiler/ets_runtime" \
+                  ":../../{1}/common/common/libc/lib" \
+                  " --ark-arch aarch64" \
+                  " --run-baseline-jit" \
+                  " --ark-arch-root=../../{1}/common/common/libc/" \
+                  " --ark-aot-tool=../../{2}/arkcompiler/ets_runtime/ark_aot_compiler" \
+                  " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
+                  " --ark-frontend-binary=../../{2}/arkcompiler/ets_frontend/es2abc" \
+                  " --merge-abc-binary=../../{2}/arkcompiler/ets_frontend/merge_abc" \
+                  " --ark-frontend=es2panda".format(args_to_test262_cmd, out_path, x64_out_path, timeout,
+                                                    test_script_name, test_script_path)
         else:
-            test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout {3}" \
-                " --libs-dir ../../{1}/lib.unstripped/arkcompiler/ets_runtime" \
-                ":../../{1}/lib.unstripped/thirdparty/icu" \
-                ":../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
-                ":../../{1}/lib.unstripped/thirdparty/bounds_checking_function/" \
-                " --run-baseline-jit" \
-                " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
-                " --ark-frontend-binary=../../{1}/arkcompiler/ets_frontend/es2abc" \
-                " --merge-abc-binary=../../{1}/arkcompiler/ets_frontend/merge_abc" \
-                " --ark-frontend=es2panda"\
-                "{2}".format(args_to_test262_cmd, out_path, x64_out_path, timeout)
-        return test262_cmd
+            cmd = "cd {5} && python3 {4} {0} --timeout {3}" \
+                  " --libs-dir ../../{1}/lib.unstripped/arkcompiler/ets_runtime" \
+                  ":../../{1}/lib.unstripped/thirdparty/icu" \
+                  ":../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                  ":../../{1}/lib.unstripped/thirdparty/bounds_checking_function/" \
+                  " --run-baseline-jit" \
+                  " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
+                  " --ark-frontend-binary=../../{1}/arkcompiler/ets_frontend/es2abc" \
+                  " --merge-abc-binary=../../{1}/arkcompiler/ets_frontend/merge_abc" \
+                  " --ark-frontend=es2panda" \
+                  "{2}".format(args_to_test262_cmd, out_path, x64_out_path, timeout,
+                               test_script_name, test_script_path)
+        return cmd
 
     @staticmethod
     def build_args_to_test262_cmd(arg_list):
@@ -556,6 +613,16 @@ class ArkPy:
                     sys.exit(1)
         return None, arg_list
 
+    @staticmethod
+    def __get_x64_out_path(out_path) -> str:
+        if 'release' in out_path:
+            return 'out/x64.release'
+        if 'debug' in out_path:
+            return 'out/x64.debug'
+        if 'fastverify' in out_path:
+            return 'out/x64.fastverify'
+        return ""
+
     def get_binaries(self):
         host_os = sys.platform
         host_cpu = platform.machine()
@@ -572,18 +639,18 @@ class ArkPy:
             print("\nLogic of getting gn binary or ninja binary does not match logic of prebuilts_download." \
                   "\nCheck func \033[92m{0} of class {1} in file {2}\033[0m against file {3} if the name of this " \
                   "file had not changed!\n".format(
-                    sys._getframe().f_code.co_name, self.__class__.__name__, CURRENT_FILENAME,
-                    self.PREBUILTS_DOWNLOAD_CONFIG_FILE_PATH))
+                sys._getframe().f_code.co_name, self.__class__.__name__, CURRENT_FILENAME,
+                self.PREBUILTS_DOWNLOAD_CONFIG_FILE_PATH))
             raise error
         if self.gn_binary_path == "" or self.ninja_binary_path == "":
             print("\nLogic of prebuilts_download may be wrong." \
                   "\nCheck \033[92mdata in file {0}\033[0m against func {1} of class {2} in file {3}!\n".format(
-                    self.PREBUILTS_DOWNLOAD_CONFIG_FILE_PATH, sys._getframe().f_code.co_name, self.__class__.__name__,
-                    CURRENT_FILENAME))
+                self.PREBUILTS_DOWNLOAD_CONFIG_FILE_PATH, sys._getframe().f_code.co_name, self.__class__.__name__,
+                CURRENT_FILENAME))
             sys.exit(0)
         if not os.path.isfile(self.gn_binary_path) or not os.path.isfile(self.ninja_binary_path):
             print("\nStep for prebuilts_download may be ommited. (\033[92m./prebuilts_download.sh\033[0m)" \
-            "\nCheck \033[92mwhether gn binary and ninja binary are under directory prebuilts\033[0m!\n".format())
+                  "\nCheck \033[92mwhether gn binary and ninja binary are under directory prebuilts\033[0m!\n".format())
             sys.exit(0)
         return
 
@@ -603,13 +670,13 @@ class ArkPy:
         if len(arg_to_list) == 1:
             os_cpu_part = arg_to_list[0]
             mode_part = "release"
-            key_to_dict_in_os_cpu_matched_arg = self.which_dict_flags_match_arg(self.ARG_DICT["os_cpu"], os_cpu_part)
-            key_to_dict_in_mode_matched_arg = self.which_dict_flags_match_arg(self.ARG_DICT["mode"], mode_part)
+            key_to_dict_in_os_cpu_matched_arg = self.which_dict_flags_match_arg(self.ARG_DICT.get("os_cpu"), os_cpu_part)
+            key_to_dict_in_mode_matched_arg = self.which_dict_flags_match_arg(self.ARG_DICT.get("mode"), mode_part)
         elif len(arg_to_list) == 2:
             os_cpu_part = arg_to_list[0]
             mode_part = arg_to_list[1]
-            key_to_dict_in_os_cpu_matched_arg = self.which_dict_flags_match_arg(self.ARG_DICT["os_cpu"], os_cpu_part)
-            key_to_dict_in_mode_matched_arg = self.which_dict_flags_match_arg(self.ARG_DICT["mode"], mode_part)
+            key_to_dict_in_os_cpu_matched_arg = self.which_dict_flags_match_arg(self.ARG_DICT.get("os_cpu"), os_cpu_part)
+            key_to_dict_in_mode_matched_arg = self.which_dict_flags_match_arg(self.ARG_DICT.get("mode"), mode_part)
         else:
             print("\"\033[92m{0}\033[0m\" combined with more than 2 flags is not supported.".format(arg))
         if (key_to_dict_in_os_cpu_matched_arg == "") | (key_to_dict_in_mode_matched_arg == ""):
@@ -635,7 +702,7 @@ class ArkPy:
         help_msg += "\033[32mCommand template:\033[0m\n{}\n\n".format(
             "  python3 ark.py \033[92m[os_cpu].[mode] [gn_target] [option]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --aot] " \
-              "[none or --pgo] [none or --litecg] [none, file or dir] [none or --threads=X] [option]\033[0m\n"
+            "[none or --pgo] [none or --litecg] [none, file or dir] [none or --threads=X] [option]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --jit] [none or --threads=X]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --baseline-jit] [none or --threads=X]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [unittest] [option]\033[0m\n"
@@ -686,8 +753,13 @@ class ArkPy:
         # prepare log file
         build_log_path = os.path.join(out_path, log_file_name)
         backup(build_log_path, "w")
+        if arg_list is not None:
+            build_target = " ".join([str(arg).strip() for arg in arg_list
+                                     if arg is not None or len(str(arg).strip()) > 0])
+        else:
+            build_target = ""
         str_to_build_log = "================================\nbuild_time: {0}\nbuild_target: {1}\n\n".format(
-            str_of_time_now(), " ".join(arg_list))
+            str_of_time_now(), build_target)
         _write(build_log_path, str_to_build_log, "a")
         # gn command
         print("=== gn gen start ===")
@@ -704,13 +776,13 @@ class ArkPy:
         # Always add " -d keeprsp" to ninja command to keep response file("*.rsp"), thus we could get shared libraries
         # of an excutable from its response file.
         ninja_cmd = \
-        self.ninja_binary_path + \
-        (" -v" if self.enable_verbose else "") + \
-        (" -d keepdepfile" if self.enable_keepdepfile else "") + \
-        " -d keeprsp" + \
-        " -C {}".format(out_path) + \
-        " {}".format(" ".join(arg_list)) + \
-        " -k {}".format(self.ignore_errors)
+            self.ninja_binary_path + \
+            (" -v" if self.enable_verbose else "") + \
+            (" -d keepdepfile" if self.enable_keepdepfile else "") + \
+            " -d keeprsp" + \
+            " -C {}".format(out_path) + \
+            " {}".format(" ".join(arg_list if arg_list else [])) + \
+            " -k {}".format(self.ignore_errors)
         print(ninja_cmd)
         code = call_with_output(ninja_cmd, build_log_path)
         if code != 0:
@@ -720,77 +792,141 @@ class ArkPy:
             print("=== ninja success! ===\n")
         return
 
-    def build_for_test262(self, out_path, timeout, gn_args: list, arg_list: list, log_file_name: str,
-                          aot_mode: bool, run_pgo=False, enable_litecg=False, run_jit=False,
-                          run_baseline_jit=False):
-        args_to_test262_cmd = self.build_args_to_test262_cmd(arg_list)
-        x64_out_path = ""
+    def call_build_gn_target(self, gn_args, out_path, x64_out_path, test_suite, log_file_name):
         if any('target_cpu="arm64"' in arg for arg in gn_args):
-            if 'release' in out_path:
-                x64_out_path = 'out/x64.release'
-            if 'debug' in out_path:
-                x64_out_path = 'out/x64.debug'
             gn_args.append("so_dir_for_qemu=\"../../{0}/common/common/libc/\"".format(out_path))
             gn_args.append("run_with_qemu=true".format(out_path))
             if not os.path.exists(x64_out_path):
                 os.makedirs(x64_out_path)
             self.build_for_gn_target(
-                x64_out_path, ['target_os="linux"', 'target_cpu="x64"', 'is_debug=false'],
-                self.ARG_DICT["target"]["test262"]["gn_targets_depend_on"], log_file_name)
+                x64_out_path,
+                ['target_os="linux"', 'target_cpu="x64"', 'is_debug=false'],
+                self.ARG_DICT.get("target").get(test_suite).get("gn_targets_depend_on"),
+                log_file_name)
             self.build_for_gn_target(
-                out_path, gn_args, self.ARG_DICT["target"]["test262"]["arm64_gn_targets_depend_on"], log_file_name)
+                out_path,
+                gn_args,
+                self.ARG_DICT.get("target").get(test_suite).get("arm64_gn_targets_depend_on"),
+                log_file_name)
         else:
             self.build_for_gn_target(
-                out_path, gn_args, self.ARG_DICT["target"]["test262"]["gn_targets_depend_on"], log_file_name)
-        if run_jit:
-            test262_cmd = self.get_test262_jit_cmd(gn_args, out_path, x64_out_path, args_to_test262_cmd, timeout)
-        elif run_baseline_jit:
-            test262_cmd = self.get_test262_baseline_jit_cmd(gn_args, out_path, x64_out_path,
-                                                            args_to_test262_cmd, timeout)
-        elif aot_mode:
-            test262_cmd = self.get_test262_aot_cmd(gn_args, out_path, x64_out_path, run_pgo, enable_litecg, args_to_test262_cmd,
-                        timeout)
-        else:
-            test262_cmd = self.get_test262_cmd(gn_args, out_path, x64_out_path, run_pgo,
-                                            enable_litecg, args_to_test262_cmd, timeout)
-        test262_log_path = os.path.join(out_path, log_file_name)
-        str_to_test262_log = "================================\ntest262_time: {0}\ntest262_target: {1}\n\n".format(
-            str_of_time_now(), args_to_test262_cmd)
-        _write(test262_log_path, str_to_test262_log, "a")
-        print("=== test262 start ===")
-        code = call_with_output(test262_cmd, test262_log_path)
-        if code != 0:
-            print("=== test262 fail! ===\n")
-            sys.exit(code)
-        print("=== test262 success! ===\n")
+                out_path,
+                gn_args,
+                self.ARG_DICT.get("target").get(test_suite).get("gn_targets_depend_on"),
+                log_file_name)
 
-    def build_for_unittest(self, out_path: str, gn_args: list, log_file_name:str):
+    def get_build_cmd(self, *, test_suite, test_script_name, test_script_path,
+                      out_path, x64_out_path, gn_args: list, args_to_cmd: str, timeout,
+                      run_jit: bool = False, run_baseline_jit: bool = False, aot_mode: bool = False,
+                      run_pgo: bool = False, enable_litecg: bool = False, ignore_list: Optional[str] = None) -> str:
+        if run_jit:
+            cmd = self.get_jit_cmd(test_suite, test_script_name, test_script_path,
+                                   gn_args, out_path, x64_out_path, args_to_cmd, timeout)
+        elif run_baseline_jit:
+            cmd = self.get_baseline_jit_cmd(test_suite, test_script_name, test_script_path,
+                                            gn_args, out_path, x64_out_path, args_to_cmd, timeout)
+        elif aot_mode and test_suite == "test262":
+            cmd = self.get_test262_aot_cmd(gn_args, out_path, x64_out_path, run_pgo,
+                                           enable_litecg, args_to_cmd, timeout)
+        else:
+            cmd = self.get_cmd(test_suite, test_script_name, test_script_path,
+                               gn_args, out_path, x64_out_path, aot_mode, run_pgo,
+                               enable_litecg, args_to_cmd, timeout, ignore_list)
+        return cmd
+
+    def build_for_suite(self, *, test_suite, test_script_name, test_script_path,
+                        out_path, gn_args: list, log_file_name, args_to_cmd: str, timeout,
+                        run_jit: bool = False, run_baseline_jit: bool = False, aot_mode: bool = False,
+                        run_pgo: bool = False, enable_litecg: bool = False, ignore_list: Optional[str] = None):
+        x64_out_path = self.__get_x64_out_path(out_path)
+        self.call_build_gn_target(gn_args, out_path, x64_out_path, test_suite, log_file_name)
+        cmd = self.get_build_cmd(
+            test_suite=test_suite,
+            test_script_name=test_script_name,
+            test_script_path=test_script_path,
+            out_path=out_path,
+            x64_out_path=x64_out_path,
+            gn_args=gn_args,
+            args_to_cmd=args_to_cmd,
+            timeout=timeout,
+            run_jit=run_jit,
+            run_baseline_jit=run_baseline_jit,
+            aot_mode=aot_mode, run_pgo=run_pgo, enable_litecg=enable_litecg, ignore_list=ignore_list)
+        log_path = str(os.path.join(out_path, log_file_name))
+        str_to_log = "================================\n{2}_time: {0}\n{2}_target: {1}\n\n".format(
+            str_of_time_now(), args_to_cmd, test_suite)
+        _write(log_path, str_to_log, "a")
+        print(f"=== {test_suite} start ===")
+        code = call_with_output(cmd, log_path)
+        if code != 0:
+            print(f"=== {test_suite} fail! ===\n")
+            sys.exit(code)
+        print(f"=== {test_suite} success! ===\n")
+
+    def build_for_test262(self, out_path, gn_args: list, arg_list: list):
+        timeout, arg_list = self.parse_timeout(arg_list)
+        arg_list = arg_list[1:]
+
+        is_aot_mode, arg_list = self.__purge_arg_list("--aot", arg_list)
+        is_pgo, arg_list = self.__purge_arg_list("--pgo", arg_list)
+        is_litecg, arg_list = self.__purge_arg_list("--litecg", arg_list)
+        is_jit, arg_list = self.__purge_arg_list("--jit", arg_list)
+        is_baseline_jit, arg_list = self.__purge_arg_list("--baseline-jit", arg_list)
+        print(f"Test262: arg_list = {arg_list}")
+
+        args_to_test262_cmd = self.build_args_to_test262_cmd(arg_list)
+        self.build_for_suite(
+            test_suite="test262",
+            test_script_name="test262/run_test262.py",
+            test_script_path="arkcompiler/ets_frontend",
+            out_path=out_path,
+            gn_args=gn_args,
+            log_file_name=self.TEST262_LOG_FILE_NAME,
+            args_to_cmd=args_to_test262_cmd,
+            timeout=timeout,
+            run_jit=is_jit,
+            run_pgo=is_pgo,
+            run_baseline_jit=is_baseline_jit,
+            aot_mode=is_aot_mode,
+            enable_litecg=is_litecg
+        )
+
+    def build_for_unittest(self, out_path: str, gn_args: list, log_file_name: str):
         self.build_for_gn_target(
-            out_path, gn_args, self.ARG_DICT["target"]["unittest"]["gn_targets_depend_on"],
+            out_path, gn_args, self.ARG_DICT.get("target").get("unittest").get("gn_targets_depend_on"),
             log_file_name)
         return
 
-    def build_for_regress_test(self, out_path, gn_args: list, arg_list: list, log_file_name: str, timeout):
+    def build_for_regress_test(self, out_path, gn_args: list, arg_list: list):
+        timeout, arg_list = self.parse_option(arg_list, option_name="--timeout", default_value=200)
+        ignore_list, arg_list = self.parse_option(arg_list, option_name="--ignore-list", default_value=None)
+
+        arg_list = arg_list[1:]
+
+        is_aot, arg_list = self.__purge_arg_list("--aot", arg_list)
+        is_pgo, arg_list = self.__purge_arg_list("--pgo", arg_list)
+        is_litecg, arg_list = self.__purge_arg_list("--litecg", arg_list)
+        is_jit, arg_list = self.__purge_arg_list("--jit", arg_list)
+        is_baseline_jit, arg_list = self.__purge_arg_list("--baseline-jit", arg_list)
+        print(f"Regress: arg_list = {arg_list}")
+
         args_to_regress_test_cmd = self.build_args_to_regress_cmd(arg_list)
-        self.build_for_gn_target(
-            out_path, gn_args, self.ARG_DICT["target"]["regresstest"]["gn_targets_depend_on"], log_file_name)
-        regress_test_cmd = "python3 arkcompiler/ets_runtime/test/regresstest/run_regress_test.py --timeout {2}" \
-                      " --ark-tool ./{0}/arkcompiler/ets_runtime/ark_js_vm" \
-                      " --ark-frontend-binary ./{0}/arkcompiler/ets_frontend/es2abc" \
-                      " --LD_LIBRARY_PATH ./{0}/arkcompiler/ets_runtime:./{0}/thirdparty/icu:" \
-                      "./prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
-                      " --out-dir ./{0}/ {1}".format(out_path, args_to_regress_test_cmd, timeout)
-        regress_test_log_path = os.path.join(out_path, log_file_name)
-        str_to_test_log = "============\n regresstest_time: {0}\nregresstest_target: {1}\n\n".format(
-            str_of_time_now(), regress_test_cmd)
-        _write(regress_test_log_path, str_to_test_log, "a")
-        print("=== regresstest start ===")
-        code = call_with_output(regress_test_cmd, regress_test_log_path)
-        if code != 0:
-            print("=== regresstest fail! ===\n")
-            sys.exit(code)
-        print("=== regresstest success! ===\n")
-        return
+        self.build_for_suite(
+            test_suite="regresstest",
+            test_script_name="test/regresstest/run_regress_test.py",
+            test_script_path="arkcompiler/ets_runtime",
+            out_path=out_path,
+            gn_args=gn_args,
+            log_file_name=self.REGRESS_TEST_LOG_FILE_NAME,
+            args_to_cmd=args_to_regress_test_cmd,
+            timeout=timeout,
+            run_jit=is_jit,
+            run_pgo=is_pgo,
+            run_baseline_jit=is_baseline_jit,
+            aot_mode=is_aot,
+            enable_litecg=is_litecg,
+            ignore_list=ignore_list
+        )
 
     def build(self, out_path: str, gn_args: list, arg_list: list):
         if not os.path.exists(out_path):
@@ -798,47 +934,17 @@ class ArkPy:
             os.makedirs(out_path)
         if len(arg_list) == 0:
             self.build_for_gn_target(out_path, gn_args, ["default"], self.GN_TARGET_LOG_FILE_NAME)
-        elif self.is_dict_flags_match_arg(self.ARG_DICT["target"]["workload"], arg_list[0]):
+        elif self.is_dict_flags_match_arg(self.ARG_DICT.get("target").get("workload"), arg_list[0]):
             self.build_for_workload(arg_list, out_path, gn_args, 'workload.log')
-        elif self.is_dict_flags_match_arg(self.ARG_DICT["target"]["test262"], arg_list[0]):
-            timeout, arg_list = self.parse_timeout(arg_list)
-            run_aot_mode = len(arg_list) >= 2 and arg_list[1] == "--aot"
-            run_aot_pgo_litecg = len(arg_list) >= 4 and ((arg_list[2] == "--pgo" and arg_list[3] == "--litecg") or
-                                                         (arg_list[3] == "--pgo" and arg_list[2] == "--litecg"))
-            run_aot_pgo = len(arg_list) >= 3 and arg_list[2] == "--pgo"
-            run_aot_litecg = len(arg_list) >= 3 and arg_list[2] == "--litecg"
-            run_jit = len(arg_list) >= 2 and arg_list[1] == "--jit"
-            run_baseline_jit = len(arg_list) >= 2 and arg_list[1] == "--baseline-jit"
-            if run_aot_mode:
-                if run_aot_pgo_litecg:
-                    self.build_for_test262(out_path, timeout, gn_args, arg_list[4:], self.TEST262_LOG_FILE_NAME, True,
-                                           True, True)
-                elif run_aot_litecg:
-                    self.build_for_test262(out_path, timeout, gn_args, arg_list[3:], self.TEST262_LOG_FILE_NAME, True,
-                                           False, True)
-                elif run_aot_pgo:
-                    self.build_for_test262(out_path, timeout, gn_args, arg_list[3:],
-                                           self.TEST262_LOG_FILE_NAME, True, True)
-                else:
-                    self.build_for_test262(out_path, timeout, gn_args, arg_list[2:], self.TEST262_LOG_FILE_NAME, True)
-            elif run_jit:
-                self.build_for_test262(out_path, timeout, gn_args, arg_list[2:],
-                                       self.TEST262_LOG_FILE_NAME, False, False,
-                                       False, True)
-            elif run_baseline_jit:
-                self.build_for_test262(out_path, timeout, gn_args, arg_list[2:],
-                                       self.TEST262_LOG_FILE_NAME, False, False,
-                                       False, False, True)
-            else:
-                self.build_for_test262(out_path, timeout, gn_args, arg_list[1:], self.TEST262_LOG_FILE_NAME, False)
-        elif self.is_dict_flags_match_arg(self.ARG_DICT["target"]["unittest"], arg_list[0]):
+        elif self.is_dict_flags_match_arg(self.ARG_DICT.get("target").get("test262"), arg_list[0]):
+            self.build_for_test262(out_path, gn_args, arg_list)
+        elif self.is_dict_flags_match_arg(self.ARG_DICT.get("target").get("unittest"), arg_list[0]):
             if len(arg_list) > 1:
                 print("\033[92m\"unittest\" not support additional arguments.\033[0m\n".format())
                 sys.exit(0)
             self.build_for_unittest(out_path, gn_args, self.UNITTEST_LOG_FILE_NAME)
-        elif self.is_dict_flags_match_arg(self.ARG_DICT["target"]["regresstest"], arg_list[0]):
-            timeout, arg_list = self.parse_option(arg_list, option_name="--timeout", default_value=200)
-            self.build_for_regress_test(out_path, gn_args, arg_list[1:], self.REGRESS_TEST_LOG_FILE_NAME, timeout)
+        elif self.is_dict_flags_match_arg(self.ARG_DICT.get("target").get("regresstest"), arg_list[0]):
+            self.build_for_regress_test(out_path, gn_args, arg_list)
         else:
             self.build_for_gn_target(out_path, gn_args, arg_list, self.GN_TARGET_LOG_FILE_NAME)
         return
@@ -851,27 +957,27 @@ class ArkPy:
         gn_args_ret = []
         for arg in arg_list:
             # match [option][clean] flag
-            if self.is_dict_flags_match_arg(self.ARG_DICT["option"]["clean"], arg):
+            if self.is_dict_flags_match_arg(self.ARG_DICT.get("option").get("clean"), arg):
                 self.clean(out_path)
                 sys.exit(0)
             # match [option][clean-continue] flag
-            elif self.is_dict_flags_match_arg(self.ARG_DICT["option"]["clean-continue"], arg):
+            elif self.is_dict_flags_match_arg(self.ARG_DICT.get("option").get("clean-continue"), arg):
                 if not self.has_cleaned:
                     self.clean(out_path)
                     self.has_cleaned = True
             # match [option][gn-args] flag
-            elif self.is_dict_flags_match_arg(self.ARG_DICT["option"]["gn-args"], arg):
+            elif self.is_dict_flags_match_arg(self.ARG_DICT.get("option").get("gn-args"), arg):
                 gn_args_ret.append(arg[(arg.find("=") + 1):])
             # match [option][keepdepfile] flag
-            elif self.is_dict_flags_match_arg(self.ARG_DICT["option"]["keepdepfile"], arg):
+            elif self.is_dict_flags_match_arg(self.ARG_DICT.get("option").get("keepdepfile"), arg):
                 if not self.enable_keepdepfile:
                     self.enable_keepdepfile = True
             # match [option][verbose] flag
-            elif self.is_dict_flags_match_arg(self.ARG_DICT["option"]["verbose"], arg):
+            elif self.is_dict_flags_match_arg(self.ARG_DICT.get("option").get("verbose"), arg):
                 if not self.enable_verbose:
                     self.enable_verbose = True
             # match [option][keep-going] flag
-            elif self.is_dict_flags_match_arg(self.ARG_DICT["option"]["keep-going"], arg):
+            elif self.is_dict_flags_match_arg(self.ARG_DICT.get("option").get("keep-going"), arg):
                 if self.ignore_errors == 1:
                     input_value = arg[(arg.find("=") + 1):]
                     try:
@@ -908,13 +1014,13 @@ class ArkPy:
             run_interpreter = True
         self.build_for_gn_target(out_path, gn_args, ["default"], self.GN_TARGET_LOG_FILE_NAME)
         workload_cmd = "cd arkcompiler/ets_runtime/test/workloadtest/ && python3 work_load.py" \
-          " --code-path {0}" \
-          " --report {1}" \
-          " --tools-type {2}" \
-          " --boundary-value {3}" \
-          " --run-count {4}" \
-          " --code-v {5}" \
-          .format(root_dir, report, tools, boundary_value, run_count, code_v)
+                       " --code-path {0}" \
+                       " --report {1}" \
+                       " --tools-type {2}" \
+                       " --boundary-value {3}" \
+                       " --run-count {4}" \
+                       " --code-v {5}" \
+            .format(root_dir, report, tools, boundary_value, run_count, code_v)
         if run_interpreter:
             workload_cmd += " --run-interpreter true"
         workload_log_path = os.path.join(out_path, log_file_name)
@@ -934,19 +1040,24 @@ class ArkPy:
         self.get_binaries()
         # get out_path
         name_of_out_dir_of_second_level = \
-            self.ARG_DICT["os_cpu"][os_cpu_key]["prefix_of_name_of_out_dir_of_second_level"] + \
+            self.ARG_DICT.get("os_cpu").get(os_cpu_key).get("prefix_of_name_of_out_dir_of_second_level") + \
             self.DELIMITER_FOR_SECOND_OUT_DIR_NAME + \
-            self.ARG_DICT["mode"][mode_key]["suffix_of_name_of_out_dir_of_second_level"]
+            self.ARG_DICT.get("mode").get(mode_key).get("suffix_of_name_of_out_dir_of_second_level")
         out_path = os.path.join(self.NAME_OF_OUT_DIR_OF_FIRST_LEVEL, name_of_out_dir_of_second_level)
         # match [option] flag
         [arg_list, gn_args] = self.match_options(arg_list, out_path)
         # get expression which would be written to args.gn file
-        gn_args.extend(self.ARG_DICT["os_cpu"][os_cpu_key]["gn_args"])
-        gn_args.extend(self.ARG_DICT["mode"][mode_key]["gn_args"])
+        gn_args.extend(self.ARG_DICT.get("os_cpu").get(os_cpu_key).get("gn_args"))
+        gn_args.extend(self.ARG_DICT.get("mode").get(mode_key).get("gn_args"))
         # start to build
         self.build(out_path, gn_args, arg_list)
         return
 
+    def __purge_arg_list(self, option_name: str, arg_list: List[Any]) -> Tuple[bool, List[Any]]:
+        if option_name in arg_list:
+            arg_list.remove(option_name)
+            return True, arg_list
+        return False, arg_list
 
 
 if __name__ == "__main__":
