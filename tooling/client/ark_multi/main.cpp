@@ -26,7 +26,10 @@
 #include "ecmascript/js_runtime_options.h"
 #include "ecmascript/napi/include/jsnapi.h"
 #include "ecmascript/platform/file.h"
-
+#ifdef PANDA_TARGET_MACOS
+#include <unistd.h>
+#include <sys/syscall.h>
+#endif
 static panda::ecmascript::Mutex g_mutex;
 static std::list<std::string> g_files;
 static std::list<std::string>::iterator g_iter;
@@ -73,6 +76,26 @@ std::pair<std::string, std::string> GetNextPara()
     return {fileName, entry};
 }
 
+std::string GetMsg(int ret, std::string& msg, std::string& fileName)
+{
+    if (!ret) {
+#ifdef PANDA_TARGET_MACOS
+        msg = "[FAILED] [" + std::to_string(syscall(SYS_thread_selfid)) + "] Run " +
+            fileName + " failed!";
+#else
+        msg = "[FAILED] [" + std::to_string(gettid()) + "] Run " + fileName + " failed!";
+#endif
+    } else {
+#ifdef PANDA_TARGET_MACOS
+        msg = "[PASS] [" + std::to_string(syscall(SYS_thread_selfid)) + "] Run " +
+            fileName + " success!";
+#else
+        msg = "[PASS] [" + std::to_string(gettid()) + "] Run " + fileName + " success!";
+#endif
+    }
+    return msg;
+}
+
 bool StartThread(uv_loop_t *loop)
 {
     uv_thread_t tid = 0;
@@ -99,13 +122,7 @@ bool StartThread(uv_loop_t *loop)
             panda::JSNApi::DestroyJSVM(vm);
             auto loop = static_cast<uv_loop_t *>(arg);
             auto work = new uv_work_t;
-            std::string msg;
-            if (!ret) {
-                msg = "[FAILED] [" + std::to_string(gettid()) + "] Run " + fileName + " failed!";
-            } else {
-                msg = "[PASS] [" + std::to_string(gettid()) + "] Run " + fileName + " success!";
-                continue;
-            }
+            std::string msg = GetMsg(ret, msg, fileName);
             work->data = new char[msg.size() + 1];
             if (strncpy_s(static_cast<char*>(work->data), msg.size() + 1, msg.data(), msg.size()) != EOK) {
                 delete[] static_cast<char*>(work->data);
