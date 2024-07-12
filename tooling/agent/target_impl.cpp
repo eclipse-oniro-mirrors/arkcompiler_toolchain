@@ -21,17 +21,24 @@
 namespace panda::ecmascript::tooling {
 void TargetImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
-    static std::unordered_map<std::string, AgentHandler> dispatcherTable {
-        { "setAutoAttach", &TargetImpl::DispatcherImpl::SetAutoAttach },
-    };
+    Method method = GetMethodEnum(request.GetMethod());
+    LOG_DEBUGGER(INFO) << "dispatch [" << request.GetMethod() << "] to TargetImpl";
+    switch (method) {
+        case Method::SETAUTOATTACH:
+            SetAutoAttach(request);
+            break;
+        case Method::UNKNOWN:
+            SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
+            break;
+    }
+}
 
-    const std::string &method = request.GetMethod();
-    LOG_DEBUGGER(INFO) << "dispatch [" << method << "] to TargetImpl";
-    auto entry = dispatcherTable.find(method);
-    if (entry != dispatcherTable.end() && entry->second != nullptr) {
-        (this->*(entry->second))(request);
+TargetImpl::DispatcherImpl::Method TargetImpl::DispatcherImpl::GetMethodEnum(const std::string& method)
+{
+    if (method == "setAutoAttach") {
+        return Method::SETAUTOATTACH;
     } else {
-        SendResponse(request, DispatchResponse::Fail("Unknown method: " + method));
+        return Method::UNKNOWN;
     }
 }
 

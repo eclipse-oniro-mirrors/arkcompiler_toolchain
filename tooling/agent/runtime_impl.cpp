@@ -33,23 +33,44 @@ void RuntimeImpl::InitializeExtendedProtocolsList()
 
 void RuntimeImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
-    static std::unordered_map<std::string, AgentHandler> dispatcherTable {
-        { "enable", &RuntimeImpl::DispatcherImpl::Enable },
-        { "disable", &RuntimeImpl::DispatcherImpl::Disable },
-        { "getProperties", &RuntimeImpl::DispatcherImpl::GetProperties },
-        { "runIfWaitingForDebugger", &RuntimeImpl::DispatcherImpl::RunIfWaitingForDebugger },
-        { "getHeapUsage", &RuntimeImpl::DispatcherImpl::GetHeapUsage }
-    };
+    Method method = GetMethodEnum(request.GetMethod());
+    LOG_DEBUGGER(DEBUG) << "dispatch [" << request.GetMethod() << "] to RuntimeImpl";
+    switch (method) {
+        case Method::ENABLE:
+            Enable(request);
+            break;
+        case Method::DISABLE:
+            Disable(request);
+            break;
+        case Method::GETPROPERTIES:
+            GetProperties(request);
+            break;
+        case Method::RUNIFWAITINGFORDEBUGGER:
+            RunIfWaitingForDebugger(request);
+            break;
+        case Method::GETHEAPUSAGE:
+            GetHeapUsage(request);
+            break;
+        case Method::UNKNOWN:
+            SendResponse(request, DispatchResponse::Fail("unknown method: " + request.GetMethod()));
+            break;
+    }
+}
 
-    const std::string &method = request.GetMethod();
-    LOG_DEBUGGER(DEBUG) << "dispatch [" << method << "] to RuntimeImpl";
-
-    auto entry = dispatcherTable.find(method);
-    if (entry != dispatcherTable.end()) {
-        (this->*(entry->second))(request);
+RuntimeImpl::DispatcherImpl::Method RuntimeImpl::DispatcherImpl::GetMethodEnum(const std::string& method)
+{
+    if (method == "enable") {
+        return Method::ENABLE;
+    } else if (method == "disable") {
+        return Method::DISABLE;
+    } else if (method == "getProperties") {
+        return Method::GETPROPERTIES;
+    } else if (method == "runIfWaitingForDebugger") {
+        return Method::RUNIFWAITINGFORDEBUGGER;
+    } else if (method == "getHeapUsage") {
+        return Method::GETHEAPUSAGE;
     } else {
-        LOG_DEBUGGER(ERROR) << "unknown method: " << method;
-        SendResponse(request, DispatchResponse::Fail("unknown method: " + method));
+        return Method::UNKNOWN;
     }
 }
 

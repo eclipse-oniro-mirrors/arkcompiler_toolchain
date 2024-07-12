@@ -58,11 +58,20 @@ public:
         void RequestMemoryDump(const DispatchRequest &request);
         void Start(const DispatchRequest &request);
 
+        enum class Method {
+            END,
+            GETCATEGORIES,
+            RECORDCLOCKSYNCMARKER,
+            REQUESTMEMORYDUMP,
+            START,
+            UNKNOWN
+        };
+        Method GetMethodEnum(const std::string& method);
+
     private:
         NO_COPY_SEMANTIC(DispatcherImpl);
         NO_MOVE_SEMANTIC(DispatcherImpl);
 
-        using AgentHandler = void (TracingImpl::DispatcherImpl::*)(const DispatchRequest &request);
         std::unique_ptr<TracingImpl> tracing_ {};
     };
 

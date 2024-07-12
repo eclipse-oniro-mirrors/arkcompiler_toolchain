@@ -79,11 +79,27 @@ public:
         void StopTrackingHeapObjects(const DispatchRequest &request);
         void TakeHeapSnapshot(const DispatchRequest &request);
 
+        enum class Method {
+            ADDINSPECTEDHEAPOBJECT,
+            COLLECTGARBAGE,
+            ENABLE,
+            DISABLE,
+            GETHEAPOBJECTID,
+            GETOBJECTBYHEAPOBJECTID,
+            GETSAMPLINGPROFILE,
+            STARTSAMPLING,
+            STARTTRACKINGHEAPOBJECTS,
+            STOPSAMPLING,
+            STOPTRACKINGHEAPOBJECTS,
+            TAKEHEAPSNAPSHOT,
+            UNKNOWN
+        };
+        Method GetMethodEnum(const std::string& method);
+
     private:
         NO_COPY_SEMANTIC(DispatcherImpl);
         NO_MOVE_SEMANTIC(DispatcherImpl);
 
-        using AgentHandler = void (HeapProfilerImpl::DispatcherImpl::*)(const DispatchRequest &request);
         std::unique_ptr<HeapProfilerImpl> heapprofiler_ {};
     };
 

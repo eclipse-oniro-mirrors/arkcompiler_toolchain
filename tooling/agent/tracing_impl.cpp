@@ -23,21 +23,44 @@
 namespace panda::ecmascript::tooling {
 void TracingImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
-    static std::unordered_map<std::string, AgentHandler> dispatcherTable {
-        { "end", &TracingImpl::DispatcherImpl::End },
-        { "getCategories", &TracingImpl::DispatcherImpl::GetCategories },
-        { "recordClockSyncMarker", &TracingImpl::DispatcherImpl::RecordClockSyncMarker },
-        { "requestMemoryDump", &TracingImpl::DispatcherImpl::RequestMemoryDump },
-        { "start", &TracingImpl::DispatcherImpl::Start }
-    };
+    Method method = GetMethodEnum(request.GetMethod());
+    LOG_DEBUGGER(DEBUG) << "dispatch [" << request.GetMethod() << "] to TracingImpl";
+    switch (method) {
+        case Method::END:
+            End(request);
+            break;
+        case Method::GETCATEGORIES:
+            GetCategories(request);
+            break;
+        case Method::RECORDCLOCKSYNCMARKER:
+            RecordClockSyncMarker(request);
+            break;
+        case Method::REQUESTMEMORYDUMP:
+            RequestMemoryDump(request);
+            break;
+        case Method::START:
+            Start(request);
+            break;
+        case Method::UNKNOWN:
+            SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
+            break;
+    }
+}
 
-    const std::string &method = request.GetMethod();
-    LOG_DEBUGGER(DEBUG) << "dispatch [" << method << "] to TracingImpl";
-    auto entry = dispatcherTable.find(method);
-    if (entry != dispatcherTable.end() && entry->second != nullptr) {
-        (this->*(entry->second))(request);
+TracingImpl::DispatcherImpl::Method TracingImpl::DispatcherImpl::GetMethodEnum(const std::string& method)
+{
+    if (method == "end") {
+        return Method::END;
+    } else if (method == "getCategories") {
+        return Method::GETCATEGORIES;
+    } else if (method == "recordClockSyncMarker") {
+        return Method::RECORDCLOCKSYNCMARKER;
+    } else if (method == "requestMemoryDump") {
+        return Method::REQUESTMEMORYDUMP;
+    } else if (method == "start") {
+        return Method::START;
     } else {
-        SendResponse(request, DispatchResponse::Fail("Unknown method: " + method));
+        return Method::UNKNOWN;
     }
 }
 
