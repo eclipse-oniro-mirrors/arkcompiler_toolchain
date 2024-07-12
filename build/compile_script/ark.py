@@ -358,18 +358,18 @@ class ArkPy:
     def get_test262_jit_cmd(gn_args, out_path, x64_out_path, args_to_test262_cmd, timeout):
         print("running test262 in JIT mode\n")
         if any('target_cpu="arm64"' in arg for arg in gn_args):
-                test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout {3}" \
-                    " --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib:../../{1}/thirdparty/icu/" \
-                    ":../../{1}/thirdparty/bounds_checking_function" \
-                    ":../../{1}/arkcompiler/ets_runtime:" \
-                    " --ark-arch aarch64" \
-                    " --run-jit" \
-                    " --ark-arch-root=../../{1}/common/common/libc/" \
-                    " --ark-aot-tool=../../{2}/arkcompiler/ets_runtime/ark_aot_compiler" \
-                    " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
-                    " --ark-frontend-binary=../../{2}/arkcompiler/ets_frontend/es2abc" \
-                    " --merge-abc-binary=../../{2}/arkcompiler/ets_frontend/merge_abc" \
-                    " --ark-frontend=es2panda".format(args_to_test262_cmd, out_path, x64_out_path, timeout)
+            test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout {3}" \
+                " --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib:../../{1}/thirdparty/icu/" \
+                ":../../{1}/thirdparty/bounds_checking_function" \
+                ":../../{1}/arkcompiler/ets_runtime:" \
+                " --ark-arch aarch64" \
+                " --run-jit" \
+                " --ark-arch-root=../../{1}/common/common/libc/" \
+                " --ark-aot-tool=../../{2}/arkcompiler/ets_runtime/ark_aot_compiler" \
+                " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
+                " --ark-frontend-binary=../../{2}/arkcompiler/ets_frontend/es2abc" \
+                " --merge-abc-binary=../../{2}/arkcompiler/ets_frontend/merge_abc" \
+                " --ark-frontend=es2panda".format(args_to_test262_cmd, out_path, x64_out_path, timeout)
         else:
             test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout {3}" \
                 " --libs-dir ../../{1}/arkcompiler/ets_runtime:../../{1}/thirdparty/icu" \
@@ -386,21 +386,21 @@ class ArkPy:
     def get_test262_baseline_jit_cmd(gn_args, out_path, x64_out_path, args_to_test262_cmd, timeout):
         print("running test262 in baseline JIT mode\n")
         if any('target_cpu="arm64"' in arg for arg in gn_args):
-                test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout {3}" \
-                    " --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
-                    ":../../{1}/thirdparty/icu" \
-                    ":../../prebuilts/clang/ohos/linux-x86_64/llvm/lib/aarch64-linux-ohos" \
-                    ":../../{1}/thirdparty/bounds_checking_function" \
-                    ":../../{1}/arkcompiler/ets_runtime" \
-                    ":../../{1}/common/common/libc/lib" \
-                    " --ark-arch aarch64" \
-                    " --run-baseline-jit" \
-                    " --ark-arch-root=../../{1}/common/common/libc/" \
-                    " --ark-aot-tool=../../{2}/arkcompiler/ets_runtime/ark_aot_compiler" \
-                    " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
-                    " --ark-frontend-binary=../../{2}/arkcompiler/ets_frontend/es2abc" \
-                    " --merge-abc-binary=../../{2}/arkcompiler/ets_frontend/merge_abc" \
-                    " --ark-frontend=es2panda".format(args_to_test262_cmd, out_path, x64_out_path, timeout)
+            test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout {3}" \
+                " --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                ":../../{1}/thirdparty/icu" \
+                ":../../prebuilts/clang/ohos/linux-x86_64/llvm/lib/aarch64-linux-ohos" \
+                ":../../{1}/thirdparty/bounds_checking_function" \
+                ":../../{1}/arkcompiler/ets_runtime" \
+                ":../../{1}/common/common/libc/lib" \
+                " --ark-arch aarch64" \
+                " --run-baseline-jit" \
+                " --ark-arch-root=../../{1}/common/common/libc/" \
+                " --ark-aot-tool=../../{2}/arkcompiler/ets_runtime/ark_aot_compiler" \
+                " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
+                " --ark-frontend-binary=../../{2}/arkcompiler/ets_frontend/es2abc" \
+                " --merge-abc-binary=../../{2}/arkcompiler/ets_frontend/merge_abc" \
+                " --ark-frontend=es2panda".format(args_to_test262_cmd, out_path, x64_out_path, timeout)
         else:
             test262_cmd = "cd arkcompiler/ets_frontend && python3 test262/run_test262.py {0} --timeout {3}" \
                 " --libs-dir ../../{1}/lib.unstripped/arkcompiler/ets_runtime" \
