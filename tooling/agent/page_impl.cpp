@@ -21,17 +21,24 @@
 namespace panda::ecmascript::tooling {
 void PageImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
-    static std::unordered_map<std::string, AgentHandler> dispatcherTable {
-        { "getNavigationHistory", &PageImpl::DispatcherImpl::GetNavigationHistory },
-    };
+    Method method = GetMethodEnum(request.GetMethod());
+    LOG_DEBUGGER(INFO) << "dispatch [" << request.GetMethod() << "] to PageImpl";
+    switch (method) {
+        case Method::GETNAVIGATIONHISTORY:
+            GetNavigationHistory(request);
+            break;
+        case Method::UNKNOWN:
+            SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
+            break;
+    }
+}
 
-    const std::string &method = request.GetMethod();
-    LOG_DEBUGGER(INFO) << "dispatch [" << method << "] to PageImpl";
-    auto entry = dispatcherTable.find(method);
-    if (entry != dispatcherTable.end() && entry->second != nullptr) {
-        (this->*(entry->second))(request);
+PageImpl::DispatcherImpl::Method PageImpl::DispatcherImpl::GetMethodEnum(const std::string& method)
+{
+    if (method == "getNavigationHistory") {
+        return Method::GETNAVIGATIONHISTORY;
     } else {
-        SendResponse(request, DispatchResponse::Fail("Unknown method: " + method));
+        return Method::UNKNOWN;
     }
 }
 

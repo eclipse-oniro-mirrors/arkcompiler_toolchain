@@ -21,17 +21,24 @@
 namespace panda::ecmascript::tooling {
 void DomImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
-    static std::unordered_map<std::string, AgentHandler> dispatcherTable {
-        { "disable", &DomImpl::DispatcherImpl::Disable },
-    };
+    Method method = GetMethodEnum(request.GetMethod());
+    LOG_DEBUGGER(INFO) << "dispatch [" << request.GetMethod() << "] to DomImpl";
+    switch (method) {
+        case Method::DISABLE:
+            Disable(request);
+            break;
+        case Method::UNKNWON:
+            SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
+            break;
+    }
+}
 
-    const std::string &method = request.GetMethod();
-    LOG_DEBUGGER(INFO) << "dispatch [" << method << "] to DomImpl";
-    auto entry = dispatcherTable.find(method);
-    if (entry != dispatcherTable.end() && entry->second != nullptr) {
-        (this->*(entry->second))(request);
+DomImpl::DispatcherImpl::Method DomImpl::DispatcherImpl::GetMethodEnum(const std::string& method)
+{
+    if (method == "disable") {
+        return Method::DISABLE;
     } else {
-        SendResponse(request, DispatchResponse::Fail("Unknown method: " + method));
+        return Method::UNKNWON;
     }
 }
 

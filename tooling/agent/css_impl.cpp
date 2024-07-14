@@ -21,17 +21,24 @@
 namespace panda::ecmascript::tooling {
 void CssImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
-    static std::unordered_map<std::string, AgentHandler> dispatcherTable {
-        { "disable", &CssImpl::DispatcherImpl::Disable },
-    };
+    Method method = GetMethodEnum(request.GetMethod());
+    LOG_DEBUGGER(INFO) << "dispatch [" << request.GetMethod() << "] to CssImpl";
+    switch (method) {
+        case Method::DISABLE:
+            Disable(request);
+            break;
+        case Method::UNKNWON:
+            SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
+            break;
+    }
+}
 
-    const std::string &method = request.GetMethod();
-    LOG_DEBUGGER(INFO) << "dispatch [" << method << "] to CssImpl";
-    auto entry = dispatcherTable.find(method);
-    if (entry != dispatcherTable.end() && entry->second != nullptr) {
-        (this->*(entry->second))(request);
+CssImpl::DispatcherImpl::Method CssImpl::DispatcherImpl::GetMethodEnum(const std::string& method)
+{
+    if (method == "disable") {
+        return Method::DISABLE;
     } else {
-        SendResponse(request, DispatchResponse::Fail("Unknown method: " + method));
+        return Method::UNKNWON;
     }
 }
 

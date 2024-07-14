@@ -53,8 +53,17 @@ public:
         void GetProperties(const DispatchRequest &request);
         void GetHeapUsage(const DispatchRequest &request);
 
+        enum class Method {
+            ENABLE,
+            DISABLE,
+            GETPROPERTIES,
+            RUNIFWAITINGFORDEBUGGER,
+            GETHEAPUSAGE,
+            UNKNOWN
+        };
+        Method GetMethodEnum(const std::string& method);
+
     private:
-        using AgentHandler = void (RuntimeImpl::DispatcherImpl::*)(const DispatchRequest &request);
         std::unique_ptr<RuntimeImpl> runtime_ {};
 
         NO_COPY_SEMANTIC(DispatcherImpl);

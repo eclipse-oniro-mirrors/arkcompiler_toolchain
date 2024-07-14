@@ -28,28 +28,79 @@ void HeapProfilerImpl::InitializeExtendedProtocolsList()
 
 void HeapProfilerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
-    static std::unordered_map<std::string, AgentHandler> dispatcherTable {
-        { "addInspectedHeapObject", &HeapProfilerImpl::DispatcherImpl::AddInspectedHeapObject },
-        { "collectGarbage", &HeapProfilerImpl::DispatcherImpl::CollectGarbage },
-        { "enable", &HeapProfilerImpl::DispatcherImpl::Enable },
-        { "disable", &HeapProfilerImpl::DispatcherImpl::Disable },
-        { "getHeapObjectId", &HeapProfilerImpl::DispatcherImpl::GetHeapObjectId },
-        { "getObjectByHeapObjectId", &HeapProfilerImpl::DispatcherImpl::GetObjectByHeapObjectId },
-        { "getSamplingProfile", &HeapProfilerImpl::DispatcherImpl::GetSamplingProfile },
-        { "startSampling", &HeapProfilerImpl::DispatcherImpl::StartSampling },
-        { "startTrackingHeapObjects", &HeapProfilerImpl::DispatcherImpl::StartTrackingHeapObjects },
-        { "stopSampling", &HeapProfilerImpl::DispatcherImpl::StopSampling },
-        { "stopTrackingHeapObjects", &HeapProfilerImpl::DispatcherImpl::StopTrackingHeapObjects },
-        { "takeHeapSnapshot", &HeapProfilerImpl::DispatcherImpl::TakeHeapSnapshot }
-    };
+    Method method = GetMethodEnum(request.GetMethod());
+    LOG_DEBUGGER(DEBUG) << "dispatch [" << request.GetMethod() << "] to HeapProfilerImpl";
+    switch (method) {
+        case Method::ADDINSPECTEDHEAPOBJECT:
+            AddInspectedHeapObject(request);
+            break;
+        case Method::COLLECTGARBAGE:
+            CollectGarbage(request);
+            break;
+        case Method::ENABLE:
+            Enable(request);
+            break;
+        case Method::DISABLE:
+            Disable(request);
+            break;
+        case Method::GETHEAPOBJECTID:
+            GetHeapObjectId(request);
+            break;
+        case Method::GETOBJECTBYHEAPOBJECTID:
+            GetObjectByHeapObjectId(request);
+            break;
+        case Method::GETSAMPLINGPROFILE:
+            GetSamplingProfile(request);
+            break;
+        case Method::STARTSAMPLING:
+            StartSampling(request);
+            break;
+        case Method::STARTTRACKINGHEAPOBJECTS:
+            StartTrackingHeapObjects(request);
+            break;
+        case Method::STOPSAMPLING:
+            StopSampling(request);
+            break;
+        case Method::STOPTRACKINGHEAPOBJECTS:
+            StopTrackingHeapObjects(request);
+            break;
+        case Method::TAKEHEAPSNAPSHOT:
+            TakeHeapSnapshot(request);
+            break;
+        case Method::UNKNOWN:
+            SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
+            break;
+    }
+}
 
-    const std::string &method = request.GetMethod();
-    LOG_DEBUGGER(DEBUG) << "dispatch [" << method << "] to HeapProfilerImpl";
-    auto entry = dispatcherTable.find(method);
-    if (entry != dispatcherTable.end() && entry->second != nullptr) {
-        (this->*(entry->second))(request);
+HeapProfilerImpl::DispatcherImpl::Method HeapProfilerImpl::DispatcherImpl::GetMethodEnum(const std::string& method)
+{
+    if (method == "addInspectedHeapObject") {
+        return Method::ADDINSPECTEDHEAPOBJECT;
+    } else if (method == "collectGarbage") {
+        return Method::COLLECTGARBAGE;
+    } else if (method == "enable") {
+        return Method::ENABLE;
+    } else if (method == "disable") {
+        return Method::DISABLE;
+    } else if (method == "getHeapObjectId") {
+        return Method::GETHEAPOBJECTID;
+    } else if (method == "getObjectByHeapObjectId") {
+        return Method::GETOBJECTBYHEAPOBJECTID;
+    } else if (method == "getSamplingProfile") {
+        return Method::GETSAMPLINGPROFILE;
+    } else if (method == "startSampling") {
+        return Method::STARTSAMPLING;
+    } else if (method == "startTrackingHeapObjects") {
+        return Method::STARTTRACKINGHEAPOBJECTS;
+    } else if (method == "stopSampling") {
+        return Method::STOPSAMPLING;
+    } else if (method == "stopTrackingHeapObjects") {
+        return Method::STOPTRACKINGHEAPOBJECTS;
+    } else if (method == "takeHeapSnapshot") {
+        return Method::TAKEHEAPSNAPSHOT;
     } else {
-        SendResponse(request, DispatchResponse::Fail("Unknown method: " + method));
+        return Method::UNKNOWN;
     }
 }
 

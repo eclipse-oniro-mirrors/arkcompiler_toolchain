@@ -23,17 +23,24 @@
 namespace panda::ecmascript::tooling {
 void OverlayImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
-    static std::unordered_map<std::string, AgentHandler> dispatcherTable {
-        { "disable", &OverlayImpl::DispatcherImpl::Disable },
-    };
+    Method method = GetMethodEnum(request.GetMethod());
+    LOG_DEBUGGER(INFO) << "dispatch [" << request.GetMethod() << "] to OverlayImpl";
+    switch (method) {
+        case Method::DISABLE:
+            Disable(request);
+            break;
+        case Method::UNKNOWN:
+            SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
+            break;
+    }
+}
 
-    const std::string &method = request.GetMethod();
-    LOG_DEBUGGER(INFO) << "dispatch [" << method << "] to OverlayImpl";
-    auto entry = dispatcherTable.find(method);
-    if (entry != dispatcherTable.end() && entry->second != nullptr) {
-        (this->*(entry->second))(request);
+OverlayImpl::DispatcherImpl::Method OverlayImpl::DispatcherImpl::GetMethodEnum(const std::string& method)
+{
+    if (method == "disable") {
+        return Method::DISABLE;
     } else {
-        SendResponse(request, DispatchResponse::Fail("Unknown method: " + method));
+        return Method::UNKNOWN;
     }
 }
 

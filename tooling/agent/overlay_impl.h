@@ -36,11 +36,16 @@ public:
         void Disable(const DispatchRequest &request);
         void Dispatch(const DispatchRequest &request) override;
 
+        enum class Method {
+            DISABLE,
+            UNKNOWN
+        };
+        Method GetMethodEnum(const std::string& method);
+
     private:
         NO_COPY_SEMANTIC(DispatcherImpl);
         NO_MOVE_SEMANTIC(DispatcherImpl);
 
-        using AgentHandler = void (OverlayImpl::DispatcherImpl::*)(const DispatchRequest &request);
         std::unique_ptr<OverlayImpl> overlay_ {};
     };
 
