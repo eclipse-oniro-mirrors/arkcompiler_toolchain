@@ -184,11 +184,43 @@ public:
         void ClientDisconnect(const DispatchRequest &request);
         void CallFunctionOn(const DispatchRequest &request);
 
+        enum class Method {
+            CONTINUE_TO_LOCATION,
+            ENABLE,
+            DISABLE,
+            EVALUATE_ON_CALL_FRAME,
+            GET_POSSIBLE_BREAKPOINTS,
+            GET_SCRIPT_SOURCE,
+            PAUSE,
+            REMOVE_BREAKPOINT,
+            REMOVE_BREAKPOINTS_BY_URL,
+            RESUME,
+            SET_ASYNC_CALL_STACK_DEPTH,
+            SET_BREAKPOINT_BY_URL,
+            SET_BREAKPOINTS_ACTIVE,
+            SET_PAUSE_ON_EXCEPTIONS,
+            SET_SKIP_ALL_PAUSES,
+            STEP_INTO,
+            SMART_STEP_INTO,
+            STEP_OUT,
+            STEP_OVER,
+            SET_MIXED_DEBUG_ENABLED,
+            SET_BLACKBOX_PATTERNS,
+            REPLY_NATIVE_CALLING,
+            GET_POSSIBLE_AND_SET_BREAKPOINT_BY_URL,
+            DROP_FRAME,
+            SET_NATIVE_RANGE,
+            RESET_SINGLE_STEPPER,
+            CLIENT_DISCONNECT,
+            CALL_FUNCTION_ON,
+            UNKNOWN
+        };
+        Method GetMethodEnum(const std::string& method);
+
     private:
         NO_COPY_SEMANTIC(DispatcherImpl);
         NO_MOVE_SEMANTIC(DispatcherImpl);
 
-        using AgentHandler = void (DebuggerImpl::DispatcherImpl::*)(const DispatchRequest &request);
         std::unique_ptr<DebuggerImpl> debugger_ {};
     };
 

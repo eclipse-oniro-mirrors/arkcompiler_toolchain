@@ -42,16 +42,16 @@ void RuntimeImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         case Method::DISABLE:
             Disable(request);
             break;
-        case Method::GETPROPERTIES:
+        case Method::GET_PROPERTIES:
             GetProperties(request);
             break;
-        case Method::RUNIFWAITINGFORDEBUGGER:
+        case Method::RUN_IF_WAITING_FOR_DEBUGGER:
             RunIfWaitingForDebugger(request);
             break;
-        case Method::GETHEAPUSAGE:
+        case Method::GET_HEAP_USAGE:
             GetHeapUsage(request);
             break;
-        case Method::UNKNOWN:
+        default:
             SendResponse(request, DispatchResponse::Fail("unknown method: " + request.GetMethod()));
             break;
     }
@@ -64,11 +64,11 @@ RuntimeImpl::DispatcherImpl::Method RuntimeImpl::DispatcherImpl::GetMethodEnum(c
     } else if (method == "disable") {
         return Method::DISABLE;
     } else if (method == "getProperties") {
-        return Method::GETPROPERTIES;
+        return Method::GET_PROPERTIES;
     } else if (method == "runIfWaitingForDebugger") {
-        return Method::RUNIFWAITINGFORDEBUGGER;
+        return Method::RUN_IF_WAITING_FOR_DEBUGGER;
     } else if (method == "getHeapUsage") {
-        return Method::GETHEAPUSAGE;
+        return Method::GET_HEAP_USAGE;
     } else {
         return Method::UNKNOWN;
     }

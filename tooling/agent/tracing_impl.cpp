@@ -29,19 +29,19 @@ void TracingImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         case Method::END:
             End(request);
             break;
-        case Method::GETCATEGORIES:
+        case Method::GET_CATEGORIES:
             GetCategories(request);
             break;
-        case Method::RECORDCLOCKSYNCMARKER:
+        case Method::RECORD_CLOCK_SYNC_MARKER:
             RecordClockSyncMarker(request);
             break;
-        case Method::REQUESTMEMORYDUMP:
+        case Method::REQUEST_MEMORY_DUMP:
             RequestMemoryDump(request);
             break;
         case Method::START:
             Start(request);
             break;
-        case Method::UNKNOWN:
+        default:
             SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
             break;
     }
@@ -52,11 +52,11 @@ TracingImpl::DispatcherImpl::Method TracingImpl::DispatcherImpl::GetMethodEnum(c
     if (method == "end") {
         return Method::END;
     } else if (method == "getCategories") {
-        return Method::GETCATEGORIES;
+        return Method::GET_CATEGORIES;
     } else if (method == "recordClockSyncMarker") {
-        return Method::RECORDCLOCKSYNCMARKER;
+        return Method::RECORD_CLOCK_SYNC_MARKER;
     } else if (method == "requestMemoryDump") {
-        return Method::REQUESTMEMORYDUMP;
+        return Method::REQUEST_MEMORY_DUMP;
     } else if (method == "start") {
         return Method::START;
     } else {

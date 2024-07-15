@@ -37,7 +37,7 @@ public:
         void Dispatch(const DispatchRequest &request) override;
 
         enum class Method {
-            GETNAVIGATIONHISTORY,
+            GET_NAVIGATION_HISTORY,
             UNKNOWN
         };
         Method GetMethodEnum(const std::string& method);

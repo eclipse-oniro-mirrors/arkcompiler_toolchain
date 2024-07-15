@@ -80,18 +80,18 @@ public:
         void TakeHeapSnapshot(const DispatchRequest &request);
 
         enum class Method {
-            ADDINSPECTEDHEAPOBJECT,
-            COLLECTGARBAGE,
+            ADD_INSPECTED_HEAP_OBJECT,
+            COLLECT_GARBAGE,
             ENABLE,
             DISABLE,
-            GETHEAPOBJECTID,
-            GETOBJECTBYHEAPOBJECTID,
-            GETSAMPLINGPROFILE,
-            STARTSAMPLING,
-            STARTTRACKINGHEAPOBJECTS,
-            STOPSAMPLING,
-            STOPTRACKINGHEAPOBJECTS,
-            TAKEHEAPSNAPSHOT,
+            GET_HEAP_OBJECT_ID,
+            GET_OBJECT_BY_HEAP_OBJECT_ID,
+            GET_SAMPLING_PROFILE,
+            START_SAMPLING,
+            START_TRACKING_HEAP_OBJECTS,
+            STOP_SAMPLING,
+            STOP_TRACKING_HEAP_OBJECTS,
+            TAKE_HEAP_SNAPSHOT,
             UNKNOWN
         };
         Method GetMethodEnum(const std::string& method);

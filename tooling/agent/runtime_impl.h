@@ -56,9 +56,9 @@ public:
         enum class Method {
             ENABLE,
             DISABLE,
-            GETPROPERTIES,
-            RUNIFWAITINGFORDEBUGGER,
-            GETHEAPUSAGE,
+            GET_PROPERTIES,
+            RUN_IF_WAITING_FOR_DEBUGGER,
+            GET_HEAP_USAGE,
             UNKNOWN
         };
         Method GetMethodEnum(const std::string& method);
