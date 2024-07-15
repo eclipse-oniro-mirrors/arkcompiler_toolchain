@@ -55,12 +55,11 @@ void DomainManager::DispatcherReply(char* msg)
 
     std::string wholeMethod;
     ret = json->GetString("method", &wholeMethod);
-    if (wholeMethod.empty()) {
-        LOGE("find method empty");
-        return;
-    }
     if (ret == Result::SUCCESS) {
         std::string::size_type length = wholeMethod.length();
+        if (length == 0) {
+            return;
+        }
         std::string::size_type indexPoint = 0;
         indexPoint = wholeMethod.find_first_of('.', 0);
         if (indexPoint == std::string::npos || indexPoint == 0 || indexPoint == length - 1) {
