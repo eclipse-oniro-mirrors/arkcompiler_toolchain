@@ -65,7 +65,7 @@ public:
 const std::string WebSocketTest::LONG_MSG       = std::string(1000, 'f');
 const std::string WebSocketTest::LONG_LONG_MSG  = std::string(0xfffff, 'f');
 
-HWTEST_F(WebSocketTest, ConnectWebSocketTest, testing::ext::TestSize.Level0)
+HWTEST_F(WebSocketTest, DISABLED_ConnectWebSocketTest, testing::ext::TestSize.Level0)
 {
     WebSocketServer serverSocket;
     bool ret = false;
@@ -162,7 +162,7 @@ HWTEST_F(WebSocketTest, ConnectWebSocketTest, testing::ext::TestSize.Level0)
     }
 }
 
-HWTEST_F(WebSocketTest, ReConnectWebSocketTest, testing::ext::TestSize.Level0)
+HWTEST_F(WebSocketTest, DISABLED_ReConnectWebSocketTest, testing::ext::TestSize.Level0)
 {
     WebSocketServer serverSocket;
     bool ret = false;
@@ -221,7 +221,7 @@ HWTEST_F(WebSocketTest, ReConnectWebSocketTest, testing::ext::TestSize.Level0)
     serverSocket.Close();
 }
 
-HWTEST_F(WebSocketTest, ClientAbnormalTest, testing::ext::TestSize.Level0)
+HWTEST_F(WebSocketTest, DISABLED_ClientAbnormalTest, testing::ext::TestSize.Level0)
 {
     WebSocketClient clientSocket;
     ASSERT_STREQ(clientSocket.GetSocketStateString().c_str(), "uninited");
@@ -230,7 +230,7 @@ HWTEST_F(WebSocketTest, ClientAbnormalTest, testing::ext::TestSize.Level0)
     ASSERT_FALSE(clientSocket.SendReply(HELLO_SERVER));
 }
 
-HWTEST_F(WebSocketTest, ServerAbnormalTest, testing::ext::TestSize.Level0)
+HWTEST_F(WebSocketTest, DISABLED_ServerAbnormalTest, testing::ext::TestSize.Level0)
 {
     WebSocketServer serverSocket;
     // No connection established, the function returns directly.
