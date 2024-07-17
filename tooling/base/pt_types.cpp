@@ -784,14 +784,14 @@ std::string ObjectRemoteObject::DescriptionForInt8Array(const EcmaVM *ecmaVm, Lo
 
 std::string ObjectRemoteObject::DescriptionForInt16Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged)
 {
-    int32_t len = tagged->ByteLength(ecmaVm) / static_cast<int32_t>(NumberSize::BYTES_OF_16BITS);
+    uint32_t len = tagged->ByteLength(ecmaVm) / NumberSize::BYTES_OF_16BITS;
     std::string description = ("Int16Array(" + std::to_string(len) + ")");
     return description;
 }
 
 std::string ObjectRemoteObject::DescriptionForInt32Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged)
 {
-    int32_t len = tagged->ByteLength(ecmaVm) / static_cast<int32_t>(NumberSize::BYTES_OF_32BITS);
+    uint32_t len = tagged->ByteLength(ecmaVm) / NumberSize::BYTES_OF_32BITS;
     std::string description = ("Int32Array(" + std::to_string(len) + ")");
     return description;
 }

@@ -41,7 +41,7 @@ class JsTestBase(unittest.TestCase):
                 "tcp:%i" % self.PORT,
                 "tcp:%i" % self.PORT,
             ],
-            stdout = subprocess.PIPE
+            stdout=subprocess.PIPE
         )
         connection = 0
         while(connection < 5):
@@ -49,7 +49,7 @@ class JsTestBase(unittest.TestCase):
             ret = None
             result = subprocess.run(
                 '%s shell "netstat -anp | grep PandaDebugger"' % os.environ.get("HDCTool", "hdc"),
-                stdout = subprocess.PIPE,
+                stdout=subprocess.PIPE,
             )
             if (result.returncode == 0):
                 ret = result.stdout
@@ -94,7 +94,7 @@ class JsTestBase(unittest.TestCase):
         ret = None
         result = subprocess.run(
             '%s shell "netstat -anp | grep PandaDebugger"' % os.environ.get("HDCTool", "hdc"),
-            stdout = subprocess.PIPE,
+            stdout=subprocess.PIPE,
         )
         if (result.returncode == 0):
             ret = result.stdout
@@ -121,5 +121,5 @@ class JsTestBase(unittest.TestCase):
 
         subprocess.Popen(
             [self.hdctool, 'shell', 'arkdb', real_panda_name, 'server'],
-            stdout = subprocess.PIPE,
+            stdout=subprocess.PIPE,
         )
