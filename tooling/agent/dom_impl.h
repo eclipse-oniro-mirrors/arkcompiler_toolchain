@@ -38,7 +38,7 @@ public:
 
         enum class Method {
             DISABLE,
-            UNKNWON
+            UNKNOWN
         };
         Method GetMethodEnum(const std::string& method);
 

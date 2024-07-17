@@ -60,9 +60,9 @@ public:
 
         enum class Method {
             END,
-            GETCATEGORIES,
-            RECORDCLOCKSYNCMARKER,
-            REQUESTMEMORYDUMP,
+            GET_CATEGORIES,
+            RECORD_CLOCK_SYNC_MARKER,
+            REQUEST_MEMORY_DUMP,
             START,
             UNKNOWN
         };

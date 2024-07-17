@@ -66,11 +66,29 @@ public:
         void EnableSerializationTimeoutCheck(const DispatchRequest &request);
         void DisableSerializationTimeoutCheck(const DispatchRequest &request);
 
+        enum class Method {
+            DISABLE,
+            ENABLE,
+            START,
+            STOP,
+            SET_SAMPLING_INTERVAL,
+            GET_BEST_EFFORT_COVERAGE,
+            STOP_PRECISE_COVERAGE,
+            TAKE_PRECISE_COVERAGE,
+            START_PRECISE_COVERAGE,
+            START_TYPE_PROFILE,
+            STOP_TYPE_PROFILE,
+            TAKE_TYPE_PROFILE,
+            ENABLE_SERIALIZATION_TIMEOUT_CHECK,
+            DISABLE_SERIALIZATION_TIMEOUT_CHECK,
+            UNKNOWN
+        };
+        Method GetMethodEnum(const std::string& method);
+
     private:
         NO_COPY_SEMANTIC(DispatcherImpl);
         NO_MOVE_SEMANTIC(DispatcherImpl);
 
-        using AgentHandler = void (ProfilerImpl::DispatcherImpl::*)(const DispatchRequest &request);
         std::unique_ptr<ProfilerImpl> profiler_ {};
     };
 

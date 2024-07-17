@@ -24,10 +24,10 @@ void PageImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
     Method method = GetMethodEnum(request.GetMethod());
     LOG_DEBUGGER(INFO) << "dispatch [" << request.GetMethod() << "] to PageImpl";
     switch (method) {
-        case Method::GETNAVIGATIONHISTORY:
+        case Method::GET_NAVIGATION_HISTORY:
             GetNavigationHistory(request);
             break;
-        case Method::UNKNOWN:
+        default:
             SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
             break;
     }
@@ -36,7 +36,7 @@ void PageImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 PageImpl::DispatcherImpl::Method PageImpl::DispatcherImpl::GetMethodEnum(const std::string& method)
 {
     if (method == "getNavigationHistory") {
-        return Method::GETNAVIGATIONHISTORY;
+        return Method::GET_NAVIGATION_HISTORY;
     } else {
         return Method::UNKNOWN;
     }

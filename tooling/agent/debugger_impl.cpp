@@ -388,44 +388,159 @@ void DebuggerImpl::InitializeExtendedProtocolsList()
 
 void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
-    static std::unordered_map<std::string, AgentHandler> dispatcherTable {
-        { "continueToLocation", &DebuggerImpl::DispatcherImpl::ContinueToLocation },
-        { "enable", &DebuggerImpl::DispatcherImpl::Enable },
-        { "disable", &DebuggerImpl::DispatcherImpl::Disable },
-        { "evaluateOnCallFrame", &DebuggerImpl::DispatcherImpl::EvaluateOnCallFrame },
-        { "getPossibleBreakpoints", &DebuggerImpl::DispatcherImpl::GetPossibleBreakpoints },
-        { "getScriptSource", &DebuggerImpl::DispatcherImpl::GetScriptSource },
-        { "pause", &DebuggerImpl::DispatcherImpl::Pause },
-        { "removeBreakpoint", &DebuggerImpl::DispatcherImpl::RemoveBreakpoint },
-        { "removeBreakpointsByUrl", &DebuggerImpl::DispatcherImpl::RemoveBreakpointsByUrl },
-        { "resume", &DebuggerImpl::DispatcherImpl::Resume },
-        { "setAsyncCallStackDepth", &DebuggerImpl::DispatcherImpl::SetAsyncCallStackDepth },
-        { "setBreakpointByUrl", &DebuggerImpl::DispatcherImpl::SetBreakpointByUrl },
-        { "setBreakpointsActive", &DebuggerImpl::DispatcherImpl::SetBreakpointsActive },
-        { "setPauseOnExceptions", &DebuggerImpl::DispatcherImpl::SetPauseOnExceptions },
-        { "setSkipAllPauses", &DebuggerImpl::DispatcherImpl::SetSkipAllPauses },
-        { "stepInto", &DebuggerImpl::DispatcherImpl::StepInto },
-        { "smartStepInto", &DebuggerImpl::DispatcherImpl::SmartStepInto},
-        { "stepOut", &DebuggerImpl::DispatcherImpl::StepOut },
-        { "stepOver", &DebuggerImpl::DispatcherImpl::StepOver },
-        { "setMixedDebugEnabled", &DebuggerImpl::DispatcherImpl::SetMixedDebugEnabled },
-        { "setBlackboxPatterns", &DebuggerImpl::DispatcherImpl::SetBlackboxPatterns },
-        { "replyNativeCalling", &DebuggerImpl::DispatcherImpl::ReplyNativeCalling },
-        { "getPossibleAndSetBreakpointByUrl", &DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl },
-        { "dropFrame", &DebuggerImpl::DispatcherImpl::DropFrame },
-        { "setNativeRange", &DebuggerImpl::DispatcherImpl::SetNativeRange },
-        { "resetSingleStepper", &DebuggerImpl::DispatcherImpl::ResetSingleStepper },
-        { "clientDisconnect", &DebuggerImpl::DispatcherImpl::ClientDisconnect },
-        { "callFunctionOn", &DebuggerImpl::DispatcherImpl::CallFunctionOn }
-    };
+    Method method = GetMethodEnum(request.GetMethod());
+    LOG_DEBUGGER(DEBUG) << "dispatch [" << request.GetMethod() << "] to DebuggerImpl";
+    switch (method) {
+        case Method::CONTINUE_TO_LOCATION:
+            ContinueToLocation(request);
+            break;
+        case Method::ENABLE:
+            Enable(request);
+            break;
+        case Method::DISABLE:
+            Disable(request);
+            break;
+        case Method::EVALUATE_ON_CALL_FRAME:
+            EvaluateOnCallFrame(request);
+            break;
+        case Method::GET_POSSIBLE_BREAKPOINTS:
+            GetPossibleBreakpoints(request);
+            break;
+        case Method::GET_SCRIPT_SOURCE:
+            GetScriptSource(request);
+            break;
+        case Method::PAUSE:
+            Pause(request);
+            break;
+        case Method::REMOVE_BREAKPOINT:
+            RemoveBreakpoint(request);
+            break;
+        case Method::REMOVE_BREAKPOINTS_BY_URL:
+            RemoveBreakpointsByUrl(request);
+            break;
+        case Method::RESUME:
+            Resume(request);
+            break;
+        case Method::SET_ASYNC_CALL_STACK_DEPTH:
+            SetAsyncCallStackDepth(request);
+            break;
+        case Method::SET_BREAKPOINT_BY_URL:
+            SetBreakpointByUrl(request);
+            break;
+        case Method::SET_BREAKPOINTS_ACTIVE:
+            SetBreakpointsActive(request);
+            break;
+        case Method::SET_PAUSE_ON_EXCEPTIONS:
+            SetPauseOnExceptions(request);
+            break;
+        case Method::SET_SKIP_ALL_PAUSES:
+            SetSkipAllPauses(request);
+            break;
+        case Method::STEP_INTO:
+            StepInto(request);
+            break;
+        case Method::SMART_STEP_INTO:
+            SmartStepInto(request);
+            break;
+        case Method::STEP_OUT:
+            StepOut(request);
+            break;
+        case Method::STEP_OVER:
+            StepOver(request);
+            break;
+        case Method::SET_MIXED_DEBUG_ENABLED:
+            SetMixedDebugEnabled(request);
+            break;
+        case Method::SET_BLACKBOX_PATTERNS:
+            SetBlackboxPatterns(request);
+            break;
+        case Method::REPLY_NATIVE_CALLING:
+            ReplyNativeCalling(request);
+            break;
+        case Method::GET_POSSIBLE_AND_SET_BREAKPOINT_BY_URL:
+            GetPossibleAndSetBreakpointByUrl(request);
+            break;
+        case Method::DROP_FRAME:
+            DropFrame(request);
+            break;
+        case Method::SET_NATIVE_RANGE:
+            SetNativeRange(request);
+            break;
+        case Method::RESET_SINGLE_STEPPER:
+            ResetSingleStepper(request);
+            break;
+        case Method::CLIENT_DISCONNECT:
+            ClientDisconnect(request);
+            break;
+        case Method::CALL_FUNCTION_ON:
+            CallFunctionOn(request);
+            break;
+        default:
+            SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
+            break;
+    }
+}
 
-    const std::string &method = request.GetMethod();
-    LOG_DEBUGGER(DEBUG) << "dispatch [" << method << "] to DebuggerImpl";
-    auto entry = dispatcherTable.find(method);
-    if (entry != dispatcherTable.end() && entry->second != nullptr) {
-        (this->*(entry->second))(request);
+DebuggerImpl::DispatcherImpl::Method DebuggerImpl::DispatcherImpl::GetMethodEnum(const std::string& method)
+{
+    if (method == "continueToLocation") {
+        return Method::CONTINUE_TO_LOCATION;
+    } else if (method == "enable") {
+        return Method::ENABLE;
+    } else if (method == "disable") {
+        return Method::DISABLE;
+    } else if (method == "evaluateOnCallFrame") {
+        return Method::EVALUATE_ON_CALL_FRAME;
+    } else if (method == "getPossibleBreakpoints") {
+        return Method::GET_POSSIBLE_BREAKPOINTS;
+    } else if (method == "getScriptSource") {
+        return Method::GET_SCRIPT_SOURCE;
+    } else if (method == "pause") {
+        return Method::PAUSE;
+    } else if (method == "removeBreakpoint") {
+        return Method::REMOVE_BREAKPOINT;
+    } else if (method == "removeBreakpointsByUrl") {
+        return Method::REMOVE_BREAKPOINTS_BY_URL;
+    } else if (method == "resume") {
+        return Method::RESUME;
+    } else if (method == "setAsyncCallStackDepth") {
+        return Method::SET_ASYNC_CALL_STACK_DEPTH;
+    } else if (method == "setBreakpointByUrl") {
+        return Method::SET_BREAKPOINT_BY_URL;
+    } else if (method == "setBreakpointsActive") {
+        return Method::SET_BREAKPOINTS_ACTIVE;
+    } else if (method == "setPauseOnExceptions") {
+        return Method::SET_PAUSE_ON_EXCEPTIONS;
+    } else if (method == "setSkipAllPauses") {
+        return Method::SET_SKIP_ALL_PAUSES;
+    } else if (method == "stepInto") {
+        return Method::STEP_INTO;
+    } else if (method == "smartStepInto") {
+        return Method::SMART_STEP_INTO;
+    } else if (method == "stepOut") {
+        return Method::STEP_OUT;
+    } else if (method == "stepOver") {
+        return Method::STEP_OVER;
+    } else if (method == "setMixedDebugEnabled") {
+        return Method::SET_MIXED_DEBUG_ENABLED;
+    } else if (method == "setBlackboxPatterns") {
+        return Method::SET_BLACKBOX_PATTERNS;
+    } else if (method == "replyNativeCalling") {
+        return Method::REPLY_NATIVE_CALLING;
+    } else if (method == "getPossibleAndSetBreakpointByUrl") {
+        return Method::GET_POSSIBLE_AND_SET_BREAKPOINT_BY_URL;
+    } else if (method == "dropFrame") {
+        return Method::DROP_FRAME;
+    } else if (method == "setNativeRange") {
+        return Method::SET_NATIVE_RANGE;
+    } else if (method == "resetSingleStepper") {
+        return Method::RESET_SINGLE_STEPPER;
+    } else if (method == "clientDisconnect") {
+        return Method::CLIENT_DISCONNECT;
+    } else if (method == "callFunctionOn") {
+        return Method::CALL_FUNCTION_ON;
     } else {
-        SendResponse(request, DispatchResponse::Fail("Unknown method: " + method));
+        return Method::UNKNOWN;
     }
 }
 

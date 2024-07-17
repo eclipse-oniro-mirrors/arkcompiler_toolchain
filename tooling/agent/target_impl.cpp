@@ -24,10 +24,10 @@ void TargetImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
     Method method = GetMethodEnum(request.GetMethod());
     LOG_DEBUGGER(INFO) << "dispatch [" << request.GetMethod() << "] to TargetImpl";
     switch (method) {
-        case Method::SETAUTOATTACH:
+        case Method::SET_AUTO_ATTACH:
             SetAutoAttach(request);
             break;
-        case Method::UNKNOWN:
+        default:
             SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
             break;
     }
@@ -36,7 +36,7 @@ void TargetImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 TargetImpl::DispatcherImpl::Method TargetImpl::DispatcherImpl::GetMethodEnum(const std::string& method)
 {
     if (method == "setAutoAttach") {
-        return Method::SETAUTOATTACH;
+        return Method::SET_AUTO_ATTACH;
     } else {
         return Method::UNKNOWN;
     }

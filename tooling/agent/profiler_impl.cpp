@@ -38,30 +38,89 @@ void ProfilerImpl::InitializeExtendedProtocolsList()
 
 void ProfilerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
-    static std::unordered_map<std::string, AgentHandler> dispatcherTable {
-        { "disable", &ProfilerImpl::DispatcherImpl::Disable },
-        { "enable", &ProfilerImpl::DispatcherImpl::Enable },
-        { "start", &ProfilerImpl::DispatcherImpl::Start },
-        { "stop", &ProfilerImpl::DispatcherImpl::Stop },
-        { "setSamplingInterval", &ProfilerImpl::DispatcherImpl::SetSamplingInterval },
-        { "getBestEffortCoverage", &ProfilerImpl::DispatcherImpl::GetBestEffortCoverage },
-        { "stopPreciseCoverage", &ProfilerImpl::DispatcherImpl::StopPreciseCoverage },
-        { "takePreciseCoverage", &ProfilerImpl::DispatcherImpl::TakePreciseCoverage },
-        { "startPreciseCoverage", &ProfilerImpl::DispatcherImpl::StartPreciseCoverage },
-        { "startTypeProfile", &ProfilerImpl::DispatcherImpl::StartTypeProfile },
-        { "stopTypeProfile", &ProfilerImpl::DispatcherImpl::StopTypeProfile },
-        { "takeTypeProfile", &ProfilerImpl::DispatcherImpl::TakeTypeProfile },
-        { "enableSerializationTimeoutCheck", &ProfilerImpl::DispatcherImpl::EnableSerializationTimeoutCheck },
-        { "disableSerializationTimeoutCheck", &ProfilerImpl::DispatcherImpl::DisableSerializationTimeoutCheck }
-    };
+    Method method = GetMethodEnum(request.GetMethod());
+    LOG_DEBUGGER(DEBUG) << "dispatch [" << request.GetMethod() << "] to ProfilerImpl";
+    switch (method) {
+        case Method::DISABLE:
+            Disable(request);
+            break;
+        case Method::ENABLE:
+            Enable(request);
+            break;
+        case Method::START:
+            Start(request);
+            break;
+        case Method::STOP:
+            Stop(request);
+            break;
+        case Method::SET_SAMPLING_INTERVAL:
+            SetSamplingInterval(request);
+            break;
+        case Method::GET_BEST_EFFORT_COVERAGE:
+            GetBestEffortCoverage(request);
+            break;
+        case Method::STOP_PRECISE_COVERAGE:
+            StopPreciseCoverage(request);
+            break;
+        case Method::TAKE_PRECISE_COVERAGE:
+            TakePreciseCoverage(request);
+            break;
+        case Method::START_PRECISE_COVERAGE:
+            StartPreciseCoverage(request);
+            break;
+        case Method::START_TYPE_PROFILE:
+            StartTypeProfile(request);
+            break;
+        case Method::STOP_TYPE_PROFILE:
+            StopTypeProfile(request);
+            break;
+        case Method::TAKE_TYPE_PROFILE:
+            TakeTypeProfile(request);
+            break;
+        case Method::ENABLE_SERIALIZATION_TIMEOUT_CHECK:
+            EnableSerializationTimeoutCheck(request);
+            break;
+        case Method::DISABLE_SERIALIZATION_TIMEOUT_CHECK:
+            DisableSerializationTimeoutCheck(request);
+            break;
+        default:
+            SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
+            break;
+    }
+}
 
-    const std::string &method = request.GetMethod();
-    LOG_DEBUGGER(DEBUG) << "dispatch [" << method << "] to ProfilerImpl";
-    auto entry = dispatcherTable.find(method);
-    if (entry != dispatcherTable.end() && entry->second != nullptr) {
-        (this->*(entry->second))(request);
+ProfilerImpl::DispatcherImpl::Method ProfilerImpl::DispatcherImpl::GetMethodEnum(const std::string& method)
+{
+    if (method == "disable") {
+        return Method::DISABLE;
+    } else if (method == "enable") {
+        return Method::ENABLE;
+    } else if (method == "start") {
+        return Method::START;
+    } else if (method == "stop") {
+        return Method::STOP;
+    } else if (method == "setSamplingInterval") {
+        return Method::SET_SAMPLING_INTERVAL;
+    } else if (method == "getBestEffortCoverage") {
+        return Method::GET_BEST_EFFORT_COVERAGE;
+    } else if (method == "stopPreciseCoverage") {
+        return Method::STOP_PRECISE_COVERAGE;
+    } else if (method == "takePreciseCoverage") {
+        return Method::TAKE_PRECISE_COVERAGE;
+    } else if (method == "startPreciseCoverage") {
+        return Method::START_PRECISE_COVERAGE;
+    } else if (method == "startTypeProfile") {
+        return Method::START_TYPE_PROFILE;
+    } else if (method == "stopTypeProfile") {
+        return Method::STOP_TYPE_PROFILE;
+    } else if (method == "takeTypeProfile") {
+        return Method::TAKE_TYPE_PROFILE;
+    } else if (method == "enableSerializationTimeoutCheck") {
+        return Method::ENABLE_SERIALIZATION_TIMEOUT_CHECK;
+    } else if (method == "disableSerializationTimeoutCheck") {
+        return Method::DISABLE_SERIALIZATION_TIMEOUT_CHECK;
     } else {
-        SendResponse(request, DispatchResponse::Fail("Unknown method: " + method));
+        return Method::UNKNOWN;
     }
 }
 

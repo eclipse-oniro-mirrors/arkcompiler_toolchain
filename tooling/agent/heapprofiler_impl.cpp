@@ -31,10 +31,10 @@ void HeapProfilerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
     Method method = GetMethodEnum(request.GetMethod());
     LOG_DEBUGGER(DEBUG) << "dispatch [" << request.GetMethod() << "] to HeapProfilerImpl";
     switch (method) {
-        case Method::ADDINSPECTEDHEAPOBJECT:
+        case Method::ADD_INSPECTED_HEAP_OBJECT:
             AddInspectedHeapObject(request);
             break;
-        case Method::COLLECTGARBAGE:
+        case Method::COLLECT_GARBAGE:
             CollectGarbage(request);
             break;
         case Method::ENABLE:
@@ -43,31 +43,31 @@ void HeapProfilerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         case Method::DISABLE:
             Disable(request);
             break;
-        case Method::GETHEAPOBJECTID:
+        case Method::GET_HEAP_OBJECT_ID:
             GetHeapObjectId(request);
             break;
-        case Method::GETOBJECTBYHEAPOBJECTID:
+        case Method::GET_OBJECT_BY_HEAP_OBJECT_ID:
             GetObjectByHeapObjectId(request);
             break;
-        case Method::GETSAMPLINGPROFILE:
+        case Method::GET_SAMPLING_PROFILE:
             GetSamplingProfile(request);
             break;
-        case Method::STARTSAMPLING:
+        case Method::START_SAMPLING:
             StartSampling(request);
             break;
-        case Method::STARTTRACKINGHEAPOBJECTS:
+        case Method::START_TRACKING_HEAP_OBJECTS:
             StartTrackingHeapObjects(request);
             break;
-        case Method::STOPSAMPLING:
+        case Method::STOP_SAMPLING:
             StopSampling(request);
             break;
-        case Method::STOPTRACKINGHEAPOBJECTS:
+        case Method::STOP_TRACKING_HEAP_OBJECTS:
             StopTrackingHeapObjects(request);
             break;
-        case Method::TAKEHEAPSNAPSHOT:
+        case Method::TAKE_HEAP_SNAPSHOT:
             TakeHeapSnapshot(request);
             break;
-        case Method::UNKNOWN:
+        default:
             SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
             break;
     }
@@ -76,29 +76,29 @@ void HeapProfilerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 HeapProfilerImpl::DispatcherImpl::Method HeapProfilerImpl::DispatcherImpl::GetMethodEnum(const std::string& method)
 {
     if (method == "addInspectedHeapObject") {
-        return Method::ADDINSPECTEDHEAPOBJECT;
+        return Method::ADD_INSPECTED_HEAP_OBJECT;
     } else if (method == "collectGarbage") {
-        return Method::COLLECTGARBAGE;
+        return Method::COLLECT_GARBAGE;
     } else if (method == "enable") {
         return Method::ENABLE;
     } else if (method == "disable") {
         return Method::DISABLE;
     } else if (method == "getHeapObjectId") {
-        return Method::GETHEAPOBJECTID;
+        return Method::GET_HEAP_OBJECT_ID;
     } else if (method == "getObjectByHeapObjectId") {
-        return Method::GETOBJECTBYHEAPOBJECTID;
+        return Method::GET_OBJECT_BY_HEAP_OBJECT_ID;
     } else if (method == "getSamplingProfile") {
-        return Method::GETSAMPLINGPROFILE;
+        return Method::GET_SAMPLING_PROFILE;
     } else if (method == "startSampling") {
-        return Method::STARTSAMPLING;
+        return Method::START_SAMPLING;
     } else if (method == "startTrackingHeapObjects") {
-        return Method::STARTTRACKINGHEAPOBJECTS;
+        return Method::START_TRACKING_HEAP_OBJECTS;
     } else if (method == "stopSampling") {
-        return Method::STOPSAMPLING;
+        return Method::STOP_SAMPLING;
     } else if (method == "stopTrackingHeapObjects") {
-        return Method::STOPTRACKINGHEAPOBJECTS;
+        return Method::STOP_TRACKING_HEAP_OBJECTS;
     } else if (method == "takeHeapSnapshot") {
-        return Method::TAKEHEAPSNAPSHOT;
+        return Method::TAKE_HEAP_SNAPSHOT;
     } else {
         return Method::UNKNOWN;
     }

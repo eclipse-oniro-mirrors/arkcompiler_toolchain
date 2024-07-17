@@ -27,7 +27,7 @@ void DomImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         case Method::DISABLE:
             Disable(request);
             break;
-        case Method::UNKNWON:
+        default:
             SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
             break;
     }
@@ -38,7 +38,7 @@ DomImpl::DispatcherImpl::Method DomImpl::DispatcherImpl::GetMethodEnum(const std
     if (method == "disable") {
         return Method::DISABLE;
     } else {
-        return Method::UNKNWON;
+        return Method::UNKNOWN;
     }
 }
 

@@ -29,7 +29,7 @@ void OverlayImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         case Method::DISABLE:
             Disable(request);
             break;
-        case Method::UNKNOWN:
+        default:
             SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
             break;
     }

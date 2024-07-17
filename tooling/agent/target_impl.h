@@ -37,7 +37,7 @@ public:
         void Dispatch(const DispatchRequest &request) override;
 
         enum class Method {
-            SETAUTOATTACH,
+            SET_AUTO_ATTACH,
             UNKNOWN
         };
         Method GetMethodEnum(const std::string& method);
