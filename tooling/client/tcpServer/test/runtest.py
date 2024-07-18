@@ -30,7 +30,7 @@ class RunTest:
         self.run_test()
 
     def parse_args(self):
-        parser = argparse.ArgumentParser(description = 'Plugin test.')
+        parser = argparse.ArgumentParser(description='Plugin test.')
         parser.add_argument(
             '-hdctool', 
             action='store',

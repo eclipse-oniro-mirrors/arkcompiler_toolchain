@@ -55,7 +55,7 @@ void TreeNode::Print(int depth) const
         }
     } else if (std::holds_alternative<std::unique_ptr<PropertyDescriptor>>(data)) {
         const auto &descriptor = std::get<std::unique_ptr<PropertyDescriptor>>(data);
-        if (descriptor) {
+        if (descriptor && descriptor->GetValue()) {
             if (descriptor->GetValue()->HasDescription()) {
                 std::cout << indent << "   " << descriptor->GetName() << " = "
                       << descriptor->GetValue()->GetDescription() << std::endl;
@@ -68,7 +68,7 @@ void TreeNode::Print(int depth) const
         const auto &descriptorMap = std::get<DescriptorMap>(data);
         for (const auto& [key, descriptor] : descriptorMap) {
             std::cout << indent << key << ". ";
-            if (descriptor) {
+            if (descriptor && descriptor->GetValue()) {
                 std::cout << descriptor->GetName() << " = " << descriptor->GetValue()->GetDescription() << std::endl;
             }
         }
@@ -172,7 +172,7 @@ TreeNode* Tree::FindNodeWithObjectIdRecursive(TreeNode* node, int32_t objectId) 
     } else if (std::holds_alternative<DescriptorMap>(node->data)) {
         const auto& descriptorMap = std::get<DescriptorMap>(node->data);
         for (const auto& [key, descriptor] : descriptorMap) {
-            if (descriptor && descriptor->GetValue()->GetObjectId() == objectId) {
+            if (descriptor && descriptor->GetValue() && descriptor->GetValue()->GetObjectId() == objectId) {
                 return node;
             }
         }
@@ -237,7 +237,7 @@ int32_t Tree::FindObjectByIndexRecursive(const TreeNode* node, int32_t index) co
     } else if (std::holds_alternative<DescriptorMap>(node->data)) {
         const auto &descriptorMap = std::get<DescriptorMap>(node->data);
         auto it = descriptorMap.find(index);
-        if (it != descriptorMap.end() && it->second) {
+        if (it != descriptorMap.end() && it->second && it->second->GetValue()) {
             return it->second->GetValue()->GetObjectId();
         }
     }
@@ -291,7 +291,7 @@ TreeNode* VariableManager::FindNodeWithObjectId(int32_t objectId)
 
 void VariableManager::AddVariableInfo(TreeNode *parentNode, std::unique_ptr<PropertyDescriptor> variableInfo)
 {
-    if (variableInfo->GetValue()->HasObjectId()) {
+    if (variableInfo && variableInfo->GetValue() && variableInfo->GetValue()->HasObjectId()) {
         variableInfo_.AddObjectNode(parentNode, std::move(variableInfo));
     } else {
         variableInfo_.AddVariableNode(parentNode, std::move(variableInfo));

@@ -42,7 +42,7 @@ class JsTestCase(JsTestBase):
                 "-b",
                 hap_name,
             ],
-            stdout = subprocess.PIPE,
+            stdout=subprocess.PIPE,
         )
         cls.run_arkdb_server(cls, dbg_name)
         cls.connect_client_socket(cls, dbg_name)
@@ -64,7 +64,7 @@ class JsTestCase(JsTestBase):
                 "force-stop",
                 hap_name,
             ],
-            stdout = subprocess.PIPE,
+            stdout=subprocess.PIPE,
         )
 
     def test_set_and_delete_breakpoints(self):
