@@ -56,13 +56,9 @@ DispatchRequest::DispatchRequest(const std::string &message)
 
     std::string wholeMethod;
     ret = json->GetString("method", &wholeMethod);
-    if (ret != Result::SUCCESS) {
+    if (ret != Result::SUCCESS || wholeMethod.empty()) {
         code_ = RequestCode::PARSE_METHOD_ERROR;
         LOG_DEBUGGER(ERROR) << "parse method error";
-        return;
-    }
-    if (wholeMethod.empty()) {
-        LOG_DEBUGGER(ERROR) << "find method empty";
         return;
     }
     std::string::size_type length = wholeMethod.length();
