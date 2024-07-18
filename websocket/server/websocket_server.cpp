@@ -13,6 +13,14 @@
  * limitations under the License.
  */
 
+#if !defined(OHOS_PLATFORM)
+#if defined(PANDA_TARGET_WINDOWS)
+#include <ws2tcpip.h>
+#else
+#include <arpa/inet.h>
+#endif
+#endif
+
 #include <fcntl.h>
 #include "common/log_wrapper.h"
 #include "frame_builder.h"
@@ -177,13 +185,21 @@ bool WebSocketServer::InitTcpWebSocket(int port, uint32_t timeoutLimit)
         CloseServerSocket();
         return false;
     }
+    return BindAndListenTcpWebSocket(port);
+}
+
+bool WebSocketServer::BindAndListenTcpWebSocket(int port)
+{
     sockaddr_in addrSin = {};
     addrSin.sin_family = AF_INET;
     addrSin.sin_port = htons(port);
-    addrSin.sin_addr.s_addr = INADDR_ANY;
+    if (inet_pton(AF_INET, "127.0.0.1", &addrSin.sin_addr) != NET_SUCCESS) {
+        LOGE("BindAndListenTcpWebSocket inet_pton failed, error = %{public}d", errno);
+        return false;
+    }
     if (bind(serverFd_, reinterpret_cast<struct sockaddr*>(&addrSin), sizeof(addrSin)) != SOCKET_SUCCESS ||
         listen(serverFd_, 1) != SOCKET_SUCCESS) {
-        LOGE("InitTcpWebSocket bind/listen failed, errno = %{public}d", errno);
+        LOGE("BindAndListenTcpWebSocket bind/listen failed, errno = %{public}d", errno);
         CloseServerSocket();
         return false;
     }
