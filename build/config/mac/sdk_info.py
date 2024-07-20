@@ -93,7 +93,10 @@ if __name__ == '__main__':
     settings = {}
     fill_machine_os_build(settings)
     fill_xcode_version(settings)
-    fill_sdk_path_and_version(settings, unknownargs[0], settings['xcode_version'])
+    test_xcode_version = settings.get('xcode_version')
+    if test_xcode_version is None:
+        raise ValueError("Xcode version is not set or invalid.")
+    fill_sdk_path_and_version(settings, unknownargs[0], test_xcode_version)
 
     for key in sorted(settings):
         value = settings[key]
