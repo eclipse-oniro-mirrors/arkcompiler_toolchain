@@ -33,6 +33,10 @@
 #include "tooling/debugger_service.h"
 #endif
 
+#if defined(ENABLE_FFRT_INTERFACES)
+#include "ffrt.h"
+#endif
+
 namespace OHOS::ArkCompiler::Toolchain {
 namespace {
 enum DispatchStatus : int32_t {
@@ -281,19 +285,34 @@ void Inspector::OnMessage(std::string&& msg)
             });
         } else {
 #if defined(OHOS_PLATFORM)
-            debuggerPostTask_([tid = tidForSocketPair_, vm = vm_] {
-                if (tid != static_cast<pid_t>(syscall(SYS_gettid))) {
+            debuggerPostTask_([tid = tidForSocketPair_, vm = vm_, this] {
+                uint64_t threadOrTaskId = GetThreadOrTaskId();
+                if (tid != static_cast<pid_t>(threadOrTaskId)) {
                     LOGE("Task not in debugger thread for socketpair");
                     return;
                 }
                 g_processMessage(vm);
             });
-#endif
+#endif // defined(OHOS_PLATFORM)
         }
     } else {
         LOGW("No debuggerPostTask provided");
     }
 }
+
+#if defined(OHOS_PLATFORM)
+uint64_t Inspector::GetThreadOrTaskId()
+{
+    uint64_t threadOrTaskId = getproctid();
+#if defined(ENABLE_FFRT_INTERFACES)
+    threadOrTaskId = ffrt_this_task_get_id();
+    if (threadOrTaskId == 0) {
+        threadOrTaskId = getproctid();
+    }
+#endif // defined(ENABLE_FFRT_INTERFACES)
+    return threadOrTaskId;
+}
+#endif // defined(OHOS_PLATFORM)
 
 const DebuggerPostTask &GetDebuggerPostTask(int tid)
 {
