@@ -48,18 +48,6 @@ public:
             {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
             {SocketAction::RECV, "Debugger.paused", ActionRule::CUSTOM_RULE,
-                [this](auto recv, auto, auto) -> bool { return RecvStepoutInfo(recv, "for_loop", 26); }},
-
-            {SocketAction::SEND, "so"},
-            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
-            {SocketAction::RECV, "Debugger.paused", ActionRule::CUSTOM_RULE,
-                [this](auto recv, auto, auto) -> bool { return RecvStepoutInfo(recv, "for_loop", 26); }},
-
-            {SocketAction::SEND, "so"},
-            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
-            {SocketAction::RECV, "Debugger.paused", ActionRule::CUSTOM_RULE,
                 [this](auto recv, auto, auto) -> bool { return RecvStepoutInfo(recv, "func_main_0", 64); }},
 
             {SocketAction::SEND, "b " DEBUGGER_JS_DIR "common_func.js 37"},
