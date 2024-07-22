@@ -362,6 +362,12 @@ void DebuggerImpl::SetDebuggerState(DebuggerState debuggerState)
     debuggerState_ = debuggerState;
 }
 
+// only use for test case
+void DebuggerImpl::SetNativeOutPause(bool nativeOutPause)
+{
+    nativeOutPause_ = nativeOutPause;
+}
+
 void DebuggerImpl::NotifyHandleProtocolCommand()
 {
     auto *handler = vm_->GetJsDebuggerManager()->GetDebuggerHandler();

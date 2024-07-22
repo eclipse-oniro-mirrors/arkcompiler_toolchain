@@ -52,6 +52,7 @@ public:
     void NotifyReturnNative();
     bool IsUserCode(const void *nativeAddress);
     void SetDebuggerState(DebuggerState debuggerState);
+    void SetNativeOutPause(bool nativeOutPause);
     void AddBreakpointDetail(const std::string &url, int32_t lineNumber,
         std::string *outId, std::vector<std::unique_ptr<Location>> *outLocations);
 
