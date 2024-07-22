@@ -55,7 +55,6 @@ ohos_source_set("libark_client_set") {
     "cJSON:cjson_static",
     "ets_runtime:libark_jsruntime",
     "libuv:uv",
-    "zlib:libz",
   ]
 
   configs = [ "../..:ark_toolchain_common_config" ]
