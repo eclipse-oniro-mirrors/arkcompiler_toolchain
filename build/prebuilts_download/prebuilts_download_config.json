@@ -1,5 +1,6 @@
 {
   "prebuilts_download_dir": "../openharmony_prebuilts",
+  "retries": 3,
   "file_handle_config": [
     {
       "src": "/prebuilts/clang/ohos/linux-x86_64/clang_linux-x86_64-ef68e8-20240229",
