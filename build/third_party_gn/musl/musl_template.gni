@@ -170,8 +170,8 @@ template("musl_libs") {
       ]
     }
 
-    if (!is_standard_system && defined(enable_musl_log)) {
-      if (enable_musl_log) {
+    if (!is_standard_system && defined(musl_enable_musl_log)) {
+      if (musl_enable_musl_log) {
         defines += [ "ENABLE_MUSL_LOG" ]
       }
     }
