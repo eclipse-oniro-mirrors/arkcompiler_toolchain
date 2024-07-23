@@ -121,4 +121,12 @@ HWTEST_F_L0(JSPtHooksTest, NativeCallingTest)
     jspthooks->NativeCalling(nullptr);
     ASSERT_NE(jspthooks, nullptr);
 }
+
+HWTEST_F_L0(JSPtHooksTest, NativeReturnTest)
+{
+    auto debugger = std::make_unique<DebuggerImpl>(ecmaVm, nullptr, nullptr);
+    std::unique_ptr<JSPtHooks> jspthooks = std::make_unique<JSPtHooks>(debugger.get());
+    jspthooks->NativeReturn(nullptr);
+    ASSERT_NE(jspthooks, nullptr);
+}
 }

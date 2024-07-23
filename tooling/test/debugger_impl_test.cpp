@@ -1241,4 +1241,22 @@ HWTEST_F_L0(DebuggerImplTest, DispatcherImplCallFunctionOn)
         protocolChannel = nullptr;
     }
 }
+HWTEST_F_L0(DebuggerImplTest, NativeOutTest)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    std::unique_ptr<JSPtHooks> jspthooks = std::make_unique<JSPtHooks>(debuggerImpl.get());
+    bool result1 = jspthooks->NativeOut();
+    ASSERT_TRUE(!result1);
+    bool value = true;
+    debuggerImpl->SetNativeOutPause(value);
+    bool result2 = jspthooks->NativeOut();
+    ASSERT_TRUE(result2);
+    ASSERT_NE(jspthooks, nullptr);
+}
 }  // namespace panda::test
