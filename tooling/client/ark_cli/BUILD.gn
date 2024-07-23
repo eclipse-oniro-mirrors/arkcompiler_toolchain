@@ -33,7 +33,6 @@ ohos_executable("arkdb") {
     "cJSON:cjson",
     "ets_runtime:libark_jsruntime",
     "libuv:uv",
-    "zlib:libz",
   ]
 
   # hiviewdfx libraries
