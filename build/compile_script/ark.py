@@ -24,6 +24,7 @@ import os
 import platform
 import subprocess
 import sys
+from typing import List, Tuple, Union, Optional
 
 CURRENT_FILENAME = os.path.basename(__file__)
 
@@ -421,6 +422,125 @@ class ArkPy:
                 "{2}".format(args_to_test262_cmd, out_path, x64_out_path, timeout)
         return test262_cmd
 
+    @staticmethod
+    def build_args_to_test262_cmd(arg_list):
+        args_to_test262_cmd = []
+
+        disable_force_gc = [arg for arg in arg_list if "disable-force-gc" in arg]
+        if disable_force_gc:
+            args_to_test262_cmd.append("--disable-force-gc")
+            arg_list.remove(disable_force_gc[0])
+
+        threads_name = "--threads"
+        threads_value, arg_list = ArkPy.parse_option(arg_list, option_name=threads_name, default_value=None)
+        if threads_value:
+            args_to_test262_cmd.extend([threads_name, threads_value])
+
+        if len(arg_list) == 0:
+            args_to_test262_cmd.append("--es2021 all")
+        elif len(arg_list) == 1:
+            arg = arg_list[0]
+            if ".js" in arg:
+                args_to_test262_cmd.append("--file test262/data/test_es2021/{}".format(arg))
+            else:
+                args_to_test262_cmd.append("--dir test262/data/test_es2021/{}".format(arg))
+        else:
+            print("\033[92m\"test262\" not support multiple additional arguments.\033[0m\n".format())
+            sys.exit(0)
+
+        return " ".join(args_to_test262_cmd)
+
+    @staticmethod
+    def build_args_to_regress_cmd(arg_list):
+        args_to_regress_cmd = []
+
+        processes_name = "--processes"
+        processes_value, arg_list = ArkPy.parse_option(arg_list, option_name=processes_name, default_value=1)
+        args_to_regress_cmd.extend([processes_name, processes_value])
+
+        test_list_name = "--test-list"
+        test_list_value, arg_list = ArkPy.parse_option(arg_list, option_name=test_list_name, default_value=None)
+        if test_list_value is not None:
+            args_to_regress_cmd.extend([test_list_name, test_list_value])
+
+        if len(arg_list) == 1:
+            arg = arg_list[0]
+            if ".js" in arg:
+                args_to_regress_cmd.append(f"--test-file {arg}")
+            else:
+                args_to_regress_cmd.append(f"--test-dir {arg}")
+        elif len(arg_list) > 1:
+            print("\033[92m\"regresstest\" not support multiple additional arguments.\033[0m\n".format())
+            sys.exit(0)
+
+        return " ".join([str(arg) for arg in args_to_regress_cmd])
+
+    @staticmethod
+    def parse_option(arg_list: List[str], option_name: str, default_value: Optional[Union[str, int]]) \
+            -> Tuple[Optional[Union[str, int]], List[str]]:
+        option_value, arg_list = ArkPy.__parse_option_with_space(arg_list, option_name)
+        if option_value is None:
+            option_value, arg_list = ArkPy.__parse_option_with_equal(arg_list, option_name)
+        if option_value is None and default_value is not None:
+            option_value = default_value
+        return option_value, arg_list
+
+    @staticmethod
+    def __is_option_value_int(value: Optional[Union[str, int]]) -> Tuple[bool, Optional[int]]:
+        if isinstance(value, int):
+            return True, int(value)
+        else:
+            return False, None
+
+    @staticmethod
+    def __is_option_value_str(value: Optional[Union[str, int]]) -> Tuple[bool, Optional[str]]:
+        if isinstance(value, str):
+            return True, str(value)
+        else:
+            return False, None
+
+    @staticmethod
+    def __get_option_value(option_name: str, value: Optional[Union[str, int]]) -> Union[str, int]:
+        result, res_value = ArkPy.__is_option_value_int(value)
+        if result:
+            return res_value
+        result, res_value = ArkPy.__is_option_value_str(value)
+        if result:
+            return res_value
+        print(f"Invalid '{option_name}' value.")
+        sys.exit(1)
+
+    @staticmethod
+    def __parse_option_with_space(arg_list: List[str], option_name: str) \
+            -> Tuple[Optional[Union[str, int]], List[str]]:
+        if option_name in arg_list:
+            option_index = arg_list.index(option_name)
+            if len(arg_list) > option_index + 1:
+                option_value = ArkPy.__get_option_value(option_name, arg_list[option_index + 1])
+                arg_list = arg_list[:option_index] + arg_list[option_index + 2:]
+            else:
+                print(f"Missing {option_name} value.")
+                sys.exit(1)
+
+            return option_value, arg_list
+        return None, arg_list
+
+    @staticmethod
+    def __parse_option_with_equal(arg_list: List[str], option_name: str) \
+            -> Tuple[Optional[Union[str, int]], List[str]]:
+        for index, arg in enumerate(arg_list):
+            local_option_name = f"{option_name}="
+            if arg.startswith(local_option_name):
+                option_value = arg[len(local_option_name):]
+                if option_value:
+                    option_value = ArkPy.__get_option_value(option_name, option_value)
+                    arg_list = arg_list[:index] + arg_list[index + 1:]
+                    return option_value, arg_list
+                else:
+                    print(f"Missing {option_name} value.")
+                    sys.exit(1)
+        return None, arg_list
+
     def get_binaries(self):
         host_os = sys.platform
         host_cpu = platform.machine()
@@ -505,7 +625,7 @@ class ArkPy:
             "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --baseline-jit] [none or --threads=X]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [unittest] [option]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [regresstest] [none, file or dir] " \
-              "[none or --processes=X]\033[0m\n")
+              "[none or --processes X and/or --test-list TEST_LIST_NAME]\033[0m\n")
         # Command examples
         help_msg += "\033[32mCommand examples:\033[0m\n{}\n\n".format(
             "  python3 ark.py \033[92mx64.release\033[0m\n"
@@ -585,34 +705,6 @@ class ArkPy:
             print("=== ninja success! ===\n")
         return
 
-    @staticmethod
-    def build_args_to_test262_cmd(arg_list):
-        args_to_test262_cmd = []
-
-        disable_force_gc = [arg for arg in arg_list if "disable-force-gc" in arg]
-        if disable_force_gc:
-            args_to_test262_cmd.append("--disable-force-gc")
-            arg_list.remove(disable_force_gc[0])
-
-        threads = [arg for arg in arg_list if arg.startswith("--threads=")]
-        if threads:
-            args_to_test262_cmd.extend(threads)
-            arg_list.remove(threads[0])
-
-        if len(arg_list) == 0:
-            args_to_test262_cmd.append("--es2021 all")
-        elif len(arg_list) == 1:
-            arg = arg_list[0]
-            if ".js" in arg:
-                args_to_test262_cmd.append("--file test262/data/test_es2021/{}".format(arg))
-            else:
-                args_to_test262_cmd.append("--dir test262/data/test_es2021/{}".format(arg))
-        else:
-            print("\033[92m\"test262\" not support multiple additional arguments.\033[0m\n".format())
-            sys.exit(0)
-
-        return " ".join(args_to_test262_cmd)
-
     def build_for_test262(self, out_path, timeout, gn_args: list, arg_list: list, log_file_name: str,
                           aot_mode: bool, run_pgo=False, enable_litecg=False, run_jit=False,
                           run_baseline_jit=False):
@@ -659,27 +751,6 @@ class ArkPy:
             out_path, gn_args, self.ARG_DICT["target"]["unittest"]["gn_targets_depend_on"],
             log_file_name)
         return
-
-    @staticmethod
-    def build_args_to_regress_cmd(arg_list):
-        args_to_regress_cmd = []
-
-        processes = [arg for arg in arg_list if arg.startswith("--processes=")]
-        if processes:
-            args_to_regress_cmd.extend(processes)
-            arg_list.remove(processes[0])
-
-        if len(arg_list) == 1:
-            arg = arg_list[0]
-            if ".js" in arg:
-                args_to_regress_cmd.append(f"--test-file {arg}")
-            else:
-                args_to_regress_cmd.append(f"--test-dir {arg}")
-        elif len(arg_list) > 1:
-            print("\033[92m\"regresstest\" not support multiple additional arguments.\033[0m\n".format())
-            sys.exit(0)
-
-        return " ".join(args_to_regress_cmd)
 
     def build_for_regress_test(self, out_path, gn_args: list, arg_list: list, log_file_name: str, timeout):
         args_to_regress_test_cmd = self.build_args_to_regress_cmd(arg_list)
@@ -748,39 +819,14 @@ class ArkPy:
                 sys.exit(0)
             self.build_for_unittest(out_path, gn_args, self.UNITTEST_LOG_FILE_NAME)
         elif self.is_dict_flags_match_arg(self.ARG_DICT["target"]["regresstest"], arg_list[0]):
-            timeout = 200
-            if '--timeout' in arg_list:
-                timeout_index = arg_list.index('--timeout')
-                if len(arg_list) > timeout_index + 1:
-                    try:
-                        timeout = int(arg_list[timeout_index + 1])
-                        arg_list = arg_list[:timeout_index] + arg_list[timeout_index + 2:]
-                    except ValueError:
-                        print("Invalid timeout value.")
-                        sys.exit(1)
-                else:
-                    print("Missing timeout value.")
-                    sys.exit(1)
+            timeout, arg_list = self.parse_option(arg_list, option_name="--timeout", default_value=200)
             self.build_for_regress_test(out_path, gn_args, arg_list[1:], self.REGRESS_TEST_LOG_FILE_NAME, timeout)
         else:
             self.build_for_gn_target(out_path, gn_args, arg_list, self.GN_TARGET_LOG_FILE_NAME)
         return
 
-    def parse_timeout(self, arg_list):
-        timeout = 400000
-        if '--timeout' in arg_list:
-            timeout_index = arg_list.index('--timeout')
-            if len(arg_list) > timeout_index + 1:
-                try:
-                    timeout = int(arg_list[timeout_index + 1])
-                    arg_list = arg_list[:timeout_index] + arg_list[timeout_index + 2:]
-                except ValueError:
-                    print("Invalid timeout value.")
-                    sys.exit(1)
-            else:
-                print("Missing timeout value.")
-                sys.exit(1)
-        return timeout, arg_list
+    def parse_timeout(self, arg_list) -> Tuple[Optional[Union[str, int]], List[str]]:
+        return self.parse_option(arg_list, option_name="--timeout", default_value=400000)
 
     def match_options(self, arg_list: list, out_path: str) -> [list, list]:
         arg_list_ret = []
