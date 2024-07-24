@@ -57,6 +57,9 @@ public:
     ~Inspector() = default;
 
     void OnMessage(std::string&& msg);
+#if defined(OHOS_PLATFORM)
+    uint64_t GetThreadOrTaskId();
+#endif // defined(OHOS_PLATFORM)
 
     static constexpr int32_t DELAY_CHECK_DISPATCH_STATUS = 100;
 
