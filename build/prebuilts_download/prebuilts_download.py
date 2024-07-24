@@ -88,7 +88,8 @@ def _uncompress(args, src_file, code_dir, unzip_dir, unzip_filename, mark_file_p
         cmd = 'tar -xvzf {} -C {};echo 0 > {}'.format(src_file, dest_dir, mark_file_path)
     else:
         cmd = 'tar -xvf {} -C {};echo 0 > {}'.format(src_file, dest_dir, mark_file_path)
-    _run_cmd(cmd)
+    _, _, returncode = _run_cmd(cmd)
+    return returncode
 
 def _copy_url(args, task_id, url, local_file, code_dir, unzip_dir, unzip_filename, mark_file_path):
     # download files
@@ -100,6 +101,7 @@ def _copy_url(args, task_id, url, local_file, code_dir, unzip_dir, unzip_filenam
         response = urlopen(url)
     except urllib.error.HTTPError as e:
         progress.console.log("Failed to open {}, HTTPError: {}".format(url, e.code), style='red')
+        return 1
     progress.update(task_id, total=int(response.info()["Content-length"]))
     with os.fdopen(os.open(local_file, flags, modes), 'wb') as dest_file:
         progress.start_task(task_id)
@@ -107,48 +109,73 @@ def _copy_url(args, task_id, url, local_file, code_dir, unzip_dir, unzip_filenam
             dest_file.write(data)
             progress.update(task_id, advance=len(data))
     progress.console.log("Downloaded {}".format(local_file))
+    if not _check_sha256(url, local_file):
+        progress.console.log('{}, Sha256 check download FAILED.'.format(local_file), style='red')
+        return 1
 
     # decompressing files
     progress.console.log("Decompressing {}".format(local_file))
-    _uncompress(args, local_file, code_dir, unzip_dir, unzip_filename, mark_file_path)
+    returncode = _uncompress(args, local_file, code_dir, unzip_dir, unzip_filename, mark_file_path)
     progress.console.log("Decompressed {}".format(local_file))
+    return returncode
 
-def _hwcloud_download(args, config, bin_dir, code_dir):
+
+def _hwcloud_download_wrapper(args, config, bin_dir, code_dir, retries):
+    attempt = 0
+    success = False
+    with progress:
+        while not success and attempt < retries:
+            success = _hwcloud_download(args, config, bin_dir, code_dir, retries)
+            attempt += 1
+    return success
+
+
+def _hwcloud_download(args, config, bin_dir, code_dir, retries):
     try:
         cnt = cpu_count()
     except:
         cnt = 1
-    with progress:
-        with ThreadPoolExecutor(max_workers=cnt) as pool:
-            tasks = dict()
-            for config_info in config:
-                unzip_dir, huaweicloud_url, unzip_filename, md5_huaweicloud_url, bin_file = _config_parse(config_info,
-                    args.tool_repo)
-                abs_unzip_dir = os.path.join(code_dir, unzip_dir)
-                if not os.path.exists(abs_unzip_dir):
-                    os.makedirs(abs_unzip_dir)
-                if _check_sha256_by_mark(args, huaweicloud_url, code_dir, unzip_dir, unzip_filename):
-                    progress.console.log('{}, Sha256 markword check OK.'.format(huaweicloud_url), style='green')
-                else:
-                    _run_cmd(''.join(['rm -rf ', code_dir, '/', unzip_dir, '/*.', unzip_filename, '.mark']))
-                    _run_cmd(''.join(['rm -rf ', code_dir, '/', unzip_dir, '/', unzip_filename]))
-                    local_file = os.path.join(bin_dir, ''.join([md5_huaweicloud_url, '.', bin_file]))
-                    if os.path.exists(local_file):
-                        if _check_sha256(huaweicloud_url, local_file):
-                            progress.console.log('{}, Sha256 check download OK.'.format(local_file), style='green')
-                            task = pool.submit(_uncompress, args, local_file, code_dir, unzip_dir, unzip_filename,
-                                args.mark_file_path)
-                            tasks[task] = os.path.basename(huaweicloud_url)
-                        else:
-                            os.remove(local_file)
-                    else:
-                        filename = huaweicloud_url.split("/")[-1]
-                        task_id = progress.add_task("download", filename=filename, start=False)
-                        task = pool.submit(_copy_url, args, task_id, huaweicloud_url, local_file, code_dir, unzip_dir,
-                            unzip_filename, args.mark_file_path)
-                        tasks[task] = os.path.basename(huaweicloud_url)
-            for task in as_completed(tasks):
-                progress.console.log('{}, download and decompress completed'.format(tasks.get(task)), style='green')
+
+    success = False
+    with ThreadPoolExecutor(max_workers=cnt) as pool:
+        tasks = dict()
+        for config_info in config:
+            unzip_dir, huaweicloud_url, unzip_filename, md5_huaweicloud_url, bin_file = _config_parse(config_info,
+                args.tool_repo)
+            abs_unzip_dir = os.path.join(code_dir, unzip_dir)
+            if not os.path.exists(abs_unzip_dir):
+                os.makedirs(abs_unzip_dir)
+            if _check_sha256_by_mark(args, huaweicloud_url, code_dir, unzip_dir, unzip_filename):
+                progress.console.log('{}, Sha256 markword check OK.'.format(huaweicloud_url), style='green')
+                continue
+
+            _run_cmd(''.join(['rm -rf ', code_dir, '/', unzip_dir, '/*.', unzip_filename, '.mark']))
+            _run_cmd(''.join(['rm -rf ', code_dir, '/', unzip_dir, '/', unzip_filename]))
+            local_file = os.path.join(bin_dir, ''.join([md5_huaweicloud_url, '.', bin_file]))
+            if not os.path.exists(local_file):
+                filename = huaweicloud_url.split("/")[-1]
+                task_id = progress.add_task("download", filename=filename, start=False)
+                task = pool.submit(_copy_url, args, task_id, huaweicloud_url, local_file, code_dir, unzip_dir,
+                    unzip_filename, args.mark_file_path)
+                tasks[task] = os.path.basename(huaweicloud_url)
+                continue
+
+            if _check_sha256(huaweicloud_url, local_file):
+                progress.console.log('{}, Sha256 check download OK.'.format(local_file), style='green')
+                task = pool.submit(_uncompress, args, local_file, code_dir, unzip_dir, unzip_filename,
+                    args.mark_file_path)
+                tasks[task] = os.path.basename(huaweicloud_url)
+            else:
+                os.remove(local_file)
+        returncode = 0
+        for task in as_completed(tasks):
+            if task.result():
+                returncode += task.result()
+            progress.console.log('{}, download and decompress completed, exit code: {}'
+                                     .format(tasks.get(task), task.result()), style='green')
+        success = returncode == 0
+    return success
+
 
 def _file_handle(config, code_dir):
     for config_info in config:
@@ -203,8 +230,13 @@ def main():
     elif host_platform == 'darwin':
         darwin_copy_config = config_info.get(host_platform).get(host_cpu).get('darwin_copy_config')
         copy_config.extend(darwin_copy_config)
-    _hwcloud_download(args, copy_config, args.bin_dir, args.code_dir)
+    retries = config_info.get('retries')
+    args.retries = 1 if retries is None else retries
+    if not _hwcloud_download_wrapper(args, copy_config, args.bin_dir, args.code_dir, args.retries):
+        return 1
     _file_handle(file_handle_config, args.code_dir)
+    return 0
+
 
 if __name__ == '__main__':
     sys.exit(main())
