@@ -875,6 +875,7 @@ class ArkPy:
         boundary_value = '-10'
         run_count = '10'
         code_v = ''
+        run_interpreter = False
         if len(arg_list) >= 2 and arg_list[1] == 'report':
             report = True
         if len(arg_list) >= 3 and arg_list[2]:
@@ -885,6 +886,8 @@ class ArkPy:
             run_count = arg_list[4]
         if len(arg_list) >= 6 and arg_list[5]:
             code_v = arg_list[5]
+        if len(arg_list) >= 7 and arg_list[6] == '--run-interpreter':
+            run_interpreter = True
         self.build_for_gn_target(out_path, gn_args, ["default"], self.GN_TARGET_LOG_FILE_NAME)
         workload_cmd = "cd arkcompiler/ets_runtime/test/workloadtest/ && python3 work_load.py" \
           " --code-path {0}" \
@@ -894,6 +897,8 @@ class ArkPy:
           " --run-count {4}" \
           " --code-v {5}" \
           .format(root_dir, report, tools, boundary_value, run_count, code_v)
+        if run_interpreter:
+            workload_cmd += " --run-interpreter true"
         workload_log_path = os.path.join(out_path, log_file_name)
         str_to_workload_log = "================================\nwokload_time: {0}\nwokload_target: {1}\n\n".format(
             str_of_time_now(), 'file')
