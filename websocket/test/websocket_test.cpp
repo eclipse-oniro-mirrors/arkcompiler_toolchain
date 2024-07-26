@@ -219,6 +219,7 @@ HWTEST_F(WebSocketTest, DISABLED_ReConnectWebSocketTest, testing::ext::TestSize.
         }
     }
     serverSocket.Close();
+    sleep(3);
 }
 
 HWTEST_F(WebSocketTest, DISABLED_ClientAbnormalTest, testing::ext::TestSize.Level0)
@@ -274,6 +275,7 @@ HWTEST_F(WebSocketTest, DISABLED_ServerAbnormalTest, testing::ext::TestSize.Leve
         };
         serverSocket.SetValidateConnectionCallback(notValidCallBack);
         ASSERT_FALSE(serverSocket.AcceptNewConnection());
+        sleep(3);
     } else {
         std::cerr << "ServerAbnormalTest::fork failed, error = "
                   << errno << ", desc = " << strerror(errno) << std::endl;
