@@ -600,13 +600,13 @@ void RuntimeImpl::GetSharedMapValue(Local<JSValueRef> value,
                                     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
     Local<SendableMapRef> sendableMapRef(value);
-    int32_t size = sendableMapRef->GetSize(vm_);
-    int32_t len = sendableMapRef->GetTotalElements(vm_);
-    int32_t index = 0;
+    uint32_t size = sendableMapRef->GetSize(vm_);
+    uint32_t len = sendableMapRef->GetTotalElements(vm_);
+    uint32_t index = 0;
     Local<JSValueRef> jsValueRef = NumberRef::New(vm_, size);
     SetKeyValue(jsValueRef, outPropertyDesc, "size");
     jsValueRef = ArrayRef::New(vm_, size);
-    for (int32_t i = 0; i < len; ++i) {
+    for (uint32_t i = 0; i < len; ++i) {
         Local<JSValueRef> jsKey = sendableMapRef->GetKey(vm_, i);
         if (jsKey->IsHole()) {
             continue;
