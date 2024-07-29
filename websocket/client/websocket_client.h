@@ -30,8 +30,7 @@ class WebSocketClient final : public WebSocketBase {
 public:
     ~WebSocketClient() noexcept override = default;
 
-    bool DecodeMessage(WebSocketFrame& wsFrame) const override;
-    void Close() override;
+    void Close();
 
     bool InitToolchainWebSocketForPort(int port, uint32_t timeoutLimit = 5);
     bool InitToolchainWebSocketForSockName(const std::string &sockName, uint32_t timeoutLimit = 5);
@@ -41,27 +40,23 @@ public:
     std::string GetSocketStateString();
 
 private:
-    static bool ValidateServerHandShake(HttpResponse& response);
+    bool DecodeMessage(WebSocketFrame& wsFrame) const override;
 
-    void CloseConnectionSocketOnFail();
-    bool ValidateIncomingFrame(const WebSocketFrame& wsFrame) override;
+    void CloseOnInitFailure();
+    bool ValidateIncomingFrame(const WebSocketFrame& wsFrame) const override;
     std::string CreateFrame(bool isLast, FrameType frameType) const override;
     std::string CreateFrame(bool isLast, FrameType frameType, const std::string& payload) const override;
     std::string CreateFrame(bool isLast, FrameType frameType, std::string&& payload) const override;
 
 private:
-    static constexpr std::array<std::string_view, 3> SOCKET_STATE_NAMES = {
-        "uninited",
-        "inited",
-        "connected"
+    static constexpr std::array<std::string_view, 4> SOCKET_STATE_NAMES = {
+        "connecting",
+        "open",
+        "closing",
+        "closed"
     };
 
-    static constexpr std::string_view HTTP_SWITCHING_PROTOCOLS_STATUS_CODE = "101";
-    static constexpr std::string_view HTTP_RESPONSE_REQUIRED_UPGRADE = "websocket";
-    static constexpr std::string_view HTTP_RESPONSE_REQUIRED_CONNECTION = "upgrade";
-
-    // may replace default websocket-key with randomly generated, as required by spec
-    static constexpr unsigned char DEFAULT_WEB_SOCKET_KEY[] = "64b4B+s5JDlgkdg7NekJ+g==";
+    // May replace default websocket-key with randomly generated, as required by spec.
     static constexpr char CLIENT_WEBSOCKET_UPGRADE_REQ[] = "GET / HTTP/1.1\r\n"
                                                                 "Connection: Upgrade\r\n"
                                                                 "Pragma: no-cache\r\n"

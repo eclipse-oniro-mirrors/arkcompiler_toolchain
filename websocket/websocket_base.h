@@ -20,6 +20,7 @@
 
 #include <atomic>
 #include <functional>
+#include <shared_mutex>
 #include <type_traits>
 
 namespace OHOS::ArkCompiler::Toolchain {
@@ -44,29 +45,61 @@ public:
     static bool IsDecodeDisconnectMsg(const std::string& message);
 
     WebSocketBase() = default;
-    virtual ~WebSocketBase() noexcept = default;
+    virtual ~WebSocketBase() noexcept;
 
-    // Receive and decode a message.
-    // In case of control frames this method handles it accordingly and returns an empty string,
-    // otherwise returns the decoded received message.
+    /**
+     * @brief Receive and decode a message.
+     * Must not be called concurrently on the same connection.
+     * Safe to call concurrently with `SendReply` and `Close`.
+     * Control frames are handled according to specification with an empty string as returned value,
+     * otherwise the method returns the decoded received message.
+     * Note that this method closes the connection after receiving invalid data.
+     * This event can be checked with `IsDecodeDisconnectMsg`.
+     */
     std::string Decode();
-    // Send message on current connection.
-    // Returns success status.
+
+    /**
+     * @brief Send message on current connection.
+     * Safe to call concurrently with: `SendReply`, `Decode`, `Close`.
+     * Note that the connection is not closed on transmission failures.
+     * @param message text payload.
+     * @param frameType frame type, must be either TEXT, BINARY or CONTINUATION.
+     * @param isLast flag indicating whether the message is the final.
+     * @returns true on success, false otherwise.
+     */
     bool SendReply(const std::string& message, FrameType frameType = FrameType::TEXT, bool isLast = true) const;
 
-    bool IsConnected();
+    /**
+     * @brief Check if connection is in `OPEN` state.
+     */
+    bool IsConnected() const;
 
+    /**
+     * @brief Set callback for calling after normal connection close.
+     * Non thread safe.
+     */
     void SetCloseConnectionCallback(CloseConnectionCallback cb);
+
+    /**
+     * @brief Set callback for calling after closing connection on any failure.
+     * Non thread safe.
+     */
     void SetFailConnectionCallback(FailConnectionCallback cb);
 
-    // Close current websocket endpoint and connections (if any).
-    virtual void Close() = 0;
+    /**
+     * @brief Send `CLOSE` frame and close the connection socket.
+     * Does nothing if connection was not in `OPEN` state.
+     * @param status close status code specified in sent frame.
+     * @returns true if connection was closed, false otherwise.
+     */
+    bool CloseConnection(CloseStatusCode status);
 
 protected:
-    enum class SocketState : uint8_t {
-        UNINITED,
-        INITED,
-        CONNECTED,
+    enum class ConnectionState : uint8_t {
+        CONNECTING,
+        OPEN,
+        CLOSING,
+        CLOSED,
     };
 
     enum class ConnectionCloseReason: uint8_t {
@@ -75,37 +108,74 @@ protected:
     };
 
 protected:
+    /**
+     * @brief Set `send` and `recv` timeout limits.
+     * @param fd socket to set timeout on.
+     * @param timeoutLimit timeout in seconds. If zero, function is no-op.
+     * @returns true on success, false otherwise.
+     */
     static bool SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit);
 
-    bool ReadPayload(WebSocketFrame& wsFrame);
-    void SendPongFrame(std::string payload);
-    void SendCloseFrame(CloseStatusCode status);
-    // Sending close frame and close connection.
-    void CloseConnection(CloseStatusCode status, SocketState newSocketState);
-    // Close connection socket.
-    void CloseConnectionSocket(ConnectionCloseReason status, SocketState newSocketState);
+    /**
+     * @brief Shutdown socket for sends and receives.
+     * Note that the implementation of this function is platform-specific,
+     * so there is no unified way to retrieve error code returned from system call.
+     * @param fd socket file descriptor.
+     * @returns zero on success, `-1` otherwise.
+     */
+    static int ShutdownSocket(int32_t fd);
 
-    virtual bool HandleDataFrame(WebSocketFrame& wsFrame);
-    virtual bool HandleControlFrame(WebSocketFrame& wsFrame);
+    /**
+     * @brief Close the connection socket.
+     * Must be transition from `CLOSING` to `CLOSED` connection state.
+     * @param status close reason, depends which callback to execute.
+     */
+    void CloseConnectionSocket(ConnectionCloseReason status);
 
-    virtual bool ValidateIncomingFrame(const WebSocketFrame& wsFrame) = 0;
+    /**
+     * @brief Execute user-provided callbacks before closing the connection socket.
+     */
+    void OnConnectionClose(ConnectionCloseReason status);
+
+    int GetConnectionSocket() const;
+    void SetConnectionSocket(int socketFd);
+    std::shared_mutex &GetConnectionMutex();
+
+    ConnectionState GetConnectionState() const;
+    ConnectionState SetConnectionState(ConnectionState newState);
+    bool CompareExchangeConnectionState(ConnectionState& expected, ConnectionState newState);
+
+    bool HandleDataFrame(WebSocketFrame& wsFrame) const;
+    bool HandleControlFrame(WebSocketFrame& wsFrame);
+    bool ReadPayload(WebSocketFrame& wsFrame) const;
+    void SendPongFrame(std::string payload) const;
+    void SendCloseFrame(CloseStatusCode status) const;
+
+    bool SendUnderLock(const std::string& message) const;
+    bool SendUnderLock(const char* buf, size_t totalLen) const;
+    bool RecvUnderLock(std::string& message) const;
+    bool RecvUnderLock(uint8_t* buf, size_t totalLen) const;
+
+    virtual bool ValidateIncomingFrame(const WebSocketFrame& wsFrame) const = 0;
     virtual std::string CreateFrame(bool isLast, FrameType frameType) const = 0;
     virtual std::string CreateFrame(bool isLast, FrameType frameType, const std::string& payload) const = 0;
     virtual std::string CreateFrame(bool isLast, FrameType frameType, std::string&& payload) const = 0;
     virtual bool DecodeMessage(WebSocketFrame& wsFrame) const = 0;
 
 protected:
-    std::atomic<SocketState> socketState_ {SocketState::UNINITED};
+    static constexpr size_t HTTP_HANDSHAKE_MAX_LEN = 1024;
+    static constexpr int SOCKET_SUCCESS = 0;
 
+private:
+    std::atomic<ConnectionState> connectionState_ {ConnectionState::CLOSED};
+
+    mutable std::shared_mutex connectionMutex_;
     int connectionFd_ {-1};
 
     // Callbacks used during different stages of connection lifecycle.
     CloseConnectionCallback closeCb_;
     FailConnectionCallback failCb_;
 
-    static constexpr char WEB_SOCKET_GUID[] = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-    static constexpr size_t HTTP_HANDSHAKE_MAX_LEN = 1024;
-    static constexpr int SOCKET_SUCCESS = 0;
     static constexpr std::string_view DECODE_DISCONNECT_MSG = "disconnect";
 };
 } // namespace OHOS::ArkCompiler::Toolchain

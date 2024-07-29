@@ -27,179 +27,14 @@
 #include "client/websocket_client.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
-bool WebSocketClient::InitToolchainWebSocketForPort(int port, uint32_t timeoutLimit)
+static bool ValidateServerHandShake(HttpResponse& response)
 {
-    if (socketState_ != SocketState::UNINITED) {
-        LOGE("InitToolchainWebSocketForPort::client has inited.");
-        return true;
-    }
+    static constexpr std::string_view HTTP_SWITCHING_PROTOCOLS_STATUS_CODE = "101";
+    static constexpr std::string_view HTTP_RESPONSE_REQUIRED_UPGRADE = "websocket";
+    static constexpr std::string_view HTTP_RESPONSE_REQUIRED_CONNECTION = "upgrade";
+    // NB! `defaultWebSocketKey` must match "Sec-WebSocket-Key" used in `WebSocketClient`.
+    static constexpr unsigned char defaultWebSocketKey[] = "64b4B+s5JDlgkdg7NekJ+g==";
 
-    connectionFd_ = socket(AF_INET, SOCK_STREAM, 0);
-    if (connectionFd_ < SOCKET_SUCCESS) {
-        LOGE("InitToolchainWebSocketForPort::client socket failed, error = %{public}d , desc = %{public}s",
-            errno, strerror(errno));
-        return false;
-    }
-
-    // set send and recv timeout limit
-    if (!SetWebSocketTimeOut(connectionFd_, timeoutLimit)) {
-        LOGE("InitToolchainWebSocketForPort::client SetWebSocketTimeOut failed, error = %{public}d , desc = %{public}s",
-            errno, strerror(errno));
-        CloseConnectionSocketOnFail();
-        return false;
-    }
-
-    sockaddr_in clientAddr;
-    if (memset_s(&clientAddr, sizeof(clientAddr), 0, sizeof(clientAddr)) != EOK) {
-        LOGE("InitToolchainWebSocketForPort::client memset_s clientAddr failed, error = %{public}d, desc = %{public}s",
-            errno, strerror(errno));
-        CloseConnectionSocketOnFail();
-        return false;
-    }
-    clientAddr.sin_family = AF_INET;
-    clientAddr.sin_port = htons(port);
-    int ret = inet_pton(AF_INET, "127.0.0.1", &clientAddr.sin_addr);
-    if (ret != NET_SUCCESS) {
-        LOGE("InitToolchainWebSocketForPort::client inet_pton failed, error = %{public}d, desc = %{public}s",
-            errno, strerror(errno));
-        CloseConnectionSocketOnFail();
-        return false;
-    }
-
-    ret = connect(connectionFd_, reinterpret_cast<struct sockaddr*>(&clientAddr), sizeof(clientAddr));
-    if (ret != SOCKET_SUCCESS) {
-        LOGE("InitToolchainWebSocketForPort::client connect failed, error = %{public}d, desc = %{public}s",
-            errno, strerror(errno));
-        CloseConnectionSocketOnFail();
-        return false;
-    }
-    socketState_ = SocketState::INITED;
-    LOGI("InitToolchainWebSocketForPort::client connect success.");
-    return true;
-}
-
-bool WebSocketClient::InitToolchainWebSocketForSockName(const std::string &sockName, uint32_t timeoutLimit)
-{
-    if (socketState_ != SocketState::UNINITED) {
-        LOGE("InitToolchainWebSocketForSockName::client has inited.");
-        return true;
-    }
-
-    connectionFd_ = socket(AF_UNIX, SOCK_STREAM, 0);
-    if (connectionFd_ < SOCKET_SUCCESS) {
-        LOGE("InitToolchainWebSocketForSockName::client socket failed, error = %{public}d , desc = %{public}s",
-            errno, strerror(errno));
-        return false;
-    }
-
-    // set send and recv timeout limit
-    if (!SetWebSocketTimeOut(connectionFd_, timeoutLimit)) {
-        LOGE("InitToolchainWebSocketForSockName::client SetWebSocketTimeOut failed, "
-            "error = %{public}d, desc = %{public}s",
-            errno, strerror(errno));
-        CloseConnectionSocketOnFail();
-        return false;
-    }
-
-    struct sockaddr_un serverAddr;
-    if (memset_s(&serverAddr, sizeof(serverAddr), 0, sizeof(serverAddr)) != EOK) {
-        LOGE("InitToolchainWebSocketForSockName::client memset_s clientAddr failed, "
-            "error = %{public}d, desc = %{public}s",
-            errno, strerror(errno));
-        CloseConnectionSocketOnFail();
-        return false;
-    }
-    serverAddr.sun_family = AF_UNIX;
-    if (strcpy_s(serverAddr.sun_path + 1, sizeof(serverAddr.sun_path) - 1, sockName.c_str()) != EOK) {
-        LOGE("InitToolchainWebSocketForSockName::client strcpy_s serverAddr.sun_path failed, "
-            "error = %{public}d, desc = %{public}s",
-            errno, strerror(errno));
-        CloseConnectionSocketOnFail();
-        return false;
-    }
-    serverAddr.sun_path[0] = '\0';
-
-    uint32_t len = offsetof(struct sockaddr_un, sun_path) + strlen(sockName.c_str()) + 1;
-    int ret = connect(connectionFd_, reinterpret_cast<struct sockaddr*>(&serverAddr), static_cast<int32_t>(len));
-    if (ret != SOCKET_SUCCESS) {
-        LOGE("InitToolchainWebSocketForSockName::client connect failed, error = %{public}d, desc = %{public}s",
-            errno, strerror(errno));
-        CloseConnectionSocketOnFail();
-        return false;
-    }
-    socketState_ = SocketState::INITED;
-    LOGI("InitToolchainWebSocketForSockName::client connect success.");
-    return true;
-}
-
-bool WebSocketClient::ClientSendWSUpgradeReq()
-{
-    if (socketState_ == SocketState::UNINITED) {
-        LOGE("ClientSendWSUpgradeReq::client has not inited.");
-        return false;
-    }
-    if (socketState_ == SocketState::CONNECTED) {
-        LOGE("ClientSendWSUpgradeReq::client has connected.");
-        return true;
-    }
-
-    // length without null-terminator
-    if (!Send(connectionFd_, CLIENT_WEBSOCKET_UPGRADE_REQ, sizeof(CLIENT_WEBSOCKET_UPGRADE_REQ) - 1, 0)) {
-        LOGE("ClientSendWSUpgradeReq::client send wsupgrade req failed, error = %{public}d, desc = %{public}sn",
-            errno, strerror(errno));
-        CloseConnectionSocketOnFail();
-        return false;
-    }
-    LOGI("ClientSendWSUpgradeReq::client send wsupgrade req success.");
-    return true;
-}
-
-bool WebSocketClient::ClientRecvWSUpgradeRsp()
-{
-    if (socketState_ == SocketState::UNINITED) {
-        LOGE("ClientRecvWSUpgradeRsp::client has not inited.");
-        return false;
-    }
-    if (socketState_ == SocketState::CONNECTED) {
-        LOGE("ClientRecvWSUpgradeRsp::client has connected.");
-        return true;
-    }
-
-    std::string msgBuf(HTTP_HANDSHAKE_MAX_LEN, 0);
-    ssize_t msgLen = 0;
-    while ((msgLen = recv(connectionFd_, msgBuf.data(), HTTP_HANDSHAKE_MAX_LEN, 0)) < 0 &&
-           (errno == EINTR || errno == EAGAIN)) {
-        LOGW("ClientRecvWSUpgradeRsp::client recv wsupgrade rsp failed, errno = %{public}d", errno);
-    }
-    if (msgLen <= 0) {
-        LOGE("ClientRecvWSUpgradeRsp::client recv wsupgrade rsp failed, error = %{public}d, desc = %{public}sn",
-            errno, strerror(errno));
-        CloseConnectionSocketOnFail();
-        return false;
-    }
-    // reduce to received size
-    msgBuf.resize(msgLen);
-
-    HttpResponse response;
-    if (!HttpResponse::Decode(msgBuf, response) || !ValidateServerHandShake(response)) {
-        LOGE("ClientRecvWSUpgradeRsp::client server handshake response is invalid");
-        CloseConnectionSocketOnFail();
-        return false;
-    }
-
-    socketState_ = SocketState::CONNECTED;
-    LOGI("ClientRecvWSUpgradeRsp::client recv wsupgrade rsp success.");
-    return true;
-}
-
-std::string WebSocketClient::GetSocketStateString()
-{
-    return std::string(SOCKET_STATE_NAMES[EnumToNumber(socketState_.load())]);
-}
-
-/* static */
-bool WebSocketClient::ValidateServerHandShake(HttpResponse& response)
-{
     // in accordance to https://www.rfc-editor.org/rfc/rfc6455#section-4.1
     if (response.status != HTTP_SWITCHING_PROTOCOLS_STATUS_CODE) {
         return false;
@@ -215,20 +50,194 @@ bool WebSocketClient::ValidateServerHandShake(HttpResponse& response)
 
     // The same WebSocket-Key is used for all connections
     // - must either use a randomly-selected, as required by spec or do this calculation statically.
-    unsigned char expectedSecWebSocketAccept_[WebSocketKeyEncoder::ENCODED_KEY_LEN + 1];
-    if (!WebSocketKeyEncoder::EncodeKey(DEFAULT_WEB_SOCKET_KEY, expectedSecWebSocketAccept_)) {
-        LOGE("ValidateServerHandShake::client failed to generate expected Sec-WebSocket-Accept token");
+    unsigned char expectedSecWebSocketAccept[WebSocketKeyEncoder::ENCODED_KEY_LEN + 1];
+    if (!WebSocketKeyEncoder::EncodeKey(defaultWebSocketKey, expectedSecWebSocketAccept)) {
+        LOGE("ValidateServerHandShake failed to generate expected Sec-WebSocket-Accept token");
         return false;
     }
 
     Trim(response.secWebSocketAccept);
     if (response.secWebSocketAccept.size() != WebSocketKeyEncoder::ENCODED_KEY_LEN ||
-        response.secWebSocketAccept.compare(reinterpret_cast<const char *>(expectedSecWebSocketAccept_)) != 0) {
+        response.secWebSocketAccept.compare(reinterpret_cast<const char *>(expectedSecWebSocketAccept)) != 0) {
         return false;
     }
 
     // may support two remaining checks
     return true;
+}
+
+bool WebSocketClient::InitToolchainWebSocketForPort(int port, uint32_t timeoutLimit)
+{
+    if (GetConnectionState() != ConnectionState::CLOSED) {
+        LOGE("InitToolchainWebSocketForPort::client has inited.");
+        return true;
+    }
+
+    int connection = socket(AF_INET, SOCK_STREAM, 0);
+    if (connection < SOCKET_SUCCESS) {
+        LOGE("InitToolchainWebSocketForPort::client socket failed, error = %{public}d , desc = %{public}s",
+            errno, strerror(errno));
+        return false;
+    }
+    SetConnectionSocket(connection);
+
+    // set send and recv timeout limit
+    if (!SetWebSocketTimeOut(connection, timeoutLimit)) {
+        LOGE("InitToolchainWebSocketForPort::client SetWebSocketTimeOut failed, error = %{public}d , desc = %{public}s",
+            errno, strerror(errno));
+        CloseOnInitFailure();
+        return false;
+    }
+
+    sockaddr_in clientAddr;
+    if (memset_s(&clientAddr, sizeof(clientAddr), 0, sizeof(clientAddr)) != EOK) {
+        LOGE("InitToolchainWebSocketForPort::client memset_s clientAddr failed, error = %{public}d, desc = %{public}s",
+            errno, strerror(errno));
+        CloseOnInitFailure();
+        return false;
+    }
+    clientAddr.sin_family = AF_INET;
+    clientAddr.sin_port = htons(port);
+    int ret = inet_pton(AF_INET, "127.0.0.1", &clientAddr.sin_addr);
+    if (ret != NET_SUCCESS) {
+        LOGE("InitToolchainWebSocketForPort::client inet_pton failed, error = %{public}d, desc = %{public}s",
+            errno, strerror(errno));
+        CloseOnInitFailure();
+        return false;
+    }
+
+    ret = connect(connection, reinterpret_cast<struct sockaddr*>(&clientAddr), sizeof(clientAddr));
+    if (ret != SOCKET_SUCCESS) {
+        LOGE("InitToolchainWebSocketForPort::client connect failed, error = %{public}d, desc = %{public}s",
+            errno, strerror(errno));
+        CloseOnInitFailure();
+        return false;
+    }
+    SetConnectionState(ConnectionState::CONNECTING);
+    LOGI("InitToolchainWebSocketForPort::client connect success.");
+    return true;
+}
+
+bool WebSocketClient::InitToolchainWebSocketForSockName(const std::string &sockName, uint32_t timeoutLimit)
+{
+    if (GetConnectionState() != ConnectionState::CLOSED) {
+        LOGE("InitToolchainWebSocketForSockName::client has inited.");
+        return true;
+    }
+
+    int connection = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (connection < SOCKET_SUCCESS) {
+        LOGE("InitToolchainWebSocketForSockName::client socket failed, error = %{public}d , desc = %{public}s",
+            errno, strerror(errno));
+        return false;
+    }
+    SetConnectionSocket(connection);
+
+    // set send and recv timeout limit
+    if (!SetWebSocketTimeOut(connection, timeoutLimit)) {
+        LOGE("InitToolchainWebSocketForSockName::client SetWebSocketTimeOut failed, "
+            "error = %{public}d, desc = %{public}s",
+            errno, strerror(errno));
+        CloseOnInitFailure();
+        return false;
+    }
+
+    struct sockaddr_un serverAddr;
+    if (memset_s(&serverAddr, sizeof(serverAddr), 0, sizeof(serverAddr)) != EOK) {
+        LOGE("InitToolchainWebSocketForSockName::client memset_s clientAddr failed, "
+            "error = %{public}d, desc = %{public}s",
+            errno, strerror(errno));
+        CloseOnInitFailure();
+        return false;
+    }
+    serverAddr.sun_family = AF_UNIX;
+    if (strcpy_s(serverAddr.sun_path + 1, sizeof(serverAddr.sun_path) - 1, sockName.c_str()) != EOK) {
+        LOGE("InitToolchainWebSocketForSockName::client strcpy_s serverAddr.sun_path failed, "
+            "error = %{public}d, desc = %{public}s",
+            errno, strerror(errno));
+        CloseOnInitFailure();
+        return false;
+    }
+    serverAddr.sun_path[0] = '\0';
+
+    uint32_t len = offsetof(struct sockaddr_un, sun_path) + strlen(sockName.c_str()) + 1;
+    int ret = connect(connection, reinterpret_cast<struct sockaddr*>(&serverAddr), static_cast<int32_t>(len));
+    if (ret != SOCKET_SUCCESS) {
+        LOGE("InitToolchainWebSocketForSockName::client connect failed, error = %{public}d, desc = %{public}s",
+            errno, strerror(errno));
+        CloseOnInitFailure();
+        return false;
+    }
+    SetConnectionState(ConnectionState::CONNECTING);
+    LOGI("InitToolchainWebSocketForSockName::client connect success.");
+    return true;
+}
+
+bool WebSocketClient::ClientSendWSUpgradeReq()
+{
+    auto state = GetConnectionState();
+    if (state == ConnectionState::CLOSING || state == ConnectionState::CLOSED) {
+        LOGE("ClientSendWSUpgradeReq::client has not inited.");
+        return false;
+    }
+    if (state == ConnectionState::OPEN) {
+        LOGE("ClientSendWSUpgradeReq::client has connected.");
+        return true;
+    }
+
+    // length without null-terminator
+    if (!Send(GetConnectionSocket(), CLIENT_WEBSOCKET_UPGRADE_REQ, sizeof(CLIENT_WEBSOCKET_UPGRADE_REQ) - 1, 0)) {
+        LOGE("ClientSendWSUpgradeReq::client send wsupgrade req failed, error = %{public}d, desc = %{public}sn",
+            errno, strerror(errno));
+        CloseOnInitFailure();
+        return false;
+    }
+    LOGI("ClientSendWSUpgradeReq::client send wsupgrade req success.");
+    return true;
+}
+
+bool WebSocketClient::ClientRecvWSUpgradeRsp()
+{
+    auto state = GetConnectionState();
+    if (state == ConnectionState::CLOSING || state == ConnectionState::CLOSED) {
+        LOGE("ClientRecvWSUpgradeRsp::client has not inited.");
+        return false;
+    }
+    if (state == ConnectionState::OPEN) {
+        LOGE("ClientRecvWSUpgradeRsp::client has connected.");
+        return true;
+    }
+
+    std::string msgBuf(HTTP_HANDSHAKE_MAX_LEN, 0);
+    ssize_t msgLen = 0;
+    while ((msgLen = recv(GetConnectionSocket(), msgBuf.data(), HTTP_HANDSHAKE_MAX_LEN, 0)) < 0 &&
+           (errno == EINTR || errno == EAGAIN)) {
+        LOGW("ClientRecvWSUpgradeRsp::client recv wsupgrade rsp failed, errno = %{public}d", errno);
+    }
+    if (msgLen <= 0) {
+        LOGE("ClientRecvWSUpgradeRsp::client recv wsupgrade rsp failed, error = %{public}d, desc = %{public}sn",
+            errno, strerror(errno));
+        CloseOnInitFailure();
+        return false;
+    }
+    // reduce to received size
+    msgBuf.resize(msgLen);
+
+    HttpResponse response;
+    if (!HttpResponse::Decode(msgBuf, response) || !ValidateServerHandShake(response)) {
+        LOGE("ClientRecvWSUpgradeRsp::client server handshake response is invalid");
+        CloseOnInitFailure();
+        return false;
+    }
+
+    SetConnectionState(ConnectionState::OPEN);
+    LOGI("ClientRecvWSUpgradeRsp::client recv wsupgrade rsp success.");
+    return true;
+}
+
+std::string WebSocketClient::GetSocketStateString()
+{
+    return std::string(SOCKET_STATE_NAMES[EnumToNumber(GetConnectionState())]);
 }
 
 bool WebSocketClient::DecodeMessage(WebSocketFrame& wsFrame) const
@@ -241,7 +250,7 @@ bool WebSocketClient::DecodeMessage(WebSocketFrame& wsFrame) const
     auto& buffer = wsFrame.payload;
     buffer.resize(msgLen, 0);
 
-    if (!Recv(connectionFd_, buffer, 0)) {
+    if (!RecvUnderLock(buffer)) {
         LOGE("DecodeMessage: Recv message without mask failed");
         return false;
     }
@@ -251,17 +260,24 @@ bool WebSocketClient::DecodeMessage(WebSocketFrame& wsFrame) const
 
 void WebSocketClient::Close()
 {
-    if (socketState_ == SocketState::CONNECTED) {
-        CloseConnection(CloseStatusCode::SERVER_GO_AWAY, SocketState::UNINITED);
+    if (!CloseConnection(CloseStatusCode::SERVER_GO_AWAY)) {
+        LOGW("Failed to close WebSocketClient");
     }
 }
 
-void WebSocketClient::CloseConnectionSocketOnFail()
+void WebSocketClient::CloseOnInitFailure()
 {
-    CloseConnectionSocket(ConnectionCloseReason::FAIL, SocketState::UNINITED);
+    // Must be in `CONNECTING` or `CLOSED` state.
+    auto expected = ConnectionState::CONNECTING;
+    if (!CompareExchangeConnectionState(expected, ConnectionState::CLOSING) &&
+        expected != ConnectionState::CLOSED) {
+        LOGE("CloseOnInitFailure violation: must be either CONNECTING or CLOSED, but got %{public}d",
+             EnumToNumber(expected));
+    }
+    CloseConnectionSocket(ConnectionCloseReason::FAIL);
 }
 
-bool WebSocketClient::ValidateIncomingFrame(const WebSocketFrame& wsFrame)
+bool WebSocketClient::ValidateIncomingFrame(const WebSocketFrame& wsFrame) const
 {
     // "A server MUST NOT mask any frames that it sends to the client."
     // https://www.rfc-editor.org/rfc/rfc6455#section-5.1

@@ -13,12 +13,10 @@
  * limitations under the License.
  */
 
-#if !defined(OHOS_PLATFORM)
 #if defined(PANDA_TARGET_WINDOWS)
 #include <ws2tcpip.h>
 #else
 #include <arpa/inet.h>
-#endif
 #endif
 
 #include <fcntl.h>
@@ -27,11 +25,35 @@
 #include "handshake_helper.h"
 #include "network.h"
 #include "server/websocket_server.h"
+#include "string_utils.h"
+
+#include <mutex>
+#include <thread>
 
 namespace OHOS::ArkCompiler::Toolchain {
+static bool ValidateHandShakeMessage(const HttpRequest& req)
+{
+    std::string upgradeHeaderValue = req.upgrade;
+    // Switch to lower case in order to support obsolete versions of WebSocket protocol.
+    ToLowerCase(upgradeHeaderValue);
+    return req.connection.find("Upgrade") != std::string::npos &&
+        upgradeHeaderValue.find("websocket") != std::string::npos &&
+        req.version.compare("HTTP/1.1") == 0;
+}
+
+WebSocketServer::~WebSocketServer() noexcept
+{
+    if (serverFd_ != -1) {
+        LOGW("WebSocket server is closed while destructing the object");
+        close(serverFd_);
+        // Reset directly in order to prevent static analyzer warnings.
+        serverFd_ = -1;
+    }
+}
+
 bool WebSocketServer::DecodeMessage(WebSocketFrame& wsFrame) const
 {
-    uint64_t msgLen = wsFrame.payloadLen;
+    const uint64_t msgLen = wsFrame.payloadLen;
     if (msgLen == 0) {
         // receiving empty data is OK
         return true;
@@ -39,18 +61,18 @@ bool WebSocketServer::DecodeMessage(WebSocketFrame& wsFrame) const
     auto& buffer = wsFrame.payload;
     buffer.resize(msgLen, 0);
 
-    if (!Recv(connectionFd_, wsFrame.maskingKey, sizeof(wsFrame.maskingKey), 0)) {
+    if (!RecvUnderLock(wsFrame.maskingKey, sizeof(wsFrame.maskingKey))) {
         LOGE("DecodeMessage: Recv maskingKey failed");
         return false;
     }
 
-    if (!Recv(connectionFd_, buffer, 0)) {
+    if (!RecvUnderLock(buffer)) {
         LOGE("DecodeMessage: Recv message with mask failed");
         return false;
     }
 
     for (uint64_t i = 0; i < msgLen; i++) {
-        auto j = i % WebSocketFrame::MASK_LEN;
+        const auto j = i % WebSocketFrame::MASK_LEN;
         buffer[i] = static_cast<uint8_t>(buffer[i]) ^ wsFrame.maskingKey[j];
     }
 
@@ -66,7 +88,7 @@ bool WebSocketServer::ProtocolUpgrade(const HttpRequest& req)
     }
 
     ProtocolUpgradeBuilder requestBuilder(encodedKey);
-    if (!Send(connectionFd_, requestBuilder.GetUpgradeMessage(), requestBuilder.GetLength(), 0)) {
+    if (!SendUnderLock(requestBuilder.GetUpgradeMessage(), requestBuilder.GetLength())) {
         LOGE("ProtocolUpgrade: Send failed");
         return false;
     }
@@ -75,17 +97,20 @@ bool WebSocketServer::ProtocolUpgrade(const HttpRequest& req)
 
 bool WebSocketServer::ResponseInvalidHandShake() const
 {
-    std::string response(BAD_REQUEST_RESPONSE);
-    return Send(connectionFd_, response, 0);
+    const std::string response(BAD_REQUEST_RESPONSE);
+    return SendUnderLock(response);
 }
 
 bool WebSocketServer::HttpHandShake()
 {
     std::string msgBuf(HTTP_HANDSHAKE_MAX_LEN, 0);
     ssize_t msgLen = 0;
-    while ((msgLen = recv(connectionFd_, msgBuf.data(), HTTP_HANDSHAKE_MAX_LEN, 0)) < 0 &&
-           (errno == EINTR || errno == EAGAIN)) {
-        LOGW("HttpHandShake recv failed, errno = %{public}d", errno);
+    {
+        std::shared_lock lock(GetConnectionMutex());
+        while ((msgLen = recv(GetConnectionSocket(), msgBuf.data(), HTTP_HANDSHAKE_MAX_LEN, 0)) < 0 &&
+            (errno == EINTR || errno == EAGAIN)) {
+            LOGW("HttpHandShake recv failed, errno = %{public}d", errno);
+        }
     }
     if (msgLen <= 0) {
         LOGE("ReadMsg failed, msgLen = %{public}ld, errno = %{public}d", static_cast<long>(msgLen), errno);
@@ -115,47 +140,86 @@ bool WebSocketServer::HttpHandShake()
     return false;
 }
 
-/* static */
-bool WebSocketServer::ValidateHandShakeMessage(const HttpRequest& req)
+bool WebSocketServer::MoveToConnectingState()
 {
-    return req.connection.find("Upgrade") != std::string::npos &&
-        req.upgrade.find("websocket") != std::string::npos &&
-        req.version.compare("HTTP/1.1") == 0;
+    if (!serverUp_.load()) {
+        // Server `Close` happened, must not accept new connections.
+        return false;
+    }
+    auto expected = ConnectionState::CLOSED;
+    if (!CompareExchangeConnectionState(expected, ConnectionState::CONNECTING)) {
+        switch (expected) {
+            case ConnectionState::CLOSING:
+                LOGW("MoveToConnectingState during closing connection");
+                break;
+            case ConnectionState::OPEN:
+                LOGW("MoveToConnectingState during already established connection");
+                break;
+            case ConnectionState::CONNECTING:
+                LOGE("MoveToConnectingState during opening connection, which violates WebSocketServer guarantees");
+                break;
+            default:
+                break;
+        }
+        return false;
+    }
+    // Must check once again because of `Close` method implementation.
+    if (!serverUp_.load()) {
+        // Server `Close` happened, `serverFd_` was closed, new connection must not be opened.
+        expected = SetConnectionState(ConnectionState::CLOSED);
+        if (expected != ConnectionState::CONNECTING) {
+            LOGE("AcceptNewConnection: Close guarantees violated");
+        }
+        return false;
+    }
+    return true;
 }
 
 bool WebSocketServer::AcceptNewConnection()
 {
-    if (socketState_ == SocketState::UNINITED) {
-        LOGE("AcceptNewConnection failed, websocket not inited");
+    if (!MoveToConnectingState()) {
         return false;
-    }
-    if (socketState_ == SocketState::CONNECTED) {
-        LOGI("AcceptNewConnection websocket has connected");
-        return true;
     }
 
-    if ((connectionFd_ = accept(serverFd_, nullptr, nullptr)) < SOCKET_SUCCESS) {
+    const int newConnectionFd = accept(serverFd_, nullptr, nullptr);
+    if (newConnectionFd < SOCKET_SUCCESS) {
         LOGI("AcceptNewConnection accept has exited");
+
+        auto expected = SetConnectionState(ConnectionState::CLOSED);
+        if (expected != ConnectionState::CONNECTING) {
+            LOGE("AcceptNewConnection: violation due to concurrent close and accept: got %{public}d",
+                 EnumToNumber(expected));
+        }
         return false;
+    }
+    {
+        std::unique_lock lock(GetConnectionMutex());
+        SetConnectionSocket(newConnectionFd);
     }
 
     if (!HttpHandShake()) {
-        LOGE("AcceptNewConnection HttpHandShake failed");
-        CloseConnectionSocket(ConnectionCloseReason::FAIL, SocketState::INITED);
+        LOGW("AcceptNewConnection HttpHandShake failed");
+
+        auto expected = SetConnectionState(ConnectionState::CLOSING);
+        if (expected != ConnectionState::CONNECTING) {
+            LOGE("AcceptNewConnection: violation due to concurrent close and accept: got %{public}d",
+                 EnumToNumber(expected));
+        }
+        CloseConnectionSocket(ConnectionCloseReason::FAIL);
         return false;
     }
+
     OnNewConnection();
     return true;
 }
 
-#if !defined(OHOS_PLATFORM)
 bool WebSocketServer::InitTcpWebSocket(int port, uint32_t timeoutLimit)
 {
     if (port < 0) {
         LOGE("InitTcpWebSocket invalid port");
         return false;
     }
-    if (socketState_ != SocketState::UNINITED) {
+    if (serverUp_.load()) {
         LOGI("InitTcpWebSocket websocket has inited");
         return true;
     }
@@ -203,13 +267,14 @@ bool WebSocketServer::BindAndListenTcpWebSocket(int port)
         CloseServerSocket();
         return false;
     }
-    socketState_ = SocketState::INITED;
+    serverUp_.store(true);
     return true;
 }
-#else
+
+#if !defined(WINDOWS_PLATFORM)
 bool WebSocketServer::InitUnixWebSocket(const std::string& sockName, uint32_t timeoutLimit)
 {
-    if (socketState_ != SocketState::UNINITED) {
+    if (serverUp_.load()) {
         LOGI("InitUnixWebSocket websocket has inited");
         return true;
     }
@@ -249,66 +314,71 @@ bool WebSocketServer::InitUnixWebSocket(const std::string& sockName, uint32_t ti
         CloseServerSocket();
         return false;
     }
-    socketState_ = SocketState::INITED;
+    serverUp_.store(true);
     return true;
 }
 
 bool WebSocketServer::InitUnixWebSocket(int socketfd)
 {
-    if (socketState_ != SocketState::UNINITED) {
+    if (serverUp_.load()) {
         LOGI("InitUnixWebSocket websocket has inited");
         return true;
     }
     if (socketfd < SOCKET_SUCCESS) {
         LOGE("InitUnixWebSocket socketfd is invalid");
-        socketState_ = SocketState::UNINITED;
         return false;
     }
-    connectionFd_ = socketfd;
-    int flag = fcntl(connectionFd_, F_GETFL, 0);
+    SetConnectionSocket(socketfd);
+    const int flag = fcntl(socketfd, F_GETFL, 0);
     if (flag == -1) {
         LOGE("InitUnixWebSocket get client state is failed");
         return false;
     }
-    fcntl(connectionFd_, F_SETFL, static_cast<size_t>(flag) & ~O_NONBLOCK);
-    socketState_ = SocketState::INITED;
+    fcntl(socketfd, F_SETFL, static_cast<size_t>(flag) & ~O_NONBLOCK);
+    serverUp_.store(true);
     return true;
 }
 
 bool WebSocketServer::ConnectUnixWebSocketBySocketpair()
 {
-    if (socketState_ == SocketState::UNINITED) {
-        LOGE("ConnectUnixWebSocket failed, websocket not inited");
+    if (!MoveToConnectingState()) {
         return false;
-    }
-    if (socketState_ == SocketState::CONNECTED) {
-        LOGI("ConnectUnixWebSocket websocket has connected");
-        return true;
     }
 
     if (!HttpHandShake()) {
         LOGE("ConnectUnixWebSocket HttpHandShake failed");
-        CloseConnectionSocket(ConnectionCloseReason::FAIL, SocketState::UNINITED);
+
+        auto expected = SetConnectionState(ConnectionState::CLOSING);
+        if (expected != ConnectionState::CONNECTING) {
+            LOGE("ConnectUnixWebSocketBySocketpair: violation due to concurrent close and accept: got %{public}d",
+                 EnumToNumber(expected));
+        }
+        CloseConnectionSocket(ConnectionCloseReason::FAIL);
         return false;
     }
-    socketState_ = SocketState::CONNECTED;
+
+    OnNewConnection();
     return true;
 }
-#endif
+#endif  // WINDOWS_PLATFORM
 
 void WebSocketServer::CloseServerSocket()
 {
     close(serverFd_);
     serverFd_ = -1;
-    socketState_ = SocketState::UNINITED;
 }
 
 void WebSocketServer::OnNewConnection()
 {
     LOGI("New client connected");
-    socketState_ = SocketState::CONNECTED;
     if (openCb_) {
         openCb_();
+    }
+
+    auto expected = SetConnectionState(ConnectionState::OPEN);
+    if (expected != ConnectionState::CONNECTING) {
+        LOGE("OnNewConnection violation: expected CONNECTING, but got %{public}d",
+             EnumToNumber(expected));
     }
 }
 
@@ -322,7 +392,7 @@ void WebSocketServer::SetOpenConnectionCallback(OpenConnectionCallback cb)
     openCb_ = std::move(cb);
 }
 
-bool WebSocketServer::ValidateIncomingFrame(const WebSocketFrame& wsFrame)
+bool WebSocketServer::ValidateIncomingFrame(const WebSocketFrame& wsFrame) const
 {
     // "The server MUST close the connection upon receiving a frame that is not masked."
     // https://www.rfc-editor.org/rfc/rfc6455#section-5.1
@@ -347,18 +417,66 @@ std::string WebSocketServer::CreateFrame(bool isLast, FrameType frameType, std::
     return builder.SetPayload(std::move(payload)).Build();
 }
 
+WebSocketServer::ConnectionState WebSocketServer::WaitConnectingStateEnds(ConnectionState connection)
+{
+    auto shutdownSocketUnderLock = [this]() {
+        auto fd = GetConnectionSocket();
+        if (fd == -1) {
+            return false;
+        }
+        int err = ShutdownSocket(fd);
+        if (err != 0) {
+            LOGW("Failed to shutdown client socket, errno = %{public}d", errno);
+        }
+        return true;
+    };
+
+    auto connectionSocketWasShutdown = false;
+    while (connection == ConnectionState::CONNECTING) {
+        if (!connectionSocketWasShutdown) {
+            // Try to shutdown the already accepted connection socket,
+            // otherwise thread can infinitely hang on handshake recv.
+            std::shared_lock lock(GetConnectionMutex());
+            connectionSocketWasShutdown = shutdownSocketUnderLock();
+        }
+
+        std::this_thread::yield();
+        connection = GetConnectionState();
+    }
+    return connection;
+}
+
 void WebSocketServer::Close()
 {
-    if (socketState_ == SocketState::UNINITED) {
+    // Firstly stop accepting new connections.
+    if (!serverUp_.exchange(false)) {
         return;
     }
-    if (socketState_ == SocketState::CONNECTED) {
-        CloseConnection(CloseStatusCode::SERVER_GO_AWAY, SocketState::INITED);
+
+    int err = ShutdownSocket(serverFd_);
+    if (err != 0) {
+        LOGW("Failed to shutdown server socket, errno = %{public}d", errno);
     }
-    usleep(10000); // 10000: time for websocket to enter the accept
-#if defined(OHOS_PLATFORM)
-    shutdown(serverFd_, SHUT_RDWR);
-#endif
+
+    // If there is a concurrent call to `CloseConnection`, we can immediately close `serverFd_`.
+    // This is because new connections are already prevented, hence no reads of `serverFd_` will be done,
+    // and the connection itself will be closed by someone else.
+    auto connection = GetConnectionState();
+    if (connection == ConnectionState::CLOSING || connection == ConnectionState::CLOSED) {
+        CloseServerSocket();
+        return;
+    }
+
+    connection = WaitConnectingStateEnds(connection);
+
+    // Can safely close server socket, as there will be no more new connections attempts.
     CloseServerSocket();
+    // Must check once again after finished `AcceptNewConnection`.
+    if (connection == ConnectionState::CLOSING || connection == ConnectionState::CLOSED) {
+        return;
+    }
+
+    // If we reached this point, connection can be `OPEN`, `CLOSING` or `CLOSED`. Try to close it anyway.
+    CloseConnection(CloseStatusCode::SERVER_GO_AWAY);
 }
 } // namespace OHOS::ArkCompiler::Toolchain

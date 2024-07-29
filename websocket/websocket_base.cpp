@@ -19,19 +19,41 @@
 #include "network.h"
 #include "websocket_base.h"
 
+#include <mutex>
+
 namespace OHOS::ArkCompiler::Toolchain {
+static std::string ToString(CloseStatusCode status)
+{
+    if (status == CloseStatusCode::NO_STATUS_CODE) {
+        return "";
+    }
+    std::string result;
+    PushNumberPerByte(result, EnumToNumber(status));
+    return result;
+}
+
+WebSocketBase::~WebSocketBase() noexcept
+{
+    if (connectionFd_ != -1) {
+        LOGW("WebSocket connection is closed while destructing the object");
+        close(connectionFd_);
+        // Reset directly in order to prevent static analyzer warnings.
+        connectionFd_ = -1;
+    }
+}
+
 // if the data is too large, it will be split into multiple frames, the first frame will be marked as 0x0
 // and the last frame will be marked as 0x1.
 // we just add the 'isLast' parameter to indicate whether it is the last frame.
 bool WebSocketBase::SendReply(const std::string& message, FrameType frameType, bool isLast) const
 {
-    if (socketState_ != SocketState::CONNECTED) {
+    if (connectionState_.load() != ConnectionState::OPEN) {
         LOGE("SendReply failed, websocket not connected");
         return false;
     }
 
-    auto frame = CreateFrame(isLast, frameType, message);
-    if (!Send(connectionFd_, frame, 0)) {
+    const auto frame = CreateFrame(isLast, frameType, message);
+    if (!SendUnderLock(frame)) {
         LOGE("SendReply: send failed");
         return false;
     }
@@ -60,18 +82,18 @@ bool WebSocketBase::SendReply(const std::string& message, FrameType frameType, b
   *    +---------------------------------------------------------------+
   */
 
-bool WebSocketBase::ReadPayload(WebSocketFrame& wsFrame)
+bool WebSocketBase::ReadPayload(WebSocketFrame& wsFrame) const
 {
     if (wsFrame.payloadLen == WebSocketFrame::TWO_BYTES_LENTH_ENC) {
         uint8_t recvbuf[WebSocketFrame::TWO_BYTES_LENTH] = {0};
-        if (!Recv(connectionFd_, recvbuf, WebSocketFrame::TWO_BYTES_LENTH, 0)) {
+        if (!RecvUnderLock(recvbuf, WebSocketFrame::TWO_BYTES_LENTH)) {
             LOGE("ReadPayload: Recv payloadLen == 126 failed");
             return false;
         }
         wsFrame.payloadLen = NetToHostLongLong(recvbuf, WebSocketFrame::TWO_BYTES_LENTH);
     } else if (wsFrame.payloadLen == WebSocketFrame::EIGHT_BYTES_LENTH_ENC) {
         uint8_t recvbuf[WebSocketFrame::EIGHT_BYTES_LENTH] = {0};
-        if (!Recv(connectionFd_, recvbuf, WebSocketFrame::EIGHT_BYTES_LENTH, 0)) {
+        if (!RecvUnderLock(recvbuf, WebSocketFrame::EIGHT_BYTES_LENTH)) {
             LOGE("ReadPayload: Recv payloadLen == 127 failed");
             return false;
         }
@@ -80,7 +102,7 @@ bool WebSocketBase::ReadPayload(WebSocketFrame& wsFrame)
     return DecodeMessage(wsFrame);
 }
 
-bool WebSocketBase::HandleDataFrame(WebSocketFrame& wsFrame)
+bool WebSocketBase::HandleDataFrame(WebSocketFrame& wsFrame) const
 {
     if (wsFrame.opcode == EnumToNumber(FrameType::TEXT)) {
         return ReadPayload(wsFrame);
@@ -104,28 +126,29 @@ bool WebSocketBase::HandleControlFrame(WebSocketFrame& wsFrame)
         SendPongFrame(wsFrame.payload);
     } else if (wsFrame.opcode == EnumToNumber(FrameType::CLOSE)) {
         // might read payload to response by echoing the status code
-        CloseConnection(CloseStatusCode::NO_STATUS_CODE, SocketState::INITED);
+        CloseConnection(CloseStatusCode::NO_STATUS_CODE);
     }
     return true;
 }
 
 std::string WebSocketBase::Decode()
 {
-    if (socketState_ != SocketState::CONNECTED) {
-        LOGE("Decode failed, websocket not connected!");
+    if (auto state = connectionState_.load(); state != ConnectionState::OPEN) {
+        LOGE("Decode failed: websocket not connected, state = %{public}d", EnumToNumber(state));
         return "";
     }
 
     uint8_t recvbuf[WebSocketFrame::HEADER_LEN] = {0};
-    if (!Recv(connectionFd_, recvbuf, WebSocketFrame::HEADER_LEN, 0)) {
+    if (!RecvUnderLock(recvbuf, WebSocketFrame::HEADER_LEN)) {
         LOGE("Decode failed, client websocket disconnect");
-        CloseConnection(CloseStatusCode::UNEXPECTED_ERROR, SocketState::INITED);
+        CloseConnection(CloseStatusCode::UNEXPECTED_ERROR);
         return std::string(DECODE_DISCONNECT_MSG);
     }
     WebSocketFrame wsFrame(recvbuf);
     if (!ValidateIncomingFrame(wsFrame)) {
         LOGE("Received websocket frame is invalid - header is %02x%02x", recvbuf[0], recvbuf[1]);
-        CloseConnection(CloseStatusCode::PROTOCOL_ERROR, SocketState::INITED);
+        CloseConnection(CloseStatusCode::PROTOCOL_ERROR);
+        return std::string(DECODE_DISCONNECT_MSG);
     }
 
     if (IsControlFrame(wsFrame.opcode)) {
@@ -135,12 +158,14 @@ std::string WebSocketBase::Decode()
     } else if (HandleDataFrame(wsFrame)) {
         return wsFrame.payload;
     }
+    // Unexpected data, must close the connection.
+    CloseConnection(CloseStatusCode::PROTOCOL_ERROR);
     return std::string(DECODE_DISCONNECT_MSG);
 }
 
-bool WebSocketBase::IsConnected()
+bool WebSocketBase::IsConnected() const
 {
-    return socketState_ == SocketState::CONNECTED;
+    return connectionState_.load() == ConnectionState::OPEN;
 }
 
 void WebSocketBase::SetCloseConnectionCallback(CloseConnectionCallback cb)
@@ -153,15 +178,8 @@ void WebSocketBase::SetFailConnectionCallback(FailConnectionCallback cb)
     failCb_ = std::move(cb);
 }
 
-void WebSocketBase::CloseConnectionSocket(ConnectionCloseReason status, SocketState newSocketState)
+void WebSocketBase::OnConnectionClose(ConnectionCloseReason status)
 {
-#if defined(OHOS_PLATFORM)
-    shutdown(connectionFd_, SHUT_RDWR);
-#endif
-    close(connectionFd_);
-    connectionFd_ = -1;
-    socketState_ = newSocketState;
-
     if (status == ConnectionCloseReason::FAIL) {
         if (failCb_) {
             failCb_();
@@ -173,38 +191,117 @@ void WebSocketBase::CloseConnectionSocket(ConnectionCloseReason status, SocketSt
     }
 }
 
-void WebSocketBase::SendPongFrame(std::string payload)
+void WebSocketBase::CloseConnectionSocket(ConnectionCloseReason status)
 {
-    auto frame = CreateFrame(true, FrameType::PONG, std::move(payload));
-    if (!Send(connectionFd_, frame, 0)) {
+    OnConnectionClose(status);
+
+    {
+        // Shared lock due to other thread possibly hanging on `recv` with acquired shared lock.
+        std::shared_lock lock(connectionMutex_);
+        int err = ShutdownSocket(connectionFd_);
+        if (err != 0) {
+            LOGW("Failed to shutdown client socket, errno = %{public}d", errno);
+        }
+    }
+    {
+        // Unique lock due to close and write into `connectionFd_`.
+        // Note that `close` must be also done in critical section,
+        // otherwise the other thread can continue using the outdated and possibly reassigned file descriptor.
+        std::unique_lock lock(connectionMutex_);
+        close(connectionFd_);
+        // Reset directly in order to prevent static analyzer warnings.
+        connectionFd_ = -1;
+    }
+
+    auto expected = ConnectionState::CLOSING;
+    if (!connectionState_.compare_exchange_strong(expected, ConnectionState::CLOSED)) {
+        LOGE("In connection transition CLOSING->CLOSED got initial state = %{public}d", EnumToNumber(expected));
+    }
+}
+
+void WebSocketBase::SendPongFrame(std::string payload) const
+{
+    const auto frame = CreateFrame(true, FrameType::PONG, std::move(payload));
+    if (!SendUnderLock(frame)) {
         LOGE("Decode: Send pong frame failed");
     }
 }
 
-static std::string ToString(CloseStatusCode status)
+void WebSocketBase::SendCloseFrame(CloseStatusCode status) const
 {
-    if (status == CloseStatusCode::NO_STATUS_CODE) {
-        return "";
-    }
-    std::string result;
-    PushNumberPerByte(result, EnumToNumber(status));
-    return result;
-}
-
-void WebSocketBase::SendCloseFrame(CloseStatusCode status)
-{
-    auto frame = CreateFrame(true, FrameType::CLOSE, ToString(status));
-    if (!Send(connectionFd_, frame, 0)) {
+    const auto frame = CreateFrame(true, FrameType::CLOSE, ToString(status));
+    if (!SendUnderLock(frame)) {
         LOGE("SendCloseFrame: Send close frame failed");
     }
 }
 
-void WebSocketBase::CloseConnection(CloseStatusCode status, SocketState newSocketState)
+bool WebSocketBase::CloseConnection(CloseStatusCode status)
 {
+    auto expected = ConnectionState::OPEN;
+    if (!connectionState_.compare_exchange_strong(expected, ConnectionState::CLOSING)) {
+        // Concurrent connection close detected, do nothing.
+        return false;
+    }
+
     LOGI("Close connection, status = %{public}d", static_cast<int>(status));
     SendCloseFrame(status);
     // can close connection right after sending back close frame.
-    CloseConnectionSocket(ConnectionCloseReason::CLOSE, newSocketState);
+    CloseConnectionSocket(ConnectionCloseReason::CLOSE);
+    return true;
+}
+
+int WebSocketBase::GetConnectionSocket() const
+{
+    return connectionFd_;
+}
+
+void WebSocketBase::SetConnectionSocket(int socketFd)
+{
+    connectionFd_ = socketFd;
+}
+
+std::shared_mutex &WebSocketBase::GetConnectionMutex()
+{
+    return connectionMutex_;
+}
+
+WebSocketBase::ConnectionState WebSocketBase::GetConnectionState() const
+{
+    return connectionState_.load();
+}
+
+WebSocketBase::ConnectionState WebSocketBase::SetConnectionState(ConnectionState newState)
+{
+    return connectionState_.exchange(newState);
+}
+
+bool WebSocketBase::CompareExchangeConnectionState(ConnectionState& expected, ConnectionState newState)
+{
+    return connectionState_.compare_exchange_strong(expected, newState);
+}
+
+bool WebSocketBase::SendUnderLock(const std::string& message) const
+{
+    std::shared_lock lock(connectionMutex_);
+    return Send(connectionFd_, message, 0);
+}
+
+bool WebSocketBase::SendUnderLock(const char* buf, size_t totalLen) const
+{
+    std::shared_lock lock(connectionMutex_);
+    return Send(connectionFd_, buf, totalLen, 0);
+}
+
+bool WebSocketBase::RecvUnderLock(std::string& message) const
+{
+    std::shared_lock lock(connectionMutex_);
+    return Recv(connectionFd_, message, 0);
+}
+
+bool WebSocketBase::RecvUnderLock(uint8_t* buf, size_t totalLen) const
+{
+    std::shared_lock lock(connectionMutex_);
+    return Recv(connectionFd_, buf, totalLen, 0);
 }
 
 /* static */
@@ -248,6 +345,20 @@ bool WebSocketBase::SetWebSocketTimeOut(int32_t fd, uint32_t timeoutLimit)
         }
     }
     return true;
+}
+#endif
+
+#if defined(WINDOWS_PLATFORM)
+/* static */
+int WebSocketBase::ShutdownSocket(int32_t fd)
+{
+    return shutdown(fd, SD_BOTH);
+}
+#else
+/* static */
+int WebSocketBase::ShutdownSocket(int32_t fd)
+{
+    return shutdown(fd, SHUT_RDWR);
 }
 #endif
 } // namespace OHOS::ArkCompiler::Toolchain
