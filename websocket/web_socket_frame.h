@@ -17,6 +17,7 @@
 #define ARKCOMPILER_TOOLCHAIN_WEBSOCKET_WS_FRAME_H
 
 #include <string>
+#include <cstdint>
 
 namespace OHOS::ArkCompiler::Toolchain {
 enum class FrameType : uint8_t {
