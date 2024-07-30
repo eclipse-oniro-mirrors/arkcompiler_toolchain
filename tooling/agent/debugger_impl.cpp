@@ -26,6 +26,8 @@
 
 #include "ecmascript/jspandafile/js_pandafile_manager.h"
 #include "ecmascript/napi/jsnapi_helper.h"
+#include "ecmascript/tagged_array-inl.h"
+
 namespace panda::ecmascript::tooling {
 using namespace std::placeholders;
 
