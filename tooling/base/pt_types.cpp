@@ -770,14 +770,14 @@ std::string ObjectRemoteObject::DescriptionForSharedArrayBuffer(const EcmaVM *ec
 
 std::string ObjectRemoteObject::DescriptionForUint8Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged)
 {
-    int32_t len = static_cast<int32_t>(tagged->ByteLength(ecmaVm));
+    uint32_t len = tagged->ByteLength(ecmaVm);
     std::string description = ("Uint8Array(" + std::to_string(len) + ")");
     return description;
 }
 
 std::string ObjectRemoteObject::DescriptionForInt8Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged)
 {
-    int32_t len = static_cast<int32_t>(tagged->ByteLength(ecmaVm));
+    uint32_t len = tagged->ByteLength(ecmaVm);
     std::string description = ("Int8Array(" + std::to_string(len) + ")");
     return description;
 }
