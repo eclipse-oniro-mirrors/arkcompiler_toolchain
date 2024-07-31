@@ -11,9 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//arkcompiler/ets_frontend/es2panda/es2abc_config.gni")
 import("//arkcompiler/toolchain/test/test_helper.gni")
-import("../../toolchain.gni")
+import("$build_root/config/components/ets_frontend/es2abc_config.gni")
 
 module_output_path = "arkcompiler/toolchain"
 
