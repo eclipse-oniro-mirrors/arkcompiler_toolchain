@@ -302,6 +302,7 @@ template("musl_libs") {
       "//third_party/jemalloc/include/",
       "//third_party/jemalloc/include/jemalloc/internal",
       "//third_party/jemalloc/include/jemalloc",
+      "//third_party/FreeBSD/contrib/libexecinfo",
     ]
   }
 
@@ -333,25 +334,43 @@ template("musl_libs") {
   source_set("soft_musl_src") {
     sources_orig = []
     sources = []
-
+    include_dirs = []
     sources_orig = musl_src_arch_file + musl_src_file
+    sources_orig -= musl_src_filterout
     sources_orig -= [
-      "src/env/__stack_chk_fail.c",
-      "src/env/__libc_start_main.c",
-      "src/env/__init_tls.c",
-      "src/string/memset.c",
       "src/string/mempcpy.c",
+      "src/string/memset.c",
+      "src/env/__init_tls.c",
+      "src/env/__libc_start_main.c",
+      "src/env/__stack_chk_fail.c",
       "src/stdlib/qsort.c",
       "src/stdlib/qsort_nr.c",
+      "src/string/strncpy.c",
     ]
-    if (musl_arch == "mips") {
-      sources_orig += [ "src/string/memset.c" ]
-    }
-    sources_orig -= musl_src_filterout
 
-    sources += [
-      "$FREEBSD_DIR/contrib/tcp_wrappers/strcasecmp.c",
-      "$FREEBSD_DIR/lib/libc/stdlib/qsort.c",
+    freebsd_files = [
+      "//third_party/FreeBSD/contrib/gdtoa/strtod.c",
+      "//third_party/FreeBSD/contrib/gdtoa/gethex.c",
+      "//third_party/FreeBSD/contrib/gdtoa/smisc.c",
+      "//third_party/FreeBSD/contrib/gdtoa/misc.c",
+      "//third_party/FreeBSD/contrib/gdtoa/strtord.c",
+      "//third_party/FreeBSD/contrib/gdtoa/hexnan.c",
+      "//third_party/FreeBSD/contrib/gdtoa/gmisc.c",
+      "//third_party/FreeBSD/contrib/gdtoa/hd_init.c",
+      "//third_party/FreeBSD/contrib/gdtoa/strtodg.c",
+      "//third_party/FreeBSD/contrib/gdtoa/ulp.c",
+      "//third_party/FreeBSD/contrib/gdtoa/strtof.c",
+      "//third_party/FreeBSD/contrib/gdtoa/sum.c",
+      "//third_party/FreeBSD/lib/libc/gdtoa/glue.c",
+      "//third_party/FreeBSD/lib/libc/stdio/parsefloat.c",
+      "//third_party/FreeBSD/contrib/tcp_wrappers/strcasecmp.c",
+      "//third_party/FreeBSD/lib/libc/gen/arc4random.c",
+      "//third_party/FreeBSD/lib/libc/gen/arc4random_uniform.c",
+      "//third_party/FreeBSD/lib/libc/stdlib/qsort.c",
+      "//third_party/FreeBSD/lib/libc/stdlib/strtoimax.c",
+      "//third_party/FreeBSD/lib/libc/stdlib/strtoul.c",
+      "//third_party/FreeBSD/lib/libc/stdlib/strtoumax.c",
+      "//third_party/musl/third_party/openbsd/lib/libc/string/strncpy.c",
     ]
 
     if (musl_arch == "arm") {
@@ -382,6 +401,7 @@ template("musl_libs") {
         "src/math/powl.c",
         "src/math/sinf.c",
         "src/math/cosf.c",
+        "src/linux/flock.c",
       ]
     } else if (musl_arch == "aarch64") {
       sources_orig -= [
@@ -416,12 +436,23 @@ template("musl_libs") {
         "src/math/sincos.c",
         "src/math/pow.c",
         "src/math/powf.c",
+        "src/linux/flock.c",
       ]
     } else if (musl_arch == "x86_64") {
-      sources_orig -= [ "src/thread/${musl_arch}/__set_thread_area.s" ]
+      sources_orig -= [
+        "src/thread/${musl_arch}/__set_thread_area.s",
+        "src/linux/flock.c",
+      ]
     }
 
     defines = []
+    defines += [ "FEATURE_ICU_LOCALE" ]
+
+    # There are two ways to implement cxa_thread_atexit_impl:
+    # - CXA_THREAD_USE_TSD(default): use pthread_key_xxx to implement cxa_thread_atexit_impl.
+    # - CXA_THREAD_USE_TLS: put dtors in pthread to implement cxa_thread_atexit_impl.
+    defines += [ "CXA_THREAD_USE_TSD" ]
+
     if (musl_arch == "arm") {
       defines += [ "MUSL_ARM_ARCH" ]
     }
@@ -477,8 +508,7 @@ template("musl_libs") {
         "$OPTRTDIR/string/arm/strcmp.S",
         "$OPTRTDIR/string/arm/strlen-armv6t2.S",
       ]
-
-      sources += added_freebsd_files
+      sources += freebsd_files
       asmflags = [
         "-D__memcpy_arm = memcpy",
         "-D__memchr_arm = memchr",
@@ -487,6 +517,7 @@ template("musl_libs") {
         "-D__strlen_armv6t2 = strlen",
       ]
     } else if (musl_arch == "aarch64") {
+      sources += freebsd_files
       if (defined(ARM_FEATURE_SVE)) {
         sources += [
           "$OPTRTDIR/string/aarch64/memchr-sve.S",
@@ -565,7 +596,6 @@ template("musl_libs") {
           "$OPTRTDIR/string/aarch64/strnlen.S",
           "$OPTRTDIR/string/aarch64/strrchr.S",
         ]
-        sources += added_freebsd_files
         asmflags = [
           "-D__memmove_aarch64 = memmove",
           "-D__memcpy_aarch64 = memcpy",
@@ -588,37 +618,19 @@ template("musl_libs") {
     cflags = [
       "-O3",
       "-fPIC",
-      "-ffreestanding",
       "-fstack-protector-strong",
-      "-flto",
     ]
-
-    if (use_jemalloc) {
-      defines += [ "USE_JEMALLOC" ]
-      if (use_jemalloc_dfx_intf) {
-        defines += [ "USE_JEMALLOC_DFX_INTF" ]
-      }
-      include_dirs = [ "//third_party/jemalloc/include/jemalloc" ]
-    }
-
-    if (!defined(include_dirs)) {
-      if (musl_arch == "aarch64") {
-        include_dirs = [ "//third_party/FreeBSD/lib/libc/aarch64" ]
-      }
-      if (musl_arch == "arm") {
-        include_dirs = [ "//third_party/FreeBSD/lib/libc/arm" ]
-      }
-    } else {
-      if (musl_arch == "aarch64") {
-        include_dirs += [ "//third_party/FreeBSD/lib/libc/aarch64" ]
-      }
-      if (musl_arch == "arm") {
-        include_dirs += [ "//third_party/FreeBSD/lib/libc/arm" ]
-      }
-    }
 
     configs -= musl_inherited_configs
     configs += [ ":soft_musl_config" ]
+    if (musl_arch == "aarch64") {
+      include_dirs += [ "//third_party/FreeBSD/lib/libc/aarch64" ]
+    } else if (musl_arch == "arm") {
+      include_dirs += [ "//third_party/FreeBSD/lib/libc/arm" ]
+    }
+    include_dirs += [ "//third_party/FreeBSD/lib/libc/include" ]
+    include_dirs += [ "//third_party/FreeBSD/contrib/libexecinfo" ]
+    include_dirs += [ "//third_party/FreeBSD/crypto/openssh/openbsd-compat" ]
 
     if (!defined(defines)) {
       defines = []
@@ -633,7 +645,8 @@ template("musl_libs") {
         defines += [ "TARGET_GUARD_SIZE=${_product_config.device_guard_size}" ]
       }
     }
-
+    external_deps = []
+    external_deps += [ "FreeBSD:libc_static" ]
     deps = porting_deps
   }
 
@@ -827,6 +840,8 @@ template("musl_libs") {
       ":soft_musl_src_nossp",
       ":soft_musl_src_optimize",
     ]
+    external_deps = []
+    external_deps = [ "FreeBSD:libc_static" ]
     output_name = "libc"
     complete_static_lib = true
   }
