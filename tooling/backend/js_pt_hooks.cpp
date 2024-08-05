@@ -16,7 +16,6 @@
 #include "backend/js_pt_hooks.h"
 
 #include "agent/debugger_impl.h"
-#include "ecmascript/jspandafile/js_pandafile_manager.h"
 
 namespace panda::ecmascript::tooling {
 void JSPtHooks::DebuggerStmt([[maybe_unused]] const JSPtLocation &location)
@@ -48,16 +47,13 @@ bool JSPtHooks::SingleStep(const JSPtLocation &location)
     LOG_DEBUGGER(VERBOSE) << "JSPtHooks: SingleStep => " << location.GetBytecodeOffset();
 
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
-    if (!debugger_->parsedFileNames_.empty()) {
-        auto jsPandaFile = location.GetJsPandaFile();
-        DebugInfoExtractor *extractor = JSPandaFileManager::GetInstance()->GetJSPtExtractor(jsPandaFile);
-        std::string url = extractor->GetSourceFile(location.GetMethodId());
-        if (debugger_->IsUrlFoundInParsedSet(url)) {
-            debugger_->RemoveUrlFromParsedSet(url);
-            debugger_->NotifyPaused({}, BREAK_ON_START);
-            return false;
-        }
+    if (UNLIKELY(firstTime_)) {
+        firstTime_ = false;
+
+        debugger_->NotifyPaused({}, BREAK_ON_START);
+        return false;
     }
+
     // pause or step complete
     if (debugger_->NotifySingleStep(location)) {
         debugger_->NotifyPaused({}, OTHER);
@@ -88,8 +84,8 @@ void JSPtHooks::LoadModule(std::string_view pandaFileName, std::string_view entr
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
 
     static uint32_t scriptId = 0;
-    if (!debugger_->NotifyScriptParsed(scriptId++, pandaFileName.data(), entryPoint)) {
-        LOG_DEBUGGER(DEBUG) << "JSPtHooks: LoadModule: " << pandaFileName << " NotifyParsed fail";
+    if (debugger_->NotifyScriptParsed(scriptId++, pandaFileName.data(), entryPoint)) {
+        firstTime_ = true;
     }
 }
 
