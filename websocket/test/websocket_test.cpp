@@ -49,7 +49,9 @@ public:
     }
 
 #if defined(OHOS_PLATFORM)
-    static constexpr char UNIX_DOMAIN_PATH[] = "server.sock";
+    static constexpr char UNIX_DOMAIN_PATH_1[] = "server.sock_1";
+    static constexpr char UNIX_DOMAIN_PATH_2[] = "server.sock_2";
+    static constexpr char UNIX_DOMAIN_PATH_3[] = "server.sock_3";
 #endif
     static constexpr char HELLO_SERVER[]    = "hello server";
     static constexpr char HELLO_CLIENT[]    = "hello client";
@@ -71,7 +73,7 @@ HWTEST_F(WebSocketTest, DISABLED_ConnectWebSocketTest, testing::ext::TestSize.Le
     bool ret = false;
 #if defined(OHOS_PLATFORM)
     int appPid = getpid();
-    ret = serverSocket.InitUnixWebSocket(UNIX_DOMAIN_PATH + std::to_string(appPid), 5);
+    ret = serverSocket.InitUnixWebSocket(UNIX_DOMAIN_PATH_1 + std::to_string(appPid), 5);
 #else
     ret = serverSocket.InitTcpWebSocket(TCP_PORT, 5);
 #endif
@@ -84,7 +86,7 @@ HWTEST_F(WebSocketTest, DISABLED_ConnectWebSocketTest, testing::ext::TestSize.Le
         WebSocketClient clientSocket;
         bool retClient = false;
 #if defined(OHOS_PLATFORM)
-        retClient = clientSocket.InitToolchainWebSocketForSockName(UNIX_DOMAIN_PATH + std::to_string(appPid), 5);
+        retClient = clientSocket.InitToolchainWebSocketForSockName(UNIX_DOMAIN_PATH_1 + std::to_string(appPid), 5);
 #else
         retClient = clientSocket.InitToolchainWebSocketForPort(TCP_PORT, 5);
 #endif
@@ -168,7 +170,7 @@ HWTEST_F(WebSocketTest, DISABLED_ReConnectWebSocketTest, testing::ext::TestSize.
     bool ret = false;
 #if defined(OHOS_PLATFORM)
     int appPid = getpid();
-    ret = serverSocket.InitUnixWebSocket(UNIX_DOMAIN_PATH + std::to_string(appPid), 5);
+    ret = serverSocket.InitUnixWebSocket(UNIX_DOMAIN_PATH_2 + std::to_string(appPid), 5);
 #else
     ret = serverSocket.InitTcpWebSocket(TCP_PORT, 5);
 #endif
@@ -182,7 +184,7 @@ HWTEST_F(WebSocketTest, DISABLED_ReConnectWebSocketTest, testing::ext::TestSize.
             WebSocketClient clientSocket;
             bool retClient = false;
 #if defined(OHOS_PLATFORM)
-            retClient = clientSocket.InitToolchainWebSocketForSockName(UNIX_DOMAIN_PATH + std::to_string(appPid), 5);
+            retClient = clientSocket.InitToolchainWebSocketForSockName(UNIX_DOMAIN_PATH_2 + std::to_string(appPid), 5);
 #else
             retClient = clientSocket.InitToolchainWebSocketForPort(TCP_PORT, 5);
 #endif
@@ -240,7 +242,7 @@ HWTEST_F(WebSocketTest, DISABLED_ServerAbnormalTest, testing::ext::TestSize.Leve
 
 #if defined(OHOS_PLATFORM)
     int appPid = getpid();
-    ASSERT_TRUE(serverSocket.InitUnixWebSocket(UNIX_DOMAIN_PATH + std::to_string(appPid), 5));
+    ASSERT_TRUE(serverSocket.InitUnixWebSocket(UNIX_DOMAIN_PATH_3 + std::to_string(appPid), 5));
 #else
     ASSERT_TRUE(serverSocket.InitTcpWebSocket(TCP_PORT, 5));
 #endif
@@ -253,9 +255,9 @@ HWTEST_F(WebSocketTest, DISABLED_ServerAbnormalTest, testing::ext::TestSize.Leve
         clientSocket.SetCloseConnectionCallback(closeCallBack);
 
 #if defined(OHOS_PLATFORM)
-        ASSERT_TRUE(clientSocket.InitToolchainWebSocketForSockName(UNIX_DOMAIN_PATH + std::to_string(appPid), 5));
+        ASSERT_TRUE(clientSocket.InitToolchainWebSocketForSockName(UNIX_DOMAIN_PATH_3 + std::to_string(appPid), 5));
         // state is not UNITED, the function returns directly.
-        ASSERT_TRUE(clientSocket.InitToolchainWebSocketForSockName(UNIX_DOMAIN_PATH + std::to_string(appPid), 5));
+        ASSERT_TRUE(clientSocket.InitToolchainWebSocketForSockName(UNIX_DOMAIN_PATH_3 + std::to_string(appPid), 5));
 #else
         ASSERT_TRUE(clientSocket.InitToolchainWebSocketForPort(TCP_PORT, 5));
         // state is not UNITED, the function returns directly.
