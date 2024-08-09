@@ -24,8 +24,6 @@
 #include "tooling/test/testcases/js_closure_scope_test.h"
 #include "tooling/test/testcases/js_container_test.h"
 #include "tooling/test/testcases/js_exception_test.h"
-#include "tooling/test/testcases/js_heapsampling_loop_test.h"
-#include "tooling/test/testcases/js_heapsampling_test.h"
 #include "tooling/test/testcases/js_local_variable_scope_test.h"
 #include "tooling/test/testcases/js_module_variable_test.h"
 #include "tooling/test/testcases/js_source_test.h"
@@ -51,9 +49,6 @@
 #include "tooling/test/testcases/js_stepinto_async_test.h"
 #include "tooling/test/testcases/js_stepout_arrow_test.h"
 #include "tooling/test/testcases/js_stepout_async_test.h"
-#include "tooling/test/testcases/js_cpuprofile_test.h"
-#include "tooling/test/testcases/js_cpuprofile_async_test.h"
-#include "tooling/test/testcases/js_cpuprofile_step_test.h"
 #include "tooling/test/testcases/js_heapusage_test.h"
 #include "tooling/test/testcases/js_heapusage_async_test.h"
 #include "tooling/test/testcases/js_heapusage_step_test.h"
@@ -72,8 +67,6 @@
 #include "tooling/test/testcases/js_breakpoint_loop_test.h"
 #include "tooling/test/testcases/js_breakpoint_recursion_test.h"
 #include "tooling/test/testcases/js_breakpoint_switch_test.h"
-#include "tooling/test/testcases/js_cpuprofile_loop_test.h"
-#include "tooling/test/testcases/js_cpuprofile_recursion_test.h"
 #include "tooling/test/testcases/js_heapusage_loop_test.h"
 #include "tooling/test/testcases/js_heapusage_recursion_test.h"
 #include "tooling/test/testcases/js_smart_stepInto_test.h"
@@ -94,7 +87,6 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsModuleVariableTest", GetJsModuleVariableTest());
     TestUtil::RegisterTest("JsSourceTest", GetJsSourceTest());
     TestUtil::RegisterTest("JsTracingTest", GetJsTracingTest());
-    TestUtil::RegisterTest("JsHeapsamplingTest", GetJsHeapsamplingTest());
     TestUtil::RegisterTest("JsWatchTest", GetJsWatchTest());
     TestUtil::RegisterTest("JsHeapdumpTest", GetJsHeapdumpTest());
     TestUtil::RegisterTest("JsAllocationtrackTest", GetJsAllocationtrackTest());
@@ -113,16 +105,12 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsStepintoAsyncTest", GetJsStepintoAsyncTest());
     TestUtil::RegisterTest("JsStepoutArrowTest", GetJsStepoutArrowTest());
     TestUtil::RegisterTest("JsStepoutAsyncTest", GetJsStepoutAsyncTest());
-    TestUtil::RegisterTest("JsCpuprofileTest", GetJsCpuprofileTest());
-    TestUtil::RegisterTest("JsCpuprofileAsyncTest", GetJsCpuprofileAsyncTest());
-    TestUtil::RegisterTest("JsCpuprofileStepTest", GetJsCpuprofileStepTest());
     TestUtil::RegisterTest("JsHeapusageTest", GetJsHeapusageTest());
     TestUtil::RegisterTest("JsHeapusageAsyncTest", GetJsHeapusageAsyncTest());
     TestUtil::RegisterTest("JsHeapusageStepTest", GetJsHeapusageStepTest());
     TestUtil::RegisterTest("JsHeapdumpLoopTest", GetJsHeapdumpLoopTest());
     TestUtil::RegisterTest("JsAllocationTrackLoopTest", GetJsAllocationTrackLoopTest());
     TestUtil::RegisterTest("JsAllocationTrackRecursionTest", GetJsAllocationTrackRecursionTest());
-    TestUtil::RegisterTest("JsHeapSamplingLoopTest", GetJsHeapSamplingLoopTest());
     TestUtil::RegisterTest("JsJsWatchBasicTypeTest", GetJsWatchBasicTypeTest());
     TestUtil::RegisterTest("JsJsWatchSetTypeTest", GetJsWatchSetTypeTest());
     TestUtil::RegisterTest("JsJsWatchOtherTypeTest", GetJsWatchOtherTypeTest());
@@ -138,7 +126,6 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsBreakpointLoopTest", GetJsBreakpointLoopTest());
     TestUtil::RegisterTest("JsBreakpointRecursionTest", GetJsBreakpointRecursionTest());
     TestUtil::RegisterTest("JsBreakpointSwitchTest", GetJsBreakpointSwitchTest());
-    TestUtil::RegisterTest("JsCpuprofileLoopTest", GetJsCpuprofileLoopTest());
     TestUtil::RegisterTest("JsHeapusageLoopTest", GetJsHeapusageLoopTest());
     TestUtil::RegisterTest("JsHeapusageRecursionTest", GetJsHeapusageRecursionTest());
     TestUtil::RegisterTest("JsSmartStepoutTest", GetJsSmartStepoutTest());
