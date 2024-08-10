@@ -127,6 +127,7 @@ ohos_shared_library("libark_ecma_debugger") {
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
+  output_name = "libark_tooling"
 }
 
 ohos_shared_library("libark_ecma_debugger_test") {
