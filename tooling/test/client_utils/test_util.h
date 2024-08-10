@@ -36,9 +36,9 @@ using TestMap = CUnorderedMap<std::string, std::unique_ptr<TestActions>>;
 using namespace OHOS::ArkCompiler::Toolchain;
 
 #ifdef OHOS_PLATFORM
-#define DEBUGGER_LIBRARY "libark_debugger.z.so"
+#define DEBUGGER_LIBRARY "libark_inspector.z.so"
 #else
-#define DEBUGGER_LIBRARY "libark_debugger.so"
+#define DEBUGGER_LIBRARY "libark_inspector.so"
 #endif
 
 class TestUtil {
