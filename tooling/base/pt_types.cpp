@@ -3216,7 +3216,7 @@ std::unique_ptr<TraceConfig> TraceConfig::Create(const PtJson &params)
     std::unique_ptr<PtJson> syntheticDelays;
     ret = params.GetArray("syntheticDelays", &syntheticDelays);
     if (ret == Result::SUCCESS) {
-        int32_t syntheticDelaysLen = includedCategories->GetSize();
+        int32_t syntheticDelaysLen = syntheticDelays->GetSize();
         for (int32_t i = 0; i < syntheticDelaysLen; ++i) {
             std::string pSyntheticDelays = syntheticDelays->Get(i)->GetString();
             traceConfig->syntheticDelays_.value().emplace_back(pSyntheticDelays);
