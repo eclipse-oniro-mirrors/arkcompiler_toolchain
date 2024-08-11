@@ -177,13 +177,13 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplAddInspectedHeapObject)
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
-    std::string msg = std::string() + R"({"id":0,"method":"HeapProfiler.disable","params":{}})";
+    std::string msg = std::string() + R"({"id":0,"method":"HeapProfiler.addInspectedHeapObject","params":{}})";
     DispatchRequest request(msg);
-    dispatcherImpl->AddInspectedHeapObject(request);
+    dispatcherImpl->Dispatch(request);
     ASSERT_TRUE(result.find("wrong params") != std::string::npos);
-    msg = std::string() + R"({"id":0,"method":"HeapProfiler.disable","params":{"heapObjectId":"0"}})";
+    msg = std::string() + R"({"id":0,"method":"HeapProfiler.addInspectedHeapObject","params":{"heapObjectId":"0"}})";
     DispatchRequest request1 = DispatchRequest(msg);
-    dispatcherImpl->AddInspectedHeapObject(request1);
+    dispatcherImpl->Dispatch(request1);
     if (channel) {
         delete channel;
         channel = nullptr;
@@ -201,7 +201,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplCollectGarbage)
     auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
     std::string msg = std::string() + R"({"id":0,"method":"HeapProfiler.collectGarbage","params":{}})";
     DispatchRequest request(msg);
-    dispatcherImpl->CollectGarbage(request);
+    dispatcherImpl->Dispatch(request);
     ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
     if (channel) {
         delete channel;
@@ -219,7 +219,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplEnable)
     auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
     std::string msg = std::string() + R"({"id":0,"method":"HeapProfiler.enable","params":{}})";
     DispatchRequest request(msg);
-    dispatcherImpl->Enable(request);
+    dispatcherImpl->Dispatch(request);
     ASSERT_TRUE(result.find("protocols") != std::string::npos);
     if (channel) {
         delete channel;
@@ -237,7 +237,7 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplDisable)
     auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
     std::string msg = std::string() + R"({"id":0,"method":"HeapProfiler.disable","params":{}})";
     DispatchRequest request(msg);
-    dispatcherImpl->Disable(request);
+    dispatcherImpl->Dispatch(request);
     ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
     if (channel) {
         delete channel;
@@ -255,11 +255,11 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplGetHeapObjectId)
     auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
     std::string msg = std::string() + R"({"id":0,"method":"HeapProfiler.getHeapObjectId","params":{"objectId":true}})";
     DispatchRequest request(msg);
-    dispatcherImpl->GetHeapObjectId(request);
+    dispatcherImpl->Dispatch(request);
     ASSERT_TRUE(result.find("wrong params") != std::string::npos);
     msg = std::string() + R"({"id":0,"method":"HeapProfiler.getHeapObjectId","params":{"objectId":"0"}})";
     DispatchRequest request1(msg);
-    dispatcherImpl->GetHeapObjectId(request1);
+    dispatcherImpl->Dispatch(request1);
     ASSERT_TRUE(result.find("GetHeapObjectId not support now") != std::string::npos);
     if (channel) {
         delete channel;
@@ -278,12 +278,12 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplGetObjectByHeapObjectId)
     std::string msg = std::string() + R"({"id":0,"method":"HeapProfiler.getObjectByHeapObjectId","params":{
         "objectId":001}})";
     DispatchRequest request(msg);
-    dispatcherImpl->GetObjectByHeapObjectId(request);
+    dispatcherImpl->Dispatch(request);
     ASSERT_TRUE(result.find("wrong params") != std::string::npos);
     msg = std::string() + R"({"id":0,"method":"HeapProfiler.getObjectByHeapObjectId","params":{"objectId":"001",
         "objectGroup":"000"}})";
     DispatchRequest request1(msg);
-    dispatcherImpl->GetObjectByHeapObjectId(request1);
+    dispatcherImpl->Dispatch(request1);
     ASSERT_TRUE(result.find("GetObjectByHeapObjectId not support now") != std::string::npos);
     if (channel) {
         delete channel;
