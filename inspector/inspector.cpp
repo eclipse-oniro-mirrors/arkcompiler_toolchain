@@ -303,14 +303,16 @@ void Inspector::OnMessage(std::string&& msg)
 #if defined(OHOS_PLATFORM)
 uint64_t Inspector::GetThreadOrTaskId()
 {
-    uint64_t threadOrTaskId = static_cast<uint64_t>(getproctid());
 #if defined(ENABLE_FFRT_INTERFACES)
-    threadOrTaskId = ffrt_this_task_get_id();
-    if (threadOrTaskId == 0) {
-        threadOrTaskId = static_cast<uint64_t>(getproctid());
+    uint64_t threadOrTaskId = ffrt_this_task_get_id();
+    if (threadOrTaskId != 0) {
+        return threadOrTaskId;
+    } else {
+        return static_cast<uint64_t>(getproctid());
     }
+#else
+    return static_cast<uint64_t>(getproctid());
 #endif // defined(ENABLE_FFRT_INTERFACES)
-    return threadOrTaskId;
 }
 #endif // defined(OHOS_PLATFORM)
 
