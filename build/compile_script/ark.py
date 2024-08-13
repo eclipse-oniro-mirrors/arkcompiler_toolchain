@@ -481,10 +481,10 @@ class ArkPy:
                                                     test_script_name, test_script_path)
         else:
             cmd = "cd {5} && python3 {4} {0} --timeout {3}" \
-                  " --libs-dir ../../{1}/lib.unstripped/arkcompiler/ets_runtime" \
-                  ":../../{1}/lib.unstripped/thirdparty/icu" \
+                  " --libs-dir ../../{1}/arkcompiler/ets_runtime" \
+                  ":../../{1}/thirdparty/icu" \
                   ":../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
-                  ":../../{1}/lib.unstripped/thirdparty/bounds_checking_function/" \
+                  ":../../{1}/thirdparty/bounds_checking_function/" \
                   " --run-baseline-jit" \
                   " --ark-tool=../../{1}/arkcompiler/ets_runtime/ark_js_vm" \
                   " --ark-frontend-binary=../../{1}/arkcompiler/ets_frontend/es2abc" \
@@ -507,6 +507,11 @@ class ArkPy:
         threads_value, arg_list = ArkPy.parse_option(arg_list, option_name=threads_name, default_value=None)
         if threads_value:
             args_to_test262_cmd.extend([threads_name, threads_value])
+
+        enable_rm = [arg for arg in arg_list if "enable-rm" in arg]
+        if enable_rm:
+            args_to_test262_cmd.append("--enable-rm")
+            arg_list.remove(enable_rm[0])
 
         if len(arg_list) == 0:
             args_to_test262_cmd.append("--es2021 all")
@@ -704,7 +709,8 @@ class ArkPy:
             "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --aot] " \
             "[none or --pgo] [none or --litecg] [none, file or dir] [none or --threads=X] [option]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --jit] [none or --threads=X]\033[0m\n"
-            "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --baseline-jit] [none or --threads=X]\033[0m\n"
+            "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --baseline-jit] [none or --enable-rm] " \
+            "[none or --threads=X]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [unittest] [option]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [regresstest] [none, file or dir] " \
               "[none or --processes X and/or --test-list TEST_LIST_NAME]\033[0m\n")
@@ -718,7 +724,7 @@ class ArkPy:
             "  python3 ark.py \033[92mx64.release test262 --threads=16\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262 --aot --pgo --litecg\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262 --aot --pgo --litecg --threads=8\033[0m\n"
-            "  python3 ark.py \033[92mx64.release test262 --jit\033[0m\n"
+            "  python3 ark.py \033[92mx64.release test262 --jit --enable-rm\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262 --baseline-jit\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262 built-ins/Array\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262 built-ins/Array/name.js\033[0m\n"
