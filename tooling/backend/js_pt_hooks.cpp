@@ -83,8 +83,7 @@ void JSPtHooks::LoadModule(std::string_view pandaFileName, std::string_view entr
 
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
 
-    static uint32_t scriptId = 0;
-    if (debugger_->NotifyScriptParsed(scriptId++, pandaFileName.data(), entryPoint)) {
+    if (debugger_->NotifyScriptParsed(g_scriptId++, pandaFileName.data(), entryPoint)) {
         firstTime_ = true;
     }
 }
