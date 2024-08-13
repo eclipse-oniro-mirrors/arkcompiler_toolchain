@@ -19,6 +19,9 @@
 #include "ecmascript/jspandafile/js_pandafile_manager.h"
 
 namespace panda::ecmascript::tooling {
+
+static std::atomic<uint32_t> g_scriptId {0};
+
 void JSPtHooks::DebuggerStmt([[maybe_unused]] const JSPtLocation &location)
 {
     LOG_DEBUGGER(VERBOSE) << "JSPHooks: Debugger Statement";
@@ -87,8 +90,7 @@ void JSPtHooks::LoadModule(std::string_view pandaFileName, std::string_view entr
 
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
 
-    static uint32_t scriptId = 0;
-    if (!debugger_->NotifyScriptParsed(scriptId++, pandaFileName.data(), entryPoint)) {
+    if (!debugger_->NotifyScriptParsed(g_scriptId++, pandaFileName.data(), entryPoint)) {
         LOG_DEBUGGER(DEBUG) << "JSPtHooks: LoadModule: " << pandaFileName << " NotifyParsed fail";
     }
 }
