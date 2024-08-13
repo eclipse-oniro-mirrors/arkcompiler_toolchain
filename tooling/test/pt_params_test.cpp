@@ -244,4 +244,28 @@ HWTEST_F_L0(PtParamsTest, StartParamsCreateTest)
     std::unique_ptr<StartParams> result1 = StartParams::Create(*ptJson1);
     ASSERT_TRUE(result1 == nullptr);
 }
+
+HWTEST_F_L0(PtParamsTest, AddRequireParamsTest)
+{
+    std::string msg;
+    std::unique_ptr<SmartStepIntoParams> smartStepIntoParams;
+
+    msg = std::string() + R"({})";
+    smartStepIntoParams = SmartStepIntoParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(smartStepIntoParams, nullptr);
+}
+
+HWTEST_F_L0(PtParamsTest, SeriliazationTimeoutCheckEnableParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<SeriliazationTimeoutCheckEnableParams> seriliazationParams;
+
+    msg = std::string() + R"({})";
+    seriliazationParams = SeriliazationTimeoutCheckEnableParams::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(seriliazationParams, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"PtParams.Test","params":{"threshold":2}})";
+    seriliazationParams = SeriliazationTimeoutCheckEnableParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_TRUE(seriliazationParams != nullptr);
+}
 }  // namespace panda::test
