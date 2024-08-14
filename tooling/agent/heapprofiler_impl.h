@@ -197,6 +197,8 @@ private:
 #if defined(ECMASCRIPT_SUPPORT_HEAPPROFILER)
     uv_timer_t handle_ {};
 #endif
+
+    friend class HeapProfilerImplFriendTest;
 };
 }  // namespace panda::ecmascript::tooling
 #endif

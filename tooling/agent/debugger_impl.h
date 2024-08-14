@@ -327,6 +327,7 @@ private:
 
     friend class JSPtHooks;
     friend class test::TestHooks;
+    friend class DebuggerImplFriendTest;
 };
 }  // namespace panda::ecmascript::tooling
 #endif

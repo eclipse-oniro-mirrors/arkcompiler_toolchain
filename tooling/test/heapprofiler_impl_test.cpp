@@ -19,6 +19,42 @@
 using namespace panda::ecmascript;
 using namespace panda::ecmascript::tooling;
 
+namespace panda::ecmascript::tooling {
+class HeapProfilerImplFriendTest {
+public:
+    explicit HeapProfilerImplFriendTest(std::unique_ptr<HeapProfilerImpl> &heapprofilerImpl)
+    {
+        heapprofilerImpl_ = std::move(heapprofilerImpl);
+    }
+
+    void ResetProfiles()
+    {
+        heapprofilerImpl_->frontend_.ResetProfiles();
+    }
+
+    void LastSeenObjectId(int32_t lastSeenObjectId, int64_t timeStampUs)
+    {
+        heapprofilerImpl_->frontend_.LastSeenObjectId(lastSeenObjectId, timeStampUs);
+    }
+
+    void HeapStatsUpdate(HeapStat* updateData, int32_t count)
+    {
+        heapprofilerImpl_->frontend_.HeapStatsUpdate(updateData, count);
+    }
+
+    void AddHeapSnapshotChunk(char *data, int32_t size)
+    {
+        heapprofilerImpl_->frontend_.AddHeapSnapshotChunk(data, size);
+    }
+
+    void ReportHeapSnapshotProgress(int32_t done, int32_t total)
+    {
+        heapprofilerImpl_->frontend_.ReportHeapSnapshotProgress(done, total);
+    }
+private:
+    std::unique_ptr<HeapProfilerImpl> heapprofilerImpl_;
+};
+}
 
 namespace panda::test {
 class HeapProfilerImplTest : public testing::Test {
@@ -408,5 +444,130 @@ HWTEST_F_L0(HeapProfilerImplTest, StopSamplingSuccessful)
     DispatchResponse response = heapProfiler->StartSampling(params);
     DispatchResponse result = heapProfiler->StopSampling(&samplingHeapProfile);
     ASSERT_TRUE(result.IsOk());
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, StartTrackingHeapObjects)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
+    std::string msg = "";
+    msg += R"({"id":0,"method":"HeapProfiler.StartTrackingHeapObjects","params":{"trackAllocations":0}})";
+    DispatchRequest request1(msg);
+    dispatcherImpl->StartTrackingHeapObjects(request1);
+    ASSERT_TRUE(result == "{\"id\":0,\"result\":{\"code\":1,\"message\":\"wrong params\"}}");
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, StopTrackingHeapObjects)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
+    std::string msg = "";
+    msg += R"({"id":0,"method":"HeapProfiler.StopTrackingHeapObjects","params":{"reportProgress":0}})";
+    DispatchRequest request1(msg);
+    dispatcherImpl->StopTrackingHeapObjects(request1);
+    ASSERT_TRUE(result == "{\"id\":0,\"result\":{\"code\":1,\"message\":\"wrong params\"}}");
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, ResetProfiles)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, nullptr);
+    auto heapprofiler = std::make_unique<HeapProfilerImplFriendTest>(tracing);
+    heapprofiler->ResetProfiles();
+    ASSERT_TRUE(result == "");
+    tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    heapprofiler = std::make_unique<HeapProfilerImplFriendTest>(tracing);
+    heapprofiler->ResetProfiles();
+    ASSERT_TRUE(result == "");
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, LastSeenObjectId)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, nullptr);
+    auto heapprofiler = std::make_unique<HeapProfilerImplFriendTest>(tracing);
+    heapprofiler->LastSeenObjectId(0, 0);
+    ASSERT_TRUE(result == "");
+    tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    heapprofiler = std::make_unique<HeapProfilerImplFriendTest>(tracing);
+    heapprofiler->LastSeenObjectId(0, 0);
+    std::string msg = "{\"method\":\"HeapProfiler.lastSeenObjectId\",";
+    msg += "\"params\":{\"lastSeenObjectId\":0,";
+    msg += "\"timestamp\":0}}";
+    ASSERT_TRUE(result == msg);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, HeapStatsUpdate)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, nullptr);
+    auto heapprofiler = std::make_unique<HeapProfilerImplFriendTest>(tracing);
+    heapprofiler->HeapStatsUpdate(nullptr, 0);
+    ASSERT_TRUE(result == "");
+    tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    heapprofiler = std::make_unique<HeapProfilerImplFriendTest>(tracing);
+    heapprofiler->HeapStatsUpdate(nullptr, 0);
+    std::string msg = "{\"method\":\"HeapProfiler.heapStatsUpdate\",";
+    msg += "\"params\":{\"statsUpdate\":[]}}";
+    ASSERT_TRUE(result == msg);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, AddHeapSnapshotChunk)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, nullptr);
+    auto heapprofiler = std::make_unique<HeapProfilerImplFriendTest>(tracing);
+    heapprofiler->AddHeapSnapshotChunk(nullptr, 0);
+    ASSERT_TRUE(result == "");
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, ReportHeapSnapshotProgress)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, nullptr);
+    auto heapprofiler = std::make_unique<HeapProfilerImplFriendTest>(tracing);
+    heapprofiler->ReportHeapSnapshotProgress(0, 0);
+    ASSERT_TRUE(result == "");
 }
 }  // namespace panda::test

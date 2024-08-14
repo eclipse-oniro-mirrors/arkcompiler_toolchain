@@ -20,6 +20,37 @@
 
 using namespace panda::ecmascript;
 using namespace panda::ecmascript::tooling;
+namespace panda::ecmascript::tooling {
+class DebuggerImplFriendTest {
+public:
+    explicit DebuggerImplFriendTest(std::unique_ptr<DebuggerImpl> &debuggerImpl)
+    {
+        debuggerImpl_ = std::move(debuggerImpl);
+    }
+
+    void CheckAndGenerateCondFunc(const std::optional<std::string> condition)
+    {
+        debuggerImpl_->CheckAndGenerateCondFunc(condition);
+    }
+
+    Local<JSValueRef> ConvertToLocal(const std::string &varValue)
+    {
+        return debuggerImpl_->ConvertToLocal(varValue);
+    }
+
+    bool GetMixStackEnabled()
+    {
+        return debuggerImpl_->mixStackEnabled_;
+    }
+
+    bool DecodeAndCheckBase64(const std::string &src, std::vector<uint8_t> &dest)
+    {
+        return debuggerImpl_->DecodeAndCheckBase64(src, dest);
+    }
+private:
+    std::unique_ptr<DebuggerImpl> debuggerImpl_;
+};
+}
 
 namespace panda::test {
 class DebuggerImplTest : public testing::Test {
@@ -68,6 +99,28 @@ HWTEST_F_L0(DebuggerImplTest, NotifyScriptParsed__001)
     strFilename = "/filename";
     EXPECT_FALSE(debuggerImpl->NotifyScriptParsed(0, strFilename, ""));
 
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, NotifyScriptParsed__002)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    ecmaVm->GetJsDebuggerManager()->SetIsDebugApp(true);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
+    // DebuggerImpl::NotifyScriptParsed -- fileName.substr(0, DATA_APP_PATH.length()) != DATA_APP_PATH
+    std::string strFilename = "";
+    EXPECT_FALSE(debuggerImpl->NotifyScriptParsed(0, strFilename, ""));
+    ecmaVm->GetJsDebuggerManager()->SetIsDebugApp(false);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(false);
     if (protocolChannel) {
         delete protocolChannel;
         protocolChannel = nullptr;
@@ -1565,5 +1618,194 @@ HWTEST_F_L0(DebuggerImplTest, NativeOutTest)
     bool result2 = jspthooks->NativeOut();
     ASSERT_TRUE(result2);
     ASSERT_NE(jspthooks, nullptr);
+}
+
+HWTEST_F_L0(DebuggerImplTest, NotifyNativeReturn__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    std::unique_ptr<PtJson> json = PtJson::CreateObject();
+    json->Add("enabled", false);
+    json->Add("mixedStackEnabled", false);
+    std::unique_ptr<SetMixedDebugParams> params = SetMixedDebugParams::Create(*json);
+    debuggerImpl->SetMixedDebugEnabled(*params);
+    debuggerImpl->NotifyNativeReturn(nullptr);
+    auto debugger = std::make_unique<DebuggerImplFriendTest>(debuggerImpl);
+    ASSERT_TRUE(!debugger->GetMixStackEnabled());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, NotifyNativeReturn__002)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    std::unique_ptr<PtJson> json = PtJson::CreateObject();
+    json->Add("enabled", false);
+    json->Add("mixedStackEnabled", true);
+    std::unique_ptr<SetMixedDebugParams> params = SetMixedDebugParams::Create(*json);
+    debuggerImpl->SetMixedDebugEnabled(*params);
+    debuggerImpl->NotifyNativeReturn(nullptr);
+    auto debugger = std::make_unique<DebuggerImplFriendTest>(debuggerImpl);
+    ASSERT_TRUE(debugger->GetMixStackEnabled());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, NotifyReturnNative__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    std::unique_ptr<PtJson> json = PtJson::CreateObject();
+    json->Add("enabled", false);
+    json->Add("mixedStackEnabled", true);
+    std::unique_ptr<SetMixedDebugParams> params = SetMixedDebugParams::Create(*json);
+    debuggerImpl->SetMixedDebugEnabled(*params);
+    debuggerImpl->NotifyReturnNative();
+    auto debugger = std::make_unique<DebuggerImplFriendTest>(debuggerImpl);
+    ASSERT_TRUE(debugger->GetMixStackEnabled());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, NotifyReturnNative__002)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    std::unique_ptr<PtJson> json = PtJson::CreateObject();
+    json->Add("enabled", false);
+    json->Add("mixedStackEnabled", false);
+    std::unique_ptr<SetMixedDebugParams> params = SetMixedDebugParams::Create(*json);
+    debuggerImpl->SetMixedDebugEnabled(*params);
+    debuggerImpl->NotifyReturnNative();
+    auto debugger = std::make_unique<DebuggerImplFriendTest>(debuggerImpl);
+    ASSERT_TRUE(!debugger->GetMixStackEnabled());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, NotifyNativeCalling__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    std::unique_ptr<PtJson> json = PtJson::CreateObject();
+    json->Add("enabled", false);
+    json->Add("mixedStackEnabled", false);
+    std::unique_ptr<SetMixedDebugParams> params = SetMixedDebugParams::Create(*json);
+    debuggerImpl->SetMixedDebugEnabled(*params);
+    debuggerImpl->NotifyNativeCalling(nullptr);
+    auto debugger = std::make_unique<DebuggerImplFriendTest>(debuggerImpl);
+    ASSERT_TRUE(!debugger->GetMixStackEnabled());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, NotifyNativeCalling__002)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    std::unique_ptr<PtJson> json = PtJson::CreateObject();
+    json->Add("enabled", false);
+    json->Add("mixedStackEnabled", true);
+    std::unique_ptr<SetMixedDebugParams> params = SetMixedDebugParams::Create(*json);
+    debuggerImpl->SetMixedDebugEnabled(*params);
+    debuggerImpl->NotifyNativeCalling(nullptr);
+    auto debugger = std::make_unique<DebuggerImplFriendTest>(debuggerImpl);
+    ASSERT_TRUE(debugger->GetMixStackEnabled());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, CheckAndGenerateCondFunc__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto debugger = std::make_unique<DebuggerImplFriendTest>(debuggerImpl);
+    std::vector<uint8_t> dest;
+    debugger->CheckAndGenerateCondFunc("");
+    ASSERT_TRUE(!debugger->DecodeAndCheckBase64("", dest));
+    std::string msg = "UEFOREEAAAAAAAAADAACAEgBAAAAAAAAAAAAAAIAAAA8AAAAAQAA";
+    msg += "AEQBAAAAAAARAAAAAEAAABEAAAAkQAAAMQAAAB8AAAASAEAAAIAAABsAAAAAgAAAHQAAAD//////////";
+    debugger->CheckAndGenerateCondFunc(msg);
+    ASSERT_TRUE(debugger->DecodeAndCheckBase64(msg, dest));
+}
+
+HWTEST_F_L0(DebuggerImplTest, ConvertToLocal__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto debugger = std::make_unique<DebuggerImplFriendTest>(debuggerImpl);
+    Local<JSValueRef> taggedValue = debugger->ConvertToLocal("");
+    ASSERT_TRUE(!taggedValue.IsEmpty());
+    taggedValue = debugger->ConvertToLocal("false");
+    ASSERT_TRUE(!taggedValue.IsEmpty());
+    taggedValue = debugger->ConvertToLocal("true");
+    ASSERT_TRUE(!taggedValue.IsEmpty());
+    taggedValue = debugger->ConvertToLocal("undefined");
+    ASSERT_TRUE(!taggedValue.IsEmpty());
+    taggedValue = debugger->ConvertToLocal("\"test\"");
+    ASSERT_TRUE(!taggedValue.IsEmpty());
+    taggedValue = debugger->ConvertToLocal("test");
+    ASSERT_TRUE(taggedValue.IsEmpty());
+    taggedValue = debugger->ConvertToLocal("1");
+    ASSERT_TRUE(!taggedValue.IsEmpty());
 }
 }  // namespace panda::test
