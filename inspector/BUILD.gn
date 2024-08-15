@@ -69,6 +69,7 @@ ohos_shared_library("ark_debugger") {
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
+  output_name = "ark_inspector"
 }
 
 ohos_source_set("connectserver_debugger_static") {
@@ -118,4 +119,5 @@ ohos_shared_library("connectserver_debugger") {
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
+  output_name = "ark_connect_inspector"
 }
