@@ -42,6 +42,7 @@ public:
     void NativeReturn(const void *nativeAddress) override;
     void VmStart() override {}
     void VmDeath() override {}
+    void MethodEntry(JSHandle<Method> method) override;
 
 private:
     NO_COPY_SEMANTIC(JSPtHooks);
