@@ -282,4 +282,35 @@ HWTEST_F_L0(PtJsonTest, AddTest)
     result = ptJson.Add(key, value2);
     ASSERT_EQ(result, false);
 }
+
+HWTEST_F_L0(PtJsonTest, UIntTest)
+{
+    std::string str = "UIntTest";
+    std::unique_ptr<PtJson> json = PtJson::Parse(str.c_str());
+    EXPECT_EQ(json->GetUInt(), 0);
+    str = "12345";
+    json = PtJson::Parse(str.c_str());
+    EXPECT_EQ(json->GetUInt(), 12345);
+}
+
+HWTEST_F_L0(PtJsonTest, UInt64Test)
+{
+    std::string str = "UInt64Test";
+    std::unique_ptr<PtJson> json = PtJson::Parse(str.c_str());
+    EXPECT_EQ(json->GetUInt64(), 0);
+    str = "123456789012345";
+    json = PtJson::Parse(str.c_str());
+    EXPECT_EQ(json->GetUInt64(), 123456789012345);
+}
+
+HWTEST_F_L0(PtJsonTest, ResultUInt64Test)
+{
+    auto test = PtJson::CreateObject();
+    test->Add("a", "ResultUInt64Test");
+    test->Add("b", 100);
+    uint64_t ui64;
+    ASSERT_EQ(test->GetUInt64("a", &ui64), Result::TYPE_ERROR);
+    ASSERT_EQ(test->GetUInt64("b", &ui64), Result::SUCCESS);
+    EXPECT_EQ(ui64, static_cast<uint64_t>(100));
+}
 }
