@@ -215,6 +215,7 @@ config("ark_toolchain_public_config") {
 # ecmascript unit testcase config
 config("toolchain_test_config") {
   visibility = [
+    "./inspector/test/*",
     "./test/fuzztest/*",
     "./tooling/test/*",
     "./websocket/test/*",
@@ -243,6 +244,7 @@ group("ark_toolchain_unittest") {
   testonly = true
   deps = []
   deps += [
+    "./inspector/test:unittest",
     "./tooling/test:unittest",
     "./websocket/test:unittest",
   ]
@@ -257,6 +259,7 @@ group("ark_toolchain_host_unittest") {
 
   # js unittest
   deps += [
+    "./inspector/test:host_unittest",
     "./tooling/test:host_unittest",
     "./websocket/test:host_unittest",
   ]
