@@ -20,6 +20,7 @@ common_source = [
   "//third_party/libuv/src/random.c",
   "//third_party/libuv/src/strscpy.c",
   "//third_party/libuv/src/threadpool.c",
+  "//third_party/libuv/src/thread-common.c",
   "//third_party/libuv/src/timer.c",
   "//third_party/libuv/src/uv-common.c",
   "//third_party/libuv/src/uv-data-getter-setters.c",
@@ -28,7 +29,6 @@ common_source = [
 ]
 if (!is_mingw && !is_win) {
   nonwin_srcs = [
-    "//third_party/libuv/src/unix/epoll.c",
     "//third_party/libuv/src/unix/async.c",
     "//third_party/libuv/src/unix/core.c",
     "//third_party/libuv/src/unix/dl.c",
@@ -57,6 +57,7 @@ config("libuv_config") {
     "//third_party/libuv/src",
     "//third_party/libuv/src/unix",
   ]
+  defines = []
   cflags = [ "-Wno-unused-parameter" ]
   if (is_linux || is_ohos) {
     cflags += [
@@ -68,7 +69,7 @@ config("libuv_config") {
     # Adding NDEBUG macro manually to avoid compilation
     # error in debug version, FIX ME
     # https://gitee.com/openharmony/build/pulls/1206/files
-    defines = [ "NDEBUG" ]
+    defines += [ "NDEBUG" ]
   } else if (is_mingw || is_win) {
     cflags += [
       "-Wno-missing-braces",
@@ -79,7 +80,7 @@ config("libuv_config") {
       "-Wno-error=unknown-pragmas",
       "-Wno-unused-variable",
     ]
-    defines = [
+    defines += [
       "WIN32_LEAN_AND_MEAN",
       "_WIN32_WINNT=0x0600",
     ]
@@ -98,7 +99,7 @@ config("libuv_config") {
       "ws2_32",
     ]
   } else if (is_android) {
-    defines = [ "_GNU_SOURCE" ]
+    defines += [ "_GNU_SOURCE" ]
   }
 }
 
@@ -122,7 +123,7 @@ ohos_source_set("libuv_source") {
   stack_protector_ret = false
   configs = [ ":libuv_config" ]
   sources = common_source
-
+  external_deps = []
   if (is_mac || (defined(is_ios) && is_ios)) {
     sources += nonwin_srcs + [
                  "//third_party/libuv/src/unix/bsd-ifaddrs.c",
@@ -132,8 +133,9 @@ ohos_source_set("libuv_source") {
                  "//third_party/libuv/src/unix/darwin.c",
                  "//third_party/libuv/src/unix/fsevents.c",
                  "//third_party/libuv/src/unix/os390-proctitle.c",
+                 "//third_party/libuv/src/unix/log_unix.c",
+                 "//third_party/libuv/src/unix/trace_unix.c",
                ]
-    sources -= [ "//third_party/libuv/src/unix/epoll.c" ]
   } else if (is_mingw || is_win) {
     sources += [
       "//third_party/libuv/src/win/async.c",
@@ -146,6 +148,7 @@ ohos_source_set("libuv_source") {
       "//third_party/libuv/src/win/getaddrinfo.c",
       "//third_party/libuv/src/win/getnameinfo.c",
       "//third_party/libuv/src/win/handle.c",
+      "//third_party/libuv/src/win/log_win.c",
       "//third_party/libuv/src/win/loop-watcher.c",
       "//third_party/libuv/src/win/pipe.c",
       "//third_party/libuv/src/win/poll.c",
@@ -156,6 +159,7 @@ ohos_source_set("libuv_source") {
       "//third_party/libuv/src/win/stream.c",
       "//third_party/libuv/src/win/tcp.c",
       "//third_party/libuv/src/win/thread.c",
+      "//third_party/libuv/src/win/trace_win.c",
       "//third_party/libuv/src/win/tty.c",
       "//third_party/libuv/src/win/udp.c",
       "//third_party/libuv/src/win/util.c",
@@ -164,31 +168,30 @@ ohos_source_set("libuv_source") {
     ]
   } else if (is_ohos || (defined(is_android) && is_android)) {
     sources += nonwin_srcs + [
-                 "//third_party/libuv/src/unix/linux-core.c",
-                 "//third_party/libuv/src/unix/linux-inotify.c",
-                 "//third_party/libuv/src/unix/linux-syscalls.c",
+                 "//third_party/libuv/src/unix/linux.c",
                  "//third_party/libuv/src/unix/procfs-exepath.c",
-                 "//third_party/libuv/src/unix/pthread-fixes.c",
                  "//third_party/libuv/src/unix/random-getentropy.c",
                  "//third_party/libuv/src/unix/random-getrandom.c",
                  "//third_party/libuv/src/unix/random-sysctl-linux.c",
                  "//third_party/libuv/src/unix/proctitle.c",
                ]
+    sources += [
+      "src/log_ohos.c",
+      "src/trace_ohos.c",
+    ]
   } else if (is_linux) {
     sources += nonwin_srcs + [
-                 "//third_party/libuv/src/unix/linux-core.c",
-                 "//third_party/libuv/src/unix/linux-inotify.c",
-                 "//third_party/libuv/src/unix/linux-syscalls.c",
+                 "//third_party/libuv/src/unix/linux.c",
                  "//third_party/libuv/src/unix/procfs-exepath.c",
                  "//third_party/libuv/src/unix/random-getrandom.c",
                  "//third_party/libuv/src/unix/random-sysctl-linux.c",
                  "//third_party/libuv/src/unix/proctitle.c",
+                 "//third_party/libuv/src/unix/log_unix.c",
+                 "//third_party/libuv/src/unix/trace_unix.c",
                ]
   } else {
     sources += nonwin_srcs + [
-                 "//third_party/libuv/src/unix/linux-core.c",
-                 "//third_party/libuv/src/unix/linux-inotify.c",
-                 "//third_party/libuv/src/unix/linux-syscalls.c",
+                 "//third_party/libuv/src/unix/linux.c",
                  "//third_party/libuv/src/unix/procfs-exepath.c",
                  "//third_party/libuv/src/unix/random-getrandom.c",
                  "//third_party/libuv/src/unix/random-sysctl-linux.c",

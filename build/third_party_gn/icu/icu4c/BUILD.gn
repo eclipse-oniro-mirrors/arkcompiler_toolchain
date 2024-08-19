@@ -499,13 +499,7 @@ ohos_shared_library("shared_icuuc") {
     "-shared",
     "-lm",
   ]
-  if (current_os == "ios") {
-    ldflags += [
-      "-Wl",
-      "-install_name",
-      "@rpath/libhmicuuc.framework/libhmicuuc",
-    ]
-  }
+
   configs = [
     ":icu_config",
     "$build_root/config/compiler:rtti",
@@ -550,14 +544,6 @@ ohos_shared_library("shared_icuuc") {
   relative_install_dir = "platformsdk"
   output_name = "hmicuuc"
   install_enable = true
-}
-
-if (current_os == "ios") {
-  ohos_combine_darwin_framework("libhmicuuc") {
-    deps = [ ":shared_icuuc" ]
-    subsystem_name = "thirdparty"
-    part_name = "icu"
-  }
 }
 
 ohos_shared_library("shared_icui18n") {
