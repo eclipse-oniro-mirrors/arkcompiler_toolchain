@@ -37,6 +37,7 @@ public:
     void SetUp() override {}
 
     void TearDown() override {}
+    void ReturnValueVerification();
 #if defined(OHOS_PLATFORM)
     static constexpr char CONNECTED_MESSAGE_TEST[] = "connected";
     static constexpr char OPEN_MESSAGE_TEST[] = "layoutOpen";
@@ -45,11 +46,14 @@ public:
     static constexpr char STOPDEBUGGER_MESSAGE_TEST[] = "stopDebugger";
     static constexpr char OPEN_ARKUI_STATE_PROFILER_TEST[] = "ArkUIStateProfilerOpen";
     static constexpr char CLOSE_ARKUI_STATE_PROFILER_TEST[] = "ArkUIStateProfilerClose";
+    static constexpr char START_RECORD_MESSAGE_TEST[] = "rsNodeStartRecord";
+    static constexpr char STOP_RECORD_MESSAGE_TEST[] = "rsNodeStopRecord";
 
     static constexpr char HELLO_INSPECTOR_CLIENT[] = "hello inspector client";
     static constexpr char INSPECTOR_SERVER_OK[]    = "inspector server ok";
     static constexpr char INSPECTOR_RUN[]          = "inspector run";
     static constexpr char INSPECTOR_QUIT[]         = "inspector quit";
+    static constexpr int32_t WAIT_TIME = 2;
 #endif
 };
 
@@ -83,7 +87,37 @@ void CallbackInit()
         g_createInfoId = id;
     };
     SetSwitchCallBack(switchStatusCb, createInfoCb, g_instanceId);
+
+    auto startRecordFunc = []() -> void {};
+    auto stopRecordFunc = []() -> void {};
+    SetRecordCallback(startRecordFunc, stopRecordFunc);
     GTEST_LOG_(INFO) << "ConnectServerTest::CallbackInit finished";
+}
+
+void ConnectServerTest::ReturnValueVerification()
+{
+#if defined(OHOS_PLATFORM)
+    // Waiting for executing the message instruction sent by the client
+    sleep(WAIT_TIME);
+    ASSERT_TRUE(g_profilerFlag);
+    ASSERT_EQ(g_createInfoId, g_instanceId);
+    ASSERT_TRUE(g_switchStatus);
+    ASSERT_TRUE(g_connectFlag);
+    ASSERT_FALSE(WaitForConnection());
+
+    SendMessage(INSPECTOR_SERVER_OK);
+    SendLayoutMessage(INSPECTOR_RUN);
+
+    // Waiting for executing the message instruction sent by the client
+    sleep(WAIT_TIME);
+    ASSERT_FALSE(g_profilerFlag);
+    ASSERT_FALSE(g_switchStatus);
+    ASSERT_FALSE(g_connectFlag);
+
+    SendProfilerMessage(INSPECTOR_QUIT);
+
+    StopServer("InspectorConnectTest");
+#endif
 }
 
 HWTEST_F(ConnectServerTest, InspectorBasicTest, testing::ext::TestSize.Level0)
@@ -109,6 +143,8 @@ HWTEST_F(ConnectServerTest, InspectorConnectTest, testing::ext::TestSize.Level0)
         EXPECT_TRUE(clientSocket.SendReply(REQUEST_MESSAGE_TEST));
         EXPECT_TRUE(clientSocket.SendReply(OPEN_MESSAGE_TEST));
         EXPECT_TRUE(clientSocket.SendReply(CONNECTED_MESSAGE_TEST));
+        EXPECT_TRUE(clientSocket.SendReply(START_RECORD_MESSAGE_TEST));
+        EXPECT_TRUE(clientSocket.SendReply(STOP_RECORD_MESSAGE_TEST));
 
         EXPECT_STREQ(clientSocket.Decode().c_str(), HELLO_INSPECTOR_CLIENT);
 
@@ -125,27 +161,9 @@ HWTEST_F(ConnectServerTest, InspectorConnectTest, testing::ext::TestSize.Level0)
         clientSocket.Close();
         exit(0);
     } else if (pid > 0) {
-        // Waiting for executing the message instruction sent by the client
-        sleep(2);
-        ASSERT_TRUE(g_profilerFlag);
-        ASSERT_EQ(g_createInfoId, g_instanceId);
-        ASSERT_TRUE(g_switchStatus);
-        ASSERT_TRUE(g_connectFlag);
-        ASSERT_FALSE(WaitForConnection());
-
-        SendMessage(INSPECTOR_SERVER_OK);
-        SendLayoutMessage(INSPECTOR_RUN);
-
-        // Waiting for executing the message instruction sent by the client
-        sleep(2);
-        ASSERT_FALSE(g_profilerFlag);
-        ASSERT_FALSE(g_switchStatus);
-        ASSERT_FALSE(g_connectFlag);
-
-        SendProfilerMessage(INSPECTOR_QUIT);
-
-        StopServer("InspectorConnectTest");
-    } else {
+        ReturnValueVerification();
+    }
+    else {
         std::cerr << "InspectorConnectTest::fork failed" << std::endl;
     }
     RemoveMessage(g_instanceId);
