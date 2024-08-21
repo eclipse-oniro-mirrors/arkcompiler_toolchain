@@ -49,7 +49,6 @@ public:
         JSNApi::StartDebugger(instance, debugOption);
         if (instance->GetJsDebuggerManager() != nullptr) {
             instance->GetJsDebuggerManager()->DisableObjectHashDisplay();
-            instance->GetJsDebuggerManager()->DisableBreakpointSync();
         }
     }
 
