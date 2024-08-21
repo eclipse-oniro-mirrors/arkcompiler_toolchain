@@ -54,7 +54,7 @@ public:
     void SetDebuggerState(DebuggerState debuggerState);
     void SetNativeOutPause(bool nativeOutPause);
     void AddBreakpointDetail(const std::string &url, int32_t lineNumber,
-        std::string *outId, std::vector<std::unique_ptr<Location>> *outLocations, bool hasScriptId);
+        std::string *outId, std::vector<std::unique_ptr<Location>> *outLocations);
 
     DispatchResponse ContinueToLocation(const ContinueToLocationParams &params);
     DispatchResponse Enable(const EnableParams &params, UniqueDebuggerId *id);
@@ -256,12 +256,11 @@ private:
     bool IsSkipLine(const JSPtLocation &location);
     bool CheckPauseOnException();
     bool IsWithinVariableScope(const LocalVariableInfo &localVariableInfo, uint32_t bcOffset);
+    bool ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
+        std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
     bool IsVariableSkipped(const std::string &varName);
     Local<FunctionRef> CheckAndGenerateCondFunc(const std::optional<std::string> &condition);
     void InitializeExtendedProtocolsList();
-    void GenerateBreakpointOutLocation(ScriptId scriptId, const std::string &url, int32_t line,
-        bool res, std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
-    ScriptId PreProcessBreakpoint(const BreakpointInfo &breakpoint, std::vector<JSPtLocation> &list);
 
     const std::unordered_set<std::string> &GetRecordName(const std::string &url)
     {
