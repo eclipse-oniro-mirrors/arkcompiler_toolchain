@@ -102,15 +102,16 @@ void TcpServer::SendCommand(std::string inputStr)
             return;
         }
         char* msg = (char*)malloc(len + 1);
-        if ((msg != nullptr) && uv_is_active(reinterpret_cast<uv_handle_t*>(g_inputSignal))) {
-            if (strncpy_s(msg, len + 1, inputStr.c_str(), len) != 0) {
-                CloseServer();
-                return;
-            }
-
-            g_inputSignal->data = std::move(msg);
-            uv_async_send(g_inputSignal);
+        if (msg == nullptr) {
+            return;
         }
+        if (strncpy_s(msg, len + 1, inputStr.c_str(), len) != 0) {
+            free(msg);
+            CloseServer();
+            return;
+        }
+        g_inputSignal->data = std::move(msg);
+        uv_async_send(g_inputSignal);
     }
     return;
 }

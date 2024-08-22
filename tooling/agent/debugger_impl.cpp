@@ -154,7 +154,7 @@ bool DebuggerImpl::CheckScriptParsed([[maybe_unused]] const std::string &fileNam
     return true;
 }
 
-void DebuggerImpl::MethodEntry(JSHandle<Method> method)
+void DebuggerImpl::MethodEntry(ScriptId scriptId, JSHandle<Method> method)
 {
     const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
     if (jsPandaFile == nullptr) {
@@ -173,7 +173,7 @@ void DebuggerImpl::MethodEntry(JSHandle<Method> method)
         // scriptParsed
         const std::string &source = extractor->GetSourceCode(methodId);
         const std::string &recordName = std::string(method->GetRecordNameStr());
-        SendableScriptParsed(g_scriptId++, fileName, url, source, recordName);
+        SendableScriptParsed(scriptId, fileName, url, source, recordName);
     }
 }
 
