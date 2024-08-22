@@ -121,17 +121,18 @@ void GetInputCommand([[maybe_unused]] void *arg)
         if (uv_is_active(reinterpret_cast<uv_handle_t*>(g_inputSignal))) {
             uint32_t len = inputStr.length();
             char* msg = (char*)malloc(len + 1);
-            if ((msg != nullptr) && uv_is_active(reinterpret_cast<uv_handle_t*>(g_inputSignal))) {
-                if (strncpy_s(msg, len + 1, inputStr.c_str(), len) != 0) {
-                    if (uv_is_active(reinterpret_cast<uv_handle_t*>(g_releaseHandle))) {
-                        uv_async_send(g_releaseHandle);
-                    }
-                    free(msg);
-                    break;
-                }
-                g_inputSignal->data = std::move(msg);
-                uv_async_send(g_inputSignal);
+            if (msg == nullptr) {
+                continue;
             }
+            if (strncpy_s(msg, len + 1, inputStr.c_str(), len) != 0) {
+                if (uv_is_active(reinterpret_cast<uv_handle_t*>(g_releaseHandle))) {
+                    uv_async_send(g_releaseHandle);
+                }
+                free(msg);
+                break;
+            }
+            g_inputSignal->data = std::move(msg);
+            uv_async_send(g_inputSignal);
         }
     }
 }

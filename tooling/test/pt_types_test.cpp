@@ -309,12 +309,9 @@ HWTEST_F_L0(PtTypesTest, TraceConfigToJsonTest)
     std::unique_ptr<PtJson> result = treceConfig.ToJson();
     ASSERT_TRUE(result);
 }
+
 HWTEST_F_L0(PtTypesTest, TraceConfigCreateTest)
 {
-    std::unique_ptr<PtJson> includedCategoriesArray = PtJson::CreateArray();
-    std::unique_ptr<PtJson> excludedCategoriesArray = PtJson::CreateArray();
-    std::unique_ptr<PtJson> syntheticDelaysArray = PtJson::CreateArray();
-    std::unique_ptr<PtJson> object = PtJson::CreateObject();
     std::string attribute = "test";
     std::unique_ptr<PtJson> ptJson = PtJson::CreateObject();
     ptJson->Add("recordMode", 0);
@@ -327,23 +324,42 @@ HWTEST_F_L0(PtTypesTest, TraceConfigCreateTest)
     ptJson->Add("memoryDumpConfig", attribute.c_str());
     std::unique_ptr<TraceConfig> traceConfig = TraceConfig::Create(*ptJson);
     ASSERT_TRUE(!traceConfig);
-    object->Add("test", 0);
+
     std::unique_ptr<PtJson> ptJson1 = PtJson::CreateObject();
-    ptJson1->Add("includedCategories", includedCategoriesArray);
-    ptJson1->Add("recordMode", attribute.c_str());
-    ptJson1->Add("excludedCategories", excludedCategoriesArray);
-    ptJson1->Add("syntheticDelays", syntheticDelaysArray);
-    ptJson1->Add("memoryDumpConfig", object);
+    ptJson1->Add("recordMode", "test");
     std::unique_ptr<TraceConfig> traceConfig1 = TraceConfig::Create(*ptJson1);
     ASSERT_TRUE(!traceConfig1);
+
     std::unique_ptr<PtJson> ptJson2 = PtJson::CreateObject();
     std::unique_ptr<TraceConfig> traceConfig2 = TraceConfig::Create(*ptJson2);
     ASSERT_TRUE(traceConfig2);
+
+    std::unique_ptr<PtJson> includedCategoriesArray = PtJson::CreateArray();
+    includedCategoriesArray->Push("includedCategory");
+    std::unique_ptr<PtJson> excludedCategoriesArray = PtJson::CreateArray();
+    excludedCategoriesArray->Push("excludedCategory1");
+    excludedCategoriesArray->Push("excludedCategory2");
+    std::unique_ptr<PtJson> syntheticDelaysArray = PtJson::CreateArray();
+    syntheticDelaysArray->Push("syntheticDelay1");
+    syntheticDelaysArray->Push("syntheticDelay2");
+    syntheticDelaysArray->Push("syntheticDelay3");
     std::unique_ptr<PtJson> ptJson3 = PtJson::CreateObject();
-    std::unique_ptr<PtJson> memoryDumpConfig = PtJson::CreateArray();
-    ptJson3->Add("memoryDumpConfig", std::move(memoryDumpConfig));
+    ptJson3->Add("recordMode", "recordUntilFull");
+    ptJson3->Add("enableSampling", true);
+    ptJson3->Add("enableSystrace", true);
+    ptJson3->Add("enableArgumentFilter", true);
+    ptJson3->Add("includedCategories", includedCategoriesArray);
+    ptJson3->Add("excludedCategories", excludedCategoriesArray);
+    ptJson3->Add("syntheticDelays", syntheticDelaysArray);
+    ptJson3->Add("memoryDumpConfig", PtJson::CreateObject());
     std::unique_ptr<TraceConfig> traceConfig3 = TraceConfig::Create(*ptJson3);
-    ASSERT_TRUE(!traceConfig3);
+    ASSERT_TRUE(traceConfig3);
+    ASSERT_TRUE(traceConfig3->GetEnableSampling());
+    ASSERT_TRUE(traceConfig3->GetEnableSystrace());
+    ASSERT_TRUE(traceConfig3->GetEnableArgumentFilter());
+    ASSERT_EQ(traceConfig3->GetIncludedCategories()->size(), 1);
+    ASSERT_EQ(traceConfig3->GetExcludedCategories()->size(), 2);
+    ASSERT_EQ(traceConfig3->GetSyntheticDelays()->size(), 3);
 }
 
 HWTEST_F_L0(PtTypesTest, ScriptTypeProfileCreateTest)

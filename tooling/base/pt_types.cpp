@@ -3086,7 +3086,7 @@ std::unique_ptr<ScriptTypeProfile> ScriptTypeProfile::Create(const PtJson &param
     std::string error;
     auto scriptTypeProfile = std::make_unique<ScriptTypeProfile>();
     Result ret;
-    
+
     std::string scriptId;
     ret = params.GetString("scriptId", &scriptId);
     if (ret == Result::SUCCESS) {
@@ -3193,6 +3193,7 @@ std::unique_ptr<TraceConfig> TraceConfig::Create(const PtJson &params)
     ret = params.GetArray("includedCategories", &includedCategories);
     if (ret == Result::SUCCESS) {
         int32_t includedCategoriesLen = includedCategories->GetSize();
+        traceConfig->includedCategories_= std::vector<std::string>();
         for (int32_t i = 0; i < includedCategoriesLen; ++i) {
             std::string pIncludedCategories = includedCategories->Get(i)->GetString();
             traceConfig->includedCategories_.value().emplace_back(pIncludedCategories);
@@ -3205,6 +3206,7 @@ std::unique_ptr<TraceConfig> TraceConfig::Create(const PtJson &params)
     ret = params.GetArray("excludedCategories", &excludedCategories);
     if (ret == Result::SUCCESS) {
         int32_t excludedCategoriesLen = excludedCategories->GetSize();
+        traceConfig->excludedCategories_ = std::vector<std::string>();
         for (int32_t i = 0; i < excludedCategoriesLen; ++i) {
             std::string pExcludedCategories = excludedCategories->Get(i)->GetString();
             traceConfig->excludedCategories_.value().emplace_back(pExcludedCategories);
@@ -3216,7 +3218,8 @@ std::unique_ptr<TraceConfig> TraceConfig::Create(const PtJson &params)
     std::unique_ptr<PtJson> syntheticDelays;
     ret = params.GetArray("syntheticDelays", &syntheticDelays);
     if (ret == Result::SUCCESS) {
-        int32_t syntheticDelaysLen = includedCategories->GetSize();
+        int32_t syntheticDelaysLen = syntheticDelays->GetSize();
+        traceConfig->syntheticDelays_ = std::vector<std::string>();
         for (int32_t i = 0; i < syntheticDelaysLen; ++i) {
             std::string pSyntheticDelays = syntheticDelays->Get(i)->GetString();
             traceConfig->syntheticDelays_.value().emplace_back(pSyntheticDelays);
