@@ -81,7 +81,6 @@ struct BreakpointDetails {
     int32_t line_ {0};
     int32_t column_ {0};
     std::string url_ {};
-    bool needResetBreakpoint_ {false};
 };
 
 // Debugger.CallFrameId
