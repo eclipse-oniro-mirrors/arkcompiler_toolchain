@@ -39,41 +39,46 @@ action("create_porting_src") {
   outdir = [ "${target_out_dir}/${musl_ported_dir}" ]
 
   src_files = musl_src_arch_file
-  src_files += musl_inc_root_files
-  src_files += musl_inc_fortify_files
-  src_files += musl_inc_sys_files
-  src_files += musl_inc_scsi_files
-  src_files += musl_inc_netpacket_files
-  src_files += musl_inc_netinet_files
-  src_files += musl_inc_net_files
-  src_files += musl_inc_arpa_files
-  src_files += musl_inc_bits_files
-  src_files += musl_src_ldso
   src_files += musl_src_file
+  src_files += musl_src_ldso
+  src_files += musl_inc_bits_files
+  src_files += musl_inc_arpa_files
+  src_files += musl_inc_net_files
+  src_files += musl_inc_netinet_files
+  src_files += musl_inc_netpacket_files
+  src_files += musl_inc_scsi_files
+  src_files += musl_inc_sys_files
+  src_files += musl_inc_fortify_files
+  src_files += musl_inc_root_files
+  src_files += musl_inc_info_files
+  src_files += musl_inc_trace_files
 
   src_files += [
-    "scripts/create_syscall.sh",
-    "scripts/create_vesion.sh",
-    "scripts/create_alltypes.sh",
-    "scripts/install.py",
-    "tools/install.sh",
-    "tools/version.sh",
-    "VERSION",
-    "include/alltypes.h.in",
-    "arch/${musl_arch}/bits/syscall.h.in",
-    "arch/${musl_arch}/bits/alltypes.h.in",
-    "tools/mkalltypes.sed",
-    "crt/rcrt1.c",
-    "crt/crt1.c",
     "crt/Scrt1.c",
-    "crt/${musl_arch}/crtn.s",
-    "crt/${musl_arch}/crti.s",
+    "crt/crt1.c",
+    "crt/rcrt1.c",
+    "tools/mkalltypes.sed",
+    "arch/${musl_arch}/bits/alltypes.h.in",
+    "arch/${musl_arch}/bits/syscall.h.in",
+    "include/alltypes.h.in",
+    "VERSION",
+    "tools/version.sh",
+    "tools/install.sh",
+    "scripts/install.py",
+    "scripts/create_alltypes.sh",
+    "scripts/create_vesion.sh",
+    "scripts/create_syscall.sh",
   ]
+  src_files += [
+    "crt/${musl_arch}/crti.s",
+    "crt/${musl_arch}/crtn.s",
+  ]
+
   args = [ "-i" ] + rebase_path(sources_dir)
   args += [ "-o" ] + rebase_path(outdir)
   args += [ "-p" ] + [ "${musl_target_os}" ]
   foreach(i, src_files) {
-    foreach(s, musl_src_porting_file) {
+    foreach(s, musl_src_files_ext) {
       if (i == s) {
         src_files -= [ "${s}" ]
       }
@@ -85,16 +90,24 @@ action("create_porting_src") {
     outputs += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
   }
 
-  foreach(s, musl_src_porting_file) {
+  foreach(s, musl_src_files_ext) {
     outputs += [ "${target_out_dir}/${musl_ported_dir}/${s}" ]
   }
+
   inputs = []
+  foreach(i, src_files) {
+    foreach(s, musl_src_linux_files) {
+      if (i == s) {
+        src_files -= [ "${s}" ]
+      }
+    }
+  }
   foreach(s, src_files) {
     inputs += [ "${musl_dir}/${s}" ]
   }
 
-  foreach(s, musl_src_porting_file) {
-    inputs += [ "${musl_porting_dir}/${s}" ]
+  foreach(s, musl_src_files_ext) {
+    inputs += [ "${musl_dir}/${s}" ]
   }
 }
 
