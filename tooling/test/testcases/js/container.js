@@ -346,6 +346,25 @@ var o = {
         var number26 = vector.getIndexOf(857);
         var number27 = vector.getFirstElement();
 
+        // sendable
+        let sendableArray = new SendableArray(1, 2);
+        let sendableArray0 = sendableArray[0];
+        let sendableArray1 = sendableArray[1];
+        let sendableArraySize = sendableArray.length;
+        let sendableMap = new SendableMap([
+            [0, 1],
+            [1, 2],
+        ]);
+        let sendableMap0 = sendableMap.get(0);
+        let sendableMap1 = sendableMap.get(1);
+        let sendableMapSize = sendableMap.size;
+        let sendableSet = new SendableSet();
+        sendableSet.add(1);
+        sendableSet.add(2);
+        let sendableSet0 = sendableSet.has(1)
+        let sendableSet1 = sendableSet.has(2)
+        let sendableSetSize = sendableSet.size;
+
         var nop = undefined;
     }
 }
