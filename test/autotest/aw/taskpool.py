@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Copyright (c) 2024 Huawei Device Co., Ltd.
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -63,7 +65,7 @@ class TaskPool(object):
         loop.run_forever()
 
     async def _stop_loop(self, interval=1):
-        # wait for all tasks in the event loop id done, then we can close the loop
+        # wait for all tasks in the event loop is done, then we can close the loop
         while True:
             if self.task_queue.empty():
                 self.event_loop.stop()

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Copyright (c) 2024 Huawei Device Co., Ltd.
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,14 +34,6 @@ class Utils(object):
         while True:
             yield message_id
             message_id += 1
-
-    @classmethod
-    def get_device_type(cls):
-        cmd = ['hdc', 'shell', 'param', 'get', 'const.product.devicetype']
-        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if result.stdout.decode('utf-8').strip() == 'default':
-            return 'rk'
-        return None
 
     @classmethod
     def get_custom_protocols(cls):
