@@ -71,11 +71,11 @@ thread_local void* g_vm = nullptr;
 
 #if !defined(IOS_PLATFORM)
 #if defined(WINDOWS_PLATFORM)
-constexpr char ARK_DEBUGGER_SHARED_LIB[] = "libark_ecma_debugger.dll";
+constexpr char ARK_DEBUGGER_SHARED_LIB[] = "libark_tooling.dll";
 #elif defined(MAC_PLATFORM)
-constexpr char ARK_DEBUGGER_SHARED_LIB[] = "libark_ecma_debugger.dylib";
+constexpr char ARK_DEBUGGER_SHARED_LIB[] = "libark_tooling.dylib";
 #else
-constexpr char ARK_DEBUGGER_SHARED_LIB[] = "libark_ecma_debugger.so";
+constexpr char ARK_DEBUGGER_SHARED_LIB[] = "libark_tooling.so";
 #endif
 #endif
 
