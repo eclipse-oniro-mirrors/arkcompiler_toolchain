@@ -112,10 +112,14 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
 
     // if load module, it needs to check whether clear singlestepper_
     ClearSingleStepper();
-    if (MatchUrlAndFileName(url, fileName)) {
-        LOG_DEBUGGER(WARN) << "NotifyScriptParsed: already loaded: " << url;
-        return false;
+    auto urlFileNameIter = urlFileNameMap_.find(url);
+    if (urlFileNameIter != urlFileNameMap_.end()) {
+        if (urlFileNameIter->second.find(fileName) != urlFileNameIter->second.end()) {
+            LOG_DEBUGGER(WARN) << "NotifyScriptParsed: already loaded: " << url;
+            return false;
+        }
     }
+    urlFileNameMap_[url].insert(fileName);
 
     // Notify script parsed event
     std::unique_ptr<PtScript> script = std::make_unique<PtScript>(scriptId, fileName, url, source);
