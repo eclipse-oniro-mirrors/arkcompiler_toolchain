@@ -116,6 +116,8 @@ public:
 
     void NativeReturn([[maybe_unused]] const void *nativeAddress) override {}
 
+    void MethodEntry([[maybe_unused]] JSHandle<Method> method) override {}
+
     void TerminateTest()
     {
         debugInterface_->UnregisterHooks();

@@ -70,20 +70,7 @@ DebuggerImpl::~DebuggerImpl()
 
 bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &fileName, std::string_view entryPoint)
 {
-#if !defined(PANDA_TARGET_WINDOWS) && !defined(PANDA_TARGET_MACOS) \
-    && !defined(PANDA_TARGET_ANDROID) && !defined(PANDA_TARGET_IOS) \
-    && !defined(PANDA_TARGET_LINUX)
-    if (fileName.substr(0, DATA_APP_PATH.length()) != DATA_APP_PATH) {
-        LOG_DEBUGGER(DEBUG) << "NotifyScriptParsed: unsupport file: " << fileName;
-        return false;
-    }
-#endif
-
-    // The release application does not require scriptParsed
-    if (!vm_->GetJsDebuggerManager()->IsDebugApp()) {
-        return false;
-    }
-    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+    if (!CheckScriptParsed(fileName)) {
         return false;
     }
 
@@ -125,6 +112,69 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
     // Store parsed script in map
     scripts_[script->GetScriptId()] = std::move(script);
     return true;
+}
+
+bool DebuggerImpl::SendableScriptParsed(ScriptId scriptId, const std::string &fileName, const std::string &url,
+                                        const std::string &source, const std::string &recordName)
+{
+    if (!CheckScriptParsed(fileName)) {
+        return false;
+    }
+
+    recordNames_[url].insert(recordName);
+
+    // if load module, it needs to check whether clear singlestepper_
+    ClearSingleStepper();
+    // Notify script parsed event
+    std::unique_ptr<PtScript> script = std::make_unique<PtScript>(scriptId, fileName, url, source);
+
+    frontend_.ScriptParsed(vm_, *script);
+
+    // Store parsed script in map
+    scripts_[script->GetScriptId()] = std::move(script);
+    return true;
+}
+
+bool DebuggerImpl::CheckScriptParsed([[maybe_unused]] const std::string &fileName)
+{
+#if !defined(PANDA_TARGET_WINDOWS) && !defined(PANDA_TARGET_MACOS) \
+    && !defined(PANDA_TARGET_ANDROID) && !defined(PANDA_TARGET_IOS) \
+    && !defined(PANDA_TARGET_LINUX)
+    if (fileName.substr(0, DATA_APP_PATH.length()) != DATA_APP_PATH) {
+        LOG_DEBUGGER(DEBUG) << "SendableScriptParsed: unsupport file: " << fileName;
+        return false;
+    }
+#endif
+
+    // The release application does not require scriptParsed
+    if (!vm_->GetJsDebuggerManager()->IsDebugApp()) {
+        return false;
+    }
+
+    return true;
+}
+
+void DebuggerImpl::MethodEntry(JSHandle<Method> method)
+{
+    const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
+    if (jsPandaFile == nullptr) {
+        LOG_DEBUGGER(ERROR) << "JSPandaFile is nullptr";
+        return;
+    }
+    DebugInfoExtractor *extractor = JSPandaFileManager::GetInstance()->GetJSPtExtractor(jsPandaFile);
+    if (extractor == nullptr) {
+        LOG_DEBUGGER(ERROR) << "extractor is nullptr";
+        return;
+    }
+    auto methodId = method->GetMethodId();
+    const std::string &url = extractor->GetSourceFile(methodId);
+    const std::string &fileName = std::string(jsPandaFile->GetJSPandaFileDesc());
+    if (!MatchUrlAndFileName(url, fileName)) {
+        // scriptParsed
+        const std::string &source = extractor->GetSourceCode(methodId);
+        const std::string &recordName = std::string(method->GetRecordNameStr());
+        SendableScriptParsed(g_scriptId++, fileName, url, source, recordName);
+    }
 }
 
 bool DebuggerImpl::NotifyNativeOut()
