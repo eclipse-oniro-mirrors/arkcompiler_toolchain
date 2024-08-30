@@ -43,7 +43,7 @@ public:
     bool SendableScriptParsed(ScriptId scriptId, const std::string &fileName, const std::string &url,
                               const std::string &source, const std::string &recordName);
     bool CheckScriptParsed(const std::string &fileName);
-    void MethodEntry(JSHandle<Method> method);
+    void MethodEntry(ScriptId scriptId, JSHandle<Method> method);
     bool NotifySingleStep(const JSPtLocation &location);
     void NotifyPaused(std::optional<JSPtLocation> location, PauseReason reason);
     void GeneratePausedInfo(PauseReason reason,

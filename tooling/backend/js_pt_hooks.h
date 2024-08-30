@@ -25,8 +25,6 @@
 namespace panda::ecmascript::tooling {
 class DebuggerImpl;
 
-static std::atomic<uint32_t> g_scriptId {0};
-
 class JSPtHooks : public PtHooks {
 public:
     explicit JSPtHooks(DebuggerImpl *debugger) : debugger_(debugger) {}
