@@ -143,6 +143,10 @@ private:
             frontend_->AddHeapSnapshotChunk(data, size);
             return true;
         }
+        bool WriteBinBlock(char *data, int32_t size) override
+        {
+            return WriteChunk(data, size);
+        }
         bool Good() override
         {
             return frontend_ != nullptr;
