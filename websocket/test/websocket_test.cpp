@@ -156,8 +156,6 @@ HWTEST_F(WebSocketTest, ConnectWebSocketTest, testing::ext::TestSize.Level0)
         recv = serverSocket.Decode();
         EXPECT_EQ(strcmp(recv.c_str(), QUIT), 0);
         serverSocket.Close();
-        // sleep ensure that linux os core can really release resource
-        sleep(3);
     } else {
         std::cerr << "ConnectWebSocketTest::fork failed, error = "
                   << errno << ", desc = " << strerror(errno) << std::endl;
@@ -221,7 +219,6 @@ HWTEST_F(WebSocketTest, ReConnectWebSocketTest, testing::ext::TestSize.Level0)
         }
     }
     serverSocket.Close();
-    sleep(3);
 }
 
 HWTEST_F(WebSocketTest, ClientAbnormalTest, testing::ext::TestSize.Level0)
@@ -277,7 +274,6 @@ HWTEST_F(WebSocketTest, ServerAbnormalTest, testing::ext::TestSize.Level0)
         };
         serverSocket.SetValidateConnectionCallback(notValidCallBack);
         ASSERT_FALSE(serverSocket.AcceptNewConnection());
-        sleep(3);
     } else {
         std::cerr << "ServerAbnormalTest::fork failed, error = "
                   << errno << ", desc = " << strerror(errno) << std::endl;
