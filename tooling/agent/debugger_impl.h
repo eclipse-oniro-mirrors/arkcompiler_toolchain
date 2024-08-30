@@ -305,6 +305,7 @@ private:
     JSDebugger *jsDebugger_ {nullptr};
 
     std::unordered_map<std::string, std::unordered_set<std::string>> recordNames_ {};
+    std::unordered_map<std::string, std::unordered_set<std::string>> urlFileNameMap_ {};
     std::unordered_map<ScriptId, std::unique_ptr<PtScript>> scripts_ {};
     PauseOnExceptionsState pauseOnException_ {PauseOnExceptionsState::NONE};
     DebuggerState debuggerState_ {DebuggerState::ENABLED};
