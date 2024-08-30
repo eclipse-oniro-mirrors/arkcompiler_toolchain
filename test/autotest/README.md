@@ -9,7 +9,7 @@
 - IDE将应用推入设备，并拉起应用（或attach到已启动应用上）
 
 - IDE与应用建立websocket连接
-- IDE与应用之间通过websocket发送和接受调试调优相关的业务消息，消息格式遵循CDP（Chrome DevTools Protocol）协议
+- IDE与应用之间通过websocket发送和接受调试调优相关的业务消息，消息格式遵循CDP协议
 
 该自动化框架依据以上流程，实现了应用启动、websocket连接、消息交互等步骤的自动化，基于此可以进行调试调优用例的执行与开发
 
