@@ -75,7 +75,14 @@ template("ohos_unittest") {
       deps += invoker.deps
     }
 
-    deps +=
-        [ "//arkcompiler/toolchain/build/third_party_gn/googletest:gtest_main" ]
+    # Add static link library judgment logic below
+
+    if (defined(invoker.rtti_compile_flag) && invoker.rtti_compile_flag) {
+      deps += [ "//arkcompiler/toolchain/build/third_party_gn/googletest:gtest_rtti_main" ]
+    } else {
+      deps += [
+        "//arkcompiler/toolchain/build/third_party_gn/googletest:gtest_main",
+      ]
+    }
   }
 }
