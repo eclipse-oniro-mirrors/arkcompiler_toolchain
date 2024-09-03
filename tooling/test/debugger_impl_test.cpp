@@ -494,7 +494,8 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_RemoveBreakpoint__003)
     DispatchRequest request(msg);
 
     dispatcherImpl->Dispatch(request);
-    EXPECT_STREQ(outStrForCallbackCheck.c_str(), R"({"id":0,"result":{}})");
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(),
+        R"({"id":0,"result":{"code":1,"message":"Unknown file name."}})");
     if (protocolChannel) {
         delete protocolChannel;
         protocolChannel = nullptr;
@@ -550,7 +551,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_RemoveBreakpointsByUrl__002)
     DispatchRequest request(msg);
 
     dispatcherImpl->Dispatch(request);
-    EXPECT_STREQ(outStrForCallbackCheck.c_str(), R"({"id":0,"result":{}})");
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(), R"({"id":0,"result":{"code":1,"message":"Unknown url"}})");
     if (protocolChannel) {
         delete protocolChannel;
         protocolChannel = nullptr;
@@ -702,8 +703,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetBreakpointByUrl__002)
     DispatchRequest request(msg);
 
     dispatcherImpl->Dispatch(request);
-    EXPECT_STREQ(outStrForCallbackCheck.c_str(),
-        R"({"id":0,"result":{"code":1,"message":"DebuggerImpl SetBreakpointWithNoMatchUrl failed"}})");
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(), R"({"id":0,"result":{"code":1,"message":"Unknown file name."}})");
     if (protocolChannel) {
         delete protocolChannel;
         protocolChannel = nullptr;
@@ -1176,7 +1176,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpoint__0
 
     dispatcherImpl->Dispatch(request);
     EXPECT_STREQ(outStrForCallbackCheck.c_str(),
-        R"({"id":0,"result":{"locations":[{"lineNumber":3,"columnNumber":0,"id":"invalid","scriptId":-1}]}})");
+        R"({"id":0,"result":{"locations":[{"lineNumber":3,"columnNumber":20,"id":"invalid","scriptId":0}]}})");
     if (protocolChannel) {
         delete protocolChannel;
         protocolChannel = nullptr;

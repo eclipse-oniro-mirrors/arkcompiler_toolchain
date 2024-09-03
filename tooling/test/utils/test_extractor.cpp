@@ -36,8 +36,7 @@ std::pair<EntityId, uint32_t> TestExtractor::GetBreakpointAddress(const SourceLo
         return true;
     };
     std::unordered_set<std::string> recordName {};
-    Global<FunctionRef> funcRef;
-    MatchWithLocation(callbackFunc, sourceLocation.line, sourceLocation.column, "", recordName, funcRef);
+    MatchWithLocation(callbackFunc, sourceLocation.line, sourceLocation.column, "", recordName);
     return {retId, retOffset};
 }
 
