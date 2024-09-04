@@ -99,12 +99,8 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
 
     // if load module, it needs to check whether clear singlestepper_
     ClearSingleStepper();
-    auto urlFileNameIter = urlFileNameMap_.find(url);
-    if (urlFileNameIter != urlFileNameMap_.end()) {
-        if (urlFileNameIter->second.find(fileName) != urlFileNameIter->second.end()) {
-            LOG_DEBUGGER(WARN) << "NotifyScriptParsed: already loaded: " << url;
-            return false;
-        }
+    if (MatchUrlAndFileName(url, fileName)) {
+        return false;
     }
     urlFileNameMap_[url].insert(fileName);
 
@@ -158,17 +154,17 @@ bool DebuggerImpl::CheckScriptParsed([[maybe_unused]] const std::string &fileNam
     return true;
 }
 
-void DebuggerImpl::MethodEntry(ScriptId scriptId, JSHandle<Method> method)
+bool DebuggerImpl::SendableMethodEntry(ScriptId scriptId, JSHandle<Method> method)
 {
     const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
     if (jsPandaFile == nullptr) {
         LOG_DEBUGGER(ERROR) << "JSPandaFile is nullptr";
-        return;
+        return false;
     }
     DebugInfoExtractor *extractor = JSPandaFileManager::GetInstance()->GetJSPtExtractor(jsPandaFile);
     if (extractor == nullptr) {
         LOG_DEBUGGER(ERROR) << "extractor is nullptr";
-        return;
+        return false;
     }
     auto methodId = method->GetMethodId();
     const std::string &url = extractor->GetSourceFile(methodId);
@@ -178,7 +174,21 @@ void DebuggerImpl::MethodEntry(ScriptId scriptId, JSHandle<Method> method)
         const std::string &source = extractor->GetSourceCode(methodId);
         const std::string &recordName = std::string(method->GetRecordNameStr());
         SendableScriptParsed(scriptId, fileName, url, source, recordName);
+        return true;
     }
+    return false;
+}
+
+bool DebuggerImpl::MatchUrlAndFileName(const std::string &url, const std::string &fileName)
+{
+    auto urlFileNameIter = urlFileNameMap_.find(url);
+    if (urlFileNameIter != urlFileNameMap_.end()) {
+        if (urlFileNameIter->second.find(fileName) != urlFileNameIter->second.end()) {
+            LOG_DEBUGGER(WARN) << "MatchUrlAndFileName: already loaded: " << url;
+            return true;
+        }
+    }
+    return false;
 }
 
 bool DebuggerImpl::NotifyNativeOut()

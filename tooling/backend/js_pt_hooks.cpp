@@ -107,12 +107,14 @@ void JSPtHooks::NativeReturn(const void *nativeAddress)
     debugger_->NotifyNativeReturn(nativeAddress);
 }
 
-void JSPtHooks::MethodEntry(JSHandle<Method> method)
+void JSPtHooks::SendableMethodEntry(JSHandle<Method> method)
 {
     LOG_DEBUGGER(VERBOSE) << "JSPtHooks: MethodEntry";
 
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
 
-    debugger_->MethodEntry(g_scriptId++, method);
+    if (debugger_->SendableMethodEntry(g_scriptId++, method)) {
+        firstTime_ = true;
+    };
 }
 }  // namespace panda::ecmascript::tooling
