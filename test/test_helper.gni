@@ -11,9 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//arkcompiler/toolchain/toolchain.gni")
-import("$build_root/config/components/ets_frontend/es2abc_config.gni")
+import("//arkcompiler/ets_frontend/es2panda/es2abc_config.gni")
 import("$build_root/test.gni")
+import("../toolchain.gni")
 
 if (is_standard_system || ark_standalone_build) {
   _icu_path_ = "thirdparty/icu"

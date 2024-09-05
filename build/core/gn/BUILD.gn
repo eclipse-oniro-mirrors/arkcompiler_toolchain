@@ -11,8 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//arkcompiler/toolchain/toolchain.gni")
-import("$build_root/config/components/ets_frontend/ets_frontend_config.gni")
+import("//arkcompiler/ets_frontend/ets_frontend_config.gni")
+import("../../../toolchain.gni")
 
 print("root_out_dir=$root_out_dir")
 print("root_build_dir=$root_build_dir")
