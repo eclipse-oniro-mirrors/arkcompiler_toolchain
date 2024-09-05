@@ -79,7 +79,7 @@ group("runtime_core") {
 group("static_core") {
   deps = [
     "$ark_root/static_core/assembler:libarktsassembler",
-    "$ark_root/static_core/bytecode_optimizer:libarktsbytecodeopt",
+    "$ark_root/static_core/compiler:libarktscompiler",
     "$ark_root/static_core/libpandabase:libarktsbase",
     "$ark_root/static_core/libpandafile:libarktsfile",
   ]
