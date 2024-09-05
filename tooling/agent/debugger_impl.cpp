@@ -128,10 +128,6 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
 
     // Store parsed script in map
     scripts_[script->GetScriptId()] = std::move(script);
-
-    // Store parsed file url, used by hook to determine
-    // whether a Break_on_start pause is needed
-    parsedFileNames_.emplace(url);
     return true;
 }
 
@@ -393,7 +389,8 @@ void DebuggerImpl::InitializeExtendedProtocolsList()
         "setNativeRange",
         "resetSingleStepper",
         "callFunctionOn",
-        "smartStepInto"
+        "smartStepInto",
+        "callFunctionOn"
     };
     debuggerExtendedProtocols_ = std::move(debuggerProtocolList);
 }
