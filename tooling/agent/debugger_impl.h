@@ -38,12 +38,12 @@ public:
     ~DebuggerImpl();
 
     // event
-    bool NotifyScriptParsed(ScriptId scriptId, const std::string &fileName,
+    bool NotifyScriptParsed(const std::string &fileName,
                             std::string_view entryPoint = "func_main_0");
-    bool SendableScriptParsed(ScriptId scriptId, const std::string &fileName, const std::string &url,
+    bool SendableScriptParsed(const std::string &fileName, const std::string &url,
                               const std::string &source, const std::string &recordName);
     bool CheckScriptParsed(const std::string &fileName);
-    bool SendableMethodEntry(ScriptId scriptId, JSHandle<Method> method);
+    bool SendableMethodEntry(JSHandle<Method> method);
     bool MatchUrlAndFileName(const std::string &url, const std::string &fileName);
     bool NotifySingleStep(const JSPtLocation &location);
     void NotifyPaused(std::optional<JSPtLocation> location, PauseReason reason);

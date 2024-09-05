@@ -42,6 +42,8 @@ const std::string DATA_APP_PATH = "/";
 const std::string DATA_APP_PATH = "/data/";
 #endif
 
+static std::atomic<uint32_t> g_scriptId {0};
+
 DebuggerImpl::DebuggerImpl(const EcmaVM *vm, ProtocolChannel *channel, RuntimeImpl *runtime)
     : vm_(vm), frontend_(channel), runtime_(runtime)
 {
@@ -68,7 +70,7 @@ DebuggerImpl::~DebuggerImpl()
     DebuggerApi::DestroyJSDebugger(jsDebugger_);
 }
 
-bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &fileName, std::string_view entryPoint)
+bool DebuggerImpl::NotifyScriptParsed(const std::string &fileName, std::string_view entryPoint)
 {
     if (!CheckScriptParsed(fileName)) {
         return false;
@@ -105,7 +107,7 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
     urlFileNameMap_[url].insert(fileName);
 
     // Notify script parsed event
-    std::unique_ptr<PtScript> script = std::make_unique<PtScript>(scriptId, fileName, url, source);
+    std::unique_ptr<PtScript> script = std::make_unique<PtScript>(g_scriptId++, fileName, url, source);
 
     frontend_.ScriptParsed(vm_, *script);
 
@@ -114,7 +116,7 @@ bool DebuggerImpl::NotifyScriptParsed(ScriptId scriptId, const std::string &file
     return true;
 }
 
-bool DebuggerImpl::SendableScriptParsed(ScriptId scriptId, const std::string &fileName, const std::string &url,
+bool DebuggerImpl::SendableScriptParsed(const std::string &fileName, const std::string &url,
                                         const std::string &source, const std::string &recordName)
 {
     if (!CheckScriptParsed(fileName)) {
@@ -126,7 +128,7 @@ bool DebuggerImpl::SendableScriptParsed(ScriptId scriptId, const std::string &fi
     // if load module, it needs to check whether clear singlestepper_
     ClearSingleStepper();
     // Notify script parsed event
-    std::unique_ptr<PtScript> script = std::make_unique<PtScript>(scriptId, fileName, url, source);
+    std::unique_ptr<PtScript> script = std::make_unique<PtScript>(g_scriptId++, fileName, url, source);
 
     frontend_.ScriptParsed(vm_, *script);
 
@@ -154,7 +156,7 @@ bool DebuggerImpl::CheckScriptParsed([[maybe_unused]] const std::string &fileNam
     return true;
 }
 
-bool DebuggerImpl::SendableMethodEntry(ScriptId scriptId, JSHandle<Method> method)
+bool DebuggerImpl::SendableMethodEntry(JSHandle<Method> method)
 {
     const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
     if (jsPandaFile == nullptr) {
@@ -173,7 +175,7 @@ bool DebuggerImpl::SendableMethodEntry(ScriptId scriptId, JSHandle<Method> metho
         // scriptParsed
         const std::string &source = extractor->GetSourceCode(methodId);
         const std::string &recordName = std::string(method->GetRecordNameStr());
-        SendableScriptParsed(scriptId, fileName, url, source, recordName);
+        SendableScriptParsed(fileName, url, source, recordName);
         return true;
     }
     return false;

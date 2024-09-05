@@ -93,11 +93,11 @@ HWTEST_F_L0(DebuggerImplTest, NotifyScriptParsed__001)
 
     // DebuggerImpl::NotifyScriptParsed -- fileName.substr(0, DATA_APP_PATH.length()) != DATA_APP_PATH
     std::string strFilename = "filename";
-    EXPECT_FALSE(debuggerImpl->NotifyScriptParsed(0, strFilename, ""));
+    EXPECT_FALSE(debuggerImpl->NotifyScriptParsed(strFilename, ""));
 
     // DebuggerImpl::NotifyScriptParsed -- fileName.substr(0, DATA_APP_PATH.length()) != DATA_APP_PATH
     strFilename = "/filename";
-    EXPECT_FALSE(debuggerImpl->NotifyScriptParsed(0, strFilename, ""));
+    EXPECT_FALSE(debuggerImpl->NotifyScriptParsed(strFilename, ""));
 
     if (protocolChannel) {
         delete protocolChannel;
@@ -118,7 +118,7 @@ HWTEST_F_L0(DebuggerImplTest, NotifyScriptParsed__002)
     ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
     // DebuggerImpl::NotifyScriptParsed -- fileName.substr(0, DATA_APP_PATH.length()) != DATA_APP_PATH
     std::string strFilename = "";
-    EXPECT_FALSE(debuggerImpl->NotifyScriptParsed(0, strFilename, ""));
+    EXPECT_FALSE(debuggerImpl->NotifyScriptParsed(strFilename, ""));
     ecmaVm->GetJsDebuggerManager()->SetIsDebugApp(false);
     ecmaVm->GetJsDebuggerManager()->SetDebugMode(false);
     if (protocolChannel) {
