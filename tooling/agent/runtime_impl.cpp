@@ -236,6 +236,8 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
         GetWeakMapValue(value, outPropertyDesc);
     } else if (value->IsRegExp(vm_)) {
         GetRegExpValue(value, outPropertyDesc);
+    } else if (value->IsSharedSet(vm_)) {
+        GetSendableSetValue(value, outPropertyDesc);
     } else if (value->IsSet(vm_)) {
         GetSetValue(value, outPropertyDesc);
     } else if (value->IsWeakSet(vm_)) {
@@ -256,7 +258,7 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
         GetListValue(value, outPropertyDesc);
     } else if (value->IsPlainArray(vm_)) {
         GetPlainArrayValue(value, outPropertyDesc);
-    }  else if (value->IsTreeMap(vm_)) {
+    } else if (value->IsTreeMap(vm_)) {
         GetTreeMapValue(value, outPropertyDesc);
     } else if (value->IsTreeSet(vm_)) {
         GetTreeSetValue(value, outPropertyDesc);
@@ -666,6 +668,33 @@ void RuntimeImpl::GetWeakMapValue(Local<JSValueRef> value,
         objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), jsValue);
         DebuggerApi::AddInternalProperties(vm_, objRef, ArkInternalValueType::Entry, internalObjects_);
         ArrayRef::SetValueAt(vm_, jsValueRef, index++, objRef);
+    }
+    DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
+    SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");
+}
+
+void RuntimeImpl::GetSendableSetValue(Local<JSValueRef> value,
+                                      std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+{
+    Local<SendableSetRef> setRef = value->ToObject(vm_);
+    int32_t size = setRef->GetSize(vm_);
+    int32_t len = setRef->GetTotalElements(vm_);
+    int32_t index = 0;
+    Local<JSValueRef> jsValueRef = NumberRef::New(vm_, size);
+    SetKeyValue(jsValueRef, outPropertyDesc, "size");
+    jsValueRef = ArrayRef::New(vm_, size);
+    for (int32_t i = 0; i < len; ++i) {
+        Local<JSValueRef> elementRef = setRef->GetValue(vm_, i);
+        if (elementRef->IsHole()) {
+            continue;
+        } else if (elementRef->IsObject(vm_)) {
+            Local<ObjectRef> objRef = ObjectRef::New(vm_);
+            objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), elementRef);
+            DebuggerApi::AddInternalProperties(vm_, objRef, ArkInternalValueType::Entry, internalObjects_);
+            ArrayRef::SetValueAt(vm_, jsValueRef, index++, objRef);
+        } else {
+            ArrayRef::SetValueAt(vm_, jsValueRef, index++, elementRef);
+        }
     }
     DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
     SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");

@@ -35,7 +35,7 @@ public:
             // break on start
             {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
             // set breakpoint
-            {SocketAction::SEND, "b " DEBUGGER_JS_DIR "container.js 349"},
+            {SocketAction::SEND, "b " DEBUGGER_JS_DIR "container.js 368"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
             // hit breakpoint after resume first time
             {SocketAction::SEND, "resume"},
@@ -65,7 +65,7 @@ public:
                 std::string breakpoint;
                 breakpoint = hitBreakpoints->Get(0)->GetString();
                 if (ret != Result::SUCCESS || breakpoint.find(sourceFile_) == std::string::npos ||
-                    breakpoint.find("348") == std::string::npos) {
+                    breakpoint.find("367") == std::string::npos) {
                     return false;
                 }
 
@@ -246,6 +246,18 @@ private:
         { "string3", { "string", "array", "array" } },
         { "string4", { "string", "male", "male" } },
         { "string5", { "string", "one", "one" } },
+        { "sendableArray", { "object", "Object", "SendableArray [Sendable]", "SendableArray [Sendable]" } },
+        { "sendableArray0", { "number", "1", "1" } },
+        { "sendableArray1", { "number", "2", "2" } },
+        { "sendableArraySize", { "number", "2", "2" } },
+        { "sendableMap", { "object", "Object", "SendableMap [Sendable]", "SendableMap [Sendable]" } },
+        { "sendableMap0", { "number", "1", "1" } },
+        { "sendableMap1", { "number", "2", "2" } },
+        { "sendableMapSize", { "number", "2", "2" } },
+        { "sendableSet", { "object", "Object", "SendableSet [Sendable]", "SendableSet [Sendable]" } },
+        { "sendableSet0", { "boolean", "true", "true" } },
+        { "sendableSet1", { "boolean", "true", "true" } },
+        { "sendableSetSize", { "number", "2", "2" } },
         };
 };
 
