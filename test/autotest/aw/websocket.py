@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Copyright (c) 2024 Huawei Device Co., Ltd.
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -149,6 +151,7 @@ class WebSocket(object):
                     instance_id = response['instanceId']
                     to_send_msg_queue = self.to_send_msg_queues[instance_id]
                     await self.send_msg_to_debugger_server(instance_id, to_send_msg_queue, 'close')
+                    num_debugger_server_client -= 1
 
             except ConnectionClosed:
                 logging.info('Connect server connection closed')

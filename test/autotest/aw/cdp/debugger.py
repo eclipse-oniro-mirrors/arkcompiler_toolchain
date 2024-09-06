@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Copyright (c) 2024 Huawei Device Co., Ltd.
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -61,6 +63,16 @@ def get_possible_and_set_breakpoint_by_url(locations: List[BreakLocationUrl]):
 
 def step_over():
     command = {'method': 'Debugger.stepOver'}
+    return command
+
+
+def step_into():
+    command = {'method': 'Debugger.stepInto'}
+    return command
+
+
+def step_out():
+    command = {'method': 'Debugger.stepOut'}
     return command
 
 

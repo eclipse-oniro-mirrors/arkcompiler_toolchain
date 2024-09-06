@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Copyright (c) 2024 Huawei Device Co., Ltd.
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,3 +47,7 @@ def get_properties(object_id: str,
         params['nonIndexedPropertiesOnly'] = non_indexed_properties_only
     command['params'] = params
     return command
+
+
+def get_heap_usage():
+    return {'method': 'Runtime.getHeapUsage'}

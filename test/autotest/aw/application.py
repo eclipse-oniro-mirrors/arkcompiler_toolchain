@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Copyright (c) 2024 Huawei Device Co., Ltd.
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +19,7 @@ Description: Action words of Application launch.
 
 import logging
 import subprocess
+import re
 import time
 
 
@@ -71,6 +74,41 @@ class Application(object):
         cls.uninstall(bundle_name)
         cls.install(hap_path)
         cls.start(bundle_name, start_mode)
+        cls.keep_awake()
         time.sleep(3)
         pid = cls.get_pid(bundle_name)
         return int(pid)
+
+    @classmethod
+    def attach(cls, bundle_name):
+        attach_cmd = (['hdc', 'shell', 'aa', 'attach', '-b', bundle_name])
+        logging.info('start application: ' + ' '.join(attach_cmd))
+        attach_result = subprocess.run(attach_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        logging.info(attach_result.stdout)
+        assert attach_result.stdout.decode('utf-8').strip() == 'attach app debug successfully.'
+
+    @classmethod
+    def click_on_middle(cls):
+        '''
+        模拟点击屏幕中间
+        '''
+        get_screen_info_cmd = ['hdc', 'shell', 'hidumper', '-s', 'RenderService', '-a', 'screen']
+        screen_info = subprocess.run(get_screen_info_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        match = re.search(r'physical screen resolution: (\d+)x(\d+)', screen_info.stdout.decode('utf-8'))
+        assert match is not None
+
+        middle_x = int(match.group(1)) // 2
+        middle_y = int(match.group(2)) // 2
+        click_cmd = ['hdc', 'shell', 'uinput', '-T', '-c', str(middle_x), str(middle_y)]
+        click_result = subprocess.run(click_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        click_result_out = click_result.stdout.decode('utf-8').strip()
+        logging.info(click_result_out)
+        assert "click coordinate" in click_result_out
+
+    @classmethod
+    def keep_awake(cls):
+        keep_awake_cmd = ['hdc', 'shell', 'power-shell', 'setmode', '602']
+        keep_awake_result = subprocess.run(keep_awake_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        keep_awake_result_out = keep_awake_result.stdout.decode('utf-8').strip()
+        logging.info(keep_awake_result_out)
+        assert "Set Mode Success!" in keep_awake_result_out
