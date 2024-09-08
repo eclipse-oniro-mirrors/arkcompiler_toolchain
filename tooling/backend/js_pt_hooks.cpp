@@ -18,9 +18,6 @@
 #include "agent/debugger_impl.h"
 
 namespace panda::ecmascript::tooling {
-
-static std::atomic<uint32_t> g_scriptId {0};
-
 void JSPtHooks::DebuggerStmt([[maybe_unused]] const JSPtLocation &location)
 {
     LOG_DEBUGGER(VERBOSE) << "JSPHooks: Debugger Statement";
@@ -86,7 +83,7 @@ void JSPtHooks::LoadModule(std::string_view pandaFileName, std::string_view entr
 
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
 
-    if (debugger_->NotifyScriptParsed(g_scriptId++, pandaFileName.data(), entryPoint)) {
+    if (debugger_->NotifyScriptParsed(pandaFileName.data(), entryPoint)) {
         firstTime_ = true;
     }
 }
@@ -105,5 +102,16 @@ void JSPtHooks::NativeReturn(const void *nativeAddress)
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
 
     debugger_->NotifyNativeReturn(nativeAddress);
+}
+
+void JSPtHooks::SendableMethodEntry(JSHandle<Method> method)
+{
+    LOG_DEBUGGER(VERBOSE) << "JSPtHooks: MethodEntry";
+
+    [[maybe_unused]] LocalScope scope(debugger_->vm_);
+
+    if (debugger_->SendableMethodEntry(method)) {
+        firstTime_ = true;
+    };
 }
 }  // namespace panda::ecmascript::tooling

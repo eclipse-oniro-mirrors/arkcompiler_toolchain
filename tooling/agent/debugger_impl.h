@@ -38,8 +38,13 @@ public:
     ~DebuggerImpl();
 
     // event
-    bool NotifyScriptParsed(ScriptId scriptId, const std::string &fileName,
+    bool NotifyScriptParsed(const std::string &fileName,
                             std::string_view entryPoint = "func_main_0");
+    bool SendableScriptParsed(const std::string &fileName, const std::string &url,
+                              const std::string &source, const std::string &recordName);
+    bool CheckScriptParsed(const std::string &fileName);
+    bool SendableMethodEntry(JSHandle<Method> method);
+    bool MatchUrlAndFileName(const std::string &url, const std::string &fileName);
     bool NotifySingleStep(const JSPtLocation &location);
     void NotifyPaused(std::optional<JSPtLocation> location, PauseReason reason);
     void GeneratePausedInfo(PauseReason reason,
@@ -122,16 +127,6 @@ public:
             }
             if (matchStr == value) {
                 return cb(script.second.get());
-            }
-        }
-        return false;
-    }
-
-    bool MatchUrlAndFileName(const std::string &url, const std::string &fileName) const
-    {
-        for (const auto &script : scripts_) {
-            if (url == script.second->GetUrl() && fileName == script.second->GetFileName()) {
-                return true;
             }
         }
         return false;
