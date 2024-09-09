@@ -26,8 +26,6 @@
 
 #include "ecmascript/jspandafile/js_pandafile_manager.h"
 #include "ecmascript/napi/jsnapi_helper.h"
-#include "ecmascript/tagged_array-inl.h"
-
 namespace panda::ecmascript::tooling {
 using namespace std::placeholders;
 
@@ -1242,7 +1240,6 @@ void DebuggerImpl::AddBreakpointDetail(const std::string &url,
     BreakpointDetails metaData{lineNumber, 0, url};
     *outId = BreakpointDetails::ToString(metaData);
 }
-
 
 DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams &params,
                                                   std::string *outId,
