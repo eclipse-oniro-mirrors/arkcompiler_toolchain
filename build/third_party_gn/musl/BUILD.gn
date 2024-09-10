@@ -162,7 +162,7 @@ action("create_syscall_h_file") {
 }
 
 uapi_from = "local"
-uapi_full_path = rebase_path(uapi_dir)
+uapi_full_path = rebase_path(musl_uapi_dir)
 arguments_uapi = [ "-c" ]
 
 # exclude these files because they need special treatment
@@ -179,7 +179,7 @@ uspi_files = exec_script("/bin/sh", arguments_uapi, "list lines")
 # Generate a copy target for each file
 foreach(file, uspi_files) {
   copy("copy_uapi_${file}") {
-    sources = [ "${uapi_dir}/${file}" ]
+    sources = [ "${musl_uapi_dir}/${file}" ]
     outputs = [ "${target_out_dir}/${musl_inc_out_dir}/${file}" ]
   }
 }
@@ -188,7 +188,7 @@ group("copy_uapi_scsi") {
   deps = []
   sources = []
   outputs = []
-  uapi_scsi_dir = rebase_path("${uapi_dir}/scsi")
+  uapi_scsi_dir = rebase_path("${musl_uapi_dir}/scsi")
   arguments_scsi = [ "-c" ]
   arguments_scsi += [ "ls ${uapi_scsi_dir}" ]
   uapi_scsi_files = exec_script("/bin/sh", arguments_scsi, "list lines")
@@ -196,7 +196,7 @@ group("copy_uapi_scsi") {
   # Generate a copy target for each file in scsi dir to avoid being influenced by musl_copy_inc_scsi output
   foreach(file, uapi_scsi_files) {
     copy("copy_uapi_scsi_${file}") {
-      sources += [ "${uapi_dir}/scsi/${file}" ]
+      sources += [ "${musl_uapi_dir}/scsi/${file}" ]
       outputs += [ "${target_out_dir}/${musl_inc_out_dir}/scsi/${file}" ]
     }
     deps += [ ":copy_uapi_scsi_${file}" ]
@@ -210,9 +210,9 @@ copy("copy_uapi_asm") {
     } else {  # aarch64 and x86_64 use same file
       file_name = "asm-arm64"
     }
-    sources = [ "${uapi_dir}/${file_name}/asm" ]
+    sources = [ "${musl_uapi_dir}/${file_name}/asm" ]
   } else {
-    sources = [ "${uapi_dir}/asm" ]
+    sources = [ "${musl_uapi_dir}/asm" ]
   }
   outputs = [ "${target_out_dir}/${musl_inc_out_dir}/asm" ]
 }
