@@ -1507,6 +1507,9 @@ DispatchResponse DebuggerImpl::DropFrame(const DropFrameParams &params)
     if (droppedDepth >= stackDepthOverBuiltin) {
         return DispatchResponse::Fail("Frames to be dropped contain builtin frame");
     }
+    if (DebuggerApi::CheckIsSendableMethod(vm_)) {
+        return DispatchResponse::Fail("Not yet support sendable method");
+    }
     if (!DebuggerApi::CheckPromiseQueueSize(vm_)) {
         return DispatchResponse::Fail("Detect promise enqueued in current frame");
     }
