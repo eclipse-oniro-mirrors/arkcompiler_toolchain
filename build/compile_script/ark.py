@@ -511,6 +511,11 @@ class ArkPy:
             args_to_test262_cmd.append("--enable-rm")
             arg_list.remove(enable_rm[0])
 
+        skip_list_name = "--skip-list"
+        skip_list_value, arg_list = ArkPy.parse_option(arg_list, option_name=skip_list_name, default_value=None)
+        if skip_list_value is not None:
+            args_to_test262_cmd.extend([skip_list_name, skip_list_value])
+
         if len(arg_list) == 0:
             args_to_test262_cmd.append("--es2021 all")
         elif len(arg_list) == 1:
