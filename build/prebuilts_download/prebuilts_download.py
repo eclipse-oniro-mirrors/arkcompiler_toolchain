@@ -152,6 +152,10 @@ def _hwcloud_download(args, config, bin_dir, code_dir, retries):
             _run_cmd(''.join(['rm -rf ', code_dir, '/', unzip_dir, '/*.', unzip_filename, '.mark']))
             _run_cmd(''.join(['rm -rf ', code_dir, '/', unzip_dir, '/', unzip_filename]))
             local_file = os.path.join(bin_dir, ''.join([md5_huaweicloud_url, '.', bin_file]))
+
+            if os.path.exists(local_file) and not _check_sha256(huaweicloud_url, local_file):
+                os.remove(local_file)
+
             if not os.path.exists(local_file):
                 filename = huaweicloud_url.split("/")[-1]
                 task_id = progress.add_task("download", filename=filename, start=False)
