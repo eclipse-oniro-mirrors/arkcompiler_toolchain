@@ -66,6 +66,16 @@ def step_over():
     return command
 
 
+def step_into():
+    command = {'method': 'Debugger.stepInto'}
+    return command
+
+
+def step_out():
+    command = {'method': 'Debugger.stepOut'}
+    return command
+
+
 def disable():
     command = {'method': 'Debugger.disable'}
     return command

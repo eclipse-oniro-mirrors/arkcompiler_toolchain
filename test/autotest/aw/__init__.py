@@ -23,6 +23,8 @@ from aw.fport import Fport
 from aw.taskpool import TaskPool
 from aw.cdp import debugger
 from aw.cdp import runtime
+from aw.cdp import heap_profiler
+from aw.cdp import cpu_profiler
 
 
 communicate_with_debugger_server = Utils.communicate_with_debugger_server

@@ -151,6 +151,7 @@ class WebSocket(object):
                     instance_id = response['instanceId']
                     to_send_msg_queue = self.to_send_msg_queues[instance_id]
                     await self.send_msg_to_debugger_server(instance_id, to_send_msg_queue, 'close')
+                    num_debugger_server_client -= 1
 
             except ConnectionClosed:
                 logging.info('Connect server connection closed')

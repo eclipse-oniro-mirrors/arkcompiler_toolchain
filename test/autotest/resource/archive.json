@@ -1,7 +1,17 @@
 [
     {
-        "application directory": "MyApplicationWorker",
-        "hap name": "MyApplicationWorker.hap",
-        "bundle name": "com.example.worker"
+        "application directory": "MultiWorker01",
+        "hap name": "MultiWorker01.hap",
+        "bundle name": "com.example.multiWorker01"
+    },
+    {
+        "application directory": "MultiWorker02",
+        "hap name": "MultiWorker02.hap",
+        "bundle name": "com.example.multiWorker02"
+    },
+    {
+        "application directory": "TaskPool01",
+        "hap name": "TaskPool01.hap",
+        "bundle name": "com.example.taskPool01"
     }
 ]
