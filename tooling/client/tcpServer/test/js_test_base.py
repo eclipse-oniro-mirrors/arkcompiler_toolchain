@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# coding=utf-8
+
 #
 # Copyright (c) 2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -105,7 +108,7 @@ class JsTestBase(unittest.TestCase):
         out_str = str(ret).split('\\n')
         pos_start = out_str[0].find("@") + 1
         out_str = out_str[0].split('\\r')[0]
-        panda_dbg.append(out_str[pos_start : ])
+        panda_dbg.append(out_str[pos_start :])
         if len(panda_dbg) == 0:
             print('Not exist PandaDebugger with name %s' % dbg_name)
             sys.exit(0)
