@@ -22,6 +22,7 @@ import sys
 import unittest
 import config
 
+
 class RunTest:
     args = None
     suite = unittest.TestSuite()
