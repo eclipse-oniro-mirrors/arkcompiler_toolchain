@@ -768,7 +768,7 @@ class ArkPy:
         # gn command
         print("=== gn gen start ===")
         code = call_with_output(
-            "{0} gen {1} --args=\"{2}\"".format(
+            "{0} gen {1} --args=\"{2}\" --export-compile-commands".format(
                 self.gn_binary_path, out_path, " ".join(gn_args).replace("\"", "\\\"")),
             build_log_path)
         if code != 0:
