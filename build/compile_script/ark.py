@@ -496,10 +496,12 @@ class ArkPy:
     def build_args_to_test262_cmd(arg_list):
         args_to_test262_cmd = []
 
-        disable_force_gc = [arg for arg in arg_list if "disable-force-gc" in arg]
-        if disable_force_gc:
-            args_to_test262_cmd.append("--disable-force-gc")
-            arg_list.remove(disable_force_gc[0])
+        disable_force_gc_name = "--disable-force-gc"
+        disable_force_gc_value, arg_list = ArkPy.parse_bool_option(
+            arg_list, option_name=disable_force_gc_name, default_value=False
+        )
+        if disable_force_gc_value:
+            args_to_test262_cmd.extend([disable_force_gc_name])
 
         threads_name = "--threads"
         threads_value, arg_list = ArkPy.parse_option(arg_list, option_name=threads_name, default_value=None)
@@ -558,6 +560,18 @@ class ArkPy:
             option_value, arg_list = ArkPy.__parse_option_with_equal(arg_list, option_name)
         if option_value is None and default_value is not None:
             option_value = default_value
+        return option_value, arg_list
+
+    @staticmethod
+    def parse_bool_option(arg_list: List[str], option_name: str, default_value: bool) \
+            -> Tuple[bool, List[str]]:
+        if option_name in arg_list:
+            option_index = arg_list.index(option_name)
+            option_value = not default_value
+            arg_list = arg_list[:option_index] + arg_list[option_index + 1:]
+        else:
+            option_value = default_value
+
         return option_value, arg_list
 
     @staticmethod
