@@ -21,7 +21,7 @@ config("gtest_private_config") {
 
 config("gtest_private_config_rtti") {
   visibility = [ ":*" ]
-  include_dirs = [ "googletest" ]
+  include_dirs = [ "$googletest_dir" ]
   cflags = [ "-frtti" ]
   cflags_objcc = [ "-frtti" ]
   cflags_cc = [ "-frtti" ]
@@ -109,6 +109,12 @@ static_library("gtest_rtti") {
   sources -= [ "$googletest_dir/src/gtest-all.cc" ]
   public_configs = [ ":gtest_config" ]
   configs += [ ":gtest_private_config_rtti" ]
+}
+
+static_library("gtest_rtti_main") {  # ADD
+  testonly = true
+  sources = [ "$googletest_dir/src/gtest_main.cc" ]
+  public_deps = [ ":gtest_rtti" ]
 }
 
 static_library("gtest_main") {
