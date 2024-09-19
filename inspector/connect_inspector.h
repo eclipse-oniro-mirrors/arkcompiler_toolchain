@@ -32,7 +32,7 @@ extern "C" {
 void StartServer(const std::string& componentName);
 
 // socketpair process.
-void StartServerForSocketPair(int socketfd);
+bool StartServerForSocketPair(int socketfd);
 
 void StopServer([[maybe_unused]] const std::string& componentName);
 
