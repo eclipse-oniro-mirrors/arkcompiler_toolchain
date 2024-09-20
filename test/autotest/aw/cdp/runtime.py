@@ -16,8 +16,16 @@ limitations under the License.
 
 Description: Python CDP Runtime.
 """
-
+from dataclasses import dataclass
 from typing import Optional
+
+
+@dataclass
+class GetPropertiesParams:
+    object_id: str = ""
+    own_properties: bool = True
+    accessor_properties_only: bool = False
+    generate_preview: bool = True
 
 
 def enable():
