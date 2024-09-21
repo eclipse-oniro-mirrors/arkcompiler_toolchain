@@ -520,7 +520,9 @@ class ArkPy:
             args_to_test262_cmd.append("--es2021 all")
         elif len(arg_list) == 1:
             arg = arg_list[0]
-            if ".js" in arg:
+            if arg == "sendable":
+                args_to_test262_cmd.append("--sendable sendable")
+            elif ".js" in arg:
                 args_to_test262_cmd.append("--file test262/data/test_es2021/{}".format(arg))
             else:
                 args_to_test262_cmd.append("--dir test262/data/test_es2021/{}".format(arg))
