@@ -506,6 +506,11 @@ class ArkPy:
         if threads_value:
             args_to_test262_cmd.extend([threads_name, threads_value])
 
+        test_list_name = "--test-list"
+        test_list_value, arg_list = ArkPy.parse_option(arg_list, option_name=test_list_name, default_value=None)
+        if test_list_value is not None:
+            args_to_test262_cmd.extend([test_list_name, test_list_value])
+
         enable_rm = [arg for arg in arg_list if "enable-rm" in arg]
         if enable_rm:
             args_to_test262_cmd.append("--enable-rm")
@@ -708,7 +713,7 @@ class ArkPy:
             "[none or --pgo] [none or --litecg] [none, file or dir] [none or --threads=X] [option]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --jit] [none or --threads=X]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --baseline-jit] [none or --enable-rm] " \
-            "[none or --threads=X]\033[0m\n"
+            "[none or --threads=X and/or --test-list TEST_LIST_NAME]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [unittest] [option]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [regresstest] [none, file or dir] " \
               "[none or --processes X and/or --test-list TEST_LIST_NAME]\033[0m\n")
