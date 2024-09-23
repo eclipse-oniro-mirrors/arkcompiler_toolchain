@@ -345,9 +345,9 @@ class ArkPy:
             cmd.append(f"--ark-frontend-binary=../../{x64_out_path}/arkcompiler/ets_frontend/es2abc")
             cmd.append(f"--merge-abc-binary=../../{x64_out_path}/arkcompiler/ets_frontend/merge_abc")
             if aot_mode:
-                cmd.append(f"--ark-aot-tool=../../{x64_out_path}/arkcompiler/ets_runtime/ark_aot_compiler")
+                cmd.append(f"--ark-aot-tool=../../{out_path}/arkcompiler/ets_runtime/ark_aot_compiler")
                 if test_suite == "regresstest":
-                    cmd.append(f"--stub-path=../../{x64_out_path}/gen/arkcompiler/ets_runtime/stub.an")
+                    cmd.append(f"--stub-path=../../{out_path}/gen/arkcompiler/ets_runtime/stub.an")
         else:
             cmd.append(f"--ark-frontend-binary=../../{out_path}/arkcompiler/ets_frontend/es2abc")
             cmd.append(f"--merge-abc-binary=../../{out_path}/arkcompiler/ets_frontend/merge_abc")
