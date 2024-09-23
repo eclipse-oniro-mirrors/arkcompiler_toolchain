@@ -17,7 +17,7 @@ limitations under the License.
 Description: Python CDP Debugger.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, List
 
 
@@ -32,6 +32,16 @@ class BreakLocationUrl:
                 'lineNumber': self.line_number,
                 'columnNumber': self.column_number}
         return json
+
+
+@dataclass
+class RemoveBreakpointsUrl:
+    url: str = ""
+
+
+@dataclass
+class SetBreakpointsLocations:
+    locations: list = field(default_factory=list)
 
 
 def enable(max_scripts_cache_size: Optional[float] = None):
