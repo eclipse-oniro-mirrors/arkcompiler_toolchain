@@ -59,6 +59,9 @@ HWTEST_F_L0(DebuggerServiceTest, InitializeDebuggerTest)
     ASSERT_TRUE(handler != nullptr);
     InitializeDebugger(ecmaVm, nullptr);
     ASSERT_TRUE(handler != nullptr);
+    EcmaVM *vm = nullptr;
+    InitializeDebugger(vm, nullptr);
+    ASSERT_TRUE(handler != nullptr);
 }
 
 HWTEST_F_L0(DebuggerServiceTest, UninitializeDebuggerTest)
@@ -69,6 +72,9 @@ HWTEST_F_L0(DebuggerServiceTest, UninitializeDebuggerTest)
     ASSERT_TRUE(handler != nullptr);
     UninitializeDebugger(ecmaVm);
     handler = ecmaVm->GetJsDebuggerManager()->GetDebuggerHandler();
+    ASSERT_TRUE(handler == nullptr);
+    EcmaVM *vm = nullptr;
+    UninitializeDebugger(vm);
     ASSERT_TRUE(handler == nullptr);
 }
 
@@ -84,6 +90,9 @@ HWTEST_F_L0(DebuggerServiceTest, OnMessageTest)
     std::string msg = std::string() + R"({"id":0,"method":"Tracing.Test","params":{}})";
     OnMessage(ecmaVm, msg + "");
     ProcessMessage(ecmaVm);
+    ASSERT_TRUE(result.find("Unknown method: Test") != std::string::npos);
+    EcmaVM *vm = nullptr;
+    OnMessage(vm, "");
     ASSERT_TRUE(result.find("Unknown method: Test") != std::string::npos);
 }
 
@@ -107,6 +116,9 @@ HWTEST_F_L0(DebuggerServiceTest, ProcessMessageTest)
     OnMessage(ecmaVm, msg + "");
     ProcessMessage(ecmaVm);
     ASSERT_TRUE(result.find("\"id\":0,") != std::string::npos);
+    EcmaVM *vm = nullptr;
+    ProcessMessage(vm);
+    ASSERT_TRUE(result.find("Stop is failure") != std::string::npos);
 }
 
 HWTEST_F_L0(DebuggerServiceTest, GetDispatchStatusTest)
@@ -119,5 +131,8 @@ HWTEST_F_L0(DebuggerServiceTest, GetDispatchStatusTest)
     InitializeDebugger(ecmaVm, callback);
     status = ProtocolHandler::DispatchStatus(GetDispatchStatus(ecmaVm));
     ASSERT_TRUE(status == ProtocolHandler::DispatchStatus::DISPATCHED);
+    EcmaVM *vm = nullptr;
+    int32_t GetDispatchStatusTest = GetDispatchStatus(vm);
+    ASSERT_TRUE(GetDispatchStatusTest == 0);
 }
 }  // namespace panda::test
