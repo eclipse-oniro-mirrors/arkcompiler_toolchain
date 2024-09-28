@@ -150,17 +150,14 @@ bool InitializeInspector(
     void* vm, const DebuggerPostTask& debuggerPostTask, const DebugInfo& debugInfo, int tidForSocketPair = 0)
 {
     std::unique_lock<std::shared_mutex> lock(g_mutex);
-    Inspector *newInspector = nullptr;
     auto iter = g_inspectors.find(vm);
     if (iter != g_inspectors.end()) {
-        newInspector = g_inspectors[vm];
-    } else {
-        newInspector = new Inspector();
-        if (!g_inspectors.emplace(vm, newInspector).second) {
-            delete newInspector;
-            return false;
-        }
+        LOGW("Inspector already exist!");
+        return true;
     }
+
+    Inspector *newInspector = new Inspector();
+    g_inspectors.emplace(vm, newInspector);
 
     newInspector->tidForSocketPair_ = tidForSocketPair;
     newInspector->tid_ = pthread_self();

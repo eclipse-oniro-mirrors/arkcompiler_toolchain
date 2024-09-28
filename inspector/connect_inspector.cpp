@@ -174,11 +174,15 @@ void ResetService()
     }
 }
 
-void StartServerForSocketPair(int socketfd)
+bool StartServerForSocketPair(int socketfd)
 {
     LOGI("StartServerForSocketPair, socketfd = %{private}d", socketfd);
     if (g_inspector == nullptr) {
         g_inspector = std::make_unique<ConnectInspector>();
+    }
+    if (g_inspector->connectServer_ != nullptr) {
+        LOGW("ConnectServer is not nullptr!");
+        return false;
     }
     g_inspector->connectServer_ = std::make_unique<ConnectServer>(socketfd,
         std::bind(&OnMessage, std::placeholders::_1));
@@ -188,8 +192,9 @@ void StartServerForSocketPair(int socketfd)
         static_cast<void*>(g_inspector->connectServer_.get())) != 0) {
         LOGE("pthread_create fail!");
         ResetService();
-        return;
+        return false;
     }
+    return true;
 }
 
 void StartServer(const std::string& componentName)
