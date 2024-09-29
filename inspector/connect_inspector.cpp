@@ -182,7 +182,7 @@ bool StartServerForSocketPair(int socketfd)
     }
     if (g_inspector->connectServer_ != nullptr) {
         LOGW("ConnectServer is not nullptr!");
-        return false;
+        return true;
     }
     g_inspector->connectServer_ = std::make_unique<ConnectServer>(socketfd,
         std::bind(&OnMessage, std::placeholders::_1));
