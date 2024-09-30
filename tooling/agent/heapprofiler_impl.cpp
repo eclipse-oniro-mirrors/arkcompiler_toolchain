@@ -324,7 +324,7 @@ DispatchResponse HeapProfilerImpl::AddInspectedHeapObject([[maybe_unused]] const
 DispatchResponse HeapProfilerImpl::CollectGarbage()
 {
     panda::JSNApi::TriggerGC(vm_, panda::JSNApi::TRIGGER_GC_TYPE::FULL_GC);
-    panda::JSNApi::TriggerGC(vm_, panda::JSNApi::TRIGGER_GC_TYPE::OLD_GC);
+    panda::JSNApi::TriggerGC(vm_, panda::JSNApi::TRIGGER_GC_TYPE::SHARED_FULL_GC);
     return DispatchResponse::Ok();
 }
 
