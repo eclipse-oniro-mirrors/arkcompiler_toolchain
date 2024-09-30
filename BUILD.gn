@@ -272,3 +272,10 @@ group("ark_js_host_unittest") {
     "//arkcompiler/toolchain:ark_toolchain_host_unittest",
   ]
 }
+
+group("runtime_core_host_ut") {
+  testonly = true
+  if (ark_standalone_build) {
+    deps = [ "$ark_root:runtime_core_host_unittest" ]
+  }
+}
