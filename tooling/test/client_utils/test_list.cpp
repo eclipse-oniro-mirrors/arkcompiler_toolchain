@@ -29,11 +29,11 @@
 #include "tooling/test/testcases/js_source_test.h"
 #include "tooling/test/testcases/js_tracing_test.h"
 #include "tooling/test/testcases/js_watch_test.h"
-#include "tooling/test/testcases/js_heapdump_loop_test.h"
 #include "tooling/test/testcases/js_heapdump_test.h"
+#include "tooling/test/testcases/js_allocationtrack_test.h"
+#include "tooling/test/testcases/js_heapdump_loop_test.h"
 #include "tooling/test/testcases/js_allocationtrack_loop_test.h"
 #include "tooling/test/testcases/js_allocationtrack_recursion_test.h"
-#include "tooling/test/testcases/js_allocationtrack_test.h"
 #include "tooling/test/testcases/js_stepinto_test.h"
 #include "tooling/test/testcases/js_stepout_test.h"
 #include "tooling/test/testcases/js_stepover_test.h"
@@ -70,6 +70,7 @@
 #include "tooling/test/testcases/js_heapusage_loop_test.h"
 #include "tooling/test/testcases/js_heapusage_recursion_test.h"
 #include "tooling/test/testcases/js_smart_stepInto_test.h"
+
 
 namespace panda::ecmascript::tooling::test {
 static std::string g_currentTestName = "";
