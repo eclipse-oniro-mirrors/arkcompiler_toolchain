@@ -1,0 +1,7 @@
+[
+    {
+        "application directory": "MyApplicationWorker",
+        "hap name": "MyApplicationWorker.hap",
+        "bundle name": "com.example.worker"
+    }
+]
