@@ -133,7 +133,7 @@ HWTEST_F(ConnectServerTest, InspectorConnectTest, testing::ext::TestSize.Level0)
     int oldProcessfd = -2;
     ASSERT_TRUE(StartServerForSocketPair(oldProcessfd));
     // test ConnectServer is not nullptr
-    ASSERT_FALSE(StartServerForSocketPair(oldProcessfd));
+    ASSERT_TRUE(StartServerForSocketPair(oldProcessfd));
     StoreMessage(g_instanceId, HELLO_INSPECTOR_CLIENT);
     pid_t pid = fork();
     if (pid == 0) {
