@@ -17,6 +17,13 @@ limitations under the License.
 Description: Python CDP CPU Profiler.
 """
 
+from dataclasses import dataclass
+
+
+@dataclass
+class SamplingInterval:
+    interval: int
+
 
 def enable():
     return {'method': 'Profiler.enable'}
@@ -34,6 +41,6 @@ def stop():
     return {'method': 'Profiler.stop'}
 
 
-def set_sampling_interval(interval: int):
+def set_sampling_interval(params: SamplingInterval):
     return {'method': 'Profiler.setSamplingInterval',
-            'params': {'interval': interval}}
+            'params': {'interval': params.interval}}

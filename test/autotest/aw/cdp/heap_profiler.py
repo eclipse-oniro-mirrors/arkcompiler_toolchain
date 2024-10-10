@@ -16,7 +16,13 @@ limitations under the License.
 
 Description: Python CDP Heap Profiler.
 """
-import typing
+
+from dataclasses import dataclass
+
+
+@dataclass
+class TrackingHeapObjectsParams:
+    track_allocations: bool
 
 
 def enable():
@@ -27,11 +33,9 @@ def disable():
     return {'method': 'HeapProfiler.disable'}
 
 
-def start_tracking_heap_objects(track_allocations: typing.Optional[bool] = None):
-    params = dict()
-    if track_allocations is not None:
-        params['trackAllocations'] = track_allocations
-    return {'method': 'HeapProfiler.startTrackingHeapObjects', 'params': params}
+def start_tracking_heap_objects(params: TrackingHeapObjectsParams):
+    return {'method': 'HeapProfiler.startTrackingHeapObjects',
+            'params': {'trackAllocations': params.track_allocations}}
 
 
 def stop_tracking_heap_objects():
