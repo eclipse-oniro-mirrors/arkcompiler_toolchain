@@ -282,4 +282,18 @@ HWTEST_F_L0(PtReturnsTest, GetCategoriesReturns)
     ASSERT_NE(json, nullptr);
     EXPECT_EQ(json->GetSize(), 1);
 }
+
+HWTEST_F_L0(PtReturnsTest, GetHeapUsageReturnsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<GetHeapUsageReturns> heapUsageReturns;
+
+    msg = std::string() + R"({})";
+    heapUsageReturns = GetHeapUsageReturns::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(heapUsageReturns, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"PtReturns.Test","params":{"usedSize":20,"totalSize":20}})";
+    heapUsageReturns = GetHeapUsageReturns::Create(DispatchRequest(msg).GetParams());
+    ASSERT_TRUE(heapUsageReturns != nullptr);
+}
 }

@@ -917,4 +917,128 @@ HWTEST_F_L0(PtTypesTest, SamplingHeapProfileTransferHead)
     int32_t columnNumber = callFrame->GetColumnNumber();
     ASSERT_TRUE(columnNumber == allocationNode.callFrameInfo_.columnNumber_);
 }
+
+HWTEST_F_L0(PtTypesTest, DescriptionForObjectTest)
+{
+    Local<WeakMapRef> weakmap = WeakMapRef::New(ecmaVm);
+    std::string description = ObjectRemoteObject::DescriptionForObject(ecmaVm, weakmap);
+    ASSERT_TRUE(description.find("WeakMap") != std::string::npos);
+
+    Local<MapRef> map = MapRef::New(ecmaVm);
+    Local<MapIteratorRef> mapiterator = MapIteratorRef::New(ecmaVm, map);
+    description = ObjectRemoteObject::DescriptionForObject(ecmaVm, mapiterator);
+    ASSERT_TRUE(description.find("MapIterator") != std::string::npos);
+
+    Local<SetRef> set = SetRef::New(ecmaVm);
+    Local<SetIteratorRef> setiterator = SetIteratorRef::New(ecmaVm, set);
+    description = ObjectRemoteObject::DescriptionForObject(ecmaVm, setiterator);
+    ASSERT_TRUE(description.find("SetIterator") != std::string::npos);
+
+    size_t size = 10;
+    Local<NativePointerRef> nativepointer = NativePointerRef::New(ecmaVm, ecmaVm, size);
+    description = ObjectRemoteObject::DescriptionForObject(ecmaVm, nativepointer);
+    std::cout << description << std::endl;
+    ASSERT_TRUE(description.find("External") != std::string::npos);
+}
+
+HWTEST_F_L0(PtTypesTest, FromTaggedTest)
+{
+    double input = 123456789.0;
+    Local<DateRef> date = DateRef::New(ecmaVm, input);
+    std::unique_ptr<RemoteObject> remoteObject = RemoteObject::FromTagged(ecmaVm, date);
+    std::string description = remoteObject->GetDescription();
+    ASSERT_TRUE(description.find("GMT") != std::string::npos);
+
+    Local<WeakMapRef> weakmap = WeakMapRef::New(ecmaVm);
+    remoteObject = RemoteObject::FromTagged(ecmaVm, weakmap);
+    description = remoteObject->GetDescription();
+    ASSERT_TRUE(description.find("WeakMap") != std::string::npos);
+
+    Local<MapRef> map = MapRef::New(ecmaVm);
+    Local<MapIteratorRef> mapiterator = MapIteratorRef::New(ecmaVm, map);
+    remoteObject = RemoteObject::FromTagged(ecmaVm, mapiterator);
+    description = remoteObject->GetDescription();
+    ASSERT_TRUE(description.find("MapIterator") != std::string::npos);
+
+    Local<SetRef> set = SetRef::New(ecmaVm);
+    Local<SetIteratorRef> setiterator = SetIteratorRef::New(ecmaVm, set);
+    remoteObject = RemoteObject::FromTagged(ecmaVm, setiterator);
+    description = remoteObject->GetDescription();
+    ASSERT_TRUE(description.find("SetIterator") != std::string::npos);
+
+    Local<PromiseCapabilityRef> capability = PromiseCapabilityRef::New(ecmaVm);
+    Local<PromiseRef> promise = capability->GetPromise(ecmaVm);
+    remoteObject = RemoteObject::FromTagged(ecmaVm, promise);
+    description = remoteObject->GetDescription();
+    ASSERT_TRUE(description.find("Promise") != std::string::npos);
+
+    size_t size = 10;
+    Local<NativePointerRef> nativepointer = NativePointerRef::New(ecmaVm, ecmaVm, size);
+    remoteObject = RemoteObject::FromTagged(ecmaVm, nativepointer);
+    description = remoteObject->GetDescription();
+    ASSERT_TRUE(description.find("External") != std::string::npos);
+}
+
+HWTEST_F_L0(PtTypesTest, NativeRangeCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<NativeRange> nativeRange;
+
+    msg = std::string() + R"({})";
+    nativeRange = NativeRange::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(nativeRange, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"start":20,"end":40}})";
+    nativeRange = NativeRange::Create(DispatchRequest(msg).GetParams());
+    ASSERT_TRUE(nativeRange != nullptr);
+}
+
+HWTEST_F_L0(PtTypesTest, BreakpointInfoCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<BreakpointInfo> breakpointInfo;
+
+    msg = std::string() + R"({})";
+    breakpointInfo = BreakpointInfo::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(breakpointInfo, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"condition":"Test","urlRegex":"Test"}})";
+    breakpointInfo = BreakpointInfo::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(breakpointInfo, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test",
+        "params":{"scriptHash":"Test", "restrictToFunction": true}})";
+    breakpointInfo = BreakpointInfo::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(breakpointInfo, nullptr);
+    
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"lineNumber":1,"columnNumber":2,"url":"Test",
+        "condition":"Test", "urlRegex":"Test", "scriptHash":"Test", "restrictToFunction": true}})";
+    breakpointInfo = BreakpointInfo::Create(DispatchRequest(msg).GetParams());
+    std::unique_ptr<PtJson> resultJson = breakpointInfo->ToJson();
+    ASSERT_TRUE(resultJson != nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test",
+        "params":{"lineNumber":1, "columnNumber":2, "url":"Test"}})";
+    breakpointInfo = BreakpointInfo::Create(DispatchRequest(msg).GetParams());
+    resultJson = breakpointInfo->ToJson();
+    ASSERT_TRUE(resultJson != nullptr);
+}
+
+HWTEST_F_L0(PtTypesTest, BreakpointReturnInfoCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<BreakpointReturnInfo> breakpointReturnInfo;
+
+    msg = std::string() + R"({})";
+    breakpointReturnInfo = BreakpointReturnInfo::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(breakpointReturnInfo, nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"lineNumber":20,"columnNumber":40}})";
+    breakpointReturnInfo = BreakpointReturnInfo::Create(DispatchRequest(msg).GetParams());
+    ASSERT_TRUE(breakpointReturnInfo != nullptr);
+
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"id":"Test","scriptId":5}})";
+    breakpointReturnInfo = BreakpointReturnInfo::Create(DispatchRequest(msg).GetParams());
+    EXPECT_EQ(breakpointReturnInfo, nullptr);
+}
 }  // namespace panda::test

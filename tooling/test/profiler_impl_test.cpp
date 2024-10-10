@@ -186,11 +186,11 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplDispatch)
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
-    std::string msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    std::string msg = std::string() + R"({"id":0,"method":"Profiler.Test","params":{}})";
     DispatchRequest request(msg);
     dispatcherImpl->Dispatch(request);
     ASSERT_TRUE(result.find("Unknown method: Test") != std::string::npos);
-    msg = std::string() + R"({"id":0,"method":"Debugger.disable","params":{}})";
+    msg = std::string() + R"({"id":0,"method":"Profiler.disable","params":{}})";
     DispatchRequest request1 = DispatchRequest(msg);
     dispatcherImpl->Dispatch(request1);
     if (channel) {
@@ -208,9 +208,9 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplEnable)
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
-    std::string msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    std::string msg = std::string() + R"({"id":0,"method":"Profiler.enable","params":{}})";
     DispatchRequest request(msg);
-    dispatcherImpl->Enable(request);
+    dispatcherImpl->Dispatch(request);
     if (channel) {
         delete channel;
         channel = nullptr;
@@ -226,9 +226,9 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplDisable)
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
-    std::string msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    std::string msg = std::string() + R"({"id":0,"method":"Profiler.disable","params":{}})";
     DispatchRequest request(msg);
-    dispatcherImpl->Disable(request);
+    dispatcherImpl->Dispatch(request);
     if (channel) {
         delete channel;
         channel = nullptr;
@@ -244,11 +244,13 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplStart)
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
-    std::string msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    std::string msg = std::string() + R"({"id":0,"method":"Profiler.start","params":{}})";
     DispatchRequest request(msg);
-    dispatcherImpl->Start(request);
+    dispatcherImpl->Dispatch(request);
     ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
-    dispatcherImpl->Stop(request);
+    msg = std::string() + R"({"id":0,"method":"Profiler.stop","params":{}})";
+    DispatchRequest request1 = DispatchRequest(msg);
+    dispatcherImpl->Dispatch(request1);
     if (channel) {
         delete channel;
         channel = nullptr;
@@ -265,9 +267,9 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplStop)
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
-    std::string msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    std::string msg = std::string() + R"({"id":0,"method":"Profiler.stop","params":{}})";
     DispatchRequest request(msg);
-    dispatcherImpl->Stop(request);
+    dispatcherImpl->Dispatch(request);
     if (channel) {
         delete channel;
         channel = nullptr;
@@ -283,13 +285,13 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplSetSamplingInterval)
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
-    std::string msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    std::string msg = std::string() + R"({"id":0,"method":"Profiler.setSamplingInterval","params":{}})";
     DispatchRequest request(msg);
-    dispatcherImpl->SetSamplingInterval(request);
+    dispatcherImpl->Dispatch(request);
     ASSERT_TRUE(result.find("wrong params") != std::string::npos);
-    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"interval":24}})";
+    msg = std::string() + R"({"id":0,"method":"Profiler.setSamplingInterval","params":{"interval":24}})";
     DispatchRequest request1(msg);
-    dispatcherImpl->SetSamplingInterval(request1);
+    dispatcherImpl->Dispatch(request1);
     if (channel) {
         delete channel;
         channel = nullptr;
@@ -305,9 +307,9 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplGetBestEffortCoverage)
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
-    std::string msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    std::string msg = std::string() + R"({"id":0,"method":"Profiler.getBestEffortCoverage","params":{}})";
     DispatchRequest request(msg);
-    dispatcherImpl->GetBestEffortCoverage(request);
+    dispatcherImpl->Dispatch(request);
     if (channel) {
         delete channel;
         channel = nullptr;
@@ -323,9 +325,9 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplStopPreciseCoverage)
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
-    std::string msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    std::string msg = std::string() + R"({"id":0,"method":"Profiler.stopPreciseCoverage","params":{}})";
     DispatchRequest request(msg);
-    dispatcherImpl->StopPreciseCoverage(request);
+    dispatcherImpl->Dispatch(request);
     if (channel) {
         delete channel;
         channel = nullptr;
@@ -341,9 +343,9 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplTakePreciseCoverage)
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
-    std::string msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    std::string msg = std::string() + R"({"id":0,"method":"Profiler.takePreciseCoverage","params":{}})";
     DispatchRequest request(msg);
-    dispatcherImpl->TakePreciseCoverage(request);
+    dispatcherImpl->Dispatch(request);
     if (channel) {
         delete channel;
         channel = nullptr;
@@ -359,9 +361,9 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplStartPreciseCoverage)
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
-    std::string msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    std::string msg = std::string() + R"({"id":0,"method":"Profiler.startPreciseCoverage","params":{}})";
     DispatchRequest request(msg);
-    dispatcherImpl->StartPreciseCoverage(request);
+    dispatcherImpl->Dispatch(request);
     if (channel) {
         delete channel;
         channel = nullptr;
@@ -377,9 +379,9 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplStartTypeProfile)
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
-    std::string msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    std::string msg = std::string() + R"({"id":0,"method":"Profiler.startTypeProfile","params":{}})";
     DispatchRequest request(msg);
-    dispatcherImpl->StartTypeProfile(request);
+    dispatcherImpl->Dispatch(request);
     if (channel) {
         delete channel;
         channel = nullptr;
@@ -395,9 +397,9 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplStopTypeProfile)
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
-    std::string msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    std::string msg = std::string() + R"({"id":0,"method":"Profiler.stopTypeProfile","params":{}})";
     DispatchRequest request(msg);
-    dispatcherImpl->StopTypeProfile(request);
+    dispatcherImpl->Dispatch(request);
     if (channel) {
         delete channel;
         channel = nullptr;
@@ -413,14 +415,54 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplTakeTypeProfile)
     ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
     auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
-    std::string msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    std::string msg = std::string() + R"({"id":0,"method":"Profiler.takeTypeProfile","params":{}})";
     DispatchRequest request(msg);
-    dispatcherImpl->TakeTypeProfile(request);
+    dispatcherImpl->Dispatch(request);
     if (channel) {
         delete channel;
         channel = nullptr;
     }
     ASSERT_TRUE(result.find("TakeTypeProfile not support now") != std::string::npos);
+}
+
+HWTEST_F_L0(ProfilerImplTest, DispatcherImplDisableSerializationTimeoutCheck)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
+    std::string msg = std::string() + R"({"id":0,"method":"Profiler.disableSerializationTimeoutCheck","params":{}})";
+    DispatchRequest request(msg);
+    dispatcherImpl->Dispatch(request);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+    ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
+}
+
+HWTEST_F_L0(ProfilerImplTest, DispatcherImplEnableSerializationTimeoutCheck)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
+    std::string msg = std::string() + R"({"id":0,"method":"Profiler.enableSerializationTimeoutCheck","params":{}})";
+    DispatchRequest request(msg);
+    dispatcherImpl->Dispatch(request);
+    ASSERT_TRUE(result.find("wrong params") != std::string::npos);
+    msg = std::string() + R"({"id":0,"method":"Profiler.enableSerializationTimeoutCheck","params":{"threshold": 5}})";
+    DispatchRequest request1(msg);
+    dispatcherImpl->Dispatch(request1);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+    ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
 }
 
 HWTEST_F_L0(ProfilerImplTest, FrontendPreciseCoverageDeltaUpdate)
