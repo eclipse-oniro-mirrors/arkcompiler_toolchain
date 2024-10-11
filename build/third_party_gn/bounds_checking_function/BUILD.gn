@@ -39,7 +39,7 @@ SEC_SHARED_PART_NAME = "bounds_checking_function"
 ohos_shared_library("libsec_shared") {
   stack_protector_ret = false
   sources = libsec_sources
-  all_dependent_configs = [ ":libsec_public_config" ]
+  public_configs = [ ":libsec_public_config" ]
   cflags = [
     "-D_INC_STRING_S",
     "-D_INC_WCHAR_S",
