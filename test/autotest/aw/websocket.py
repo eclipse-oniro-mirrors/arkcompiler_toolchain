@@ -90,7 +90,7 @@ class WebSocket(object):
         logging.info(f'[==>] Connect server send message: {message}')
         return True
 
-    async def main_task(self, taskpool, websocket, procedure, pid):
+    async def main_task(self, taskpool, procedure, pid):
         # the async queue must be initialized in task
         self.to_send_msg_queue_for_connect_server = asyncio.Queue()
         self.received_msg_queue_for_connect_server = asyncio.Queue()
@@ -101,7 +101,7 @@ class WebSocket(object):
         taskpool.submit(self._receiver_of_connect_server(connect_server_client,
                                                          self.received_msg_queue_for_connect_server,
                                                          taskpool, pid))
-        taskpool.submit(procedure(websocket))
+        taskpool.submit(procedure(self))
 
     def _connect_connect_server(self):
         client = connect(f'ws://localhost:{self.connect_server_port}',

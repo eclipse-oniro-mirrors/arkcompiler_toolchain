@@ -18,7 +18,47 @@ Description: Python CDP Debugger.
 """
 
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Optional, List
+
+
+@dataclass
+class DropFrameParams:
+    dropped_depth: int = 1
+
+
+@dataclass
+class ReplyNativeCallingParams:
+    user_code: bool = True
+
+
+@dataclass
+class SetMixedDebugEnabledParams:
+    enabled: bool
+    mixed_stack_enabled: bool
+
+
+@dataclass
+class SmartStepIntoParams:
+    url: str
+    line_number: int
+
+
+@dataclass
+class PauseOnExceptionsState(Enum):
+    ALL = 'all'
+    NONE = 'none'
+    CAUGHT = 'caught'
+    UNCAUGHT = 'uncaught'
+
+
+@dataclass
+class EvaluateOnCallFrameParams:
+    expression: str
+    call_frame_id: int = 0
+    object_group: str = "console"
+    include_command_line_api: bool = True
+    silent: bool = True
 
 
 @dataclass
@@ -26,11 +66,14 @@ class BreakLocationUrl:
     url: str
     line_number: int
     column_number: Optional[int] = 0
+    condition: Optional[str] = None
 
     def to_json(self):
         json = {'url': self.url,
                 'lineNumber': self.line_number,
                 'columnNumber': self.column_number}
+        if self.condition is not None:
+            json['condition'] = self.condition
         return json
 
 
@@ -44,10 +87,8 @@ class SetBreakpointsLocations:
     locations: list = field(default_factory=list)
 
 
-def enable(max_scripts_cache_size: Optional[float] = None):
+def enable():
     command = {'method': 'Debugger.enable'}
-    if max_scripts_cache_size:
-        command['params'] = {'maxScriptsCacheSize': max_scripts_cache_size}
     return command
 
 
@@ -56,18 +97,18 @@ def resume():
     return command
 
 
-def remove_breakpoints_by_url(url: str):
+def remove_breakpoints_by_url(params: RemoveBreakpointsUrl):
     command = {'method': 'Debugger.removeBreakpointsByUrl',
-               'params': {'url': url}}
+               'params': {'url': params.url}}
     return command
 
 
-def get_possible_and_set_breakpoint_by_url(locations: List[BreakLocationUrl]):
-    params = {'locations': []}
-    for location in locations:
-        params['locations'].append(location.to_json())
+def get_possible_and_set_breakpoint_by_url(params: SetBreakpointsLocations):
+    locations = []
+    for location in params.locations:
+        locations.append(location.to_json())
     command = {'method': 'Debugger.getPossibleAndSetBreakpointByUrl',
-               'params': params}
+               'params': {'locations': locations}}
     return command
 
 
@@ -88,4 +129,50 @@ def step_out():
 
 def disable():
     command = {'method': 'Debugger.disable'}
+    return command
+
+
+def set_pause_on_exceptions(params: PauseOnExceptionsState):
+    command = {'method': 'Debugger.setPauseOnExceptions',
+               'params': {'state': params.value}}
+    return command
+
+
+def evaluate_on_call_frame(params: EvaluateOnCallFrameParams):
+    command = {'method': 'Debugger.evaluateOnCallFrame',
+               'params': {
+                   'callFrameId': str(params.call_frame_id),
+                   'expression': params.expression,
+                   'includeCommandLineApi': params.include_command_line_api,
+                   'objectGroup': params.object_group,
+                   'silent': params.silent}}
+    return command
+
+
+def pause():
+    command = {'method': 'Debugger.pause'}
+    return command
+
+
+def set_mixed_debug_enabled(params: SetMixedDebugEnabledParams):
+    command = {'method': 'Debugger.setMixedDebugEnabled',
+               'params': {'enabled': params.enabled, 'mixedStackEnabled': params.mixed_stack_enabled}}
+    return command
+
+
+def reply_native_calling(params: ReplyNativeCallingParams):
+    command = {'method': 'Debugger.replyNativeCalling',
+               'params': {'userCode': params.user_code}}
+    return command
+
+
+def drop_frame(params: DropFrameParams):
+    command = {'method': 'Debugger.dropFrame',
+               'params': {'droppedDepth': params.dropped_depth}}
+    return command
+
+
+def smart_step_into(params: SmartStepIntoParams):
+    command = {'method': 'Debugger.smartStepInto',
+               'params': {'url': params.url, 'lineNumber': params.line_number}}
     return command
