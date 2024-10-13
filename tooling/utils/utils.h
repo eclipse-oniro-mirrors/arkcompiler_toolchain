@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+#include <optional>
 
 namespace OHOS::ArkCompiler::Toolchain {
 class Utils {
@@ -25,6 +26,8 @@ public:
     static bool RealPath(const std::string &path, std::string &realPath, bool readOnly = true);
     static bool GetCurrentTime(char *date, char *tim, size_t size);
     static bool StrToUInt(const char *content, uint32_t *result);
+    static bool StrToInt32(const std::string &str, int32_t &result);
+    static bool StrToInt32(const std::string &str, std::optional<int32_t> &result);
     static std::vector<std::string> SplitString(const std::string &str, const std::string &delimiter);
     static bool IsNumber(const std::string &str);
 };

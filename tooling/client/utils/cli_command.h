@@ -25,7 +25,7 @@
 #include "tooling/client/domain/heapprofiler_client.h"
 #include "tooling/client/domain/profiler_client.h"
 #include "tooling/client/manager/domain_manager.h"
-#include "tooling/client/utils/utils.h"
+#include "tooling/utils/utils.h"
 #include "tooling/client/session/session.h"
 
 namespace OHOS::ArkCompiler::Toolchain {

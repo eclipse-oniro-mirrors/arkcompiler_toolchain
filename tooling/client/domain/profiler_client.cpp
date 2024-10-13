@@ -16,7 +16,7 @@
 #include "tooling/client/domain/profiler_client.h"
 #include "tooling/base/pt_types.h"
 #include "common/log_wrapper.h"
-#include "tooling/client/utils/utils.h"
+#include "tooling/utils/utils.h"
 #include "tooling/client/session/session.h"
 
 #include <map>

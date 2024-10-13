@@ -47,7 +47,9 @@ std::unique_ptr<EvaluateOnCallFrameParams> EvaluateOnCallFrameParams::Create(con
     std::string callFrameId;
     ret = params.GetString("callFrameId", &callFrameId);
     if (ret == Result::SUCCESS) {
-        paramsObject->callFrameId_ = std::stoi(callFrameId);
+        if (!ToolchainUtils::StrToInt32(callFrameId, paramsObject->callFrameId_)) {
+            error += "Failed to convert 'callFrameId' from string to int;";
+        }
     } else {
         error += "Unknown or wrong type of 'callFrameId';";
     }
@@ -199,7 +201,9 @@ std::unique_ptr<GetScriptSourceParams> GetScriptSourceParams::Create(const PtJso
     std::string scriptId;
     ret = params.GetString("scriptId", &scriptId);
     if (ret == Result::SUCCESS) {
-        paramsObject->scriptId_ = std::stoi(scriptId);
+        if (!ToolchainUtils::StrToInt32(scriptId, paramsObject->scriptId_)) {
+            error += "Failed to convert 'scriptId' from string to int;";
+        }
     } else {
         error += "Unknown or wrong type of'scriptId';";
     }
@@ -731,7 +735,9 @@ std::unique_ptr<GetPropertiesParams> GetPropertiesParams::Create(const PtJson &p
     std::string objectId;
     ret = params.GetString("objectId", &objectId);
     if (ret == Result::SUCCESS) {
-        paramsObject->objectId_ = std::stoi(objectId);
+        if (!ToolchainUtils::StrToInt32(objectId, paramsObject->objectId_)) {
+            error += "Failed to convert 'objectId' from string to int;";
+        }
     } else {
         error += "Unknown or wrong type of 'objectId';";
     }
@@ -774,7 +780,9 @@ std::unique_ptr<CallFunctionOnParams> CallFunctionOnParams::Create(const PtJson 
     std::string callFrameId;
     ret = params.GetString("callFrameId", &callFrameId);
     if (ret == Result::SUCCESS) {
-        paramsObject->callFrameId_ = std::stoi(callFrameId);
+        if (!ToolchainUtils::StrToInt32(callFrameId, paramsObject->callFrameId_)) {
+            error += "Failed to convert 'callFrameId' from string to int;";
+        }
     } else {
         error += "Unknown or wrong type of 'callFrameId';";
     }
@@ -790,7 +798,9 @@ std::unique_ptr<CallFunctionOnParams> CallFunctionOnParams::Create(const PtJson 
     std::string objectId;
     ret = params.GetString("objectId", &objectId);
     if (ret == Result::SUCCESS) {
-        paramsObject->objectId_ = std::stoi(objectId);
+        if (!ToolchainUtils::StrToInt32(objectId, paramsObject->objectId_)) {
+            error += "Failed to convert 'objectId' from string to int;";
+        }
     } else if (ret == Result::TYPE_ERROR) {
         error += "Wrong type of 'objectId';";
     }
@@ -981,7 +991,9 @@ std::unique_ptr<AddInspectedHeapObjectParams> AddInspectedHeapObjectParams::Crea
     std::string heapObjectId;
     ret = params.GetString("heapObjectId", &heapObjectId);
     if (ret == Result::SUCCESS) {
-        paramsObject->heapObjectId_ = std::stoi(heapObjectId);
+        if (!ToolchainUtils::StrToInt32(heapObjectId, paramsObject->heapObjectId_)) {
+            error += "Failed to convert 'heapObjectId' from string to int;";
+        }
     } else {
         error += "Unknown or wrong type of 'heapObjectId';";
     }
@@ -1002,7 +1014,9 @@ std::unique_ptr<GetHeapObjectIdParams> GetHeapObjectIdParams::Create(const PtJso
     std::string objectId;
     ret = params.GetString("objectId", &objectId);
     if (ret == Result::SUCCESS) {
-        paramsObject->objectId_ = std::stoi(objectId);
+        if (!ToolchainUtils::StrToInt32(objectId, paramsObject->objectId_)) {
+            error += "Failed to convert 'objectId' from string to int;";
+        }
     } else if (ret == Result::TYPE_ERROR) {
         error += "Wrong type of 'objectId';";
     }
@@ -1023,7 +1037,9 @@ std::unique_ptr<GetObjectByHeapObjectIdParams> GetObjectByHeapObjectIdParams::Cr
     std::string objectId;
     ret = params.GetString("objectId", &objectId);
     if (ret == Result::SUCCESS) {
-        paramsObject->objectId_ = std::stoi(objectId);
+        if (!ToolchainUtils::StrToInt32(objectId, paramsObject->objectId_)) {
+            error += "Failed to convert 'objectId' from string to int;";
+        }
     } else if (ret == Result::TYPE_ERROR) {
         error += "Wrong type of 'objectId';";
     }

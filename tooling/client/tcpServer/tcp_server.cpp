@@ -14,7 +14,7 @@
  */
 #include "tooling/client/tcpServer/tcp_server.h"
 
-#include "tooling/client/utils/utils.h"
+#include "tooling/utils/utils.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 uv_async_t* g_inputSignal;
