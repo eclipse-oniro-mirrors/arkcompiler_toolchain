@@ -50,8 +50,19 @@ def install_requirements(requirements_file=r'.\requirements.txt'):
         sys.exit(1)
 
 
+def clear_log_handler():
+    # remove all old handlers of the root logger
+    log = logging.getLogger()
+    for handler in log.handlers[:]:
+        log.removeHandler(handler)
+
+
 if __name__ == '__main__':
     check_python_version()
     install_requirements()
 
-    pytest.main()
+    clear_log_handler()
+
+    args = sys.argv[1:]
+
+    pytest.main(args)

@@ -22,24 +22,39 @@ import subprocess
 
 
 class Fport(object):
+    retry_times = 3
+    increase_step = 7
+
     @classmethod
     def fport_connect_server(cls, port, pid, bundle_name):
-        cmd = ['hdc', 'fport', f'tcp:{port}', f'ark:{pid}@{bundle_name}']
-        logging.info('fport connect server: ' + ' '.join(cmd))
-        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        logging.info(result.stdout.strip())
-        assert result.stdout.decode('utf-8').strip() == 'Forwardport result:OK'
+        for _ in range(Fport.retry_times):
+            cmd = ['hdc', 'fport', f'tcp:{port}', f'ark:{pid}@{bundle_name}']
+            logging.info('fport connect server: ' + ' '.join(cmd))
+            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            logging.info(result.stdout.strip())
+            if 'TCP Port listen failed' not in result.stdout.decode('utf-8'):
+                assert result.stdout.decode('utf-8').strip() == 'Forwardport result:OK'
+                return port
+            else:    # The port is occupied
+                port += Fport.increase_step
+        return -1
 
     @classmethod
     def fport_debugger_server(cls, port, pid, tid=0):
-        if tid == 0:
-            cmd = ['hdc', 'fport', f'tcp:{port}', f'ark:{pid}@Debugger']
-        else:
-            cmd = ['hdc', 'fport', f'tcp:{port}', f'ark:{pid}@{tid}@Debugger']
-        logging.info('fport_debugger_server: ' + ' '.join(cmd))
-        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        logging.info(result.stdout.strip())
-        assert result.stdout.decode('utf-8').strip() == 'Forwardport result:OK'
+        for _ in range(Fport.retry_times):
+            if tid == 0:
+                cmd = ['hdc', 'fport', f'tcp:{port}', f'ark:{pid}@Debugger']
+            else:
+                cmd = ['hdc', 'fport', f'tcp:{port}', f'ark:{pid}@{tid}@Debugger']
+            logging.info('fport_debugger_server: ' + ' '.join(cmd))
+            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            logging.info(result.stdout.strip())
+            if 'TCP Port listen failed' not in result.stdout.decode('utf-8'):
+                assert result.stdout.decode('utf-8').strip() == 'Forwardport result:OK'
+                return port
+            else:    # The port is occupied
+                port += Fport.increase_step
+        return -1
 
     @classmethod
     def clear_fport(cls):

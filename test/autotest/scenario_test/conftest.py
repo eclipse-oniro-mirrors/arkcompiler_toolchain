@@ -139,7 +139,12 @@ def launch_hap(config):
     config['pid'] = pid
 
     Fport.clear_fport()
-    Fport.fport_connect_server(config['connect_server_port'], config['pid'], config['bundle_name'])
+    connect_server_port = Fport.fport_connect_server(config['connect_server_port'],
+                                                     config['pid'],
+                                                     config['bundle_name'])
+    assert connect_server_port > 0, logging.error('Failed to fport connect server for 3 times, '
+                                                  'the port is very likely occupied')
+    config['connect_server_port'] = connect_server_port
 
     config['websocket'] = WebSocket(config['connect_server_port'], config['debugger_server_port'])
     config['taskpool'] = TaskPool()
