@@ -451,8 +451,7 @@ void DebuggerImpl::InitializeExtendedProtocolsList()
         "setNativeRange",
         "resetSingleStepper",
         "callFunctionOn",
-        "smartStepInto",
-        "callFunctionOn"
+        "smartStepInto"
     };
     debuggerExtendedProtocols_ = std::move(debuggerProtocolList);
 }

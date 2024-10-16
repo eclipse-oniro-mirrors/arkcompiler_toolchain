@@ -45,8 +45,7 @@ class Utils(object):
                      "setNativeRange",
                      "resetSingleStepper",
                      "callFunctionOn",
-                     "smartStepInto",
-                     "callFunctionOn"]
+                     "smartStepInto"]
         return protocols
 
     @classmethod
