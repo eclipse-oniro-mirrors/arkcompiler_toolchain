@@ -1,17 +1,30 @@
 [
     {
-        "application directory": "MultiWorker01",
+        "application project": "MultiWorker01",
         "hap name": "MultiWorker01.hap",
         "bundle name": "com.example.multiWorker01"
     },
     {
-        "application directory": "MultiWorker02",
+        "application project": "MultiWorker02",
         "hap name": "MultiWorker02.hap",
         "bundle name": "com.example.multiWorker02"
     },
     {
-        "application directory": "TaskPool01",
+        "application project": "TaskPool01",
         "hap name": "TaskPool01.hap",
         "bundle name": "com.example.taskPool01"
+    },
+    {
+        "application project": "HotReloadHarHsp01",
+        "hap name": ["HotReloadHarHsp01.hap", "HspDiscovery.hsp"],
+        "bundle name": "com.example.HotReloadHarHsp01",
+        "hqf name": ["HotReloadHarHsp01.hqf", "HspDiscovery.hap"]
+    },
+    {
+        "application project": "HotReloadPages01",
+        "hap name": "HotReloadPages01.hap",
+        "bundle name": "com.example.HotReloadPages01",
+        "hqf name": [["HotReloadPages01.01.hqf"], ["HotReloadPages01.02.hqf"],
+                     ["HotReloadPages01.03.hqf"], ["HotReloadPages01.04.hqf"]]
     }
 ]

@@ -77,6 +77,14 @@ class Utils(object):
         assert mount_result.stdout.decode('utf-8').strip() == 'Mount finish'
 
     @classmethod
+    def hdc_file_send(cls, source, sink):
+        cmd = ['hdc', 'file', 'send', source, sink]
+        logging.info(' '.join(cmd))
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        logging.info(result.stdout.strip())
+        assert 'FileTransfer finish' in result.stdout.decode('utf-8').strip()
+
+    @classmethod
     def clear_fault_log(cls):
         cmd = ['hdc', 'shell', 'rm', '/data/log/faultlog/faultlogger/*']
         logging.info(' '.join(cmd))
@@ -95,7 +103,7 @@ class Utils(object):
         assert result.returncode == 0
 
     @classmethod
-    def save_hilog(cls, log_path, file_name, debug_on=False):
+    def save_hilog(cls, log_path, file_name, debug_on: bool = False):
         if not os.path.exists(log_path):
             os.makedirs(log_path)
 
@@ -105,42 +113,36 @@ class Utils(object):
         result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         assert result.returncode == 0
 
+        cmd = ['hdc', 'shell', 'hilog', '-G', '16M']
+        logging.info(' '.join(cmd))
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        assert result.returncode == 0
+
+        cmd = ['hdc', 'shell', 'hilog', '-Q', 'pidoff']
+        logging.info(' '.join(cmd))
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        assert result.returncode == 0
+
+        cmd = ['hdc', 'shell', 'hilog', '-Q', 'domainoff']
+        logging.info(' '.join(cmd))
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        assert result.returncode == 0
+
         if debug_on:
-            cmd = ['hdc', 'shell', 'hilog', '-G', '16M']
-            logging.info(' '.join(cmd))
-            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            assert result.returncode == 0
-
-            cmd = ['hdc', 'shell', 'hilog', '-Q', 'pidoff']
-            logging.info(' '.join(cmd))
-            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            assert result.returncode == 0
-
-            cmd = ['hdc', 'shell', 'hilog', '-Q', 'domainoff']
-            logging.info(' '.join(cmd))
-            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            assert result.returncode == 0
-
-            cmd = ['hdc', 'shell', 'hilog', '-b', 'd']
-            logging.info(' '.join(cmd))
-            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            assert result.returncode == 0
-
-            cmd = ['hdc', 'shell', 'setprop', 'persist.sys.hilog.debug.on', 'true']
-            logging.info(' '.join(cmd))
-            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            assert result.returncode == 0
-
             cmd = ['hdc', 'shell', 'hilog', '-b', 'DEBUG']
             logging.info(' '.join(cmd))
             result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             assert result.returncode == 0
+        else:
+            cmd = ['hdc', 'shell', 'hilog', '-b', 'INFO']
+            logging.info(' '.join(cmd))
+            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            assert result.returncode == 0
 
-        # create a sub-process to receive the hilog
         hilog_process = subprocess.Popen(['hdc', 'shell', 'hilog'],
                                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         file = os.fdopen(os.open(rf'{log_path}\{file_name}',
-                                 os.O_WRONLY | os.O_CREAT,
+                                 os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
                                  stat.S_IRUSR | stat.S_IWUSR), 'wb')
 
         def write():
@@ -152,7 +154,21 @@ class Utils(object):
                 logging.info('hilog stream is closed.')
             file.close()
 
+        # create a thread to receive the hilog
         write_thread = threading.Thread(target=write)
         write_thread.start()
 
         return hilog_process, write_thread
+
+    @classmethod
+    def search_hilog(cls, hilog_path, key_world):
+        matched_logs = []
+        with open(hilog_path, 'rb') as file:
+            while True:
+                line = file.readline()
+                if not line:
+                    logging.debug('Reach the end of the hilog file')
+                    break
+                if key_world in line:
+                    matched_logs.append(line.strip())
+        return matched_logs
