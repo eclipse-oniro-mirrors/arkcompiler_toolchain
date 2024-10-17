@@ -20,6 +20,7 @@
 #include "tooling/client/manager/watch_manager.h"
 #include "tooling/base/pt_json.h"
 #include "tooling/client/session/session.h"
+#include "tooling/utils/utils.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 namespace OHOS::ArkCompiler::Toolchain {
@@ -256,10 +257,15 @@ void RuntimeClient::HandleGetProperties(std::unique_ptr<PtJson> json, const int 
         variableManager.ClearVariableInfo();
         variableManager.InitializeTree(treeInfo);
     }
-    std::string requestObjectId = GetRequestObjectIdById(id);
+    std::string requestObjectIdStr = GetRequestObjectIdById(id);
     TreeNode *node = nullptr;
     if (!isInitializeTree_) {
-        node = variableManager.FindNodeWithObjectId(std::stoi(requestObjectId));
+        int32_t requestObjectId;
+        if (!Utils::StrToInt32(requestObjectIdStr, requestObjectId)) {
+            LOGE("arkdb: convert 'requestObjectId' from string to int error");
+            return;
+        }
+        node = variableManager.FindNodeWithObjectId(requestObjectId);
     } else {
         node = variableManager.FindNodeObjectZero();
     }

@@ -46,6 +46,7 @@ debugger_sources = [
   "debugger_service.cpp",
   "dispatcher.cpp",
   "protocol_handler.cpp",
+  "utils/utils.cpp",
 ]
 if (!is_mingw && !is_mac && target_os != "ios") {
   debugger_sources += [

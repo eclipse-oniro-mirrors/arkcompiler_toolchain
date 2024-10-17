@@ -16,7 +16,7 @@
 #include "tooling/client/manager/breakpoint_manager.h"
 
 #include "common/log_wrapper.h"
-#include "tooling/client/utils/utils.h"
+#include "tooling/utils/utils.h"
 #include "tooling/client/session/session.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;

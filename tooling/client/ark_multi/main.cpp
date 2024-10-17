@@ -26,6 +26,7 @@
 #include "ecmascript/js_runtime_options.h"
 #include "ecmascript/napi/include/jsnapi.h"
 #include "ecmascript/platform/file.h"
+#include "tooling/utils/utils.h"
 #ifdef PANDA_TARGET_MACOS
 #include <unistd.h>
 #include <sys/syscall.h>
@@ -152,7 +153,12 @@ int Main(const int argc, const char **argv)
     }
 
     std::string countStr = argv[1];
-    g_threadCount = std::min(std::stoi(countStr), MAX_THREAD);
+    int32_t count;
+    if (!Utils::StrToInt32(countStr, count)) {
+        std::cerr << "The argument about the number of threads is incorrect." << std::endl;
+        return -1;
+    }
+    g_threadCount = std::min(count, MAX_THREAD);
 
     std::string filePath = argv[2];
     std::string realPath;

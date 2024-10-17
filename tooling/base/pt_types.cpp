@@ -1054,7 +1054,9 @@ std::unique_ptr<RemoteObject> RemoteObject::Create(const PtJson &params)
     std::string objectId;
     ret = params.GetString("objectId", &objectId);
     if (ret == Result::SUCCESS) {
-        remoteObject->objectId_ = std::stoi(objectId);
+        if (!ToolchainUtils::StrToInt32(objectId, remoteObject->objectId_)) {
+            error += "Failed to convert 'objectId' from string to int;";
+        }
     } else if (ret == Result::TYPE_ERROR) {
         error += "Wrong type of 'objectId';";
     }
@@ -1132,7 +1134,9 @@ std::unique_ptr<ExceptionDetails> ExceptionDetails::Create(const PtJson &params)
     std::string scriptId;
     ret = params.GetString("scriptId", &scriptId);
     if (ret == Result::SUCCESS) {
-        exceptionDetails->scriptId_ = std::stoi(scriptId);
+        if (!ToolchainUtils::StrToInt32(scriptId, exceptionDetails->scriptId_)) {
+            error += "Failed to convert 'scriptId' from string to int;";
+        }
     } else if (ret == Result::TYPE_ERROR) {
         error += "Wrong type of 'scriptId';";
     }
@@ -1532,7 +1536,9 @@ std::unique_ptr<CallArgument> CallArgument::Create(const PtJson &params)
     std::string objectId;
     ret = params.GetString("objectId", &objectId);
     if (ret == Result::SUCCESS) {
-        callArgument->objectId_ = std::stoi(objectId);
+        if (!ToolchainUtils::StrToInt32(objectId, callArgument->objectId_)) {
+            error += "Failed to convert 'objectId' from string to int;";
+        }
     } else if (ret == Result::TYPE_ERROR) {  // optional value
         error += "Wrong type of 'objectId';";
     }
@@ -1568,7 +1574,9 @@ std::unique_ptr<Location> Location::Create(const PtJson &params)
     std::string scriptId;
     ret = params.GetString("scriptId", &scriptId);
     if (ret == Result::SUCCESS) {
-        location->scriptId_ = std::stoi(scriptId);
+        if (!ToolchainUtils::StrToInt32(scriptId, location->scriptId_)) {
+            error += "Failed to convert 'scriptId' from string to int;";
+        }
     } else {
         error += "Unknown or wrong type of 'scriptId';";
     }
@@ -1696,7 +1704,9 @@ std::unique_ptr<LocationRange> LocationRange::Create(const PtJson &params)
     std::string scriptId;
     ret = params.GetString("scriptId", &scriptId);
     if (ret == Result::SUCCESS) {
-        locationRange->scriptId_ = std::stoi(scriptId);
+        if (!ToolchainUtils::StrToInt32(scriptId, locationRange->scriptId_)) {
+            error += "Failed to convert 'scriptId' from string to int;";
+        }
     } else {
         error += "Unknown or wrong type of 'scriptId';";
     }
@@ -1788,7 +1798,9 @@ std::unique_ptr<BreakLocation> BreakLocation::Create(const PtJson &params)
     std::string scriptId;
     ret = params.GetString("scriptId", &scriptId);
     if (ret == Result::SUCCESS) {
-        breakLocation->scriptId_ = std::stoi(scriptId);
+        if (!ToolchainUtils::StrToInt32(scriptId, breakLocation->scriptId_)) {
+            error += "Failed to convert 'scriptId' from string to int;";
+        }
     } else {
         error += "Unknown or wrong type of 'scriptId';";
     }
@@ -1951,7 +1963,9 @@ std::unique_ptr<CallFrame> CallFrame::Create(const PtJson &params)
     std::string callFrameId;
     ret = params.GetString("callFrameId", &callFrameId);
     if (ret == Result::SUCCESS) {
-        callFrame->callFrameId_ = std::stoi(callFrameId);
+        if (!ToolchainUtils::StrToInt32(callFrameId, callFrame->callFrameId_)) {
+            error += "Failed to convert 'callFrameId' from string to int;";
+        }
     } else {
         error += "Unknown or wrong type of 'callFrameId';";
     }

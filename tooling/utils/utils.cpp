@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#include "common/log_wrapper.h"
-#include "tooling/client/utils/utils.h"
 #include <ctime>
 #include <climits>
 #include <cerrno>
 #include <string>
-#include "utils.h"
+
+#include "common/log_wrapper.h"
+#include "tooling/utils/utils.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 bool Utils::GetCurrentTime(char *date, char *tim, size_t size)
@@ -65,6 +65,30 @@ bool Utils::StrToUInt(const char *content, uint32_t *result)
     if (endPtr == content || *endPtr != '\0') {
         return false;
     }
+    return true;
+}
+
+bool Utils::StrToInt32(const std::string &str, int32_t &result)
+{
+    const int dec = 10;
+    char *endPtr = nullptr;
+    long long num = std::strtoll(str.c_str(), &endPtr, dec);
+    if (endPtr == str.c_str() || *endPtr != '\0' || num > INT_MAX || num < INT_MIN) {
+        return false;
+    }
+    result = static_cast<int32_t>(num);
+    return true;
+}
+
+bool Utils::StrToInt32(const std::string &str, std::optional<int32_t> &result)
+{
+    const int dec = 10;
+    char *endPtr = nullptr;
+    long long num = std::strtoll(str.c_str(), &endPtr, dec);
+    if (endPtr == str.c_str() || *endPtr != '\0' || num > INT_MAX || num < INT_MIN) {
+        return false;
+    }
+    result = static_cast<int32_t>(num);
     return true;
 }
 
