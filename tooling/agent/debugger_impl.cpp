@@ -127,6 +127,8 @@ bool DebuggerImpl::SendableScriptParsed(const std::string &fileName, const std::
 
     // if load module, it needs to check whether clear singlestepper_
     ClearSingleStepper();
+    
+    urlFileNameMap_[url].insert(fileName);
     // Notify script parsed event
     std::unique_ptr<PtScript> script = std::make_unique<PtScript>(g_scriptId++, fileName, url, source);
 
