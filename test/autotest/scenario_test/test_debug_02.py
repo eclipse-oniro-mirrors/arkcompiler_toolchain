@@ -26,8 +26,8 @@ import pytest
 
 from aw import Application
 from aw import Utils
-from aw import communicate_with_debugger_server
-from aw import debugger, runtime
+from aw import debugger
+from aw.api import debugger_api, runtime_api
 
 
 @pytest.mark.debug
@@ -86,9 +86,11 @@ class TestDebug02:
         websocket = self.config['websocket']
         taskpool = self.config['taskpool']
         pid = self.config['pid']
+        self.debugger_impl = debugger_api.DebuggerImpl(self.id_generator, websocket)
+        self.runtime_impl = runtime_api.RuntimeImpl(self.id_generator, websocket)
 
         Application.attach(self.config['bundle_name'])
-        taskpool.submit(websocket.main_task(taskpool, websocket, self.procedure, pid))
+        taskpool.submit(websocket.main_task(taskpool, self.procedure, pid))
         taskpool.await_taskpool()
         taskpool.task_join()
         if taskpool.task_exception:
@@ -98,122 +100,55 @@ class TestDebug02:
         ################################################################################################################
         # main thread: connect the debugger server
         ################################################################################################################
-        send_msg = {"type": "connected"}
-        await websocket.send_msg_to_connect_server(send_msg)
-        response = await websocket.recv_msg_of_connect_server()
-        response = json.loads(response)
-        assert response['type'] == 'addInstance'
-        assert response['instanceId'] == 0, logging.error('instance id of the main thread not equal to 0')
-        assert response['tid'] == self.config['pid']
-        main_thread_instance_id = await websocket.get_instance()
-        main_thread_to_send_queue = websocket.to_send_msg_queues[main_thread_instance_id]
-        main_thread_received_queue = websocket.received_msg_queues[main_thread_instance_id]
-        logging.info(f'Connect to the debugger server of instance: {main_thread_instance_id}')
+        main_thread = await self.debugger_impl.connect_to_debugger_server(self.config['pid'], True)
+        logging.info(f'Connect to the debugger server of instance: {main_thread.instance_id}')
         ################################################################################################################
         # worker thread: connect the debugger server
         ################################################################################################################
-        workers_num = 2
-        worker_instances_id = []
-        worker_thread_to_send_queues = []
-        worker_thread_received_queues = []
-        for i in range(workers_num):
-            response = await websocket.recv_msg_of_connect_server()
-            response = json.loads(response)
-            assert response['type'] == 'addInstance'
-            assert response['instanceId'] != 0
-            assert response['tid'] != self.config['pid']
-            assert 'workerThread_' in response['name']
-            worker_instance_id = await websocket.get_instance()
-            worker_instances_id.append(worker_instance_id)
-            worker_thread_to_send_queues.append(websocket.to_send_msg_queues[worker_instance_id])
-            worker_thread_received_queues.append(websocket.received_msg_queues[worker_instance_id])
-            logging.info(f'Connect to the debugger server of instance: {worker_instance_id}')
+        worker_thread_1 = await self.debugger_impl.connect_to_debugger_server(self.config['pid'], False)
+        logging.info(f'Connect to the debugger server of instance: {worker_thread_1.instance_id}')
+        worker_thread_2 = await self.debugger_impl.connect_to_debugger_server(self.config['pid'], False)
+        logging.info(f'Connect to the debugger server of instance: {worker_thread_2.instance_id}')
         ################################################################################################################
         # worker thread: Runtime.enable
         ################################################################################################################
-        for i in range(workers_num):
-            message_id = next(self.id_generator)
-            response = await communicate_with_debugger_server(worker_instances_id[i],
-                                                              worker_thread_to_send_queues[i],
-                                                              worker_thread_received_queues[i],
-                                                              runtime.enable(), message_id)
-            assert json.loads(response) == {"id": message_id, "result": {"protocols": []}}
+        await self.runtime_impl.send("Runtime.enable", worker_thread_1)
+        await self.runtime_impl.send("Runtime.enable", worker_thread_2)
         ################################################################################################################
         # worker thread: Debugger.enable
         ################################################################################################################
-        for i in range(workers_num):
-            message_id = next(self.id_generator)
-            response = await communicate_with_debugger_server(worker_instances_id[i],
-                                                              worker_thread_to_send_queues[i],
-                                                              worker_thread_received_queues[i],
-                                                              debugger.enable(), message_id)
-            response = json.loads(response)
-            assert response['method'] == 'Debugger.scriptParsed'
-            assert response['params']['url'] == self.config['file_path']['worker']
-            assert response['params']['endLine'] == 0
-            response = await websocket.recv_msg_of_debugger_server(worker_instances_id[i],
-                                                                   worker_thread_received_queues[i])
-            assert json.loads(response) == {"id": message_id, "result": {"debuggerId": "0",
-                                                                         "protocols": Utils.get_custom_protocols()}}
+        await self.debugger_impl.send("Debugger.enable", worker_thread_1)
+        await self.debugger_impl.send("Debugger.enable", worker_thread_2)
         ################################################################################################################
         # worker thread: Runtime.runIfWaitingForDebugger
         ################################################################################################################
-        for i in range(workers_num):
-            message_id = next(self.id_generator)
-            response = await communicate_with_debugger_server(worker_instances_id[i],
-                                                              worker_thread_to_send_queues[i],
-                                                              worker_thread_received_queues[i],
-                                                              runtime.run_if_waiting_for_debugger(), message_id)
-            assert json.loads(response) == {"id": message_id, "result": {}}
+        await self.runtime_impl.send("Runtime.runIfWaitingForDebugger", worker_thread_1)
+        await self.runtime_impl.send("Runtime.runIfWaitingForDebugger", worker_thread_2)
+        ################################################################################################################
+        # main thread: Runtime.enable
+        ################################################################################################################
+        await self.runtime_impl.send("Runtime.enable", main_thread)
         ################################################################################################################
         # main thread: Debugger.enable
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(main_thread_instance_id,
-                                                          main_thread_to_send_queue,
-                                                          main_thread_received_queue,
-                                                          debugger.enable(), message_id)
-        assert json.loads(response)['method'] == 'Debugger.scriptParsed'
-        response = await websocket.recv_msg_of_debugger_server(main_thread_instance_id,
-                                                               main_thread_received_queue)
-        assert json.loads(response)['method'] == 'Debugger.scriptParsed'
-        response = await websocket.recv_msg_of_debugger_server(main_thread_instance_id,
-                                                               main_thread_received_queue)
-        assert json.loads(response) == {"id": message_id, "result": {"debuggerId": "0",
-                                                                     "protocols": Utils.get_custom_protocols()}}
+        await self.debugger_impl.send("Debugger.enable", main_thread)
         ################################################################################################################
         # main thread: Runtime.runIfWaitingForDebugger
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(main_thread_instance_id,
-                                                          main_thread_to_send_queue,
-                                                          main_thread_received_queue,
-                                                          runtime.run_if_waiting_for_debugger(), message_id)
-        assert json.loads(response) == {"id": message_id, "result": {}}
+        await self.runtime_impl.send("Runtime.runIfWaitingForDebugger", main_thread)
         ################################################################################################################
         # main thread: Debugger.removeBreakpointsByUrl
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(main_thread_instance_id,
-                                                          main_thread_to_send_queue,
-                                                          main_thread_received_queue,
-                                                          debugger.remove_breakpoints_by_url(
-                                                              self.config['file_path']['index']),
-                                                          message_id)
-        assert json.loads(response) == {"id": message_id, "result": {}}
+        params = debugger.RemoveBreakpointsUrl(self.config['file_path']['index'])
+        await self.debugger_impl.send("Debugger.removeBreakpointsByUrl", main_thread, params)
         ################################################################################################################
         # main thread: Debugger.getPossibleAndSetBreakpointByUrl
         ################################################################################################################
-        message_id = next(self.id_generator)
         locations = [debugger.BreakLocationUrl(url=self.config['file_path']['index'], line_number=53),
                      debugger.BreakLocationUrl(url=self.config['file_path']['index'], line_number=57)]
-        response = await communicate_with_debugger_server(main_thread_instance_id,
-                                                          main_thread_to_send_queue,
-                                                          main_thread_received_queue,
-                                                          debugger.get_possible_and_set_breakpoint_by_url(locations),
-                                                          message_id)
-        response = json.loads(response)
-        assert response['id'] == message_id
+        params = debugger.SetBreakpointsLocations(locations)
+        response = await self.debugger_impl.send("Debugger.getPossibleAndSetBreakpointsByUrl",
+                                                 main_thread, params)
         assert response['result']['locations'][0]['id'] == 'id:53:0:' + self.config['file_path']['index']
         assert response['result']['locations'][1]['id'] == 'id:57:0:' + self.config['file_path']['index']
         ################################################################################################################
@@ -223,315 +158,149 @@ class TestDebug02:
         ################################################################################################################
         # main thread: Debugger.paused, hit breakpoint
         ################################################################################################################
-        response = await websocket.recv_msg_of_debugger_server(main_thread_instance_id,
-                                                               main_thread_received_queue)
-        response = json.loads(response)
-        assert response['method'] == 'Debugger.paused'
+        response = await self.debugger_impl.recv("Debugger.paused", main_thread)
         assert response['params']['callFrames'][0]['url'] == self.config['file_path']['index']
         assert response['params']['hitBreakpoints'] == ['id:53:16:' + self.config['file_path']['index']]
         ################################################################################################################
         # worker thread: destroy instance
         ################################################################################################################
-        response = await websocket.recv_msg_of_connect_server()
-        response = json.loads(response)
-        assert response['type'] == 'destroyInstance'
-        if response['instanceId'] == worker_instances_id[0]:
-            worker_instances_id[0] = worker_instances_id[1]
-            worker_thread_to_send_queues[0] = worker_thread_to_send_queues[1]
-            worker_thread_received_queues[0] = worker_thread_received_queues[1]
+        response = await self.debugger_impl.destroy_instance()
+        if response['instanceId'] == worker_thread_1.instance_id:
+            worker_thread_1 = worker_thread_2
         ################################################################################################################
         # worker thread: Debugger.removeBreakpointsByUrl
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(worker_instances_id[0],
-                                                          worker_thread_to_send_queues[0],
-                                                          worker_thread_received_queues[0],
-                                                          debugger.remove_breakpoints_by_url(
-                                                              self.config['file_path']['worker']),
-                                                          message_id)
-        assert json.loads(response) == {"id": message_id, "result": {}}
+        params = debugger.RemoveBreakpointsUrl(self.config['file_path']['worker'])
+        await self.debugger_impl.send("Debugger.removeBreakpointsByUrl", worker_thread_1, params)
         ################################################################################################################
         # worker thread: Debugger.getPossibleAndSetBreakpointByUrl
         ################################################################################################################
-        message_id = next(self.id_generator)
         locations = [debugger.BreakLocationUrl(url=self.config['file_path']['worker'], line_number=11)]
-        response = await communicate_with_debugger_server(worker_instances_id[0],
-                                                          worker_thread_to_send_queues[0],
-                                                          worker_thread_received_queues[0],
-                                                          debugger.get_possible_and_set_breakpoint_by_url(locations),
-                                                          message_id)
-        response = json.loads(response)
-        assert response['id'] == message_id
+        params = debugger.SetBreakpointsLocations(locations)
+        response = await self.debugger_impl.send("Debugger.getPossibleAndSetBreakpointsByUrl",
+                                                 worker_thread_1, params)
         assert response['result']['locations'][0]['id'] == 'id:11:0:' + self.config['file_path']['worker']
         ################################################################################################################
         # main thread: Debugger.resume
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(main_thread_instance_id,
-                                                          main_thread_to_send_queue,
-                                                          main_thread_received_queue,
-                                                          debugger.resume(), message_id)
-        assert json.loads(response) == {"method": "Debugger.resumed", "params": {}}
-        response = await websocket.recv_msg_of_debugger_server(main_thread_instance_id,
-                                                               main_thread_received_queue)
-        assert json.loads(response) == {"id": message_id, "result": {}}
-        ################################################################################################################
+        await self.debugger_impl.send("Debugger.resume", main_thread)
         # main thread: Debugger.paused, hit breakpoint
-        ################################################################################################################
-        response = await websocket.recv_msg_of_debugger_server(main_thread_instance_id,
-                                                               main_thread_received_queue)
-        response = json.loads(response)
-        assert response['method'] == 'Debugger.paused'
+        response = await self.debugger_impl.recv("Debugger.paused", main_thread)
         assert response['params']['callFrames'][0]['url'] == self.config['file_path']['index']
         assert response['params']['hitBreakpoints'] == ['id:57:20:' + self.config['file_path']['index']]
         ################################################################################################################
         # worker thread: connect the debugger server
         ################################################################################################################
-        response = await websocket.recv_msg_of_connect_server()
-        response = json.loads(response)
-        assert response['type'] == 'addInstance'
-        assert response['instanceId'] != 0
-        assert response['tid'] != self.config['pid']
-        assert 'workerThread_' in response['name']
-        worker_instances_id[1] = await websocket.get_instance()
-        worker_thread_to_send_queues[1] = websocket.to_send_msg_queues[worker_instances_id[1]]
-        worker_thread_received_queues[1] = websocket.received_msg_queues[worker_instances_id[1]]
-        logging.info(f'Connect to the debugger server of instance: {worker_instances_id[1]}')
+        worker_thread_2 = await self.debugger_impl.connect_to_debugger_server(self.config['pid'], False)
+        logging.info(f'Connect to the debugger server of instance: {worker_thread_2.instance_id}')
         ################################################################################################################
         # worker thread: Runtime.enable
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(worker_instances_id[1],
-                                                          worker_thread_to_send_queues[1],
-                                                          worker_thread_received_queues[1],
-                                                          runtime.enable(), message_id)
-        assert json.loads(response) == {"id": message_id, "result": {"protocols": []}}
+        await self.runtime_impl.send("Runtime.enable", worker_thread_2)
         ################################################################################################################
         # worker thread: Debugger.enable
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(worker_instances_id[1],
-                                                          worker_thread_to_send_queues[1],
-                                                          worker_thread_received_queues[1],
-                                                          debugger.enable(), message_id)
-        assert json.loads(response) == {"id": message_id, "result": {"debuggerId": "0",
-                                                                     "protocols": Utils.get_custom_protocols()}}
+        await self.debugger_impl.send("Debugger.enable", worker_thread_2)
         ################################################################################################################
         # worker thread: Runtime.runIfWaitingForDebugger
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(worker_instances_id[1],
-                                                          worker_thread_to_send_queues[1],
-                                                          worker_thread_received_queues[1],
-                                                          runtime.run_if_waiting_for_debugger(), message_id)
-        assert json.loads(response) == {"id": message_id, "result": {}}
-        response = await websocket.recv_msg_of_debugger_server(worker_instances_id[1],
-                                                               worker_thread_received_queues[1])
-        response = json.loads(response)
-        assert response['method'] == 'Debugger.scriptParsed'
+        await self.runtime_impl.send("Runtime.runIfWaitingForDebugger", worker_thread_2)
+        # worker thread: Debugger.scriptParsed
+        response = await self.debugger_impl.recv("Debugger.scriptParsed", worker_thread_2)
         assert response['params']['url'] == self.config['file_path']['worker']
         assert response['params']['endLine'] == 0
+        # worker thread: Debugger.paused
+        response = await self.debugger_impl.recv("Debugger.paused", worker_thread_2)
+        assert response['params']['callFrames'][0]['url'] == self.config['file_path']['worker']
+        assert response['params']['reason'] == 'Break on start'
         ################################################################################################################
         # worker thread: Debugger.removeBreakpointsByUrl
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(worker_instances_id[1],
-                                                          worker_thread_to_send_queues[1],
-                                                          worker_thread_received_queues[1],
-                                                          debugger.remove_breakpoints_by_url(
-                                                              self.config['file_path']['worker']),
-                                                          message_id)
-        response = json.loads(response)
-        assert response['method'] == 'Debugger.paused'
-        assert response['params']['callFrames'][0]['url'] == self.config['file_path']['worker']
-        assert response['params']['reason'] == 'Break on start'
-        response = await websocket.recv_msg_of_debugger_server(worker_instances_id[1],
-                                                               worker_thread_received_queues[1])
-        assert json.loads(response) == {"id": message_id, "result": {}}
+        params = debugger.RemoveBreakpointsUrl(self.config['file_path']['worker'])
+        await self.debugger_impl.send("Debugger.removeBreakpointsByUrl", worker_thread_2, params)
         ################################################################################################################
         # worker thread: Debugger.getPossibleAndSetBreakpointByUrl
         ################################################################################################################
-        message_id = next(self.id_generator)
         locations = [debugger.BreakLocationUrl(url=self.config['file_path']['worker'], line_number=11)]
-        response = await communicate_with_debugger_server(worker_instances_id[1],
-                                                          worker_thread_to_send_queues[1],
-                                                          worker_thread_received_queues[1],
-                                                          debugger.get_possible_and_set_breakpoint_by_url(locations),
-                                                          message_id)
-        response = json.loads(response)
-        assert response['id'] == message_id
+        params = debugger.SetBreakpointsLocations(locations)
+        response = await self.debugger_impl.send("Debugger.getPossibleAndSetBreakpointsByUrl",
+                                                 worker_thread_2, params)
         assert response['result']['locations'][0]['id'] == 'id:11:0:' + self.config['file_path']['worker']
         ################################################################################################################
         # worker thread: Debugger.resume
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(worker_instances_id[1],
-                                                          worker_thread_to_send_queues[1],
-                                                          worker_thread_received_queues[1],
-                                                          debugger.resume(), message_id)
-        assert json.loads(response) == {"method": "Debugger.resumed", "params": {}}
-        response = await websocket.recv_msg_of_debugger_server(worker_instances_id[1],
-                                                               worker_thread_received_queues[1])
-        assert json.loads(response) == {"id": message_id, "result": {}}
+        await self.debugger_impl.send("Debugger.resume", worker_thread_2)
         ################################################################################################################
         # main thread: Debugger.resume
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(main_thread_instance_id,
-                                                          main_thread_to_send_queue,
-                                                          main_thread_received_queue,
-                                                          debugger.resume(), message_id)
-        assert json.loads(response) == {"method": "Debugger.resumed", "params": {}}
-        response = await websocket.recv_msg_of_debugger_server(main_thread_instance_id,
-                                                               main_thread_received_queue)
-        assert json.loads(response) == {"id": message_id, "result": {}}
+        await self.debugger_impl.send("Debugger.resume", main_thread)
         # main thread: Debugger.paused
-        response = await websocket.recv_msg_of_debugger_server(main_thread_instance_id,
-                                                               main_thread_received_queue)
-        response = json.loads(response)
-        assert response['method'] == 'Debugger.paused'
+        response = await self.debugger_impl.recv("Debugger.paused", main_thread)
         assert response['params']['callFrames'][0]['url'] == self.config['file_path']['index']
         assert response['params']['reason'] == 'other'
         assert response['params']['hitBreakpoints'] == ['id:57:20:' + self.config['file_path']['index']]
         # worker thread: Debugger.paused
-        response = await websocket.recv_msg_of_debugger_server(worker_instances_id[0],
-                                                               worker_thread_received_queues[0])
-        response = json.loads(response)
-        assert response['method'] == 'Debugger.paused'
+        response = await self.debugger_impl.recv("Debugger.paused", worker_thread_1)
         assert response['params']['callFrames'][0]['url'] == self.config['file_path']['worker']
         assert response['params']['reason'] == 'Break on start'
         assert response['params']['hitBreakpoints'] == []
         ################################################################################################################
         # worker thread: Debugger.resume
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(worker_instances_id[0],
-                                                          worker_thread_to_send_queues[0],
-                                                          worker_thread_received_queues[0],
-                                                          debugger.resume(), message_id)
-        assert json.loads(response) == {"method": "Debugger.resumed", "params": {}}
-        response = await websocket.recv_msg_of_debugger_server(worker_instances_id[0],
-                                                               worker_thread_received_queues[0])
-        assert json.loads(response) == {"id": message_id, "result": {}}
+        await self.debugger_impl.send("Debugger.resume", worker_thread_1)
         # worker thread: Debugger.paused
-        response = await websocket.recv_msg_of_debugger_server(worker_instances_id[0],
-                                                               worker_thread_received_queues[0])
-        response = json.loads(response)
-        assert response['method'] == 'Debugger.paused'
+        response = await self.debugger_impl.recv("Debugger.paused", worker_thread_1)
         assert response['params']['callFrames'][0]['url'] == self.config['file_path']['worker']
         assert response['params']['reason'] == 'other'
         assert response['params']['hitBreakpoints'] == ['id:11:4:' + self.config['file_path']['worker']]
         ################################################################################################################
         # worker thread: Debugger.stepOut
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(worker_instances_id[0],
-                                                          worker_thread_to_send_queues[0],
-                                                          worker_thread_received_queues[0],
-                                                          debugger.step_out(), message_id)
-        assert json.loads(response) == {"method": "Debugger.resumed", "params": {}}
-        response = await websocket.recv_msg_of_debugger_server(worker_instances_id[0],
-                                                               worker_thread_received_queues[0])
-        assert json.loads(response) == {"id": message_id, "result": {}}
+        await self.debugger_impl.send("Debugger.stepOut", worker_thread_1)
         ################################################################################################################
         # worker thread: Debugger.disable
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(worker_instances_id[0],
-                                                          worker_thread_to_send_queues[0],
-                                                          worker_thread_received_queues[0],
-                                                          debugger.disable(), message_id)
-        assert json.loads(response) == {"method": "Debugger.resumed", "params": {}}
-        response = await websocket.recv_msg_of_debugger_server(worker_instances_id[0],
-                                                               worker_thread_received_queues[0])
-        assert json.loads(response) == {"id": message_id, "result": {}}
+        await self.debugger_impl.send("Debugger.disable", worker_thread_1)
         ################################################################################################################
         # main thread: Debugger.stepOver
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(main_thread_instance_id,
-                                                          main_thread_to_send_queue,
-                                                          main_thread_received_queue,
-                                                          debugger.step_over(), message_id)
-        assert json.loads(response) == {"method": "Debugger.resumed", "params": {}}
-        response = await websocket.recv_msg_of_debugger_server(main_thread_instance_id,
-                                                               main_thread_received_queue)
-        assert json.loads(response) == {"id": message_id, "result": {}}
+        await self.debugger_impl.send("Debugger.stepOver", main_thread)
         # main thread: Debugger.paused
-        response = await websocket.recv_msg_of_debugger_server(main_thread_instance_id,
-                                                               main_thread_received_queue)
-        response = json.loads(response)
-        assert response['method'] == 'Debugger.paused'
+        response = await self.debugger_impl.recv("Debugger.paused", main_thread)
         assert response['params']['callFrames'][0]['url'] == self.config['file_path']['index']
         assert response['params']['reason'] == 'other'
         assert response['params']['hitBreakpoints'] == []
         # worker thread: Debugger.paused
-        response = await websocket.recv_msg_of_debugger_server(worker_instances_id[1],
-                                                               worker_thread_received_queues[1])
-        response = json.loads(response)
-        assert response['method'] == 'Debugger.paused'
+        response = await self.debugger_impl.recv("Debugger.paused", worker_thread_2)
         assert response['params']['callFrames'][0]['url'] == self.config['file_path']['worker']
         assert response['params']['reason'] == 'other'
         assert response['params']['hitBreakpoints'] == ['id:11:4:' + self.config['file_path']['worker']]
         ################################################################################################################
         # worker thread: Debugger.resume
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(worker_instances_id[1],
-                                                          worker_thread_to_send_queues[1],
-                                                          worker_thread_received_queues[1],
-                                                          debugger.resume(), message_id)
-        assert json.loads(response) == {"method": "Debugger.resumed", "params": {}}
-        response = await websocket.recv_msg_of_debugger_server(worker_instances_id[1],
-                                                               worker_thread_received_queues[1])
-        assert json.loads(response) == {"id": message_id, "result": {}}
+        await self.debugger_impl.send("Debugger.resume", worker_thread_2)
         ################################################################################################################
         # worker thread: Debugger.disable
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(worker_instances_id[1],
-                                                          worker_thread_to_send_queues[1],
-                                                          worker_thread_received_queues[1],
-                                                          debugger.disable(), message_id)
-        assert json.loads(response) == {"method": "Debugger.resumed", "params": {}}
-        response = await websocket.recv_msg_of_debugger_server(worker_instances_id[1],
-                                                               worker_thread_received_queues[1])
-        assert json.loads(response) == {"id": message_id, "result": {}}
+        await self.debugger_impl.send("Debugger.disable", worker_thread_2)
         ################################################################################################################
         # main thread: Debugger.resume
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(main_thread_instance_id,
-                                                          main_thread_to_send_queue,
-                                                          main_thread_received_queue,
-                                                          debugger.resume(), message_id)
-        assert json.loads(response) == {"method": "Debugger.resumed", "params": {}}
-        response = await websocket.recv_msg_of_debugger_server(main_thread_instance_id,
-                                                               main_thread_received_queue)
-        assert json.loads(response) == {"id": message_id, "result": {}}
+        await self.debugger_impl.send("Debugger.resume", main_thread)
         ################################################################################################################
         # worker thread: destroy instance
         ################################################################################################################
-        for i in range(workers_num):
-            response = await websocket.recv_msg_of_connect_server()
-            response = json.loads(response)
-            assert response['type'] == 'destroyInstance'
-            assert response['instanceId'] in worker_instances_id
+        response = await self.debugger_impl.destroy_instance()
+        assert response['instanceId'] != self.config['pid']
+        response = await self.debugger_impl.destroy_instance()
+        assert response['instanceId'] != self.config['pid']
         ################################################################################################################
         # main thread: Debugger.disable
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(main_thread_instance_id,
-                                                          main_thread_to_send_queue,
-                                                          main_thread_received_queue,
-                                                          debugger.disable(), message_id)
-        assert json.loads(response) == {"method": "Debugger.resumed", "params": {}}
-        response = await websocket.recv_msg_of_debugger_server(main_thread_instance_id,
-                                                               main_thread_received_queue)
-        assert json.loads(response) == {"id": message_id, "result": {}}
+        await self.debugger_impl.send("Debugger.disable", main_thread)
         ################################################################################################################
         # close the websocket connections
         ################################################################################################################
-        await websocket.send_msg_to_debugger_server(main_thread_instance_id, main_thread_to_send_queue, 'close')
+        await websocket.send_msg_to_debugger_server(main_thread.instance_id, main_thread.send_msg_queue, 'close')
         await websocket.send_msg_to_connect_server('close')
         ################################################################################################################
