@@ -17,7 +17,6 @@ limitations under the License.
 Description: Scenario test case.
 """
 
-import json
 import logging
 import os
 import time
@@ -26,8 +25,8 @@ import pytest
 
 from aw import Utils
 from aw import Application
-from aw import communicate_with_debugger_server
-from aw import runtime, debugger, cpu_profiler
+from aw import profiler
+from aw.api import debugger_api, runtime_api, profiler_api
 
 
 @pytest.mark.cpu_profiler
@@ -79,8 +78,11 @@ class TestCpuProfiler01:
         websocket = self.config['websocket']
         taskpool = self.config['taskpool']
         pid = self.config['pid']
+        self.debugger_impl = debugger_api.DebuggerImpl(self.id_generator, websocket)
+        self.runtime_impl = runtime_api.RuntimeImpl(self.id_generator, websocket)
+        self.profiler_impl = profiler_api.ProfilerImpl(self.id_generator, websocket)
 
-        taskpool.submit(websocket.main_task(taskpool, websocket, self.procedure, pid))
+        taskpool.submit(websocket.main_task(taskpool, self.procedure, pid))
         taskpool.await_taskpool()
         taskpool.task_join()
         if taskpool.task_exception:
@@ -90,112 +92,53 @@ class TestCpuProfiler01:
         ################################################################################################################
         # main thread: connect the debugger server
         ################################################################################################################
-        send_msg = {"type": "connected"}
-        await websocket.send_msg_to_connect_server(send_msg)
-        response = await websocket.recv_msg_of_connect_server()
-        response = json.loads(response)
-        assert response['type'] == 'addInstance'
-        assert response['instanceId'] == 0, logging.error('instance id of the main thread not equal to 0')
-        assert response['tid'] == self.config['pid']
-        main_thread_instance_id = await websocket.get_instance()
-        main_thread_to_send_queue = websocket.to_send_msg_queues[main_thread_instance_id]
-        main_thread_received_queue = websocket.received_msg_queues[main_thread_instance_id]
-        logging.info(f'Connect to the debugger server of instance: {main_thread_instance_id}')
+        main_thread = await self.debugger_impl.connect_to_debugger_server(self.config['pid'], True)
+        logging.info(f'Connect to the debugger server of instance: {main_thread.instance_id}')
         ################################################################################################################
         # worker thread: connect the debugger server
         ################################################################################################################
-        workers_num = 2
-        worker_instances_id = []
-        worker_thread_to_send_queues = []
-        worker_thread_received_queues = []
-        for i in range(workers_num):
-            response = await websocket.recv_msg_of_connect_server()
-            response = json.loads(response)
-            assert response['type'] == 'addInstance'
-            assert response['instanceId'] != 0
-            assert response['tid'] != self.config['pid']
-            assert 'workerThread_' in response['name']
-            worker_instance_id = await websocket.get_instance()
-            worker_instances_id.append(worker_instance_id)
-            worker_thread_to_send_queues.append(websocket.to_send_msg_queues[worker_instance_id])
-            worker_thread_received_queues.append(websocket.received_msg_queues[worker_instance_id])
-            logging.info(f'Connect to the debugger server of instance: {worker_instance_id}')
+        worker_thread_1 = await self.debugger_impl.connect_to_debugger_server(self.config['pid'], False)
+        logging.info(f'Connect to the debugger server of instance: {worker_thread_1.instance_id}')
+        worker_thread_2 = await self.debugger_impl.connect_to_debugger_server(self.config['pid'], False)
+        logging.info(f'Connect to the debugger server of instance: {worker_thread_2.instance_id}')
         ################################################################################################################
         # main thread: Runtime.enable
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(main_thread_instance_id,
-                                                          main_thread_to_send_queue,
-                                                          main_thread_received_queue,
-                                                          runtime.enable(), message_id)
-        assert json.loads(response) == {"id": message_id, "result": {"protocols": []}}
+        await self.runtime_impl.send("Runtime.enable", main_thread)
         ################################################################################################################
         # worker thread: Runtime.enable
         ################################################################################################################
-        for i in range(workers_num):
-            message_id = next(self.id_generator)
-            response = await communicate_with_debugger_server(worker_instances_id[i],
-                                                              worker_thread_to_send_queues[i],
-                                                              worker_thread_received_queues[i],
-                                                              runtime.enable(), message_id)
-            assert json.loads(response) == {"id": message_id, "result": {"protocols": []}}
+        await self.runtime_impl.send("Runtime.enable", worker_thread_1)
+        await self.runtime_impl.send("Runtime.enable", worker_thread_2)
         ################################################################################################################
         # main thread: Profiler.setSamplingInterval
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(main_thread_instance_id,
-                                                          main_thread_to_send_queue,
-                                                          main_thread_received_queue,
-                                                          cpu_profiler.set_sampling_interval(500), message_id)
-        assert json.loads(response) == {"id": message_id, "result": {}}
+        params = profiler.SamplingInterval(500)
+        await self.profiler_impl.send("Profiler.setSamplingInterval", main_thread, params)
         ################################################################################################################
         # worker thread: Profiler.setSamplingInterval
         ################################################################################################################
-        for i in range(workers_num):
-            message_id = next(self.id_generator)
-            response = await communicate_with_debugger_server(worker_instances_id[i],
-                                                              worker_thread_to_send_queues[i],
-                                                              worker_thread_received_queues[i],
-                                                              cpu_profiler.set_sampling_interval(500), message_id)
-            assert json.loads(response) == {"id": message_id, "result": {}}
+        params = profiler.SamplingInterval(500)
+        await self.profiler_impl.send("Profiler.setSamplingInterval", worker_thread_1, params)
+        await self.profiler_impl.send("Profiler.setSamplingInterval", worker_thread_2, params)
         ################################################################################################################
         # main thread: Profiler.start
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(main_thread_instance_id,
-                                                          main_thread_to_send_queue,
-                                                          main_thread_received_queue,
-                                                          cpu_profiler.start(), message_id)
-        assert json.loads(response) == {"id": message_id, "result": {}}
+        await self.profiler_impl.send("Profiler.start", main_thread)
         ################################################################################################################
         # worker thread: Profiler.start
         ################################################################################################################
-        for i in range(workers_num):
-            message_id = next(self.id_generator)
-            response = await communicate_with_debugger_server(worker_instances_id[i],
-                                                              worker_thread_to_send_queues[i],
-                                                              worker_thread_received_queues[i],
-                                                              cpu_profiler.start(), message_id)
-            assert json.loads(response) == {"id": message_id, "result": {}}
+        await self.profiler_impl.send("Profiler.start", worker_thread_1)
+        await self.profiler_impl.send("Profiler.start", worker_thread_2)
         ################################################################################################################
         # main thread: Debugger.disable
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(main_thread_instance_id,
-                                                          main_thread_to_send_queue,
-                                                          main_thread_received_queue,
-                                                          debugger.disable(), message_id)
-        assert json.loads(response) == {"id": message_id, "result": {}}
+        await self.debugger_impl.send("Debugger.disable", main_thread)
         ################################################################################################################
         # worker thread: Debugger.disable
         ################################################################################################################
-        for i in range(workers_num):
-            message_id = next(self.id_generator)
-            response = await communicate_with_debugger_server(worker_instances_id[i],
-                                                              worker_thread_to_send_queues[i],
-                                                              worker_thread_received_queues[i],
-                                                              debugger.disable(), message_id)
-            assert json.loads(response) == {"id": message_id, "result": {}}
+        await self.debugger_impl.send("Debugger.disable", worker_thread_1)
+        await self.debugger_impl.send("Debugger.disable", worker_thread_2)
         ################################################################################################################
         # all thread: sleep 10 seconds
         ################################################################################################################
@@ -203,35 +146,17 @@ class TestCpuProfiler01:
         ################################################################################################################
         # main thread: Profiler.stop
         ################################################################################################################
-        message_id = next(self.id_generator)
-        response = await communicate_with_debugger_server(main_thread_instance_id,
-                                                          main_thread_to_send_queue,
-                                                          main_thread_received_queue,
-                                                          cpu_profiler.stop(), message_id)
-        response = json.loads(response)
-        assert response['id'] == message_id
-        assert all(i >= 0 for i in response['result']['profile']['timeDeltas'])
+        await self.profiler_impl.send("Profiler.stop", main_thread)
         ################################################################################################################
         # worker thread: Profiler.stop
         ################################################################################################################
-        for i in range(workers_num):
-            message_id = next(self.id_generator)
-            response = await communicate_with_debugger_server(worker_instances_id[i],
-                                                              worker_thread_to_send_queues[i],
-                                                              worker_thread_received_queues[i],
-                                                              cpu_profiler.stop(), message_id)
-            response = json.loads(response)
-            assert response['id'] == message_id
-            assert all(i >= 0 for i in response['result']['profile']['timeDeltas'])
-        ################################################################################################################
-        # worker thread: destroy instance
-        ################################################################################################################
-        for i in range(workers_num):
-            await websocket.send_msg_to_debugger_server(worker_instances_id[i],
-                                                        worker_thread_to_send_queues[i], 'close')
+        await self.profiler_impl.send("Profiler.stop", worker_thread_1)
+        await self.profiler_impl.send("Profiler.stop", worker_thread_2)
         ################################################################################################################
         # close the websocket connections
         ################################################################################################################
-        await websocket.send_msg_to_debugger_server(main_thread_instance_id, main_thread_to_send_queue, 'close')
+        await websocket.send_msg_to_debugger_server(worker_thread_1.instance_id, worker_thread_1.send_msg_queue, 'close')
+        await websocket.send_msg_to_debugger_server(worker_thread_2.instance_id, worker_thread_2.send_msg_queue, 'close')
+        await websocket.send_msg_to_debugger_server(main_thread.instance_id, main_thread.send_msg_queue, 'close')
         await websocket.send_msg_to_connect_server('close')
         ################################################################################################################
