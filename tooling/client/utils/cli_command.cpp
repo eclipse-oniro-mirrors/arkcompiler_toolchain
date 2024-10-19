@@ -26,7 +26,6 @@
 #include "tooling/client/manager/stack_manager.h"
 #include "tooling/client/manager/variable_manager.h"
 #include "tooling/client/session/session.h"
-#include "tooling/client/utils/utils.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 const std::string HELP_MSG = "usage: <command> <options>\n"

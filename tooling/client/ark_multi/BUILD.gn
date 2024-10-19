@@ -14,7 +14,10 @@
 import("//arkcompiler/toolchain/toolchain.gni")
 
 ohos_executable("ark_multi") {
-  sources = [ "main.cpp" ]
+  sources = [
+    "../../utils/utils.cpp",
+    "main.cpp",
+  ]
 
   include_dirs = [
     "./",
