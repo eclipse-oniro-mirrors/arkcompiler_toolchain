@@ -35,7 +35,11 @@ if (check_darwin_system_result != "") {
 }
 
 if (host_os == "linux") {
-  host_platform_dir = "linux-x86_64"
+  if (host_cpu == "arm64") {
+    host_platform_dir = "linux-aarch64"
+  } else {
+    host_platform_dir = "linux-x86_64"
+  }
 } else if (host_os == "mac") {
   if (host_cpu == "arm64") {
     host_platform_dir = "darwin-arm64"

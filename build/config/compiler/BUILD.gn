@@ -412,7 +412,7 @@ config("compiler_cpu_abi") {
       if (is_clang && (is_ohos || is_android)) {
         ldflags += [ "-Wl,--hash-style=gnu" ]
       }
-      if (!is_android) {
+      if (!is_android && !is_clang) {
         cflags += [
           "-march=$arm_arch",
           "-mfloat-abi=$arm_float_abi",
