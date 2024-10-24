@@ -22,11 +22,14 @@
 #include "common/macros.h"
 
 #include "tooling/base/pt_json.h"
+#include "tooling/utils/utils.h"
 
 #include "ecmascript/debugger/debugger_api.h"
 #include "ecmascript/dfx/cpu_profiler/samples_record.h"
 #include "ecmascript/dfx/hprof/heap_sampling.h"
 #include "libpandabase/macros.h"
+
+using ToolchainUtils = OHOS::ArkCompiler::Toolchain::Utils;
 
 namespace panda::ecmascript::tooling {
 // ========== Base types begin
@@ -71,8 +74,12 @@ struct BreakpointDetails {
         std::string lineStr = id.substr(lineStart + 1, columnStart - lineStart - 1);
         std::string columnStr = id.substr(columnStart + 1, urlStart - columnStart - 1);
         std::string url = id.substr(urlStart + 1);
-        metaData->line_ = std::stoi(lineStr);
-        metaData->column_ = std::stoi(columnStr);
+        if (!ToolchainUtils::StrToInt32(lineStr, metaData->line_)) {
+            return false;
+        }
+        if (!ToolchainUtils::StrToInt32(columnStr, metaData->column_)) {
+            return false;
+        }
         metaData->url_ = url;
 
         return true;

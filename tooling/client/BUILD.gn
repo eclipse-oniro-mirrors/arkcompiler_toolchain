@@ -28,6 +28,7 @@ ohos_source_set("libark_client_set") {
   ]
 
   sources = [
+    "../utils/utils.cpp",
     "domain/debugger_client.cpp",
     "domain/heapprofiler_client.cpp",
     "domain/profiler_client.cpp",
@@ -42,7 +43,6 @@ ohos_source_set("libark_client_set") {
     "session/session.cpp",
     "tcpServer/tcp_server.cpp",
     "utils/cli_command.cpp",
-    "utils/utils.cpp",
   ]
 
   deps += [
