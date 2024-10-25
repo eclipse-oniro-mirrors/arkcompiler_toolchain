@@ -48,6 +48,28 @@
           "unzip_filename": "llvm"
         }
       ]
+    },
+    "aarch64": {
+      "copy_config": [
+        {
+          "unzip_dir": "prebuilts/build-tools/linux-aarch64/bin",
+          "unzip_filename": "gn"
+        },
+        {
+          "unzip_dir": "prebuilts/build-tools/linux-aarch64/bin",
+          "unzip_filename": "ninja"
+        },
+        {
+          "unzip_dir": "prebuilts/ark_tools",
+          "unzip_filename": "ark_js_prebuilts"
+        }
+      ],
+      "linux_copy_config": [
+        {
+          "unzip_dir": "prebuilts/clang/ohos/linux-aarch64",
+          "unzip_filename": "llvm"
+        }
+      ]
     }
   },
   "darwin": {
