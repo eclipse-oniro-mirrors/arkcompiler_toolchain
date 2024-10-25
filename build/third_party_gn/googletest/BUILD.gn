@@ -36,7 +36,7 @@ config("gtest_config") {
     "-Wno-reorder-init-list",
   ]
   if (is_mingw) {
-    cflags_cc = [
+    cflags_cc += [
       "-Wno-unused-const-variable",
       "-Wno-unused-private-field",
     ]
