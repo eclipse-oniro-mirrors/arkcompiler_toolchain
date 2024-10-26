@@ -874,9 +874,11 @@ class ArkPy:
     def build_for_suite(self, *, test_suite, test_script_name, test_script_path,
                         out_path, gn_args: list, log_file_name, args_to_cmd: str, timeout,
                         run_jit: bool = False, run_baseline_jit: bool = False, aot_mode: bool = False,
-                        run_pgo: bool = False, enable_litecg: bool = False, ignore_list: Optional[str] = None):
+                        run_pgo: bool = False, enable_litecg: bool = False, ignore_list: Optional[str] = None,
+                        skip_compiler: bool = False):
         x64_out_path = self.__get_x64_out_path(out_path)
-        self.call_build_gn_target(gn_args, out_path, x64_out_path, test_suite, log_file_name)
+        if not skip_compiler:
+            self.call_build_gn_target(gn_args, out_path, x64_out_path, test_suite, log_file_name)
         cmd = self.get_build_cmd(
             test_suite=test_suite,
             test_script_name=test_script_name,
@@ -909,6 +911,7 @@ class ArkPy:
         is_litecg, arg_list = self.__purge_arg_list("--litecg", arg_list)
         is_jit, arg_list = self.__purge_arg_list("--jit", arg_list)
         is_baseline_jit, arg_list = self.__purge_arg_list("--baseline-jit", arg_list)
+        is_skip_compiler, arg_list = self.__purge_arg_list("--skip-compiler", arg_list)
         print(f"Test262: arg_list = {arg_list}")
 
         args_to_test262_cmd = self.build_args_to_test262_cmd(arg_list)
@@ -925,7 +928,8 @@ class ArkPy:
             run_pgo=is_pgo,
             run_baseline_jit=is_baseline_jit,
             aot_mode=is_aot_mode,
-            enable_litecg=is_litecg
+            enable_litecg=is_litecg,
+            skip_compiler=is_skip_compiler
         )
 
     def build_for_unittest(self, out_path: str, gn_args: list, log_file_name: str):
@@ -945,6 +949,7 @@ class ArkPy:
         is_litecg, arg_list = self.__purge_arg_list("--litecg", arg_list)
         is_jit, arg_list = self.__purge_arg_list("--jit", arg_list)
         is_baseline_jit, arg_list = self.__purge_arg_list("--baseline-jit", arg_list)
+        is_skip_compiler, arg_list = self.__purge_arg_list("--skip-compiler", arg_list)
         print(f"Regress: arg_list = {arg_list}")
 
         args_to_regress_test_cmd = self.build_args_to_regress_cmd(arg_list)
@@ -962,7 +967,8 @@ class ArkPy:
             run_baseline_jit=is_baseline_jit,
             aot_mode=is_aot,
             enable_litecg=is_litecg,
-            ignore_list=ignore_list
+            ignore_list=ignore_list,
+            skip_compiler=is_skip_compiler
         )
 
     def build(self, out_path: str, gn_args: list, arg_list: list):
