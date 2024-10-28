@@ -92,6 +92,7 @@ class ArkPy:
     DELIMITER_FOR_SECOND_OUT_DIR_NAME = "."
     GN_TARGET_LOG_FILE_NAME = "build.log"
     UNITTEST_LOG_FILE_NAME = "unittest.log"
+    RUNTIME_CORE_UNITTEST_LOG_FILE_NAME = "runtime_core_unittest.log"
     TEST262_LOG_FILE_NAME = "test262.log"
     REGRESS_TEST_LOG_FILE_NAME = "regresstest.log"
     PREBUILTS_DOWNLOAD_CONFIG_FILE_PATH = \
@@ -209,6 +210,13 @@ class ArkPy:
                     "Add --gn-args=\"run_with_qemu=true\" timeout=\"1200\"\
                     \"disable_force_gc=true\" to command when running unittest of non-host type with qemu.",
                 "gn_targets_depend_on": ["unittest_packages"],
+            },
+            "runtime_core_unittest": {
+                "flags": ["runtime_core_unittest"],
+                "description":
+                    "Compile and run runtime_core_unittest of arkcompiler target. "
+                    "Add --keep-going=N to keep running runtime_core_unittest when errors occured less than N. ",
+                "gn_targets_depend_on": ["runtime_core_unittest_packages"],
             },
             "workload": {
                 "flags": ["workload", "work-load", "work_load"],
@@ -531,6 +539,8 @@ class ArkPy:
                 args_to_test262_cmd.append("--sendable sendable")
             elif ".js" in arg:
                 args_to_test262_cmd.append("--file test262/data/test_es2021/{}".format(arg))
+            elif "--abc2program" in arg:
+                args_to_test262_cmd.append("--abc2program --es2021 all")
             else:
                 args_to_test262_cmd.append("--dir test262/data/test_es2021/{}".format(arg))
         else:
@@ -743,6 +753,7 @@ class ArkPy:
             "  python3 ark.py \033[92m[os_cpu].[mode] [test262] [none or --baseline-jit] [none or --enable-rm] " \
             "[none or --threads=X and/or --test-list TEST_LIST_NAME]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [unittest] [option]\033[0m\n"
+            "  python3 ark.py \033[92m[os_cpu].[mode] [runtime_core_unittest] [option]\033[0m\n"
             "  python3 ark.py \033[92m[os_cpu].[mode] [regresstest] [none, file or dir] " \
               "[none or --processes X and/or --test-list TEST_LIST_NAME]\033[0m\n")
         # Command examples
@@ -760,6 +771,7 @@ class ArkPy:
             "  python3 ark.py \033[92mx64.release test262 built-ins/Array\033[0m\n"
             "  python3 ark.py \033[92mx64.release test262 built-ins/Array/name.js\033[0m\n"
             "  python3 ark.py \033[92mx64.release unittest\033[0m\n"
+            "  python3 ark.py \033[92mx64.release runtime_core_unittest\033[0m\n"
             "  python3 ark.py \033[92mx64.release regresstest\033[0m\n"
             "  python3 ark.py \033[92mx64.release regresstest --processes=4\033[0m\n"
             "  python3 ark.py \033[92mx64.release workload\033[0m\n"
@@ -938,6 +950,11 @@ class ArkPy:
             log_file_name)
         return
 
+    def build_for_runtime_core_unittest(self, out_path: str, gn_args: list, log_file_name: str):
+        runtime_core_ut_depend = self.ARG_DICT.get("target").get("runtime_core_unittest").get("gn_targets_depend_on")
+        self.build_for_gn_target(out_path, gn_args, runtime_core_ut_depend, log_file_name)
+        return
+
     def build_for_regress_test(self, out_path, gn_args: list, arg_list: list):
         timeout, arg_list = self.parse_option(arg_list, option_name="--timeout", default_value=200)
         ignore_list, arg_list = self.parse_option(arg_list, option_name="--ignore-list", default_value=None)
@@ -986,6 +1003,11 @@ class ArkPy:
                 print("\033[92m\"unittest\" not support additional arguments.\033[0m\n".format())
                 sys.exit(0)
             self.build_for_unittest(out_path, gn_args, self.UNITTEST_LOG_FILE_NAME)
+        elif self.is_dict_flags_match_arg(self.ARG_DICT.get("target").get("runtime_core_unittest"), arg_list[0]):
+            if len(arg_list) > 1:
+                print("\033[92m\"runtime_core_unittest\" not support additional arguments.\033[0m\n".format())
+                sys.exit(0)
+            self.build_for_runtime_core_unittest(out_path, gn_args, self.RUNTIME_CORE_UNITTEST_LOG_FILE_NAME)
         elif self.is_dict_flags_match_arg(self.ARG_DICT.get("target").get("regresstest"), arg_list[0]):
             self.build_for_regress_test(out_path, gn_args, arg_list)
         else:

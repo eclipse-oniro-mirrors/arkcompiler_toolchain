@@ -40,6 +40,11 @@ group("unittest_packages") {
   deps = [ "$toolchain_root:ark_js_host_unittest" ]
 }
 
+group("runtime_core_unittest_packages") {
+  testonly = true
+  deps = [ "$toolchain_root:runtime_core_host_ut" ]
+}
+
 group("ets_runtime") {
   deps = [
     "$js_root:libark_jsruntime",
