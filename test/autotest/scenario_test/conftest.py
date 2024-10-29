@@ -22,7 +22,7 @@ import os
 
 import pytest
 
-from aw import Application, Fport, WebSocket, TaskPool
+from aw import Application, Fport, WebSocket, TaskPool, Utils
 
 
 @pytest.fixture(scope='class')
@@ -130,6 +130,58 @@ def test_suite_taskpool_01_debug():
         }
     }
     launch_hap(config)
+    return config
+
+
+@pytest.fixture(scope='class')
+def test_suite_hotreload_har_hsp_01():
+    logging.info('running application HotReloadHarHsp01')
+    config = {
+        'bundle_name': 'com.example.HotReloadHarHsp01',
+        'hap_dir': rf'{os.path.dirname(__file__)}\..\resource\HotReloadHarHsp01',
+        'hap_entry_name': 'HotReloadHarHsp01.hap',
+        'hsp_discovery_name': 'HspDiscovery.hsp',
+
+        'local_hqf_entry_path': rf'{os.path.dirname(__file__)}\..\resource\HotReloadHarHsp01.hqf',
+        'remote_hqf_entry_path': '/data/HotReloadHarHsp01.hqf',
+        'hqf_entry_name': 'HotReloadHarHsp01.hqf',
+
+        'local_hqf_discovery_path': rf'{os.path.dirname(__file__)}\..\resource\HspDiscovery.hqf',
+        'remote_hqf_discovery_path': '/data/HspDiscovery.hqf',
+        'hqf_discovery_name': 'HspDiscovery.hap',
+    }
+    pid = Application.launch_application(config['bundle_name'], config['hap_dir'])
+    assert pid != 0, logging.error(f'Pid of {config["bundle_name"]} is 0!')
+    config['pid'] = pid
+    return config
+
+
+@pytest.fixture(scope='class')
+def test_suite_hotreload_pages_01():
+    logging.info('running application HotReloadPages01')
+    config = {
+        'bundle_name': 'com.example.HotReloadPages01',
+        'hap_path': rf'{os.path.dirname(__file__)}\..\resource\HotReloadPages01.hap',
+
+        'hqf_01_name': 'HotReloadPages01.01.hqf',
+        'local_hqf_01_path': rf'{os.path.dirname(__file__)}\..\resource\HotReloadPages01.01.hqf',
+        'remote_hqf_01_path': '/data/HotReloadPages01.01.hqf',
+
+        'hqf_02_name': 'HotReloadPages01.02.hqf',
+        'local_hqf_02_path': rf'{os.path.dirname(__file__)}\..\resource\HotReloadPages01.02.hqf',
+        'remote_hqf_02_path': '/data/HotReloadPages01.02.hqf',
+
+        'hqf_03_name': 'HotReloadPages01.03.hqf',
+        'local_hqf_03_path': rf'{os.path.dirname(__file__)}\..\resource\HotReloadPages01.03.hqf',
+        'remote_hqf_03_path': '/data/HotReloadPages01.03.hqf',
+
+        'hqf_04_name': 'HotReloadPages01.04.hqf',
+        'local_hqf_04_path': rf'{os.path.dirname(__file__)}\..\resource\HotReloadPages01.04.hqf',
+        'remote_hqf_04_path': '/data/HotReloadPages01.04.hqf',
+    }
+    pid = Application.launch_application(config['bundle_name'], config['hap_path'])
+    assert pid != 0, logging.error(f'Pid of {config["bundle_name"]} is 0!')
+    config['pid'] = pid
     return config
 
 

@@ -42,7 +42,7 @@ class Application(object):
 
     @classmethod
     def install(cls, hap_path):
-        install_cmd = ['hdc', 'install', '-r', hap_path]
+        install_cmd = ['hdc', 'install', '-p', hap_path]
         logging.info('install application: ' + ' '.join(install_cmd))
         install_result = subprocess.run(install_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         logging.info(install_result.stdout)
@@ -65,7 +65,7 @@ class Application(object):
         for line in ps_result_out.strip().split('\r\n'):
             if bundle_name in line:
                 logging.info(f'pid of {bundle_name}: ' + line)
-                return line.strip().split()[1]
+                return int(line.strip().split()[1])
         return 0
 
     @classmethod
@@ -89,9 +89,9 @@ class Application(object):
 
     @classmethod
     def click_on_middle(cls):
-        '''
-        模拟点击屏幕中间
-        '''
+        """
+        Simulate clicking the center of the screen
+        """
         get_screen_info_cmd = ['hdc', 'shell', 'hidumper', '-s', 'RenderService', '-a', 'screen']
         screen_info = subprocess.run(get_screen_info_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         match = re.search(r'physical screen resolution: (\d+)x(\d+)', screen_info.stdout.decode('utf-8'))
@@ -106,9 +106,28 @@ class Application(object):
         assert "click coordinate" in click_result_out
 
     @classmethod
+    def back(cls):
+        """
+        Simulate the back button to return to the previous step
+        """
+        cmd = ['hdc', 'shell', 'uitest', 'uiInput', 'keyEvent', 'Back']
+        logging.info('click the back button: ' + ' '.join(cmd))
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        logging.info(result.stdout.strip())
+        assert result.stdout.decode('utf-8').strip() == 'No Error'
+
+    @classmethod
     def keep_awake(cls):
         keep_awake_cmd = ['hdc', 'shell', 'power-shell', 'setmode', '602']
         keep_awake_result = subprocess.run(keep_awake_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         keep_awake_result_out = keep_awake_result.stdout.decode('utf-8').strip()
         logging.info(keep_awake_result_out)
         assert "Set Mode Success!" in keep_awake_result_out
+
+    @classmethod
+    def hot_reload(cls, hqf_path):
+        cmd = ['hdc', 'shell', 'bm', 'quickfix', '-a', '-f', hqf_path]
+        logging.info('hot reload: ' + ' '.join(cmd))
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        logging.info(result.stdout.strip())
+        assert result.stdout.decode('utf-8').strip() == 'apply quickfix succeed.'
