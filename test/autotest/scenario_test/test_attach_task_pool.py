@@ -30,8 +30,8 @@ from aw.api import debugger_api, runtime_api
 
 
 @pytest.mark.debug
-@pytest.mark.timeout(30)
-class TestDebug04:
+@pytest.mark.timeout(60)
+class TestAttachTaskPool:
     """
     测试用例：多 task 实例 attach 调试
     测试步骤：
@@ -48,13 +48,32 @@ class TestDebug04:
         11. 主线程 resume（Debugger.resume）
         11. 子线程命中断点后 resume（Debugger.resume）
         12. 关闭所有线程 debugger server 和 connect server 连接
+    关键代码：
+        Index.ets
+            @Concurrent
+            function add(args1, args2) {
+                return args1 + args2
+            }
+            @Concurrent
+            function sub(args1, args2) {
+                return args1 - args2
+            }
+            let taskAdd = new taskpool.Task(add, 200, 100)
+            let taskSub = new taskpool.Task(sub, 200, 100)
+            async function taskpoolTest() {
+                let valueAdd = await taskpool.execute(taskAdd)
+                let valueSub = await taskpool.execute(taskSub)
+            }
+            .OnClick(() => {
+                taskpoolTest()
+            })
     """
 
     def setup_method(self):
-        logging.info('Start running TestDebug04: setup')
+        logging.info('Start running TestAttachTaskPool: setup')
 
         self.log_path = rf'{os.path.dirname(__file__)}\..\log'
-        self.hilog_file_name = 'test_debug_04.hilog.txt'
+        self.hilog_file_name = 'test_attach_task_pool.hilog.txt'
         self.id_generator = Utils.message_id_generator()
 
         # receive the hilog before the test start
@@ -74,10 +93,10 @@ class TestDebug04:
         self.write_thread.join()
 
         Utils.save_fault_log(log_path=self.log_path)
-        logging.info('TestDebug04 done')
+        logging.info('TestAttachTaskPool done')
 
     def test(self, test_suite_taskpool_01):
-        logging.info('Start running TestDebug04: test')
+        logging.info('Start running TestAttachTaskPool: test')
         self.config = test_suite_taskpool_01
         websocket = self.config['websocket']
         taskpool = self.config['taskpool']

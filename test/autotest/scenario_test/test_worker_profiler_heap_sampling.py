@@ -23,36 +23,33 @@ import time
 
 import pytest
 
-from aw import Utils
 from aw import Application
-from aw import profiler
-from aw.api import debugger_api, runtime_api, profiler_api
+from aw import Utils
+from aw.api import debugger_api, runtime_api, heap_profiler_api
 
 
-@pytest.mark.cpu_profiler
-@pytest.mark.timeout(40)
-class TestCpuProfiler02:
+@pytest.mark.heap_profiler
+@pytest.mark.timeout(80)
+class TestWorkerProfilerHeapSampling:
     """
-    测试用例：多实例 CPU 调优 Launch 录制
+    测试用例：多实例内存调优 HeapSampling 录制
     测试步骤：
-        1. -p 模式启动应用
+        1.  拉起应用，attach 主线程
         2.  连接 connect server 和主线程 debugger server
         3.  连接 worker 线程 debugger server
-        4.  worker 线程使能 Runtime（Runtime.enable）
-        5.  worker 线程设置采样间隔（Profiler.setSamplingInterval）
-        6.  worker 线程启动 CPU 调试（Profiler.start）
-        7.  worker 线程去使能 Debugger（Debugger.disable）
-        8.  等待 10 秒后关闭 worker 线程 CPU 调优，获取 worker 线程调优数据（Profiler.stop）
-        9.  销毁 worker 线程，对应的 debugger server 连接断开
-        10. 关闭主线程 CPU 调优，获取主线程调优数据（Profiler.stop）
-        11. 关闭主线程 debugger server 和 connect server 连接
+        4.  所有线程使能 Runtime（Runtime.enable）
+        5.  所有线程去使能 Debugger（Debugger.disable）
+        6.  所有线程开启内存采样（HeapProfiler.startSampling）
+        7.  等待 10 秒后，所有线程结束内存采样，获取数据（HeapProfiler.stopSampling）
+        8.  销毁 worker 线程，对应的 debugger server 连接断开
+        9.  关闭主线程 debugger server 和 connect server 连接
     """
 
     def setup_method(self):
-        logging.info('Start running TestCpuProfiler02: setup')
+        logging.info('Start running TestWorkerProfilerHeapSampling: setup')
 
         self.log_path = rf'{os.path.dirname(__file__)}\..\log'
-        self.hilog_file_name = 'test_cpu_profiler_02.hilog.txt'
+        self.hilog_file_name = 'test_worker_profiler_heap_sampling.hilog.txt'
         self.id_generator = Utils.message_id_generator()
 
         # receive the hilog before the test start
@@ -72,18 +69,19 @@ class TestCpuProfiler02:
         self.write_thread.join()
 
         Utils.save_fault_log(log_path=self.log_path)
-        logging.info('TestCpuProfiler02 done')
+        logging.info('TestWorkerProfilerHeapSampling done')
 
-    def test(self, test_suite_worker_02_profile):
-        logging.info('Start running TestCpuProfiler02: test')
-        self.config = test_suite_worker_02_profile
+    def test(self, test_suite_worker_02):
+        logging.info('Start running TestWorkerProfilerHeapSampling: test')
+        self.config = test_suite_worker_02
         websocket = self.config['websocket']
         taskpool = self.config['taskpool']
         pid = self.config['pid']
         self.debugger_impl = debugger_api.DebuggerImpl(self.id_generator, websocket)
         self.runtime_impl = runtime_api.RuntimeImpl(self.id_generator, websocket)
-        self.profiler_impl = profiler_api.ProfilerImpl(self.id_generator, websocket)
+        self.heap_profiler_impl = heap_profiler_api.HeapProfilerImpl(self.id_generator, websocket)
 
+        Application.attach(self.config['bundle_name'])
         taskpool.submit(websocket.main_task(taskpool, self.procedure, pid))
         taskpool.await_taskpool()
         taskpool.task_join()
@@ -104,44 +102,55 @@ class TestCpuProfiler02:
         worker_thread_2 = await self.debugger_impl.connect_to_debugger_server(self.config['pid'], False)
         logging.info(f'Connect to the debugger server of instance: {worker_thread_2.instance_id}')
         ################################################################################################################
+        # main thread: Runtime.enable
+        ################################################################################################################
+        await self.runtime_impl.send("Runtime.enable", main_thread)
+        ################################################################################################################
         # worker thread: Runtime.enable
         ################################################################################################################
         await self.runtime_impl.send("Runtime.enable", worker_thread_1)
         await self.runtime_impl.send("Runtime.enable", worker_thread_2)
         ################################################################################################################
-        # worker thread: Profiler.setSamplingInterval
+        # main thread: Debugger.disable
         ################################################################################################################
-        params = profiler.SamplingInterval(500)
-        await self.profiler_impl.send("Profiler.setSamplingInterval", worker_thread_1, params)
-        await self.profiler_impl.send("Profiler.setSamplingInterval", worker_thread_2, params)
-        ################################################################################################################
-        # worker thread: Profiler.start
-        ################################################################################################################
-        await self.profiler_impl.send("Profiler.start", worker_thread_1)
-        await self.profiler_impl.send("Profiler.start", worker_thread_2)
+        await self.debugger_impl.send("Debugger.disable", main_thread)
         ################################################################################################################
         # worker thread: Debugger.disable
         ################################################################################################################
         await self.debugger_impl.send("Debugger.disable", worker_thread_1)
         await self.debugger_impl.send("Debugger.disable", worker_thread_2)
         ################################################################################################################
+        # main thread: HeapProfiler.startSampling
+        ################################################################################################################
+        await self.heap_profiler_impl.send("HeapProfiler.startSampling", main_thread)
+        ################################################################################################################
+        # worker thread: HeapProfiler.startSampling
+        ################################################################################################################
+        await self.heap_profiler_impl.send("HeapProfiler.startSampling", worker_thread_1)
+        await self.heap_profiler_impl.send("HeapProfiler.startSampling", worker_thread_2)
+        ################################################################################################################
         # all thread: sleep 10 seconds
         ################################################################################################################
         time.sleep(10)
         ################################################################################################################
-        # worker thread: Profiler.stop
+        # main thread: HeapProfiler.stopSampling
         ################################################################################################################
-        await self.profiler_impl.send("Profiler.stop", worker_thread_1)
-        await self.profiler_impl.send("Profiler.stop", worker_thread_2)
+        response = await self.heap_profiler_impl.send("HeapProfiler.stopSampling", main_thread)
+        assert response['result']['profile'] is not None
         ################################################################################################################
-        # main thread: Profiler.stop 
+        # worker thread: HeapProfiler.stopSampling
         ################################################################################################################
-        await self.profiler_impl.send("Profiler.stop", main_thread)
+        response = await self.heap_profiler_impl.send("HeapProfiler.stopSampling", worker_thread_1)
+        assert response['result']['profile'] is not None
+        response = await self.heap_profiler_impl.send("HeapProfiler.stopSampling", worker_thread_2)
+        assert response['result']['profile'] is not None
         ################################################################################################################
         # close the websocket connections
         ################################################################################################################
-        await websocket.send_msg_to_debugger_server(worker_thread_1.instance_id, worker_thread_1.send_msg_queue, 'close')
-        await websocket.send_msg_to_debugger_server(worker_thread_2.instance_id, worker_thread_2.send_msg_queue, 'close')
+        await websocket.send_msg_to_debugger_server(worker_thread_1.instance_id, worker_thread_1.send_msg_queue,
+                                                    'close')
+        await websocket.send_msg_to_debugger_server(worker_thread_2.instance_id, worker_thread_2.send_msg_queue,
+                                                    'close')
         await websocket.send_msg_to_debugger_server(main_thread.instance_id, main_thread.send_msg_queue, 'close')
         await websocket.send_msg_to_connect_server('close')
         ################################################################################################################

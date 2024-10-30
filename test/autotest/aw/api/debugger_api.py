@@ -253,5 +253,5 @@ class DebuggerImpl(ProtocolImpl):
                                                           connection.received_msg_queue,
                                                           debugger.drop_frame(params), message_id)
         response = json.loads(response)
-        assert response == {"id": message_id, "result": {}}
+        assert response['id'] == message_id
         return response

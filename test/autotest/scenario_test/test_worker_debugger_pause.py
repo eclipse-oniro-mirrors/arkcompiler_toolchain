@@ -25,37 +25,52 @@ import pytest
 
 from aw import Application
 from aw import Utils
-from aw import debugger, runtime
 from aw.api import debugger_api, runtime_api
 
 
 @pytest.mark.debug
-@pytest.mark.timeout(30)
-class TestDebug03:
+@pytest.mark.timeout(60)
+class TestWorkerDebuggerPause:
     """
-    测试用例：多 task 实例 debug 调试
+    测试用例：多实例 debug 暂停恢复调试
     测试步骤：
         1.  连接 connect server 和主线程 debugger server
         2.  主线程使能 Runtime 和 Debugger
-        3.  连接子线程 debugger server，用于执行 task 任务
-        4.  子线程使能 Runtime 和 Debugger
-        5.  主线程 Index.ts 文件设置断点（Debugger.getPossibleAndSetBreakpointByUrl）
-        6.  触发点击事件，主线程命中断点
-        7.  子线程 Index.ts 文件设置断点（Debugger.getPossibleAndSetBreakpointByUrl）
-        8.  子线程 resume，命中断点（Debugger.resume）
-        9.  子线程 getProperties，返回给定对象的属性（Runtime.getProperties）
-        10. 子线程 stepOut，主线程命中断点（Debugger.stepOut）
-        11. 主线程 getProperties（Runtime.getProperties）
-        12. 主线程 resume（Debugger.resume）
-        13. 子线程命中断点后 resume（Debugger.resume）
+        3.  主线程 resume（Debugger.resume）
+        4.  触发点击事件，创建子线程，连接子线程 debugger server
+        5.  子线程使能 Runtime 和 Debugger
+        6.  子线程 resume，停在 debugger代码处（Debugger.resume）
+        7.  子线程 resume，所有线程等待2秒（Debugger.resume）
+        8.  暂停子线程（Debugger.pause）
+        9.  再次恢复子线程（Debugger.resume）
+        10. 子线程去使能 debugger（Debugger.disable）
+        11. 暂停主线程（Debugger.pause）
+        12. 再次恢复主线程（Debugger.resume）
+        13. 主线程去使能 debugger（Debugger.disable）
         14. 关闭所有线程 debugger server 和 connect server 连接
+    关键代码：
+        Index.ets
+            .OnClick(() => {
+                let myWorker = new worker.ThreadWorker("entry/ets/workers/Worker.ets")
+                myWorker.postMessage("hello world")
+                const start = Date.now()
+                while (Date.now() - start < 10000) {}
+            })
+        Worker.ets
+            const workerPort: ThreadWorkerGlobalScope = worker.workerPort;
+            workerPort.onmessage = (e: MessageEvents) => {
+                workerPort.postMessage(e.data)
+                debugger
+                const start = Date.now()
+                while (Date.now() - start < 10000) {}
+            }
     """
 
     def setup_method(self):
-        logging.info('Start running TestDebug03: setup')
+        logging.info('Start running TestWorkerDebuggerPause: setup')
 
         self.log_path = rf'{os.path.dirname(__file__)}\..\log'
-        self.hilog_file_name = 'test_debug_03.hilog.txt'
+        self.hilog_file_name = 'test_worker_debugger_pause.hilog.txt'
         self.id_generator = Utils.message_id_generator()
 
         # receive the hilog before the test start
@@ -75,11 +90,11 @@ class TestDebug03:
         self.write_thread.join()
 
         Utils.save_fault_log(log_path=self.log_path)
-        logging.info('TestDebug03 done')
+        logging.info('TestWorkerDebuggerPause done')
 
-    def test(self, test_suite_taskpool_01_debug):
-        logging.info('Start running TestDebug03: test')
-        self.config = test_suite_taskpool_01_debug
+    def test(self, test_suite_worker_05_debug):
+        logging.info('Start running TestWorkerDebuggerPause: test')
+        self.config = test_suite_worker_05_debug
         websocket = self.config['websocket']
         taskpool = self.config['taskpool']
         pid = self.config['pid']
@@ -143,6 +158,10 @@ class TestDebug03:
         ################################################################################################################
         await self.debugger_impl.send("Debugger.resume", main_thread)
         ################################################################################################################
+        # main thread: click on the screen
+        ################################################################################################################
+        Application.click_on_middle()
+        ################################################################################################################
         # worker thread: connect the debugger server
         ################################################################################################################
         worker_thread = await self.debugger_impl.connect_to_debugger_server(self.config['pid'], False)
@@ -159,102 +178,40 @@ class TestDebug03:
         # worker thread: Runtime.runIfWaitingForDebugger
         ################################################################################################################
         await self.runtime_impl.send("Runtime.runIfWaitingForDebugger", worker_thread)
-        ################################################################################################################
-        # main thread: Debugger.removeBreakpointsByUrl
-        ################################################################################################################
-        params = debugger.RemoveBreakpointsUrl(self.config['file_path']['index'])
-        await self.debugger_impl.send("Debugger.removeBreakpointsByUrl", main_thread, params)
-        ################################################################################################################
-        # main thread: Debugger.getPossibleAndSetBreakpointByUrl
-        ################################################################################################################
-        locations = [debugger.BreakLocationUrl(url=self.config['file_path']['index'], line_number=10),
-                     debugger.BreakLocationUrl(url=self.config['file_path']['index'], line_number=17),
-                     debugger.BreakLocationUrl(url=self.config['file_path']['index'], line_number=25)]
-        params = debugger.SetBreakpointsLocations(locations)
-        response = await self.debugger_impl.send("Debugger.getPossibleAndSetBreakpointsByUrl",
-                                                 main_thread, params)
-        assert response['result']['locations'][0]['id'] == 'id:10:0:' + self.config['file_path']['index']
-        assert response['result']['locations'][1]['id'] == 'id:17:0:' + self.config['file_path']['index']
-        assert response['result']['locations'][2]['id'] == 'id:25:0:' + self.config['file_path']['index']
-        ################################################################################################################
-        # main thread: click on the screen
-        ################################################################################################################
-        Application.click_on_middle()
-        ################################################################################################################
         # worker thread: Debugger.scriptParsed
-        ################################################################################################################
         response = await self.debugger_impl.recv("Debugger.scriptParsed", worker_thread)
-        assert response['params']['url'] == self.config['file_path']['index']
+        assert response['params']['url'] == self.config['file_path']['worker']
         assert response['params']['endLine'] == 0
         # worker thread: Debugger.paused
         response = await self.debugger_impl.recv("Debugger.paused", worker_thread)
-        assert response['params']['callFrames'][0]['url'] == self.config['file_path']['index']
+        assert response['params']['callFrames'][0]['url'] == self.config['file_path']['worker']
         assert response['params']['reason'] == 'Break on start'
-        ################################################################################################################
-        # worker thread: Debugger.removeBreakpointsByUrl
-        ################################################################################################################
-        params = debugger.RemoveBreakpointsUrl(self.config['file_path']['index'])
-        await self.debugger_impl.send("Debugger.removeBreakpointsByUrl", worker_thread, params)
-        ################################################################################################################
-        # worker thread: Debugger.getPossibleAndSetBreakpointByUrl
-        ################################################################################################################
-        locations = [debugger.BreakLocationUrl(url=self.config['file_path']['index'], line_number=10),
-                     debugger.BreakLocationUrl(url=self.config['file_path']['index'], line_number=17),
-                     debugger.BreakLocationUrl(url=self.config['file_path']['index'], line_number=25)]
-        params = debugger.SetBreakpointsLocations(locations)
-        response = await self.debugger_impl.send("Debugger.getPossibleAndSetBreakpointsByUrl",
-                                                 worker_thread, params)
-        assert response['result']['locations'][0]['id'] == 'id:10:0:' + self.config['file_path']['index']
-        assert response['result']['locations'][1]['id'] == 'id:17:0:' + self.config['file_path']['index']
-        assert response['result']['locations'][2]['id'] == 'id:25:0:' + self.config['file_path']['index']
         ################################################################################################################
         # worker thread: Debugger.resume
         ################################################################################################################
         await self.debugger_impl.send("Debugger.resume", worker_thread)
         # worker thread: Debugger.paused
         response = await self.debugger_impl.recv("Debugger.paused", worker_thread)
-        assert response['params']['callFrames'][0]['url'] == self.config['file_path']['index']
+        assert response['params']['callFrames'][0]['url'] == self.config['file_path']['worker']
         assert response['params']['reason'] == 'other'
-        assert response['params']['hitBreakpoints'] == ['id:10:14:' + self.config['file_path']['index']]
+        assert response['params']['hitBreakpoints'] == ['id:0:0:']
         ################################################################################################################
-        # worker thread: Runtime.getProperties
+        # worker thread: Debugger.resume
         ################################################################################################################
-        params = runtime.GetPropertiesParams('0')
-        response = await self.runtime_impl.send("Runtime.getProperties", worker_thread, params)
-        assert response['result']['result'][0]['name'] == 'add'
-        assert response['result']['result'][0]['value']['type'] == 'function'
+        await self.debugger_impl.send("Debugger.resume", worker_thread)
         ################################################################################################################
-        # worker thread: Debugger.stepOut
+        # all thread: sleep 2 seconds
         ################################################################################################################
-        await self.debugger_impl.send("Debugger.stepOut", worker_thread)
+        time.sleep(2)
         ################################################################################################################
-        # main thread: Debugger.paused, hit breakpoint
+        # worker thread: Debugger.pause
         ################################################################################################################
-        response = await self.debugger_impl.recv("Debugger.paused", main_thread)
-        assert response['params']['callFrames'][0]['url'] == self.config['file_path']['index']
-        assert response['params']['hitBreakpoints'] == ['id:25:4:' + self.config['file_path']['index']]
-        ################################################################################################################
-        # main thread: Runtime.getProperties
-        ################################################################################################################
-        params = runtime.GetPropertiesParams('0')
-        response = await self.runtime_impl.send("Runtime.getProperties", main_thread, params)
-        assert response['result']['result'][0]['name'] == 'taskpoolTest'
-        assert response['result']['result'][0]['value']['type'] == 'function'
-        assert response['result']['result'][1]['name'] == 'valueSub'
-        assert response['result']['result'][1]['value']['type'] == 'undefined'
-        assert response['result']['result'][2]['name'] == 'valueAdd'
-        assert response['result']['result'][2]['value']['type'] == 'number'
-        assert response['result']['result'][2]['value']['description'] == '300'
-        ################################################################################################################
-        # main thread: Debugger.resume
-        ################################################################################################################
-        await self.debugger_impl.send("Debugger.resume", main_thread)
-        ################################################################################################################
+        await self.debugger_impl.send("Debugger.pause", worker_thread)
         # worker thread: Debugger.paused
-        ################################################################################################################
         response = await self.debugger_impl.recv("Debugger.paused", worker_thread)
-        assert response['params']['callFrames'][0]['url'] == self.config['file_path']['index']
-        assert response['params']['hitBreakpoints'] == ['id:17:14:' + self.config['file_path']['index']]
+        assert response['params']['callFrames'][0]['url'] == self.config['file_path']['worker']
+        assert response['params']['reason'] == 'other'
+        assert response['params']['hitBreakpoints'] == []
         ################################################################################################################
         # worker thread: Debugger.resume
         ################################################################################################################
@@ -263,6 +220,19 @@ class TestDebug03:
         # worker thread: Debugger.disable
         ################################################################################################################
         await self.debugger_impl.send("Debugger.disable", worker_thread)
+        ################################################################################################################
+        # main thread: Debugger.pause
+        ################################################################################################################
+        await self.debugger_impl.send("Debugger.pause", main_thread)
+        # main thread: Debugger.paused
+        response = await self.debugger_impl.recv("Debugger.paused", main_thread)
+        assert response['params']['callFrames'][0]['url'] == self.config['file_path']['index']
+        assert response['params']['reason'] == 'other'
+        assert response['params']['hitBreakpoints'] == []
+        ################################################################################################################
+        # main thread: Debugger.resume
+        ################################################################################################################
+        await self.debugger_impl.send("Debugger.resume", main_thread)
         ################################################################################################################
         # main thread: Debugger.disable
         ################################################################################################################
