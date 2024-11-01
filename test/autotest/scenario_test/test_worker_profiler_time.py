@@ -30,8 +30,8 @@ from aw.api import debugger_api, runtime_api, profiler_api
 
 
 @pytest.mark.cpu_profiler
-@pytest.mark.timeout(40)
-class TestCpuProfiler01:
+@pytest.mark.timeout(80)
+class TestWorkerProfilerTime:
     """
     测试用例：多实例 CPU 调优 Time 录制
     测试步骤：
@@ -47,10 +47,10 @@ class TestCpuProfiler01:
     """
 
     def setup_method(self):
-        logging.info('Start running TestCpuProfiler01: setup')
+        logging.info('Start running TestWorkerProfilerTime: setup')
 
         self.log_path = rf'{os.path.dirname(__file__)}\..\log'
-        self.hilog_file_name = 'test_cpu_profiler_01.hilog.txt'
+        self.hilog_file_name = 'test_worker_profiler_time.hilog.txt'
         self.id_generator = Utils.message_id_generator()
 
         # receive the hilog before the test start
@@ -70,10 +70,10 @@ class TestCpuProfiler01:
         self.write_thread.join()
 
         Utils.save_fault_log(log_path=self.log_path)
-        logging.info('TestCpuProfiler01 done')
+        logging.info('TestWorkerProfilerTime done')
 
     def test(self, test_suite_worker_02):
-        logging.info('Start running TestCpuProfiler01: test')
+        logging.info('Start running TestWorkerProfilerTime: test')
         self.config = test_suite_worker_02
         websocket = self.config['websocket']
         taskpool = self.config['taskpool']
@@ -155,8 +155,10 @@ class TestCpuProfiler01:
         ################################################################################################################
         # close the websocket connections
         ################################################################################################################
-        await websocket.send_msg_to_debugger_server(worker_thread_1.instance_id, worker_thread_1.send_msg_queue, 'close')
-        await websocket.send_msg_to_debugger_server(worker_thread_2.instance_id, worker_thread_2.send_msg_queue, 'close')
+        await websocket.send_msg_to_debugger_server(worker_thread_1.instance_id, worker_thread_1.send_msg_queue,
+                                                    'close')
+        await websocket.send_msg_to_debugger_server(worker_thread_2.instance_id, worker_thread_2.send_msg_queue,
+                                                    'close')
         await websocket.send_msg_to_debugger_server(main_thread.instance_id, main_thread.send_msg_queue, 'close')
         await websocket.send_msg_to_connect_server('close')
         ################################################################################################################

@@ -30,10 +30,10 @@ from aw.api import debugger_api, runtime_api
 
 
 @pytest.mark.debug
-@pytest.mark.timeout(30)
-class TestDebug01:
+@pytest.mark.timeout(60)
+class TestWorkerStep:
     """
-    测试用例：多实例 debug 调试
+    测试用例：多实例 debug 调试，执行单步操作进行跨线程通信
     测试步骤：
         1.  连接 connect server 和主线程 debugger server
         2.  主线程使能 Runtime 和 Debugger
@@ -50,20 +50,43 @@ class TestDebug01:
         13. 主线程 getProperties，返回给定对象的属性（Runtime.getProperties）
         14. 主线程 resume，暂停在下一断点（Debugger.resume）
         15. 重新创建一个子线程，使能并设置断点
-        16. 主线程 resume，发送消息给子线程，主线程暂停在下一断点（Debugger.resume）
+        16. 主线程 stepOut，发送消息给子线程，主线程暂停在下一断点（Debugger.stepOut）
         17. 子线程命中断点后 getProperties（Runtime.getProperties）
         18. 子线程 stepOut 发消息给主线程（Debugger.stepOut）
-        19. 主线程 stepOver，发送消息给另一子线程，主线程暂停在下一行（Debugger.stepOver）
+        19. 主线程 stepInto，发送消息给另一子线程，主线程暂停在下一行（Debugger.stepInto）
         20. 子线程命中断点后 resume，发消息给主线程（Debugger.resume）
         21. 销毁所有子线程，对应的 debugger server 连接断开
         22. 关闭主线程 debugger server 和 connect server 连接
+    关键代码：
+        Index.ets
+            let workerIndex = 0
+            function newWorker() {} // 创建一个子线程, workerIndex++
+            function terminateWorker() {} // 销毁一个子线程, workerIndex--
+            for (let i = 0; i < 2; i++) {
+                newWorker()
+            }
+            .onClick(() => {
+                terminateWorker()
+                newWorker()
+                for (let i = 0; i < workerIndex; i++) {
+                    workers[i].postMessage("hello world")
+                }
+                while (workerIndex) {
+                    terminateWorker()
+                }
+            })
+        Worker.ets
+            const workerPort: ThreadWorkerGlobalScope = worker.workerPort;
+            workerPort.onmessage = (e: MessageEvents) => {
+                workerPort.postMessage(e.data);
+            }
     """
 
     def setup_method(self):
-        logging.info('Start running TestDebug01: setup')
+        logging.info('Start running TestWorkerStep: setup')
 
         self.log_path = rf'{os.path.dirname(__file__)}\..\log'
-        self.hilog_file_name = 'test_debug_01.hilog.txt'
+        self.hilog_file_name = 'test_worker_step.hilog.txt'
         self.id_generator = Utils.message_id_generator()
 
         # receive the hilog before the test start
@@ -83,10 +106,10 @@ class TestDebug01:
         self.write_thread.join()
 
         Utils.save_fault_log(log_path=self.log_path)
-        logging.info('TestDebug01 done')
+        logging.info('TestWorkerStep done')
 
     def test(self, test_suite_worker_01_debug):
-        logging.info('Start running TestDebug01: test')
+        logging.info('Start running TestWorkerStep: test')
         self.config = test_suite_worker_01_debug
         websocket = self.config['websocket']
         taskpool = self.config['taskpool']

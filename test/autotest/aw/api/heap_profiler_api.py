@@ -31,7 +31,9 @@ class HeapProfilerImpl(ProtocolImpl):
         super().__init__(id_generator, websocket)
         self.dispatch_table = {"startTrackingHeapObjects": (self.start_tracking_heap_objects, ProtocolType.send),
                                "stopTrackingHeapObjects": (self.stop_tracking_heap_objects, ProtocolType.send),
-                               "takeHeapSnapshot": (self.take_heap_snapshot, ProtocolType.send)}
+                               "takeHeapSnapshot": (self.take_heap_snapshot, ProtocolType.send),
+                               "startSampling": (self.start_sampling, ProtocolType.send),
+                               "stopSampling": (self.stop_sampling, ProtocolType.send)}
 
     async def start_tracking_heap_objects(self, message_id, connection, params):
         response = await communicate_with_debugger_server(connection.instance_id,
@@ -77,4 +79,22 @@ class HeapProfilerImpl(ProtocolImpl):
         assert pre_response.endswith(r'\n]\n}\n"}}')
         response = json.loads(response)
         assert response == {"id": message_id, "result": {}}
+        return response
+
+    async def start_sampling(self, message_id, connection, params):
+        response = await communicate_with_debugger_server(connection.instance_id,
+                                                          connection.send_msg_queue,
+                                                          connection.received_msg_queue,
+                                                          heap_profiler.start_sampling(), message_id)
+        response = json.loads(response)
+        assert response == {"id": message_id, "result": {}}
+        return response
+
+    async def stop_sampling(self, message_id, connection, params):
+        response = await communicate_with_debugger_server(connection.instance_id,
+                                                          connection.send_msg_queue,
+                                                          connection.received_msg_queue,
+                                                          heap_profiler.stop_sampling(), message_id)
+        response = json.loads(response)
+        assert response['id'] == message_id
         return response

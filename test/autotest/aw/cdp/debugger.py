@@ -143,7 +143,7 @@ def evaluate_on_call_frame(params: EvaluateOnCallFrameParams):
                'params': {
                    'callFrameId': str(params.call_frame_id),
                    'expression': params.expression,
-                   'includeCommandLineApi': params.include_command_line_api,
+                   'includeCommandLineAPI': params.include_command_line_api,
                    'objectGroup': params.object_group,
                    'silent': params.silent}}
     return command

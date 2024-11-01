@@ -25,33 +25,31 @@ import pytest
 
 from aw import Application
 from aw import Utils
-from aw import heap_profiler
 from aw.api import debugger_api, runtime_api, heap_profiler_api
 
 
 @pytest.mark.heap_profiler
-@pytest.mark.timeout(40)
-class TestHeapProfiler01:
+@pytest.mark.timeout(80)
+class TestProfilerHeapDump:
     """
-    测试用例：多实例内存调优 Allocation 录制
+    测试用例：多实例内存调优 HeapDump 录制
     测试步骤：
         1.  拉起应用，attach 主线程
         2.  连接 connect server 和主线程 debugger server
         3.  连接 worker 线程 debugger server
         4.  所有线程使能 Runtime（Runtime.enable）
-        5.  所有线程获取内存使用情况（Runtime.getHeapUsage）
-        6.  所有线程启动 Allocation 录制（HeapProfiler.startTrackingHeapObjects）
-        7.  所有线程获取内存使用情况（Runtime.getHeapUsage）
-        8.  等待 10 秒后关闭 Allocation 录制，获取数据（HeapProfiler.stopTrackingHeapObjects）
-        9.  销毁 worker 线程，对应的 debugger server 连接断开
-        10. 关闭主线程 debugger server 和 connect server 连接
+        5.  所有线程去使能 Debugger（Debugger.disable）
+        5.  所有线程拍摄内存快照（HeapProfiler.takeHeapSnapshot）
+        6.  等待 10 秒后，所有线程再次拍摄内存快照（HeapProfiler.takeHeapSnapshot）
+        7.  销毁 worker 线程，对应的 debugger server 连接断开
+        8.  关闭主线程 debugger server 和 connect server 连接
     """
 
     def setup_method(self):
-        logging.info('Start running TestHeapProfiler01: setup')
+        logging.info('Start running TestWorkerProfilerHeapDump: setup')
 
         self.log_path = rf'{os.path.dirname(__file__)}\..\log'
-        self.hilog_file_name = 'test_heap_profiler_01.hilog.txt'
+        self.hilog_file_name = 'test_worker_profiler_heap_dump.hilog.txt'
         self.id_generator = Utils.message_id_generator()
 
         # receive the hilog before the test start
@@ -71,10 +69,10 @@ class TestHeapProfiler01:
         self.write_thread.join()
 
         Utils.save_fault_log(log_path=self.log_path)
-        logging.info('TestHeapProfiler01 done')
+        logging.info('TestWorkerProfilerHeapDump done')
 
     def test(self, test_suite_worker_02):
-        logging.info('Start running TestHeapProfiler01: test')
+        logging.info('Start running TestWorkerProfilerHeapDump: test')
         self.config = test_suite_worker_02
         websocket = self.config['websocket']
         taskpool = self.config['taskpool']
@@ -113,26 +111,6 @@ class TestHeapProfiler01:
         await self.runtime_impl.send("Runtime.enable", worker_thread_1)
         await self.runtime_impl.send("Runtime.enable", worker_thread_2)
         ################################################################################################################
-        # main thread: Runtime.getHeapUsage
-        ################################################################################################################
-        await self.runtime_impl.send("Runtime.getHeapUsage", main_thread)
-        ################################################################################################################
-        # worker thread: Runtime.getHeapUsage
-        ################################################################################################################
-        await self.runtime_impl.send("Runtime.getHeapUsage", worker_thread_1)
-        await self.runtime_impl.send("Runtime.getHeapUsage", worker_thread_2)
-        ################################################################################################################
-        # main thread: HeapProfiler.startTrackingHeapObjects
-        ################################################################################################################
-        params = heap_profiler.TrackingHeapObjectsParams(False)
-        await self.heap_profiler_impl.send("HeapProfiler.startTrackingHeapObjects", main_thread, params)
-        ################################################################################################################
-        # worker thread: HeapProfiler.startTrackingHeapObjects
-        ################################################################################################################
-        params = heap_profiler.TrackingHeapObjectsParams(False)
-        await self.heap_profiler_impl.send("HeapProfiler.startTrackingHeapObjects", worker_thread_1, params)
-        await self.heap_profiler_impl.send("HeapProfiler.startTrackingHeapObjects", worker_thread_2, params)
-        ################################################################################################################
         # main thread: Debugger.disable
         ################################################################################################################
         await self.debugger_impl.send("Debugger.disable", main_thread)
@@ -142,27 +120,27 @@ class TestHeapProfiler01:
         await self.debugger_impl.send("Debugger.disable", worker_thread_1)
         await self.debugger_impl.send("Debugger.disable", worker_thread_2)
         ################################################################################################################
+        # main thread: HeapProfiler.takeHeapSnapshot
+        ################################################################################################################
+        await self.heap_profiler_impl.send("HeapProfiler.takeHeapSnapshot", main_thread)
+        ################################################################################################################
+        # worker thread: HeapProfiler.takeHeapSnapshot
+        ################################################################################################################
+        await self.heap_profiler_impl.send("HeapProfiler.takeHeapSnapshot", worker_thread_1)
+        await self.heap_profiler_impl.send("HeapProfiler.takeHeapSnapshot", worker_thread_2)
+        ################################################################################################################
         # all thread: sleep 10 seconds
         ################################################################################################################
         time.sleep(10)
         ################################################################################################################
-        # main thread: Runtime.getHeapUsage
+        # main thread: HeapProfiler.takeHeapSnapshot
         ################################################################################################################
-        await self.runtime_impl.send("Runtime.getHeapUsage", main_thread)
+        await self.heap_profiler_impl.send("HeapProfiler.takeHeapSnapshot", main_thread)
         ################################################################################################################
-        # worker thread: Runtime.getHeapUsage
+        # worker thread: HeapProfiler.takeHeapSnapshot
         ################################################################################################################
-        await self.runtime_impl.send("Runtime.getHeapUsage", worker_thread_1)
-        await self.runtime_impl.send("Runtime.getHeapUsage", worker_thread_2)
-        ################################################################################################################
-        # main thread: HeapProfiler.stopTrackingHeapObjects
-        ################################################################################################################
-        await self.heap_profiler_impl.send("HeapProfiler.stopTrackingHeapObjects", main_thread)
-        ################################################################################################################
-        # worker thread: HeapProfiler.stopTrackingHeapObjects
-        ################################################################################################################
-        await self.heap_profiler_impl.send("HeapProfiler.stopTrackingHeapObjects", worker_thread_1)
-        await self.heap_profiler_impl.send("HeapProfiler.stopTrackingHeapObjects", worker_thread_2)
+        await self.heap_profiler_impl.send("HeapProfiler.takeHeapSnapshot", worker_thread_1)
+        await self.heap_profiler_impl.send("HeapProfiler.takeHeapSnapshot", worker_thread_2)
         ################################################################################################################
         # close the websocket connections
         ################################################################################################################
