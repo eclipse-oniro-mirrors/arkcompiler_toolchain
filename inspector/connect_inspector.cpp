@@ -237,6 +237,9 @@ void StoreMessage(int32_t instanceId, const std::string& message)
 void StoreInspectorInfo(const std::string& jsonTreeStr, const std::string& jsonSnapshotStr)
 {
     std::lock_guard<std::mutex> lock(g_connectMutex);
+    if (g_inspector == nullptr) {
+        return;
+    }
     g_inspector->layoutInspectorInfo_.tree = jsonTreeStr;
     g_inspector->layoutInspectorInfo_.snapShot = jsonSnapshotStr;
 }
