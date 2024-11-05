@@ -568,7 +568,12 @@ class ArkPy:
         test_list_value, arg_list = ArkPy.parse_option(arg_list, option_name=test_list_name, default_value=None)
         if test_list_value is not None:
             args_to_regress_cmd.extend([test_list_name, test_list_value])
-
+        compiler_opt_track_field_name = "--compiler-opt-track-field"
+        compiler_opt_track_field_value, arg_list = ArkPy.parse_bool_option(
+            arg_list, option_name=compiler_opt_track_field_name, default_value=False
+        )
+        if compiler_opt_track_field_value:
+            args_to_regress_cmd.append(f"{compiler_opt_track_field_name}={compiler_opt_track_field_value}")
         if len(arg_list) == 1:
             arg = arg_list[0]
             if ".js" in arg:
