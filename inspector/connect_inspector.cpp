@@ -238,7 +238,7 @@ void StoreInspectorInfo(const std::string& jsonTreeStr, const std::string& jsonS
 {
     std::lock_guard<std::mutex> lock(g_connectMutex);
     if (g_inspector == nullptr) {
-        return;
+        g_inspector = std::make_unique<ConnectInspector>();
     }
     g_inspector->layoutInspectorInfo_.tree = jsonTreeStr;
     g_inspector->layoutInspectorInfo_.snapShot = jsonSnapshotStr;
