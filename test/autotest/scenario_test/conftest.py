@@ -45,6 +45,63 @@ def test_suite_main_instance_01_debug():
 
 
 @pytest.fixture(scope='class')
+def test_suite_main_instance_02_debug():
+    logging.info('running main_instance_02 in debug mode')
+    config = {
+        'start_mode': '-D',
+        'connect_server_port': 15702,
+        'debugger_server_port': 15703,
+        'bundle_name': 'com.example.mainInstance02',
+        'hap_name': 'MainInstance02.hap',
+        'hap_path': rf'{os.path.dirname(__file__)}\..\resource\MainInstance02.hap',
+        'file_path': {
+            'entry_ability': 'entry|entry|1.0.0|src/main/ets/entryability/EntryAbility.ts',
+            'index': 'entry|entry|1.0.0|src/main/ets/pages/Index.ts',
+        }
+    }
+    launch_hap(config)
+    return config
+
+
+@pytest.fixture(scope='class')
+def test_suite_main_instance_03_debug():
+    logging.info('running main_instance_03 in debug mode')
+    config = {
+        'start_mode': '-D',
+        'connect_server_port': 15704,
+        'debugger_server_port': 15705,
+        'bundle_name': 'com.example.mainInstance03',
+        'hap_name': 'MainInstance03.hap',
+        'hap_path': rf'{os.path.dirname(__file__)}\..\resource\MainInstance03.hap',
+        'file_path': {
+            'entry_ability': 'entry|entry|1.0.0|src/main/ets/entryability/EntryAbility.ts',
+            'index': 'entry|entry|1.0.0|src/main/ets/pages/Index.ts',
+        }
+    }
+    launch_hap(config)
+    return config
+
+
+@pytest.fixture(scope='class')
+def test_suite_main_instance_04_debug():
+    logging.info('running main_instance_04 in debug mode')
+    config = {
+        'start_mode': '-D',
+        'connect_server_port': 15706,
+        'debugger_server_port': 15707,
+        'bundle_name': 'com.example.mainInstance04',
+        'hap_name': 'MainInstance04.hap',
+        'hap_path': rf'{os.path.dirname(__file__)}\..\resource\MainInstance04.hap',
+        'file_path': {
+            'entry_ability': 'entry|entry|1.0.0|src/main/ets/entryability/EntryAbility.ts',
+            'index': 'entry|entry|1.0.0|src/main/ets/pages/Index.ts',
+        }
+    }
+    launch_hap(config)
+    return config
+
+
+@pytest.fixture(scope='class')
 def test_suite_worker_08_debug():
     logging.info('running worker_08 in debug mode')
     config = {
@@ -74,26 +131,6 @@ def test_suite_worker_07_debug():
         'bundle_name': 'com.example.multiWorker07',
         'hap_name': 'MultiWorker07.hap',
         'hap_path': rf'{os.path.dirname(__file__)}\..\resource\MultiWorker07.hap',
-        'file_path': {
-            'entry_ability': 'entry|entry|1.0.0|src/main/ets/entryability/EntryAbility.ts',
-            'index': 'entry|entry|1.0.0|src/main/ets/pages/Index.ts',
-            'worker': 'entry|entry|1.0.0|src/main/ets/workers/Worker.ts'
-        }
-    }
-    launch_hap(config)
-    return config
-
-
-@pytest.fixture(scope='class')
-def test_suite_worker_06_debug():
-    logging.info('running worker_06 in debug mode')
-    config = {
-        'start_mode': '-D',
-        'connect_server_port': 15694,
-        'debugger_server_port': 15695,
-        'bundle_name': 'com.example.multiWorker06',
-        'hap_name': 'MultiWorker06.hap',
-        'hap_path': rf'{os.path.dirname(__file__)}\..\resource\MultiWorker06.hap',
         'file_path': {
             'entry_ability': 'entry|entry|1.0.0|src/main/ets/entryability/EntryAbility.ts',
             'index': 'entry|entry|1.0.0|src/main/ets/pages/Index.ts',
