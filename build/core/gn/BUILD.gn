@@ -91,6 +91,24 @@ group("static_core") {
     "$ark_root/static_core/libpandabase:libarktsbase",
     "$ark_root/static_core/libpandafile:libarktsfile",
   ]
+  if (target_os != "mingw") {
+    deps += [ "$ark_root/static_core/runtime:libarkruntime" ]
+  }
+}
+
+group("hybrid") {
+  deps = [
+    ":ets_frontend",
+    ":ets_runtime",
+    ":static_core",
+    "$ark_root/static_core/plugins/ets:etsstdlib(${host_toolchain})",
+  ]
+  if (target_os != "mingw") {
+    deps += [
+      "$ark_root/static_core/plugins/ets/runtime/interop_js:ets_interop_js_napi",
+      "$ark_root/static_core/tools/ark_js_napi_cli:ark_js_napi_cli",
+    ]
+  }
 }
 
 group("toolchain") {
