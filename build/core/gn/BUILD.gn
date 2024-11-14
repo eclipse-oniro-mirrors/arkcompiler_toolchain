@@ -47,7 +47,10 @@ group("runtime_core_unittest_packages") {
 
 group("ets_runtime") {
   deps = [
+    "$js_root:js_type_metadata",
     "$js_root:libark_jsruntime",
+    "$js_root/ecmascript/dfx/hprof:ark_js_heap_snapshot_tool",
+    "$js_root/ecmascript/dfx/hprof/rawheap_translate:rawheap_translator",
     "$js_root/ecmascript/js_vm:ark_js_vm",
     "$js_root/ecmascript/quick_fix:quick_fix",
   ]
