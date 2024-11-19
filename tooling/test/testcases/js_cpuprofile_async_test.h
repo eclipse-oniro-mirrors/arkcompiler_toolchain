@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-#ifndef ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_CPUPROFILE_TEST_H
-#define ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_CPUPROFILE_TEST_H
+#ifndef ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_CPUPROFILE_ASYNC_TEST_H
+#define ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_CPUPROFILE_ASYNC_TEST_H
 
 #include "tooling/test/client_utils/test_util.h"
 
 namespace panda::ecmascript::tooling::test {
-class JsCpuprofileTest : public TestActions {
+class JsCpuprofileAsyncTest : public TestActions {
 public:
-    JsCpuprofileTest()
+    JsCpuprofileAsyncTest()
     {
         testAction = {
             {SocketAction::SEND, "enable"},
@@ -30,7 +30,7 @@ public:
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
             {SocketAction::SEND, "run"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
-            // load sample.js
+            // load async_func.js
             {SocketAction::RECV, "Debugger.scriptParsed", ActionRule::STRING_CONTAIN},
             // break on start
             {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
@@ -39,8 +39,13 @@ public:
             {SocketAction::SEND, "cpuprofile"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
 
-            {SocketAction::SEND, "b " DEBUGGER_JS_DIR "sample.js 23"},
+            {SocketAction::SEND, "b " DEBUGGER_JS_DIR "async_func.js 18"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+
+            {SocketAction::SEND, "resume"},
+            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
 
             {SocketAction::SEND, "resume"},
             {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
@@ -69,14 +74,11 @@ public:
                     if (ret != Result::SUCCESS) {
                         return false;
                     }
+
                     return true;
                 }},
             {SocketAction::SEND, "cpuprofile-disable"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
-            {SocketAction::SEND, "resume"},
-            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
-            {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
 
             // reply success and run
             {SocketAction::SEND, "success"},
@@ -90,18 +92,18 @@ public:
     {
         return {pandaFile_, entryPoint_};
     }
-    ~JsCpuprofileTest() = default;
+    ~JsCpuprofileAsyncTest() = default;
 
 private:
-    std::string pandaFile_ = DEBUGGER_ABC_DIR "sample.abc";
-    std::string sourceFile_ = DEBUGGER_JS_DIR "sample.js";
+    std::string pandaFile_ = DEBUGGER_ABC_DIR "async_func.abc";
+    std::string sourceFile_ = DEBUGGER_JS_DIR "async_func.js";
     std::string entryPoint_ = "_GLOBAL::func_main_0";
 };
 
-std::unique_ptr<TestActions> GetJsCpuprofileTest()
+std::unique_ptr<TestActions> GetJsCpuprofileAsyncTest()
 {
-    return std::make_unique<JsCpuprofileTest>();
+    return std::make_unique<JsCpuprofileAsyncTest>();
 }
-}  // namespace panda::ecmascript::tooling::test
+} // namespace panda::ecmascript::tooling::test
 
-#endif // ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_CPUPROFILE_TEST_H
+#endif // ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_CPUPROFILE_ASYNC_TEST_H

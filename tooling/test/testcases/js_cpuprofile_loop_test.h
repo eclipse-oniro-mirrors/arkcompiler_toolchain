@@ -39,23 +39,43 @@ public:
 
             {SocketAction::SEND, "cpuprofile"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
-            // resume and stop cpuprofile
+
+            {SocketAction::SEND, "b " DEBUGGER_JS_DIR "common_func.js 64"},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::SEND, "b " DEBUGGER_JS_DIR "common_func.js 65"},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+
             {SocketAction::SEND, "resume"},
             {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
             {SocketAction::SEND, "cpuprofile-stop"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE,
                 [this](auto recv, auto, auto) -> bool { return RecvCpuprofileInfo(recv); }},
-            // cpuprofile second time and disable
+
             {SocketAction::SEND, "cpuprofile"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::SEND, "resume"},
+            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
             {SocketAction::SEND, "cpuprofile-stop"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE,
                 [this](auto recv, auto, auto) -> bool { return RecvCpuprofileInfo(recv); }},
+
             {SocketAction::SEND, "cpuprofile-disable"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
-            // reply success
+
+            {SocketAction::SEND, "resume"},
+            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
+
+            // reply success and run
             {SocketAction::SEND, "success"},
+            {SocketAction::SEND, "resume"},
+            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
         };
     }
 

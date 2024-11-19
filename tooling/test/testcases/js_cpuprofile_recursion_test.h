@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-#ifndef ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_CPUPROFILE_TEST_H
-#define ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_CPUPROFILE_TEST_H
+#ifndef ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_CPUPROFILE_RECURSION_TEST_H
+#define ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_CPUPROFILE_RECURSION_TEST_H
 
 #include "tooling/test/client_utils/test_util.h"
 
 namespace panda::ecmascript::tooling::test {
-class JsCpuprofileTest : public TestActions {
+class JsCpuprofileRecursionTest : public TestActions {
 public:
-    JsCpuprofileTest()
+    JsCpuprofileRecursionTest()
     {
         testAction = {
             {SocketAction::SEND, "enable"},
@@ -30,49 +30,38 @@ public:
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
             {SocketAction::SEND, "run"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
-            // load sample.js
+            // load common_func.js
             {SocketAction::RECV, "Debugger.scriptParsed", ActionRule::STRING_CONTAIN},
             // break on start
             {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
             {SocketAction::SEND, "cpuprofile-enable"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+
             {SocketAction::SEND, "cpuprofile"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
-
-            {SocketAction::SEND, "b " DEBUGGER_JS_DIR "sample.js 23"},
+            {SocketAction::SEND, "b " DEBUGGER_JS_DIR "common_func.js 67"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
-
             {SocketAction::SEND, "resume"},
             {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
             {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
-
             {SocketAction::SEND, "cpuprofile-stop"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE,
-                [](auto recv, auto, auto) -> bool {
-                    std::unique_ptr<PtJson> json = PtJson::Parse(recv);
-                    Result ret;
-                    int id = 0;
-                    ret = json->GetInt("id", &id);
-                    if (ret != Result::SUCCESS) {
-                        return false;
-                    }
+                [this](auto recv, auto, auto) -> bool { return RecvCpuprofileInfo(recv); }},
 
-                    std::unique_ptr<PtJson> result = nullptr;
-                    ret = json->GetObject("result", &result);
-                    if (ret != Result::SUCCESS) {
-                        return false;
-                    }
+            {SocketAction::SEND, "cpuprofile"},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::SEND, "resume"},
+            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
+            {SocketAction::SEND, "cpuprofile-stop"},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE,
+                [this](auto recv, auto, auto) -> bool { return RecvCpuprofileInfo(recv); }},
 
-                    std::unique_ptr<PtJson> profile = nullptr;
-                    ret = result->GetObject("profile", &profile);
-                    if (ret != Result::SUCCESS) {
-                        return false;
-                    }
-                    return true;
-                }},
             {SocketAction::SEND, "cpuprofile-disable"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+
             {SocketAction::SEND, "resume"},
             {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
@@ -86,22 +75,46 @@ public:
         };
     }
 
+    bool RecvCpuprofileInfo(std::string recv)
+    {
+        std::unique_ptr<PtJson> json = PtJson::Parse(recv);
+        Result ret;
+        int id = 0;
+        ret = json->GetInt("id", &id);
+        if (ret != Result::SUCCESS) {
+            return false;
+        }
+
+        std::unique_ptr<PtJson> result = nullptr;
+        ret = json->GetObject("result", &result);
+        if (ret != Result::SUCCESS) {
+            return false;
+        }
+
+        std::unique_ptr<PtJson> profile = nullptr;
+        ret = result->GetObject("profile", &profile);
+        if (ret != Result::SUCCESS) {
+            return false;
+        }
+        return true;
+    }
+
     std::pair<std::string, std::string> GetEntryPoint() override
     {
         return {pandaFile_, entryPoint_};
     }
-    ~JsCpuprofileTest() = default;
+    ~JsCpuprofileRecursionTest() = default;
 
 private:
-    std::string pandaFile_ = DEBUGGER_ABC_DIR "sample.abc";
-    std::string sourceFile_ = DEBUGGER_JS_DIR "sample.js";
+    std::string pandaFile_ = DEBUGGER_ABC_DIR "common_func.abc";
+    std::string sourceFile_ = DEBUGGER_JS_DIR "common_func.js";
     std::string entryPoint_ = "_GLOBAL::func_main_0";
 };
 
-std::unique_ptr<TestActions> GetJsCpuprofileTest()
+std::unique_ptr<TestActions> GetJsCpuprofileRecursionTest()
 {
-    return std::make_unique<JsCpuprofileTest>();
+    return std::make_unique<JsCpuprofileRecursionTest>();
 }
-}  // namespace panda::ecmascript::tooling::test
+} // namespace panda::ecmascript::tooling::test
 
-#endif // ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_CPUPROFILE_TEST_H
+#endif // ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_CPUPROFILE_LOOP_TEST_H
