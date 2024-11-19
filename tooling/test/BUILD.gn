@@ -144,7 +144,10 @@ ohos_shared_library("jsdebugtest") {
     external_deps += [ "hilog:libhilog" ]
   }
 
-  external_deps += [ "cJSON:cjson_static" ]
+  external_deps += [
+    "cJSON:cjson_static",
+    "ets_runtime:libark_jsruntime",
+  ]
   install_enable = false
   output_extension = "so"
   subsystem_name = "test"
@@ -298,6 +301,7 @@ host_unittest_action("DebuggerClientTest") {
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
   external_deps += [
+    "bounds_checking_function:libsec_shared",
     "cJSON:cjson_static",
     "icu:shared_icui18n",
     "icu:shared_icuuc",
@@ -343,6 +347,7 @@ host_unittest_action("DebuggerCIntClientTest") {
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
   external_deps += [
+    "bounds_checking_function:libsec_shared",
     "cJSON:cjson_static",
     "icu:shared_icui18n",
     "icu:shared_icuuc",
