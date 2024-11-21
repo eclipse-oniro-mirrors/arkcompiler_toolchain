@@ -113,6 +113,7 @@ bool StartThread(uv_loop_t *loop)
             }
             auto [fileName, entry] = GetNextPara();
             g_mutex.Unlock();
+
             panda::ecmascript::EcmaVM *vm = panda::JSNApi::CreateEcmaVM(g_runtimeOptions);
             if (vm == nullptr) {
                 std::cerr << "Cannot create vm." << std::endl;
@@ -121,14 +122,16 @@ bool StartThread(uv_loop_t *loop)
             panda::JSNApi::SetBundle(vm, !g_runtimeOptions.GetMergeAbc());
             bool ret = ExecutePandaFile(vm, g_runtimeOptions, fileName, entry);
             panda::JSNApi::DestroyJSVM(vm);
+
             auto loop = static_cast<uv_loop_t *>(arg);
             auto work = new uv_work_t;
             std::string msg = GetMsg(ret, msg, fileName);
             work->data = new char[msg.size() + 1];
             if (strncpy_s(static_cast<char*>(work->data), msg.size() + 1, msg.data(), msg.size()) != EOK) {
+                std::cerr << "strncpy_s fail." << std::endl;
                 delete[] static_cast<char*>(work->data);
                 delete work;
-                std::abort();
+                return;
             }
             uv_queue_work(loop, work, [] (uv_work_t*) {}, [] (uv_work_t* work, int) {
                 std::cerr << static_cast<char*>(work->data) << std::endl;
@@ -173,7 +176,7 @@ int Main(const int argc, const char **argv)
     while (std::getline(in, line)) {
         if (line.find_last_of(".abc") == std::string::npos) {  // endwith
             std::cerr << "Not endwith .abc" << line << std::endl;
-            std::abort();
+            return -1;
         }
         g_files.emplace_back(line);
     }

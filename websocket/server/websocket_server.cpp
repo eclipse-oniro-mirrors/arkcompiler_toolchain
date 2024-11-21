@@ -331,7 +331,7 @@ bool WebSocketServer::InitUnixWebSocket(int socketfd)
     SetConnectionSocket(socketfd);
     const int flag = fcntl(socketfd, F_GETFL, 0);
     if (flag == -1) {
-        LOGE("InitUnixWebSocket get client state is failed");
+        LOGE("InitUnixWebSocket get client state is failed, error is %{public}s", strerror(errno));
         return false;
     }
     fcntl(socketfd, F_SETFL, static_cast<size_t>(flag) & ~O_NONBLOCK);
