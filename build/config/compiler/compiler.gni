@@ -24,6 +24,8 @@ is_ohos_or_android = is_ohos || is_android
 optimize_for_size = is_ohos_or_android
 
 declare_args() {
+  symbol_level = -1
+
   # Set to true to use lld, the LLVM linker. This flag may be used on Windows,
   # Linux.
   use_lld = is_clang &&
@@ -40,4 +42,18 @@ declare_args() {
                      current_cpu == "arm")) ||
        (is_ohos_or_android && (current_cpu == "x86" || current_cpu == "x64" ||
                                current_cpu == "arm" || current_cpu == "arm64")))
+}
+
+if (symbol_level == -1) {
+  if (is_ohos_or_android) {
+    # With instrumentation enabled, debug info puts libchrome.so over 4gb, which
+    # causes the linker to produce an invalid ELF. http://crbug.com/574476
+    symbol_level = 0
+  } else if (is_ohos) {
+    # Reduce symbol level when it will cause invalid elf files to be created
+    # (due to file size). https://crbug.com/648948.
+    symbol_level = 1
+  } else {
+    symbol_level = 0
+  }
 }
