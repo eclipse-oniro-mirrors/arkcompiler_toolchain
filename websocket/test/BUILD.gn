@@ -14,7 +14,7 @@
 import("//arkcompiler/toolchain/test/test_helper.gni")
 import("//arkcompiler/toolchain/toolchain.gni")
 
-module_output_path = "arkcompiler/toolchain"
+module_output_path = "toolchain"
 
 host_unittest_action("WebSocketTest") {
   module_out_path = module_output_path
