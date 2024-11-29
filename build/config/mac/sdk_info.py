@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (c) 2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,14 +25,15 @@ import sys
 # "iphoneos" or "macosx" generally).
 
 
-def split_version(version):
-    """Splits the Xcode version to 3 values.
+def split_version(version: str or bytes):
+    """
+    Splits the Xcode version to 3 values.
 
-    >>> list(SplitVersion('8.2.1.1'))
+    >>> list(split_version('8.2.1.1'))
     ['8', '2', '1']
-    >>> list(SplitVersion('9.3'))
+    >>> list(split_version('9.3'))
     ['9', '3', '0']
-    >>> list(SplitVersion('10.0'))
+    >>> list(split_version('10.0'))
     ['10', '0', '0']
     """
     if isinstance(version, bytes):
@@ -41,47 +42,52 @@ def split_version(version):
     return itertools.islice(itertools.chain(version, itertools.repeat('0')), 0, 3)
 
 
-def format_version(version):
-    """Converts Xcode version to a format required for DTXcode in Info.plist
+def format_version(version: str or bytes):
+    """
+    Converts Xcode version to a format required for DTXcode in Info.plist
 
-    >>> FormatVersion('8.2.1')
+    >>> format_version('8.2.1')
     '0821'
-    >>> FormatVersion('9.3')
+    >>> format_version('9.3')
     '0930'
-    >>> FormatVersion('10.0')
+    >>> format_version('10.0')
     '1000'
     """
     major, minor, patch = split_version(version)
     return ('%2s%s%s' % (major, minor, patch)).replace(' ', '0')
 
 
-def fill_xcode_version(settings_xcode):
-    """Fills the Xcode version and build number into |settings_xcode|."""
-    lines = subprocess.check_output(['xcodebuild', '-version']).splitlines()
-    settings_xcode['xcode_version'] = format_version(lines[0].split()[-1])
-    settings_xcode['xcode_version_int'] = int(settings_xcode['xcode_version'], 10)
-    settings_xcode['xcode_build'] = lines[-1].split()[-1]
+def fill_xcode_version(fill_settings: dict) -> dict:
+    """Fills the Xcode version and build number into |fill_settings|."""
+
+    try:
+        lines = subprocess.check_output(['xcodebuild', '-version']).splitlines()
+        fill_settings['xcode_version'] = format_version(lines[0].split()[-1])
+        fill_settings['xcode_version_int'] = int(fill_settings['xcode_version'], 10)
+        fill_settings['xcode_build'] = lines[-1].split()[-1]
+    except subprocess.CalledProcessError as cpe:  
+        print(f"Failed to run xcodebuild -version: {cpe}")
 
 
-def fill_machine_os_build(settings_os):
-    """Fills OS build number into |settings_os|."""
-    settings_os['machine_os_build'] = subprocess.check_output(
+def fill_machine_os_build(fill_settings: dict):
+    """Fills OS build number into |fill_settings|."""
+    fill_settings['machine_os_build'] = subprocess.check_output(
         ['sw_vers', '-buildVersion']).strip()
 
 
-def fill_sdk_path_and_version(settings_sdk, platform, xcode_version):
-    """Fills the SDK path and version for |platform| into |settings|."""
-    settings_sdk['sdk_path'] = subprocess.check_output([
+def fill_sdk_path_and_version(fill_settings: dict, platform: str, xcode_version: str or bytes):
+    """Fills the SDK path and version for |platform| into |fill_settings|."""
+    fill_settings['sdk_path'] = subprocess.check_output([
         'xcrun', '-sdk', platform, '--show-sdk-path']).strip()
-    settings_sdk['sdk_version'] = subprocess.check_output([
+    fill_settings['sdk_version'] = subprocess.check_output([
         'xcrun', '-sdk', platform, '--show-sdk-version']).strip()
-    settings_sdk['sdk_platform_path'] = subprocess.check_output([
+    fill_settings['sdk_platform_path'] = subprocess.check_output([
         'xcrun', '-sdk', platform, '--show-sdk-platform-path']).strip()
     if xcode_version >= '0720':
-        settings_sdk['sdk_build'] = subprocess.check_output([
-            'xcrun', '-sdk', platform, '--show-sdk-build-version']).strip()
+        fill_settings['sdk_build'] = subprocess.check_output([
+          'xcrun', '-sdk', platform, '--show-sdk-build-version']).strip()
     else:
-        settings_sdk['sdk_build'] = settings_sdk['sdk_version']
+        fill_settings['sdk_build'] = fill_settings['sdk_version']
 
 
 if __name__ == '__main__':
@@ -95,20 +101,20 @@ if __name__ == '__main__':
 
     if len(unknownargs) != 1:
         sys.stderr.write(
-            'usage: %s [iphoneos|iphonesimulator|macosx]\n' %
-            os.path.basename(sys.argv[0]))
+          'usage: %s [iphoneos|iphonesimulator|macosx]\n' %
+          os.path.basename(sys.argv[0]))
         sys.exit(1)
 
     settings = {}
     fill_machine_os_build(settings)
     fill_xcode_version(settings)
-    test_xcode_version = settings.get('xcode_version')
-    if test_xcode_version is None:
-        raise ValueError("Xcode version is not set or invalid.")
-    fill_sdk_path_and_version(settings, unknownargs[0], test_xcode_version)
+    try:
+        fill_sdk_path_and_version(settings, unknownargs[0], settings.get('xcode_version'))
+    except ValueError as vle:
+        print(f"Error: {vle}")
 
     for key in sorted(settings):
-        value = settings[key]
+        value = settings.get(key)
         if isinstance(value, bytes):
             value = value.decode()
         if key != 'xcode_version_int':
