@@ -55,57 +55,9 @@ Note:If the text contains special characters, please escape them according to th
     <oatconfig>
         <policylist>
             <policy name="defaultPolicy" desc="" >
-                <policyitem type="license" name="BSD" path="build/misc/mac/check_return_value.py" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/toolchain/get_concurrent_links.py" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/misc/mac/find_sdk.py" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/toolchain/get_cpu_count.py" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/misc/overrides/build.gni" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/toolchain/BUILD.gn" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/config/mac/BUILD.gn" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/config/mac/mac_sdk.gni" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/toolchain/clang_static_analyzer.gni" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/toolchain/mac/BUILD.gn" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/config/mac/mac_sdk_overrides.gni" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/toolchain/clang_static_analyzer_wrapper.py" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/toolchain/mac/filter_libtool.py" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/config/mac/sdk_info.py" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/toolchain/concurrent_links.gni" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/toolchain/mac/get_tool_mtime.py" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/config/mac/symbols.gni" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/toolchain/gcc_link_wrapper.py" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/toolchain/mac/linker_driver.py" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/config/mac/xcrun.py" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                <policyitem type="license" name="BSD" path="build/toolchain/gcc_solink_wrapper.py" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc="BSL-3-Clause LICENSE"/>
-                
-                <policyitem type="copyright" name="Chromium Author" path="build/misc/mac/check_return_value.py" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/toolchain/get_concurrent_links.py" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/misc/mac/find_sdk.py" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/toolchain/get_cpu_count.py" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/misc/overrides/build.gni" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/toolchain/BUILD.gn" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/config/mac/BUILD.gn" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/config/mac/mac_sdk.gni" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/toolchain/clang_static_analyzer.gni" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/toolchain/mac/BUILD.gn" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/config/mac/mac_sdk_overrides.gni" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/toolchain/clang_static_analyzer_wrapper.py" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/toolchain/mac/filter_libtool.py" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/config/mac/sdk_info.py" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/toolchain/concurrent_links.gni" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/toolchain/mac/get_tool_mtime.py" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/config/mac/symbols.gni" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/toolchain/gcc_link_wrapper.py" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/toolchain/mac/linker_driver.py" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/config/mac/xcrun.py" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="copyright" name="Chromium Author" path="build/toolchain/gcc_solink_wrapper.py" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="copyright change"/>
-                <policyitem type="compatibility" name="Apache" path="arkcompiler/toolchain" rule="may" group="defaultGroup" filefilter="defaultPolicyFilter" desc=""/>
             </policy>
         </policylist>
         <policylist>
-            <policy name="projectPolicy" desc="">
-                <policyitem type="copyright" name="Copyright 2015 The Chromium Authors. All rights reserved." path="build/toolchain/.*" rule="may" group="defaultGroup" filefilter="copyrightPolicyFilter" desc="Chromium Copyright"/>
-                <policyitem type="license" name="BSDStyleLicense" path="build/toolchain/.*" desc="Chromium License"/>
-            </policy>
         </policylist>
         <filefilterlist>
             <filefilter name="copyrightPolicyFilter" desc="copyright文件头校验策略的过滤条件" >

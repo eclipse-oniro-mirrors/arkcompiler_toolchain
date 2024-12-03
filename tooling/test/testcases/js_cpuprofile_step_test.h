@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-#ifndef ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_CPUPROFILE_TEST_H
-#define ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_CPUPROFILE_TEST_H
+#ifndef ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_CPUPROFILE_STEP_TEST_H
+#define ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_CPUPROFILE_STEP_TEST_H
 
 #include "tooling/test/client_utils/test_util.h"
 
 namespace panda::ecmascript::tooling::test {
-class JsCpuprofileTest : public TestActions {
+class JsCpuprofileStepTest : public TestActions {
 public:
-    JsCpuprofileTest()
+    JsCpuprofileStepTest()
     {
         testAction = {
             {SocketAction::SEND, "enable"},
@@ -43,6 +43,31 @@ public:
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
 
             {SocketAction::SEND, "resume"},
+            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
+
+            {SocketAction::SEND, "so"},
+            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
+
+            {SocketAction::SEND, "si"},
+            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
+
+            {SocketAction::SEND, "sov"},
+            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
+
+            {SocketAction::SEND, "so"},
+            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
+
+            {SocketAction::SEND, "sov"},
             {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
             {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
@@ -73,11 +98,6 @@ public:
                 }},
             {SocketAction::SEND, "cpuprofile-disable"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
-            {SocketAction::SEND, "resume"},
-            {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
-            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
-            {SocketAction::RECV, "Debugger.paused", ActionRule::STRING_CONTAIN},
-
             // reply success and run
             {SocketAction::SEND, "success"},
             {SocketAction::SEND, "resume"},
@@ -90,7 +110,7 @@ public:
     {
         return {pandaFile_, entryPoint_};
     }
-    ~JsCpuprofileTest() = default;
+    ~JsCpuprofileStepTest() = default;
 
 private:
     std::string pandaFile_ = DEBUGGER_ABC_DIR "sample.abc";
@@ -98,10 +118,10 @@ private:
     std::string entryPoint_ = "_GLOBAL::func_main_0";
 };
 
-std::unique_ptr<TestActions> GetJsCpuprofileTest()
+std::unique_ptr<TestActions> GetJsCpuprofileStepTest()
 {
-    return std::make_unique<JsCpuprofileTest>();
+    return std::make_unique<JsCpuprofileStepTest>();
 }
 }  // namespace panda::ecmascript::tooling::test
 
-#endif // ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_CPUPROFILE_TEST_H
+#endif // ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_CPUPROFILE_STEP_TEST_H

@@ -125,7 +125,6 @@ ohos_shared_library("libark_ecma_debugger") {
   if (!is_standard_system) {
     relative_install_dir = "ark"
   }
-  innerapi_tags = [ "platformsdk" ]
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
   output_name = "libark_tooling"

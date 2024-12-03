@@ -15,9 +15,5 @@ group("fuzztest") {
   testonly = true
   deps = []
 
-  deps += [
-    "wsserver_fuzzer:fuzztest",
-    "wsservernotifydisconnectevent_fuzzer:fuzztest",
-    "wsserversendreply_fuzzer:fuzztest",
-  ]
+  deps += [ "wsserversendreply_fuzzer:fuzztest" ]
 }
