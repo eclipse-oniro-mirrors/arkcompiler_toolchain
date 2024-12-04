@@ -15,6 +15,7 @@ import("//arkcompiler/toolchain/toolchain.gni")
 
 ohos_executable("ark_multi") {
   sources = [
+    "../../../common/log_wrapper.cpp",
     "../../utils/utils.cpp",
     "main.cpp",
   ]
