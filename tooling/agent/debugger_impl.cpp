@@ -141,7 +141,7 @@ bool DebuggerImpl::CheckScriptParsed([[maybe_unused]] const std::string &fileNam
     && !defined(PANDA_TARGET_ANDROID) && !defined(PANDA_TARGET_IOS) \
     && !defined(PANDA_TARGET_LINUX)
     if (fileName.substr(0, DATA_APP_PATH.length()) != DATA_APP_PATH) {
-        LOG_DEBUGGER(DEBUG) << "SendableScriptParsed: unsupport file: " << fileName;
+        LOG_DEBUGGER(DEBUG) << "CheckScriptParsed: unsupport file: " << fileName;
         return false;
     }
 #endif
