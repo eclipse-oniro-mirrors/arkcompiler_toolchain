@@ -45,6 +45,8 @@ public:
     static constexpr char STOPDEBUGGER_MESSAGE_TEST[] = "stopDebugger";
     static constexpr char OPEN_ARKUI_STATE_PROFILER_TEST[] = "ArkUIStateProfilerOpen";
     static constexpr char CLOSE_ARKUI_STATE_PROFILER_TEST[] = "ArkUIStateProfilerClose";
+    static constexpr char START_RECORD_MESSAGE_TEST[] = "rsNodeStartRecord";
+    static constexpr char STOP_RECORD_MESSAGE_TEST[] = "rsNodeStopRecord";
 
     static constexpr char HELLO_INSPECTOR_CLIENT[] = "hello inspector client";
     static constexpr char INSPECTOR_SERVER_OK[]    = "inspector server ok";
@@ -83,6 +85,10 @@ void CallbackInit()
         g_createInfoId = id;
     };
     SetSwitchCallBack(switchStatusCb, createInfoCb, g_instanceId);
+
+    auto startRecordFunc = []() -> void {};
+    auto stopRecordFunc = []() -> void {};
+    SetRecordCallback(startRecordFunc, stopRecordFunc);
     GTEST_LOG_(INFO) << "ConnectServerTest::CallbackInit finished";
 }
 
@@ -109,6 +115,8 @@ HWTEST_F(ConnectServerTest, InspectorConnectTest, testing::ext::TestSize.Level0)
         EXPECT_TRUE(clientSocket.SendReply(REQUEST_MESSAGE_TEST));
         EXPECT_TRUE(clientSocket.SendReply(OPEN_MESSAGE_TEST));
         EXPECT_TRUE(clientSocket.SendReply(CONNECTED_MESSAGE_TEST));
+        EXPECT_TRUE(clientSocket.SendReply(START_RECORD_MESSAGE_TEST));
+        EXPECT_TRUE(clientSocket.SendReply(STOP_RECORD_MESSAGE_TEST));
 
         EXPECT_STREQ(clientSocket.Decode().c_str(), HELLO_INSPECTOR_CLIENT);
 

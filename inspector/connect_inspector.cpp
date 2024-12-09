@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,8 @@ static constexpr char REQUEST_MESSAGE[] = "tree";
 static constexpr char STOPDEBUGGER_MESSAGE[] = "stopDebugger";
 static constexpr char OPEN_ARKUI_STATE_PROFILER[] = "ArkUIStateProfilerOpen";
 static constexpr char CLOSE_ARKUI_STATE_PROFILER[] = "ArkUIStateProfilerClose";
+static constexpr char START_RECORD_MESSAGE[] = "rsNodeStartRecord";
+static constexpr char STOP_RECORD_MESSAGE[] = "rsNodeStopRecord";
 std::function<void(bool)> g_setConnectCallBack;
 
 void* HandleDebugManager(void* const server)
@@ -63,6 +65,25 @@ void OnOpenMessage(const std::string& message)
         if (g_inspector->setSwitchStatus_ != nullptr) {
             LOGI("layoutOpen start");
             g_inspector->setSwitchStatus_(true);
+        }
+    }
+}
+
+void OnInspectorRecordMessage(const std::string& message)
+{
+    if (message.find(START_RECORD_MESSAGE, 0) != std::string::npos) {
+        if (g_inspector->startRecord_ != nullptr && !g_inspector->isRecording_) {
+            LOGI("record start");
+            g_inspector->startRecord_();
+            g_inspector->isRecording_ = true;
+        }
+    }
+
+    if (message.find(STOP_RECORD_MESSAGE, 0) != std::string::npos) {
+        if (g_inspector->stopRecord_ != nullptr && g_inspector->isRecording_) {
+            LOGI("record stop");
+            g_inspector->stopRecord_();
+            g_inspector->isRecording_ = false;
         }
     }
 }
@@ -115,6 +136,7 @@ void OnMessage(const std::string& message)
                 g_inspector->setDebugMode_();
             }
         }
+        OnInspectorRecordMessage(message);
     }
 }
 
@@ -272,4 +294,14 @@ void SetProfilerCallback(const std::function<void(bool)> &setArkUIStateProfilerS
     g_inspector->setArkUIStateProfilerStatus_ = setArkUIStateProfilerStatus;
 }
 
+void SetRecordCallback(const std::function<void(void)> &startRecordFunc,
+    const std::function<void(void)> &stopRecordFunc)
+{
+    std::lock_guard<std::mutex> lock(g_connectMutex);
+    if (g_inspector == nullptr) {
+        g_inspector = std::make_unique<ConnectInspector>();
+    }
+    g_inspector->startRecord_ = startRecordFunc;
+    g_inspector->stopRecord_ = stopRecordFunc;
+}
 } // OHOS::ArkCompiler::Toolchain
