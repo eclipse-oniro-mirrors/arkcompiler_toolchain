@@ -88,6 +88,11 @@ bool DebuggerImpl::NotifyScriptParsed(const std::string &fileName, std::string_v
         return false;
     }
 
+    if (!vm_->GetJsDebuggerManager()->GetFaApp() && jsPandaFile->IsBundlePack()) {
+        LOG_DEBUGGER(DEBUG) << "NotifyScriptParsed: Unmerge file: " << fileName;
+        return false;
+    }
+    
     const char *recordName = entryPoint.data();
     auto mainMethodIndex = panda_file::File::EntityId(jsPandaFile->GetMainMethodIndex(recordName));
     const std::string &source = extractor->GetSourceCode(mainMethodIndex);
