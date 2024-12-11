@@ -228,6 +228,11 @@ class ArkPy:
                 "description": "Compile arkcompiler target and run regresstest with arkcompiler target.",
                 "gn_targets_depend_on": ["default"],
             },
+            "hybrid": {
+                "flags": ["hybrid"],
+                "description": "Compile ArkJS and STS parts in hybrid mode.",
+                "gn_targets_depend_on": ["hybrid"],
+            },
             "gn_target": {
                 "flags": ["<name of target in \"*.gn*\" file>"],  # any other flags
                 "description":
@@ -1015,6 +1020,11 @@ class ArkPy:
             self.build_for_runtime_core_unittest(out_path, gn_args, self.RUNTIME_CORE_UNITTEST_LOG_FILE_NAME)
         elif self.is_dict_flags_match_arg(self.ARG_DICT.get("target").get("regresstest"), arg_list[0]):
             self.build_for_regress_test(out_path, gn_args, arg_list)
+        elif self.is_dict_flags_match_arg(self.ARG_DICT.get("target").get("hybrid"), arg_list[0]):
+            self.build_for_gn_target(out_path,
+                                    gn_args + ["ark_ets_hybrid=true", "ark_js_hybrid=true"],
+                                    self.ARG_DICT.get("target").get("hybrid").get("gn_targets_depend_on"),
+                                    self.GN_TARGET_LOG_FILE_NAME)
         else:
             self.build_for_gn_target(out_path, gn_args, arg_list, self.GN_TARGET_LOG_FILE_NAME)
         return
