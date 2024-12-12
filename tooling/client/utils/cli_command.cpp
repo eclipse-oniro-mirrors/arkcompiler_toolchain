@@ -505,6 +505,9 @@ ErrCode CliCommand::PrintCommand(const std::string &cmd)
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
     RuntimeClient &runtimeClient = session->GetDomainManager().GetRuntimeClient();
     if (GetArgList().size() == 1) {
+        if (!Utils::IsNumber(GetArgList()[0])) {
+            return ErrCode::ERR_FAIL;
+        }
         runtimeClient.SetIsInitializeTree(false);
         VariableManager &variableManager = session->GetVariableManager();
         int32_t objectId = variableManager.FindObjectIdWithIndex(std::stoi(GetArgList()[0]));
