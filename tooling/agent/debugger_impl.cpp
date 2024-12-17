@@ -459,6 +459,25 @@ void DebuggerImpl::InitializeExtendedProtocolsList()
     debuggerExtendedProtocols_ = std::move(debuggerProtocolList);
 }
 
+std::string DebuggerImpl::DispatcherImpl::GetJsFrames()
+{
+    std::vector<void *> nativePointers = debugger_->NativeAddr();
+    if (nativePointers.empty()) {
+        return "";
+    }
+    tooling::MixedStack mixedStack;
+    mixedStack.SetNativePointers(nativePointers);
+    std::vector<std::unique_ptr<CallFrame>> callFrames;
+    if (debugger_->GenerateCallFrames(&callFrames, false)) {
+        mixedStack.SetCallFrames(std::move(callFrames));
+    }
+    return mixedStack.ToJson()->Stringify();
+}
+
+std::vector<void *> DebuggerImpl::NativeAddr()
+{
+    return DebuggerApi::GetNativePointer(vm_);
+}
 void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
     Method method = GetMethodEnum(request.GetMethod());

@@ -45,6 +45,8 @@ TOOLCHAIN_EXPORT void ProcessMessage(const ::panda::ecmascript::EcmaVM *vm);
 
 TOOLCHAIN_EXPORT int32_t GetDispatchStatus(const ::panda::ecmascript::EcmaVM *vm);
 
+TOOLCHAIN_EXPORT const char* GetCallFrames(const ::panda::ecmascript::EcmaVM *vm);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

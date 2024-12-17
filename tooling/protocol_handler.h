@@ -48,6 +48,10 @@ public:
 
     std::unique_ptr<PtJson> CreateErrorReply(const DispatchResponse &response);
     void SendReply(const PtJson &reply);
+    const Dispatcher* GetDispatcher() const
+    {
+        return &dispatcher_;
+    }
 
 private:
     NO_MOVE_SEMANTIC(ProtocolHandler);

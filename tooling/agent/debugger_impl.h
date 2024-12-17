@@ -52,6 +52,7 @@ public:
                            const Local<JSValueRef> &exception);
     bool NotifyNativeOut();
     void NotifyHandleProtocolCommand();
+    std::vector<void *> NativeAddr();
     void NotifyNativeCalling(const void *nativeAddress);
     void NotifyNativeReturn(const void *nativeAddress);
     void NotifyReturnNative();
@@ -151,6 +152,7 @@ public:
         ~DispatcherImpl() override = default;
 
         void ContinueToLocation(const DispatchRequest &request);
+        std::string GetJsFrames();
         void Dispatch(const DispatchRequest &request) override;
         void Enable(const DispatchRequest &request);
         void Disable(const DispatchRequest &request);

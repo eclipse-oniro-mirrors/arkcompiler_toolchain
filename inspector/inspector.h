@@ -47,6 +47,7 @@ void WaitForDebugger(void* vm);
 
 void StoreDebuggerInfo(int tid, void* vm, const DebuggerPostTask& debuggerPostTask);
 
+const char* GetJsBacktrace();
 #if __cplusplus
 }
 #endif
@@ -58,7 +59,7 @@ public:
 
     void OnMessage(std::string&& msg);
 #if defined(OHOS_PLATFORM)
-    uint64_t GetThreadOrTaskId();
+    static uint64_t GetThreadOrTaskId();
 #endif // defined(OHOS_PLATFORM)
 
     static constexpr int32_t DELAY_CHECK_DISPATCH_STATUS = 100;

@@ -21,6 +21,7 @@
 #include "ecmascript/ecma_vm.h"
 
 namespace panda::ecmascript::tooling {
+#define EMPTY_STRING ""
 void InitializeDebugger(::panda::ecmascript::EcmaVM *vm,
                         const std::function<void(const void *, const std::string &)> &onResponse)
 {
@@ -94,5 +95,26 @@ int32_t GetDispatchStatus(const ::panda::ecmascript::EcmaVM *vm)
         return handler->GetDispatchStatus();
     }
     return ProtocolHandler::DispatchStatus::UNKNOWN;
+}
+
+// strdup allocates memory; caller is responsible for freeing it
+// Return the dynamically allocated string (must be freed by the caller)
+const char* GetCallFrames(const ::panda::ecmascript::EcmaVM *vm)
+{
+    if (vm == nullptr || vm->GetJsDebuggerManager() == nullptr) {
+        LOG_DEBUGGER(ERROR) << "VM has already been destroyed";
+        return EMPTY_STRING;
+    }
+    ProtocolHandler *handler = vm->GetJsDebuggerManager()->GetDebuggerHandler();
+    if (LIKELY(handler != nullptr)) {
+        auto dispatcher = handler->GetDispatcher();
+        if (LIKELY(dispatcher != nullptr)) {
+            auto mixStack = dispatcher->GetJsFrames();
+            const char* buffer = strdup(mixStack.c_str());
+            return buffer;
+        }
+        return EMPTY_STRING;
+    }
+    return EMPTY_STRING;
 }
 }  // namespace panda::ecmascript::tooling

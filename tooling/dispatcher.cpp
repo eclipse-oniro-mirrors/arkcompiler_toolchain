@@ -200,4 +200,14 @@ void Dispatcher::Dispatch(const DispatchRequest &request)
         }
     }
 }
+
+std::string Dispatcher::GetJsFrames() const
+{
+    auto dispatcher = dispatchers_.find("Debugger");
+    if (dispatcher != dispatchers_.end()) {
+        auto debuggerImpl = reinterpret_cast<DebuggerImpl::DispatcherImpl*>(dispatcher->second.get());
+        return debuggerImpl->GetJsFrames();
+    }
+    return "";
+}
 }  // namespace panda::ecmascript::tooling
