@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -229,9 +229,9 @@ class ArkPy:
                 "gn_targets_depend_on": ["default"],
             },
             "hybrid": {
-                "flags": ["hybrid"],
+                "flags": ["hybrid", "hybrid_tests"],
                 "description": "Compile ArkJS and STS parts in hybrid mode.",
-                "gn_targets_depend_on": ["hybrid"],
+                "gn_targets_depend_on": [],
             },
             "gn_target": {
                 "flags": ["<name of target in \"*.gn*\" file>"],  # any other flags
@@ -1027,9 +1027,10 @@ class ArkPy:
         elif self.is_dict_flags_match_arg(self.ARG_DICT.get("target").get("regresstest"), arg_list[0]):
             self.build_for_regress_test(out_path, gn_args, arg_list)
         elif self.is_dict_flags_match_arg(self.ARG_DICT.get("target").get("hybrid"), arg_list[0]):
+            targets = arg_list
             self.build_for_gn_target(out_path,
                                     gn_args + ["ark_ets_hybrid=true", "ark_js_hybrid=true"],
-                                    self.ARG_DICT.get("target").get("hybrid").get("gn_targets_depend_on"),
+                                    targets,
                                     self.GN_TARGET_LOG_FILE_NAME)
         else:
             self.build_for_gn_target(out_path, gn_args, arg_list, self.GN_TARGET_LOG_FILE_NAME)
