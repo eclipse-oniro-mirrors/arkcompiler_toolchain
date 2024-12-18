@@ -47,6 +47,8 @@ void WaitForDebugger(void* vm);
 
 void StoreDebuggerInfo(int tid, void* vm, const DebuggerPostTask& debuggerPostTask);
 
+// The returned pointer must be released using free() after it is no longer needed.
+// Failure to release the memory will result in memory leaks.
 const char* GetJsBacktrace();
 #if __cplusplus
 }

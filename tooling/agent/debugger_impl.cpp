@@ -456,7 +456,7 @@ void DebuggerImpl::InitializeExtendedProtocolsList()
 
 std::string DebuggerImpl::DispatcherImpl::GetJsFrames()
 {
-    std::vector<void *> nativePointers = debugger_->NativeAddr();
+    std::vector<void *> nativePointers = debugger_->GetNativeAddr();
     if (nativePointers.empty()) {
         return "";
     }
@@ -469,7 +469,7 @@ std::string DebuggerImpl::DispatcherImpl::GetJsFrames()
     return mixedStack.ToJson()->Stringify();
 }
 
-std::vector<void *> DebuggerImpl::NativeAddr()
+std::vector<void *> DebuggerImpl::GetNativeAddr()
 {
     return DebuggerApi::GetNativePointer(vm_);
 }

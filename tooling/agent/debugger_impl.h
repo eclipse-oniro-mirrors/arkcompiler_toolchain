@@ -52,7 +52,7 @@ public:
                            const Local<JSValueRef> &exception);
     bool NotifyNativeOut();
     void NotifyHandleProtocolCommand();
-    std::vector<void *> NativeAddr();
+    std::vector<void *> GetNativeAddr();
     void NotifyNativeCalling(const void *nativeAddress);
     void NotifyNativeReturn(const void *nativeAddress);
     void NotifyReturnNative();
