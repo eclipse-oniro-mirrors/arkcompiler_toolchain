@@ -472,6 +472,10 @@ const char* GetJsBacktrace()
 {
 #if defined(OHOS_PLATFORM)
     void* vm = GetEcmaVM(Inspector::GetThreadOrTaskId());
+    if (g_getCallFrames == nullptr) {
+        LOGE("GetCallFrames symbol resolve failed");
+        return "";
+    }
     return g_getCallFrames(vm);
 #else
     return "";

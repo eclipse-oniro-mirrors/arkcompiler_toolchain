@@ -21,7 +21,6 @@
 #include "ecmascript/ecma_vm.h"
 
 namespace panda::ecmascript::tooling {
-#define EMPTY_STRING ""
 void InitializeDebugger(::panda::ecmascript::EcmaVM *vm,
                         const std::function<void(const void *, const std::string &)> &onResponse)
 {
@@ -103,7 +102,7 @@ const char* GetCallFrames(const ::panda::ecmascript::EcmaVM *vm)
 {
     if (vm == nullptr || vm->GetJsDebuggerManager() == nullptr) {
         LOG_DEBUGGER(ERROR) << "VM has already been destroyed";
-        return EMPTY_STRING;
+        return "";
     }
     ProtocolHandler *handler = vm->GetJsDebuggerManager()->GetDebuggerHandler();
     if (LIKELY(handler != nullptr)) {
@@ -113,8 +112,8 @@ const char* GetCallFrames(const ::panda::ecmascript::EcmaVM *vm)
             const char* buffer = strdup(mixStack.c_str());
             return buffer;
         }
-        return EMPTY_STRING;
+        return "";
     }
-    return EMPTY_STRING;
+    return "";
 }
 }  // namespace panda::ecmascript::tooling
