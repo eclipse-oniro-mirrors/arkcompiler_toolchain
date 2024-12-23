@@ -100,6 +100,8 @@ public:
     ~BreakpointInfo() override = default;
 
     static std::unique_ptr<BreakpointInfo> Create(const PtJson &params);
+    static std::shared_ptr<BreakpointInfo> CreateAsSharedPtr(int32_t line, int32_t column,
+        std::string url, std::string condition = "");
     std::unique_ptr<PtJson> ToJson() const override;
 
     int32_t GetLineNumber() const
@@ -173,6 +175,15 @@ private:
     std::optional<bool> restrictToFunction_ {};
 };
 
+class HashBreakpointInfo {
+public:
+    size_t operator()(const std::shared_ptr<BreakpointInfo> &bpoint) const
+    {
+        return (std::hash<std::string>()(bpoint->GetUrl())) ^
+            (std::hash<uint32_t>()(bpoint->GetLineNumber())) ^
+            (std::hash<uint32_t>()(bpoint->GetColumnNumber()));
+    }
+};
 // Runtime.ScriptId
 using ScriptId = int32_t;
 

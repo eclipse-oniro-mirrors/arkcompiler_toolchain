@@ -102,6 +102,16 @@ public:
         endLine_ = endLine;
     }
 
+    std::vector<std::shared_ptr<BreakpointReturnInfo>> GetLocations() const
+    {
+        return locations_;
+    }
+
+    void SetLocations(std::vector<std::shared_ptr<BreakpointReturnInfo>> locations)
+    {
+        locations_ = locations;
+    }
+
 private:
     NO_COPY_SEMANTIC(PtScript);
     NO_MOVE_SEMANTIC(PtScript);
@@ -113,6 +123,7 @@ private:
     std::string scriptSource_ {};  // js source code
     std::string sourceMapUrl_ {};  // source map url
     int32_t endLine_ {0};      // total line number of source file
+    std::vector<std::shared_ptr<BreakpointReturnInfo>> locations_ {};
 };
 }  // namespace panda::ecmascript::tooling
 #endif

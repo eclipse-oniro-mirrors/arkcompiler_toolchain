@@ -32,6 +32,7 @@ class TestHooks;
 }  // namespace test
 
 enum class DebuggerState { DISABLED, ENABLED, PAUSED };
+enum class DebuggerFeature { LAUNCH_ACCELERATE, UNKNOWN };
 class DebuggerImpl final {
 public:
     DebuggerImpl(const EcmaVM *vm, ProtocolChannel *channel, RuntimeImpl *runtime);
@@ -40,10 +41,8 @@ public:
     // event
     bool NotifyScriptParsed(const std::string &fileName,
                             std::string_view entryPoint = "func_main_0");
-    bool SendableScriptParsed(const std::string &fileName, const std::string &url,
-                              const std::string &source, const std::string &recordName);
     bool CheckScriptParsed(const std::string &fileName);
-    bool SendableMethodEntry(JSHandle<Method> method);
+    bool NotifyScriptParsedBySendable(JSHandle<Method> method);
     bool MatchUrlAndFileName(const std::string &url, const std::string &fileName);
     bool NotifySingleStep(const JSPtLocation &location);
     void NotifyPaused(std::optional<JSPtLocation> location, PauseReason reason);
@@ -80,7 +79,7 @@ public:
                                         bool isSmartBreakpoint = false);
     DispatchResponse SetBreakpointsActive(const SetBreakpointsActiveParams &params);
     DispatchResponse GetPossibleAndSetBreakpointByUrl(const GetPossibleAndSetBreakpointParams &params,
-        std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
+        std::vector<std::shared_ptr<BreakpointReturnInfo>> &outLocations);
     DispatchResponse SetPauseOnExceptions(const SetPauseOnExceptionsParams &params);
     DispatchResponse SetSkipAllPauses(const SetSkipAllPausesParams &params);
     DispatchResponse SetNativeRange(const SetNativeRangeParams &params);
@@ -98,7 +97,7 @@ public:
             const CallFunctionOnParams &params,
             std::unique_ptr<RemoteObject> *outRemoteObject,
             std::optional<std::unique_ptr<ExceptionDetails>> *outExceptionDetails);
-
+    DispatchResponse SaveAllPossibleBreakpoints(const SaveAllPossibleBreakpointsParams &params);
     /**
      * @brief: match first script and callback
      *
@@ -181,6 +180,7 @@ public:
         void DropFrame(const DispatchRequest &request);
         void ClientDisconnect(const DispatchRequest &request);
         void CallFunctionOn(const DispatchRequest &request);
+        void SaveAllPossibleBreakpoints(const DispatchRequest &request);
 
         enum class Method {
             CONTINUE_TO_LOCATION,
@@ -211,6 +211,7 @@ public:
             RESET_SINGLE_STEPPER,
             CLIENT_DISCONNECT,
             CALL_FUNCTION_ON,
+            SAVE_ALL_POSSIBLE_BREAKPOINTS,
             UNKNOWN
         };
         Method GetMethodEnum(const std::string& method);
@@ -254,10 +255,19 @@ private:
     bool CheckPauseOnException();
     bool IsWithinVariableScope(const LocalVariableInfo &localVariableInfo, uint32_t bcOffset);
     bool ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
-        std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations);
+        std::vector<std::shared_ptr<BreakpointReturnInfo>> &outLocations);
     bool IsVariableSkipped(const std::string &varName);
     Local<FunctionRef> CheckAndGenerateCondFunc(const std::optional<std::string> &condition);
     void InitializeExtendedProtocolsList();
+    bool NeedToSetBreakpointsWhenParsingScript(const std::string &url);
+    std::vector<std::shared_ptr<BreakpointReturnInfo>> SetBreakpointsWhenParsingScript(const std::string &url);
+    void SavePendingBreakpoints(const SaveAllPossibleBreakpointsParams &params);
+    bool InsertIntoPendingBreakpoints(const BreakpointInfo &breakpoint);
+    void SaveParsedScriptsAndUrl(const std::string &fileName, const std::string &url,
+        const std::string &recordName, const std::string &source = "");
+    void EnableDebuggerFeatures(const EnableParams &params);
+    DebuggerFeature GetDebuggerFeatureEnum(std::string &option);
+    void EnableFeature(DebuggerFeature feature);
 
     const std::unordered_set<std::string> &GetRecordName(const std::string &url)
     {
@@ -267,6 +277,14 @@ private:
             return iter->second;
         }
         return recordName;
+    }
+    void EnableLaunchAccelerateMode()
+    {
+        breakOnStartEnable_ = false;
+    }
+    bool IsLaunchAccelerateMode() const
+    {
+        return !breakOnStartEnable_;
     }
 
     class Frontend {
@@ -299,7 +317,7 @@ private:
 
     std::unordered_map<std::string, std::unordered_set<std::string>> recordNames_ {};
     std::unordered_map<std::string, std::unordered_set<std::string>> urlFileNameMap_ {};
-    std::unordered_map<ScriptId, std::unique_ptr<PtScript>> scripts_ {};
+    std::unordered_map<ScriptId, std::shared_ptr<PtScript>> scripts_ {};
     PauseOnExceptionsState pauseOnException_ {PauseOnExceptionsState::NONE};
     DebuggerState debuggerState_ {DebuggerState::ENABLED};
     bool pauseOnNextByteCode_ {false};
@@ -321,6 +339,10 @@ private:
     JsDebuggerManager::SingleStepperFunc stepperFunc_ {nullptr};
     JsDebuggerManager::ReturnNativeFunc returnNative_ {nullptr};
     std::vector<std::string> debuggerExtendedProtocols_ {};
+    // For launch accelerate mode
+    std::unordered_map<std::string, CUnorderedSet<std::shared_ptr<BreakpointInfo>, HashBreakpointInfo>>
+        breakpointPendingMap_ {};
+    bool breakOnStartEnable_ {true};
 
     friend class JSPtHooks;
     friend class test::TestHooks;

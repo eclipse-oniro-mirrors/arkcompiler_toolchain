@@ -417,12 +417,12 @@ HWTEST_F_L0(DebuggerReturnsTest, SearchInContentReturnsToJsonTest)
 
 HWTEST_F_L0(DebuggerReturnsTest, GetPossibleAndSetBreakpointByUrlReturnsToJsonTest)
 {
-    auto locations = std::vector<std::unique_ptr<BreakpointReturnInfo>>();
-    std::unique_ptr<BreakpointReturnInfo> breakpointReturnInfo = std::make_unique<BreakpointReturnInfo>();
+    auto locations = std::vector<std::shared_ptr<BreakpointReturnInfo>>();
+    std::shared_ptr<BreakpointReturnInfo> breakpointReturnInfo = std::make_shared<BreakpointReturnInfo>();
     breakpointReturnInfo->SetScriptId(11).SetLineNumber(1).SetColumnNumber(44);
-    locations.emplace_back(std::move(breakpointReturnInfo));
+    locations.emplace_back(breakpointReturnInfo);
     std::unique_ptr<GetPossibleAndSetBreakpointByUrlReturns> getPossibleAndSetBreakpointByUrlReturns = std::make_unique
-                                                    <GetPossibleAndSetBreakpointByUrlReturns>(std::move(locations));
+                                                    <GetPossibleAndSetBreakpointByUrlReturns>(locations);
     std::unique_ptr<PtJson> locationsJS;
     ASSERT_EQ(getPossibleAndSetBreakpointByUrlReturns->ToJson()->GetArray("locations", &locationsJS), Result::SUCCESS);
     ASSERT_NE(locationsJS, nullptr);

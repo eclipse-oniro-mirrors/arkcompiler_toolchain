@@ -182,6 +182,10 @@ void CliCommand::CreateCommandMap()
         {std::make_pair("enable", "enable"), std::bind(&CliCommand::DebuggerCommand, this, "enable")},
         {std::make_pair("finish", "fin"), std::bind(&CliCommand::DebuggerCommand, this, "finish")},
         {std::make_pair("frame", "f"), std::bind(&CliCommand::DebuggerCommand, this, "frame")},
+        {std::make_pair("enable-launch-accelerate", "enable-acc"),
+            std::bind(&CliCommand::DebuggerCommand, this, "enable-launch-accelerate")},
+        {std::make_pair("saveAllPossibleBreakpoints", "b-new"),
+            std::bind(&CliCommand::SaveAllPossibleBreakpointsCommand, this, "saveAllPossibleBreakpoints")},
     };
     CreateOtherCommandMap();
 }
@@ -623,6 +627,11 @@ ErrCode CliCommand::TestCommand(const std::string &cmd)
         return ErrCode::ERR_FAIL;
     }
     return ErrCode::ERR_OK;
+}
+
+ErrCode CliCommand::SaveAllPossibleBreakpointsCommand(const std::string &cmd)
+{
+    return BreakCommand(cmd);
 }
 
 ErrCode CliCommand::ExecHelpCommand()
