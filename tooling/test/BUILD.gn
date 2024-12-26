@@ -54,6 +54,7 @@ test_js_files = [
   "local_variable_scope",
   "container",
   "closure_scope",
+  "closure_variable",
   "branch",
   "common_func",
   "watch_variable",
