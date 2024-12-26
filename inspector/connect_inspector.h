@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef ARKCOMPILER_TOOLCHAIN_CONNECT_SERVER_CONNECT_INSPECTOR_H
-#define ARKCOMPILER_TOOLCHAIN_CONNECT_SERVER_CONNECT_INSPECTOR_H
+#ifndef ARKCOMPILER_TOOLCHAIN_INSPECTOR_CONNECT_INSPECTOR_H
+#define ARKCOMPILER_TOOLCHAIN_INSPECTOR_CONNECT_INSPECTOR_H
 
 #include <queue>
 #include <string>
@@ -40,13 +40,7 @@ void SendMessage(const std::string& message);
 
 void StoreMessage(int32_t instanceId, const std::string& message);
 
-void SendLayoutMessage(const std::string& message);
-
-void SendProfilerMessage(const std::string &message);
-
 void SetConnectCallback(const std::function<void(bool)>& callback);
-
-void StoreInspectorInfo(const std::string& jsonTreeStr,  const std::string& jsonSnapshotStr);
 
 void RemoveMessage(int32_t instanceId);
 
@@ -62,16 +56,25 @@ void SetProfilerCallback(const std::function<void(bool)> &setArkUIStateProfilerS
 void SetRecordCallback(const std::function<void(void)> &startRecordFunc,
     const std::function<void(void)> &stopRecordFunc);
 
+/**
+ * @brief set connect server message handler callback from ArkUI.
+ * @param arkUICallback message handler callback of ArkUI.
+ *     @param paramOfCallback message recvived from IDE.
+ */
+void SetArkUICallback(const std::function<void(const char *)> &arkUICallback);
+
+/**
+ * @brief set connect server message handler callback from WMS.
+ * @param wMSCallback message handler callback of WMS.
+ *     @param paramOfCallback message recvived from IDE.
+ */
+void SetWMSCallback(const std::function<void(const char *)> &wMSCallback);
+
 #ifdef __cplusplus
 #if __cplusplus
 }
 #endif
 #endif /* End of #ifdef __cplusplus */
-
-struct LayoutInspectorInfo {
-    std::string tree;
-    std::string snapShot;
-};
 
 class ConnectInspector {
 public:
@@ -80,10 +83,8 @@ public:
 
     std::string componentName_;
     std::unordered_map<int32_t, std::string> infoBuffer_;
-    LayoutInspectorInfo layoutInspectorInfo_;
     std::unique_ptr<ConnectServer> connectServer_;
     std::atomic<bool> waitingForDebugger_ = true;
-    std::queue<std::string> ideMsgQueue_;
     std::function<void(bool)> setSwitchStatus_;
     std::function<void(bool)> setArkUIStateProfilerStatus_;
     std::function<void(int32_t)> createLayoutInfo_;
@@ -92,6 +93,28 @@ public:
     std::function<void(void)> startRecord_;
     std::function<void(void)> stopRecord_;
     bool isRecording_ = false;
+    std::function<void(const char *)> arkuiCallback_;
+    std::function<void(const char *)> wMSCallback_;
+};
+
+class ConnectRequest {
+public:
+    explicit ConnectRequest(const std::string &message);
+    ~ConnectRequest() = default;
+
+    bool IsValid() const
+    {
+        return isSuccess_;
+    }
+    
+    const std::string &GetDomain() const
+    {
+        return domain_;
+    }
+
+private:
+    std::string domain_ {};
+    bool isSuccess_ {false};
 };
 } // namespace OHOS::ArkCompiler::Toolchain
 

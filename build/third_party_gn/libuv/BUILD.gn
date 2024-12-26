@@ -127,13 +127,13 @@ ohos_source_set("libuv_source") {
   if (is_mac || (defined(is_ios) && is_ios)) {
     sources += nonwin_srcs + [
                  "//third_party/libuv/src/unix/bsd-ifaddrs.c",
-                 "//third_party/libuv/src/unix/kqueue.c",
-                 "//third_party/libuv/src/unix/random-getentropy.c",
                  "//third_party/libuv/src/unix/darwin-proctitle.c",
                  "//third_party/libuv/src/unix/darwin.c",
                  "//third_party/libuv/src/unix/fsevents.c",
-                 "//third_party/libuv/src/unix/os390-proctitle.c",
+                 "//third_party/libuv/src/unix/kqueue.c",
                  "//third_party/libuv/src/unix/log_unix.c",
+                 "//third_party/libuv/src/unix/os390-proctitle.c",
+                 "//third_party/libuv/src/unix/random-getentropy.c",
                  "//third_party/libuv/src/unix/trace_unix.c",
                ]
   } else if (is_mingw || is_win) {
@@ -170,10 +170,10 @@ ohos_source_set("libuv_source") {
     sources += nonwin_srcs + [
                  "//third_party/libuv/src/unix/linux.c",
                  "//third_party/libuv/src/unix/procfs-exepath.c",
+                 "//third_party/libuv/src/unix/proctitle.c",
                  "//third_party/libuv/src/unix/random-getentropy.c",
                  "//third_party/libuv/src/unix/random-getrandom.c",
                  "//third_party/libuv/src/unix/random-sysctl-linux.c",
-                 "//third_party/libuv/src/unix/proctitle.c",
                ]
     sources += [
       "src/log_ohos.c",
@@ -182,20 +182,20 @@ ohos_source_set("libuv_source") {
   } else if (is_linux) {
     sources += nonwin_srcs + [
                  "//third_party/libuv/src/unix/linux.c",
+                 "//third_party/libuv/src/unix/log_unix.c",
                  "//third_party/libuv/src/unix/procfs-exepath.c",
+                 "//third_party/libuv/src/unix/proctitle.c",
                  "//third_party/libuv/src/unix/random-getrandom.c",
                  "//third_party/libuv/src/unix/random-sysctl-linux.c",
-                 "//third_party/libuv/src/unix/proctitle.c",
-                 "//third_party/libuv/src/unix/log_unix.c",
                  "//third_party/libuv/src/unix/trace_unix.c",
                ]
   } else {
     sources += nonwin_srcs + [
                  "//third_party/libuv/src/unix/linux.c",
                  "//third_party/libuv/src/unix/procfs-exepath.c",
+                 "//third_party/libuv/src/unix/proctitle.c",
                  "//third_party/libuv/src/unix/random-getrandom.c",
                  "//third_party/libuv/src/unix/random-sysctl-linux.c",
-                 "//third_party/libuv/src/unix/proctitle.c",
                ]
   }
   subsystem_name = "thirdparty"
