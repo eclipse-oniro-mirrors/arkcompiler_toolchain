@@ -45,6 +45,7 @@
 #include "tooling/test/testcases/js_breakpoint_cannot_hit_test.h"
 #include "tooling/test/testcases/js_breakpoint_in_different_branch.h"
 #include "tooling/test/testcases/js_watch_variable_test.h"
+#include "tooling/test/testcases/js_watch_closure_variable_test.h"
 #include "tooling/test/testcases/js_stepinto_arrow_test.h"
 #include "tooling/test/testcases/js_stepinto_async_test.h"
 #include "tooling/test/testcases/js_stepout_arrow_test.h"
@@ -114,6 +115,7 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsJsWatchBasicTypeTest", GetJsWatchBasicTypeTest());
     TestUtil::RegisterTest("JsJsWatchSetTypeTest", GetJsWatchSetTypeTest());
     TestUtil::RegisterTest("JsJsWatchOtherTypeTest", GetJsWatchOtherTypeTest());
+    TestUtil::RegisterTest("JsWatchClosureVariableTest", GetJsWatchClosureVariableTest());
     TestUtil::RegisterTest("JsStepintoLoopTest", GetJsStepintoLoopTest());
     TestUtil::RegisterTest("JsStepintoRecursionTest", GetJsStepintoRecursionTest());
     TestUtil::RegisterTest("JsStepintoSwitchTest", GetJsStepintoSwitchTest());
