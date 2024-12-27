@@ -249,6 +249,22 @@ std::string PtJson::GetKey() const
     return std::string(object_->string);
 }
 
+std::vector<std::string> PtJson::GetKeysArray() const
+{
+    std::vector<std::string> result;
+    if (object_ == nullptr) {
+        return result;
+    }
+    cJSON *node = object_->child;
+    while (node != nullptr) {
+        if (node->string != nullptr) {
+            result.emplace_back(std::string(node->string));
+        }
+        node = node->next;
+    }
+    return result;
+}
+
 cJSON *PtJson::GetJson() const
 {
     return object_;
