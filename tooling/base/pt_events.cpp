@@ -191,6 +191,15 @@ std::unique_ptr<PtJson> ScriptParsed::ToJson() const
         result->Add("embedderName", embedderName_->c_str());
     }
 
+    std::unique_ptr<PtJson> array = PtJson::CreateArray();
+    size_t len = locations_.size();
+    for (size_t i = 0; i < len; i++) {
+        ASSERT(locations_[i] != nullptr);
+        std::unique_ptr<PtJson> location = locations_[i]->ToJson();
+        array->Push(location);
+    }
+    result->Add("locations", array);
+
     std::unique_ptr<PtJson> object = PtJson::CreateObject();
     object->Add("method", GetName().c_str());
     object->Add("params", result);

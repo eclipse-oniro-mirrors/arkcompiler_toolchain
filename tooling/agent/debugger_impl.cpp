@@ -97,47 +97,40 @@ bool DebuggerImpl::NotifyScriptParsed(const std::string &fileName, std::string_v
     auto mainMethodIndex = panda_file::File::EntityId(jsPandaFile->GetMainMethodIndex(recordName));
     const std::string &source = extractor->GetSourceCode(mainMethodIndex);
     const std::string &url = extractor->GetSourceFile(mainMethodIndex);
-
-    recordNames_[url].insert(recordName);
-
     // if load module, it needs to check whether clear singlestepper_
     ClearSingleStepper();
     if (MatchUrlAndFileName(url, fileName)) {
+        LOG_DEBUGGER(WARN) << "DebuggerImpl::NotifyScriptParsed: Script already been parsed: "
+            << "url: " << url << " fileName: " << fileName;
         return false;
     }
-    urlFileNameMap_[url].insert(fileName);
 
-    // Notify script parsed event
-    std::unique_ptr<PtScript> script = std::make_unique<PtScript>(g_scriptId++, fileName, url, source);
-
-    frontend_.ScriptParsed(vm_, *script);
-
-    // Store parsed script in map
-    scripts_[script->GetScriptId()] = std::move(script);
+    SaveParsedScriptsAndUrl(fileName, url, recordName, source);
     return true;
 }
 
-bool DebuggerImpl::SendableScriptParsed(const std::string &fileName, const std::string &url,
-                                        const std::string &source, const std::string &recordName)
+std::vector<std::shared_ptr<BreakpointReturnInfo>> DebuggerImpl::SetBreakpointsWhenParsingScript(const std::string &url)
 {
-    if (!CheckScriptParsed(fileName)) {
-        return false;
+    std::vector<std::shared_ptr<BreakpointReturnInfo>> outLocations {};
+    for (const auto &breakpoint : breakpointPendingMap_[url]) {
+        if (!ProcessSingleBreakpoint(*breakpoint, outLocations)) {
+            std::string invalidBpId = "invalid";
+            std::shared_ptr<BreakpointReturnInfo> bpInfo = std::make_shared<BreakpointReturnInfo>();
+            bpInfo->SetId(invalidBpId)
+                .SetLineNumber(breakpoint->GetLineNumber())
+                .SetColumnNumber(breakpoint->GetColumnNumber());
+            outLocations.emplace_back(bpInfo);
+        }
     }
+    return outLocations;
+}
 
-    recordNames_[url].insert(recordName);
-
-    // if load module, it needs to check whether clear singlestepper_
-    ClearSingleStepper();
-    
-    urlFileNameMap_[url].insert(fileName);
-    // Notify script parsed event
-    std::unique_ptr<PtScript> script = std::make_unique<PtScript>(g_scriptId++, fileName, url, source);
-
-    frontend_.ScriptParsed(vm_, *script);
-
-    // Store parsed script in map
-    scripts_[script->GetScriptId()] = std::move(script);
-    return true;
+bool DebuggerImpl::NeedToSetBreakpointsWhenParsingScript(const std::string &url)
+{
+    if (breakpointPendingMap_.find(url) != breakpointPendingMap_.end()) {
+        return !breakpointPendingMap_[url].empty();
+    }
+    return false;
 }
 
 bool DebuggerImpl::CheckScriptParsed([[maybe_unused]] const std::string &fileName)
@@ -151,7 +144,7 @@ bool DebuggerImpl::CheckScriptParsed([[maybe_unused]] const std::string &fileNam
     }
 #endif
 
-    // The release application does not require scriptParsed
+    // check if Debugable flag is true in module.json
     if (!vm_->GetJsDebuggerManager()->IsDebugApp()) {
         return false;
     }
@@ -159,8 +152,27 @@ bool DebuggerImpl::CheckScriptParsed([[maybe_unused]] const std::string &fileNam
     return true;
 }
 
-bool DebuggerImpl::SendableMethodEntry(JSHandle<Method> method)
+void DebuggerImpl::SaveParsedScriptsAndUrl(const std::string &fileName, const std::string &url,
+    const std::string &recordName, const std::string &source)
 {
+    // Save recordName to its corresponding url
+    recordNames_[url].insert(recordName);
+    // Save parsed fileName to its corresponding url
+    urlFileNameMap_[url].insert(fileName);
+    // Create and save script
+    std::shared_ptr<PtScript> script = std::make_shared<PtScript>(g_scriptId++, fileName, url, source);
+    scripts_[script->GetScriptId()] = script;
+    // Check if is launch accelerate mode & has pending bps to set
+    if (IsLaunchAccelerateMode() && NeedToSetBreakpointsWhenParsingScript(url)) {
+        script->SetLocations(SetBreakpointsWhenParsingScript(url));
+    }
+    // Notify frontend ScriptParsed event
+    frontend_.ScriptParsed(vm_, *script);
+}
+
+bool DebuggerImpl::NotifyScriptParsedBySendable(JSHandle<Method> method)
+{
+    // Find extractor and retrieve infos
     const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
     if (jsPandaFile == nullptr) {
         LOG_DEBUGGER(ERROR) << "JSPandaFile is nullptr";
@@ -174,14 +186,23 @@ bool DebuggerImpl::SendableMethodEntry(JSHandle<Method> method)
     auto methodId = method->GetMethodId();
     const std::string &url = extractor->GetSourceFile(methodId);
     const std::string &fileName = std::string(jsPandaFile->GetJSPandaFileDesc());
-    if (!MatchUrlAndFileName(url, fileName)) {
-        // scriptParsed
-        const std::string &source = extractor->GetSourceCode(methodId);
-        const std::string &recordName = std::string(method->GetRecordNameStr());
-        SendableScriptParsed(fileName, url, source, recordName);
-        return true;
+    // Check url path & is debugable in module.json
+    if (!CheckScriptParsed(fileName)) {
+        return false;
     }
-    return false;
+    // Clear SingleStepper before notify
+    ClearSingleStepper();
+    // Check if this (url, fileName) pair has already been parsed
+    if (MatchUrlAndFileName(url, fileName)) {
+        LOG_DEBUGGER(WARN) << "DebuggerImpl::NotifyScriptParsedBySendable: Script already been parsed: "
+            << "url: " << url << " fileName: " << fileName;
+        return false;
+    }
+    // Parse and save this file
+    const std::string &source = extractor->GetSourceCode(methodId);
+    const std::string &recordName = std::string(method->GetRecordNameStr());
+    SaveParsedScriptsAndUrl(fileName, url, recordName, source);
+    return true;
 }
 
 bool DebuggerImpl::MatchUrlAndFileName(const std::string &url, const std::string &fileName)
@@ -189,7 +210,6 @@ bool DebuggerImpl::MatchUrlAndFileName(const std::string &url, const std::string
     auto urlFileNameIter = urlFileNameMap_.find(url);
     if (urlFileNameIter != urlFileNameMap_.end()) {
         if (urlFileNameIter->second.find(fileName) != urlFileNameIter->second.end()) {
-            LOG_DEBUGGER(WARN) << "MatchUrlAndFileName: already loaded: " << url;
             return true;
         }
     }
@@ -454,7 +474,8 @@ void DebuggerImpl::InitializeExtendedProtocolsList()
         "setNativeRange",
         "resetSingleStepper",
         "callFunctionOn",
-        "smartStepInto"
+        "smartStepInto",
+        "saveAllPossibleBreakpoints"
     };
     debuggerExtendedProtocols_ = std::move(debuggerProtocolList);
 }
@@ -567,6 +588,9 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         case Method::CALL_FUNCTION_ON:
             CallFunctionOn(request);
             break;
+        case Method::SAVE_ALL_POSSIBLE_BREAKPOINTS:
+            SaveAllPossibleBreakpoints(request);
+            break;
         default:
             SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
             break;
@@ -631,6 +655,8 @@ DebuggerImpl::DispatcherImpl::Method DebuggerImpl::DispatcherImpl::GetMethodEnum
         return Method::CLIENT_DISCONNECT;
     } else if (method == "callFunctionOn") {
         return Method::CALL_FUNCTION_ON;
+    } else if (method == "saveAllPossibleBreakpoints") {
+        return Method::SAVE_ALL_POSSIBLE_BREAKPOINTS;
     } else {
         return Method::UNKNOWN;
     }
@@ -795,10 +821,22 @@ void DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(const Dispat
         return;
     }
 
-    std::vector<std::unique_ptr<BreakpointReturnInfo>> outLocation;
+    std::vector<std::shared_ptr<BreakpointReturnInfo>> outLocation;
     DispatchResponse response = debugger_->GetPossibleAndSetBreakpointByUrl(*params, outLocation);
     GetPossibleAndSetBreakpointByUrlReturns result(std::move(outLocation));
     SendResponse(request, response, result);
+}
+
+void DebuggerImpl::DispatcherImpl::SaveAllPossibleBreakpoints(const DispatchRequest &request)
+{
+    std::unique_ptr<SaveAllPossibleBreakpointsParams> params =
+        SaveAllPossibleBreakpointsParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+    DispatchResponse response = debugger_->SaveAllPossibleBreakpoints(*params);
+    SendResponse(request, response);
 }
 
 void DebuggerImpl::DispatcherImpl::SetPauseOnExceptions(const DispatchRequest &request)
@@ -1032,7 +1070,8 @@ void DebuggerImpl::Frontend::ScriptParsed(const EcmaVM *vm, const PtScript &scri
         .SetEndLine(script.GetEndLine())
         .SetEndColumn(0)
         .SetExecutionContextId(0)
-        .SetHash(script.GetHash());
+        .SetHash(script.GetHash())
+        .SetLocations(script.GetLocations());
 
     channel_->SendNotification(scriptParsed);
 }
@@ -1069,11 +1108,49 @@ DispatchResponse DebuggerImpl::Enable([[maybe_unused]] const EnableParams &param
     ASSERT(id != nullptr);
     *id = 0;
     vm_->GetJsDebuggerManager()->SetDebugMode(true);
+    // Enable corresponding features requested by IDE
+    EnableDebuggerFeatures(params);
     for (auto &script : scripts_) {
         frontend_.ScriptParsed(vm_, *script.second);
     }
     debuggerState_ = DebuggerState::ENABLED;
     return DispatchResponse::Ok();
+}
+
+void DebuggerImpl::EnableDebuggerFeatures(const EnableParams &params)
+{
+    if (!params.HasEnableOptionsList()) {
+        return;
+    }
+    auto enableOptionsList = params.GetEnableOptionsList();
+    if (enableOptionsList.empty()) {
+        return;
+    }
+    for (auto &option : enableOptionsList) {
+        LOG_DEBUGGER(INFO) << "Debugger feature " << option << " is enabled";
+        EnableFeature(GetDebuggerFeatureEnum(option));
+    }
+}
+
+DebuggerFeature DebuggerImpl::GetDebuggerFeatureEnum(std::string &option)
+{
+    if (option == "enableLaunchAccelerate") {
+        return DebuggerFeature::LAUNCH_ACCELERATE;
+    }
+    // Future features could be added here to parse as DebuggerFeatureEnum
+    return DebuggerFeature::UNKNOWN;
+}
+
+void DebuggerImpl::EnableFeature(DebuggerFeature feature)
+{
+    switch (feature) {
+        case DebuggerFeature::LAUNCH_ACCELERATE:
+            EnableLaunchAccelerateMode();
+            DebuggerApi::DisableFirstTimeFlag(jsDebugger_);
+            break;
+        default:
+            break;
+    }
 }
 
 DispatchResponse DebuggerImpl::Disable()
@@ -1230,6 +1307,9 @@ DispatchResponse DebuggerImpl::RemoveBreakpointsByUrl(const RemoveBreakpointsByU
     }
 
     LOG_DEBUGGER(INFO) << "All breakpoints on " << url << " are removed";
+    if (IsLaunchAccelerateMode()) {
+        breakpointPendingMap_.erase(url);
+    }
     return DispatchResponse::Ok();
 }
 
@@ -1324,7 +1404,7 @@ DispatchResponse DebuggerImpl::SetBreakpointsActive(const SetBreakpointsActivePa
 }
 
 DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const GetPossibleAndSetBreakpointParams &params,
-    std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations)
+    std::vector<std::shared_ptr<BreakpointReturnInfo>> &outLocations)
 {
     if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
         return DispatchResponse::Fail("GetPossibleAndSetBreakpointByUrl: debugger agent is not enabled");
@@ -1336,18 +1416,69 @@ DispatchResponse DebuggerImpl::GetPossibleAndSetBreakpointByUrl(const GetPossibl
     for (const auto &breakpoint : *breakpointList) {
         if (!ProcessSingleBreakpoint(*breakpoint, outLocations)) {
             std::string invalidBpId = "invalid";
-            std::unique_ptr<BreakpointReturnInfo> bpInfo = std::make_unique<BreakpointReturnInfo>();
+            std::shared_ptr<BreakpointReturnInfo> bpInfo = std::make_shared<BreakpointReturnInfo>();
             bpInfo->SetId(invalidBpId)
                 .SetLineNumber(breakpoint->GetLineNumber())
                 .SetColumnNumber(breakpoint->GetColumnNumber());
-            outLocations.emplace_back(std::move(bpInfo));
+            outLocations.emplace_back(bpInfo);
+        }
+        // Insert this bp into bp pending map
+        if (IsLaunchAccelerateMode()) {
+            InsertIntoPendingBreakpoints(*breakpoint);
         }
     }
     return DispatchResponse::Ok();
 }
 
+bool DebuggerImpl::InsertIntoPendingBreakpoints(const BreakpointInfo &breakpoint)
+{
+    auto condition = breakpoint.HasCondition() ? breakpoint.GetCondition() : std::optional<std::string> {};
+    auto bpShared = BreakpointInfo::CreateAsSharedPtr(breakpoint.GetLineNumber(), breakpoint.GetColumnNumber(),
+        breakpoint.GetUrl(), (condition.has_value() ? condition.value() : ""));
+    if (breakpointPendingMap_.empty() ||
+            breakpointPendingMap_.find(breakpoint.GetUrl()) == breakpointPendingMap_.end()) {
+        CUnorderedSet<std::shared_ptr<BreakpointInfo>, HashBreakpointInfo> set {};
+        set.insert(bpShared);
+        breakpointPendingMap_[breakpoint.GetUrl()] = set;
+        return true;
+    }
+    return (breakpointPendingMap_[breakpoint.GetUrl()].insert(bpShared)).second;
+}
+
+DispatchResponse DebuggerImpl::SaveAllPossibleBreakpoints(const SaveAllPossibleBreakpointsParams &params)
+{
+    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+        return DispatchResponse::Fail("SaveAllPossibleBreakpoints: debugger agent is not enabled");
+    }
+    if (!IsLaunchAccelerateMode()) {
+        return DispatchResponse::Fail("SaveAllPossibleBreakpoints: protocol is not enabled");
+    }
+    if (!params.HasBreakpointsMap()) {
+        return DispatchResponse::Fail("SaveAllPossibleBreakpoints: no pending breakpoint exists");
+    }
+    SavePendingBreakpoints(params);
+    return DispatchResponse::Ok();
+}
+
+void DebuggerImpl::SavePendingBreakpoints(const SaveAllPossibleBreakpointsParams &params)
+{
+    for (const auto &entry : *(params.GetBreakpointsMap())) {
+        if (breakpointPendingMap_.find(entry.first) == breakpointPendingMap_.end()) {
+            CUnorderedSet<std::shared_ptr<BreakpointInfo>, HashBreakpointInfo> set {};
+            for (auto &info : entry.second) {
+                set.insert(info);
+            }
+            breakpointPendingMap_[entry.first] = set;
+        } else {
+            for (auto &info : entry.second) {
+                breakpointPendingMap_[entry.first].insert(info);
+            }
+        }
+    }
+}
+
 bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
-                                           std::vector<std::unique_ptr<BreakpointReturnInfo>> &outLocations)
+                                           std::vector<std::shared_ptr<BreakpointReturnInfo>> &outLocations)
 {
     const std::string &url = breakpoint.GetUrl();
     int32_t lineNumber = breakpoint.GetLineNumber();
@@ -1391,9 +1522,9 @@ bool DebuggerImpl::ProcessSingleBreakpoint(const BreakpointInfo &breakpoint,
     
     BreakpointDetails bpMetaData {lineNumber, 0, url};
     std::string outId = BreakpointDetails::ToString(bpMetaData);
-    std::unique_ptr<BreakpointReturnInfo> bpInfo = std::make_unique<BreakpointReturnInfo>();
+    std::shared_ptr<BreakpointReturnInfo> bpInfo = std::make_unique<BreakpointReturnInfo>();
     bpInfo->SetScriptId(scriptId).SetLineNumber(lineNumber).SetColumnNumber(0).SetId(outId);
-    outLocations.emplace_back(std::move(bpInfo));
+    outLocations.emplace_back(bpInfo);
 
     return true;
 }

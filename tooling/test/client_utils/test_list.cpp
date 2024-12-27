@@ -71,6 +71,7 @@
 #include "tooling/test/testcases/js_heapusage_loop_test.h"
 #include "tooling/test/testcases/js_heapusage_recursion_test.h"
 #include "tooling/test/testcases/js_smart_stepInto_test.h"
+#include "tooling/test/testcases/js_accelerate_launch_test.h"
 
 namespace panda::ecmascript::tooling::test {
 static std::string g_currentTestName = "";
@@ -131,6 +132,7 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsHeapusageLoopTest", GetJsHeapusageLoopTest());
     TestUtil::RegisterTest("JsHeapusageRecursionTest", GetJsHeapusageRecursionTest());
     TestUtil::RegisterTest("JsSmartStepoutTest", GetJsSmartStepoutTest());
+    TestUtil::RegisterTest("JsAccelerateLaunchTest", GetJsAccelerateLaunchTest());
 }
 
 std::vector<const char *> GetTestList()

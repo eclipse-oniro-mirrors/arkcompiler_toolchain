@@ -106,4 +106,16 @@ HWTEST_F_L0(DebuggerScriptTest, EndLineTest)
     script->SetEndLine(200);
     ASSERT_EQ(script->GetEndLine(), 200);
 }
+
+HWTEST_F_L0(DebuggerScriptTest, LocationsTest)
+{
+    std::unique_ptr<PtScript> script = std::make_unique<PtScript>(1, "name_1", "url_1", "source_1");
+    std::vector<std::shared_ptr<BreakpointReturnInfo>> locations {};
+    std::shared_ptr<BreakpointReturnInfo> bpInfo = std::make_shared<BreakpointReturnInfo>();
+    std::string invalidBpId = "invalid";
+    bpInfo->SetId(invalidBpId).SetLineNumber(1).SetColumnNumber(0);
+    locations.emplace_back(bpInfo);
+    script->SetLocations(locations);
+    ASSERT_EQ(script->GetLocations().size(), 1);
+}
 }  // namespace panda::test
