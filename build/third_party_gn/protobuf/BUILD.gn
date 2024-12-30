@@ -19,7 +19,7 @@ THIRDPARTY_PROTOBUF_PART_NAME = "protobuf"
 protobuf_src_root = "//third_party/protobuf/src"
 
 config("protobuf_config") {
-  include_dirs = [ "protobuf_src_root" ]
+  include_dirs = [ "$protobuf_src_root" ]
 }
 
 ohos_shared_library("protobuf_lite") {
