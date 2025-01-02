@@ -14,7 +14,7 @@
 import("//arkcompiler/toolchain/toolchain.gni")
 
 ohos_source_set("libark_client_set") {
-  stack_protector_ret = false
+  stack_protector_ret = true
   defines = []
   deps = []
 
@@ -66,7 +66,7 @@ ohos_source_set("libark_client_set") {
 }
 
 ohos_shared_library("libark_client") {
-  stack_protector_ret = false
+  stack_protector_ret = true
   deps = [ ":libark_client_set" ]
 
   install_enable = false

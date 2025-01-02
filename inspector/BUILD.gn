@@ -14,7 +14,7 @@
 import("//arkcompiler/toolchain/toolchain.gni")
 
 ohos_source_set("ark_debugger_static") {
-  stack_protector_ret = false
+  stack_protector_ret = true
   defines = []
 
   if (is_mingw || is_mac) {
@@ -54,7 +54,7 @@ ohos_source_set("ark_debugger_static") {
 }
 
 ohos_shared_library("ark_debugger") {
-  stack_protector_ret = false
+  stack_protector_ret = true
   deps = [ ":ark_debugger_static" ]
 
   if (is_mingw) {
@@ -72,7 +72,7 @@ ohos_shared_library("ark_debugger") {
 }
 
 ohos_source_set("connectserver_debugger_static") {
-  stack_protector_ret = false
+  stack_protector_ret = true
   defines = []
 
   if (is_mingw || is_mac) {

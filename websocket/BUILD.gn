@@ -44,7 +44,7 @@ if (is_arkui_x && target_os == "ios") {
 websocket_ext_deps += [ "bounds_checking_function:libsec_shared" ]
 
 ohos_source_set("websocket_base") {
-  stack_protector_ret = false
+  stack_protector_ret = true
 
   configs = websocket_configs
 
@@ -73,7 +73,7 @@ config("websocket_public_config") {
 }
 
 ohos_source_set("websocket_server") {
-  stack_protector_ret = false
+  stack_protector_ret = true
 
   configs = websocket_configs
   public_configs = [ ":websocket_public_config" ]
@@ -94,7 +94,7 @@ ohos_source_set("websocket_server") {
 
 # required for runtime_core ArkTS inspector
 ohos_static_library("libwebsocket_server") {
-  stack_protector_ret = false
+  stack_protector_ret = true
 
   public_configs = [ ":websocket_public_config" ]
 
@@ -108,7 +108,7 @@ ohos_static_library("libwebsocket_server") {
 }
 
 ohos_source_set("websocket_client") {
-  stack_protector_ret = false
+  stack_protector_ret = true
 
   configs = websocket_configs
   public_configs = [ ":websocket_public_config" ]
