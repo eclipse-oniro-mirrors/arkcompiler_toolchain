@@ -38,6 +38,7 @@ ohos_fuzztest("BackendLoadModuleFuzzTest") {
   external_deps += [
     "cJSON:cjson",
     "ets_runtime:libark_jsruntime",
+    "icu:shared_icuuc",
     "libuv:uv",
     sdk_libc_secshared_dep,
   ]
