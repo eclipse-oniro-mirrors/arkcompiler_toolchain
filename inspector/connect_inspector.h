@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -59,6 +59,9 @@ void SetSwitchCallBack(const std::function<void(bool)>& setSwitchStatus,
 
 void SetProfilerCallback(const std::function<void(bool)> &setArkUIStateProfilerStatus);
 
+void SetRecordCallback(const std::function<void(void)> &startRecordFunc,
+    const std::function<void(void)> &stopRecordFunc);
+
 #ifdef __cplusplus
 #if __cplusplus
 }
@@ -86,6 +89,9 @@ public:
     std::function<void(int32_t)> createLayoutInfo_;
     std::function<void()> setDebugMode_;
     int32_t instanceId_ = -1;
+    std::function<void(void)> startRecord_;
+    std::function<void(void)> stopRecord_;
+    bool isRecording_ = false;
 };
 } // namespace OHOS::ArkCompiler::Toolchain
 
