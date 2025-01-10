@@ -37,7 +37,7 @@ public:
     void SetUp() override {}
 
     void TearDown() override {}
-    void ReturnValueVerification();
+
 #if defined(OHOS_PLATFORM)
     static constexpr char CONNECTED_MESSAGE_TEST[] = "connected";
     static constexpr char OPEN_MESSAGE_TEST[] = "layoutOpen";
@@ -48,6 +48,8 @@ public:
     static constexpr char CLOSE_ARKUI_STATE_PROFILER_TEST[] = "ArkUIStateProfilerClose";
     static constexpr char START_RECORD_MESSAGE_TEST[] = "rsNodeStartRecord";
     static constexpr char STOP_RECORD_MESSAGE_TEST[] = "rsNodeStopRecord";
+    static constexpr char ARKUI_MESSAGE[] = "{\"method\": \"ArkUI.test\"}";
+    static constexpr char WMS_MESSAGE[] = "{\"method\": \"WMS.test\"}";
 
     static constexpr char HELLO_INSPECTOR_CLIENT[] = "hello inspector client";
     static constexpr char INSPECTOR_SERVER_OK[]    = "inspector server ok";
@@ -62,11 +64,13 @@ bool g_connectFlag = false;
 bool g_switchStatus = false;
 int32_t g_createInfoId = 0;
 int32_t g_instanceId = 1;
+std::string g_arkUIMsg = "";
+std::string g_wMSMsg = "";
 
 void CallbackInit()
 {
     auto profilerCb = [](bool flag) -> void {
-    g_profilerFlag = flag;
+        g_profilerFlag = flag;
     };
     SetProfilerCallback(profilerCb);
 
@@ -91,33 +95,18 @@ void CallbackInit()
     auto startRecordFunc = []() -> void {};
     auto stopRecordFunc = []() -> void {};
     SetRecordCallback(startRecordFunc, stopRecordFunc);
+
+    auto arkUICb = [](const char *msg) -> void {
+        g_arkUIMsg = msg;
+    };
+    SetArkUICallback(arkUICb);
+
+    auto wMSCb = [](const char *msg) -> void {
+        g_wMSMsg = msg;
+    };
+    SetWMSCallback(wMSCb);
+
     GTEST_LOG_(INFO) << "ConnectServerTest::CallbackInit finished";
-}
-
-void ConnectServerTest::ReturnValueVerification()
-{
-#if defined(OHOS_PLATFORM)
-    // Waiting for executing the message instruction sent by the client
-    sleep(WAIT_TIME);
-    ASSERT_TRUE(g_profilerFlag);
-    ASSERT_EQ(g_createInfoId, g_instanceId);
-    ASSERT_TRUE(g_switchStatus);
-    ASSERT_TRUE(g_connectFlag);
-    ASSERT_FALSE(WaitForConnection());
-
-    SendMessage(INSPECTOR_SERVER_OK);
-    SendLayoutMessage(INSPECTOR_RUN);
-
-    // Waiting for executing the message instruction sent by the client
-    sleep(WAIT_TIME);
-    ASSERT_FALSE(g_profilerFlag);
-    ASSERT_FALSE(g_switchStatus);
-    ASSERT_FALSE(g_connectFlag);
-
-    SendProfilerMessage(INSPECTOR_QUIT);
-
-    StopServer("InspectorConnectTest");
-#endif
 }
 
 HWTEST_F(ConnectServerTest, InspectorBasicTest, testing::ext::TestSize.Level0)
@@ -141,15 +130,16 @@ HWTEST_F(ConnectServerTest, InspectorConnectTest, testing::ext::TestSize.Level0)
         ASSERT_TRUE(clientSocket.InitToolchainWebSocketForSockName(std::to_string(appPid)));
         ASSERT_TRUE(clientSocket.ClientSendWSUpgradeReq());
         ASSERT_TRUE(clientSocket.ClientRecvWSUpgradeRsp());
+        EXPECT_TRUE(clientSocket.SendReply(CONNECTED_MESSAGE_TEST));
         EXPECT_TRUE(clientSocket.SendReply(OPEN_ARKUI_STATE_PROFILER_TEST));
         EXPECT_TRUE(clientSocket.SendReply(REQUEST_MESSAGE_TEST));
         EXPECT_TRUE(clientSocket.SendReply(OPEN_MESSAGE_TEST));
-        EXPECT_TRUE(clientSocket.SendReply(CONNECTED_MESSAGE_TEST));
         EXPECT_TRUE(clientSocket.SendReply(START_RECORD_MESSAGE_TEST));
         EXPECT_TRUE(clientSocket.SendReply(STOP_RECORD_MESSAGE_TEST));
+        EXPECT_TRUE(clientSocket.SendReply(ARKUI_MESSAGE));
+        EXPECT_TRUE(clientSocket.SendReply(WMS_MESSAGE));
 
         EXPECT_STREQ(clientSocket.Decode().c_str(), HELLO_INSPECTOR_CLIENT);
-
         std::string recv = clientSocket.Decode();
         EXPECT_STREQ(recv.c_str(), INSPECTOR_SERVER_OK);
         if (strcmp(recv.c_str(), INSPECTOR_SERVER_OK) == 0) {
@@ -163,7 +153,28 @@ HWTEST_F(ConnectServerTest, InspectorConnectTest, testing::ext::TestSize.Level0)
         clientSocket.Close();
         exit(0);
     } else if (pid > 0) {
-        ReturnValueVerification();
+        // Waiting for executing the message instruction sent by the client
+        sleep(WAIT_TIME);
+        ASSERT_TRUE(g_profilerFlag);
+        ASSERT_EQ(g_createInfoId, g_instanceId);
+        ASSERT_TRUE(g_switchStatus);
+        ASSERT_TRUE(g_connectFlag);
+        EXPECT_STREQ(g_arkUIMsg.c_str(), ARKUI_MESSAGE);
+        EXPECT_STREQ(g_wMSMsg.c_str(), WMS_MESSAGE);
+        ASSERT_FALSE(WaitForConnection());
+
+        SendMessage(INSPECTOR_SERVER_OK);
+        SendMessage(INSPECTOR_RUN);
+
+        // Waiting for executing the message instruction sent by the client
+        sleep(WAIT_TIME);
+        ASSERT_FALSE(g_profilerFlag);
+        ASSERT_FALSE(g_switchStatus);
+        ASSERT_FALSE(g_connectFlag);
+
+        SendMessage(INSPECTOR_QUIT);
+
+        StopServer("InspectorConnectTest");
     }
     else {
         std::cerr << "InspectorConnectTest::fork failed" << std::endl;

@@ -15,8 +15,6 @@
 
 #include "tooling/base/pt_json.h"
 
-#include "libpandabase/macros.h"
-
 namespace panda::ecmascript::tooling {
 std::unique_ptr<PtJson> PtJson::CreateObject()
 {
@@ -60,7 +58,9 @@ std::string PtJson::Stringify() const
 
 bool PtJson::Add(const char *key, bool value) const
 {
-    ASSERT(key != nullptr && !Contains(key));
+    if (key == nullptr || Contains(key)) {
+        return false;
+    }
 
     cJSON *node = cJSON_CreateBool(value);
     if (node == nullptr) {
@@ -93,7 +93,9 @@ bool PtJson::Add(const char *key, uint32_t value) const
 
 bool PtJson::Add(const char *key, double value) const
 {
-    ASSERT(key != nullptr && !Contains(key));
+    if (key == nullptr || Contains(key)) {
+        return false;
+    }
 
     cJSON *node = cJSON_CreateNumber(value);
     if (node == nullptr) {
@@ -111,7 +113,9 @@ bool PtJson::Add(const char *key, double value) const
 
 bool PtJson::Add(const char *key, const char *value) const
 {
-    ASSERT(key != nullptr && !Contains(key));
+    if (key == nullptr || Contains(key)) {
+        return false;
+    }
 
     cJSON *node = cJSON_CreateString(value);
     if (node == nullptr) {
@@ -129,7 +133,9 @@ bool PtJson::Add(const char *key, const char *value) const
 
 bool PtJson::Add(const char *key, const std::unique_ptr<PtJson> &value) const
 {
-    ASSERT(key != nullptr && !Contains(key));
+    if (key == nullptr || Contains(key)) {
+        return false;
+    }
 
     cJSON *node = value->GetJson();
     if (node == nullptr) {
@@ -228,7 +234,9 @@ bool PtJson::Push(const std::unique_ptr<PtJson> &value) const
 
 bool PtJson::Remove(const char *key) const
 {
-    ASSERT(key != nullptr && Contains(key));
+    if (key == nullptr || !Contains(key)) {
+        return false;
+    }
 
     cJSON_DeleteItemFromObject(object_, key);
     return true;
