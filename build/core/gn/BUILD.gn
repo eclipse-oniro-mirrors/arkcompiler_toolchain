@@ -90,6 +90,7 @@ group("static_core") {
     "$ark_root/static_core/compiler:libarktscompiler",
     "$ark_root/static_core/libpandabase:libarktsbase",
     "$ark_root/static_core/libpandafile:libarktsfile",
+    "$ark_root/static_core/static_linker:static_linker",
   ]
   if (target_os != "mingw") {
     deps += [ "$ark_root/static_core/runtime:libarkruntime" ]
