@@ -15,10 +15,6 @@
 
 #include "tooling/client/manager/variable_manager.h"
 
-#include <iomanip>
-
-#include "common/log_wrapper.h"
-
 using PtJson = panda::ecmascript::tooling::PtJson;
 namespace OHOS::ArkCompiler::Toolchain {
 void TreeNode::AddChild(std::unique_ptr<PropertyDescriptor> descriptor)

@@ -15,11 +15,7 @@
 
 #include "agent/profiler_impl.h"
 
-#include "tooling/base/pt_events.h"
 #include "protocol_channel.h"
-#include "ecmascript/debugger/debugger_api.h"
-
-#include "ecmascript/napi/include/dfx_jsnapi.h"
 
 namespace panda::ecmascript::tooling {
 // Whenever adding a new protocol which is not a standard CDP protocol,

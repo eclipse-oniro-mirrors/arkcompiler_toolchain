@@ -15,12 +15,7 @@
 
 #include "tooling/client/session/session.h"
 
-#include "common/log_wrapper.h"
 #include "tooling/client/manager/message_manager.h"
-#include "tooling/base/pt_json.h"
-#include "tooling/utils/utils.h"
-
-#include <iomanip>
 
 using PtJson = panda::ecmascript::tooling::PtJson;
 using Result = panda::ecmascript::tooling::Result;

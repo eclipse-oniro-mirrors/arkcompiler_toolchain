@@ -16,7 +16,6 @@
 #include "dispatcher.h"
 
 #include "agent/debugger_impl.h"
-#include "agent/runtime_impl.h"
 #ifdef ECMASCRIPT_SUPPORT_HEAPPROFILER
 #include "agent/heapprofiler_impl.h"
 #endif

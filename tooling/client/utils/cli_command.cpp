@@ -15,18 +15,6 @@
 
 #include "tooling/client/utils/cli_command.h"
 
-#include <functional>
-#include <iostream>
-
-#include "tooling/client/domain/debugger_client.h"
-#include "tooling/client/domain/runtime_client.h"
-#include "common/log_wrapper.h"
-#include "tooling/client/manager/breakpoint_manager.h"
-#include "tooling/client/manager/domain_manager.h"
-#include "tooling/client/manager/stack_manager.h"
-#include "tooling/client/manager/variable_manager.h"
-#include "tooling/client/session/session.h"
-
 namespace OHOS::ArkCompiler::Toolchain {
 const std::string HELP_MSG = "usage: <command> <options>\n"
     " These are common commands list:\n"

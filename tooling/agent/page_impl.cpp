@@ -15,9 +15,6 @@
 
 #include "agent/page_impl.h"
 
-#include "base/pt_events.h"
-#include "protocol_channel.h"
-
 namespace panda::ecmascript::tooling {
 void PageImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {

@@ -15,7 +15,6 @@
 
 #include "connect_server.h"
 #include <mutex>
-#include <shared_mutex>
 #include <unistd.h>
 #include "common/log_wrapper.h"
 #include "websocket/server/websocket_server.h"

@@ -15,11 +15,6 @@
 
 #include "agent/overlay_impl.h"
 
-#include "base/pt_events.h"
-#include "protocol_channel.h"
-
-#include "ecmascript/napi/include/dfx_jsnapi.h"
-
 namespace panda::ecmascript::tooling {
 void OverlayImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
