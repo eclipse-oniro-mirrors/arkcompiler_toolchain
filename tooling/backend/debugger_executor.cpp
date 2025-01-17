@@ -15,7 +15,6 @@
 
 #include "backend/debugger_executor.h"
 
-#include "ecmascript/debugger/debugger_api.h"
 #include "ecmascript/debugger/js_debugger_manager.h"
 #include "tooling/base/pt_types.h"
 

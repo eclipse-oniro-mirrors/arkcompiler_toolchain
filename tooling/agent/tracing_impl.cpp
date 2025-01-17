@@ -15,10 +15,7 @@
 
 #include "agent/tracing_impl.h"
 
-#include "tooling/base/pt_events.h"
 #include "protocol_channel.h"
-
-#include "ecmascript/napi/include/dfx_jsnapi.h"
 
 namespace panda::ecmascript::tooling {
 void TracingImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)

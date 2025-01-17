@@ -15,7 +15,6 @@
 
 #include "inspector.h"
 
-#include <chrono>
 #include <shared_mutex>
 #if defined(OHOS_PLATFORM)
 #include <syscall.h>
@@ -24,7 +23,6 @@
 #if defined(OHOS_PLATFORM)
 #include <unistd.h>
 #endif
-#include <unordered_map>
 
 #include "common/log_wrapper.h"
 #include "library_loader.h"

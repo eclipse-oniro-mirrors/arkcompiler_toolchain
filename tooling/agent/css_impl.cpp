@@ -15,9 +15,6 @@
 
 #include "agent/css_impl.h"
 
-#include "base/pt_events.h"
-#include "protocol_channel.h"
-
 namespace panda::ecmascript::tooling {
 void CssImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {

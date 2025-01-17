@@ -18,7 +18,6 @@
 #include "protocol_handler.h"
 
 #include "ecmascript/debugger/js_debugger_manager.h"
-#include "ecmascript/ecma_vm.h"
 
 namespace panda::ecmascript::tooling {
 void InitializeDebugger(::panda::ecmascript::EcmaVM *vm,

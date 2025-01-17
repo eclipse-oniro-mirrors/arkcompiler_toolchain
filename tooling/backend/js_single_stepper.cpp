@@ -16,7 +16,6 @@
 #include "backend/js_single_stepper.h"
 
 #include "ecmascript/debugger/debugger_api.h"
-#include "ecmascript/jspandafile/debug_info_extractor.h"
 #include "ecmascript/jspandafile/js_pandafile_manager.h"
 
 namespace panda::ecmascript::tooling {

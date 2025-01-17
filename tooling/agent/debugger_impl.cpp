@@ -16,17 +16,11 @@
 #include "agent/debugger_impl.h"
 
 #include "tooling/base/pt_base64.h"
-#include "tooling/base/pt_events.h"
-#include "tooling/base/pt_params.h"
-#include "tooling/base/pt_returns.h"
-#include "tooling/base/pt_types.h"
 #include "backend/debugger_executor.h"
-#include "dispatcher.h"
 #include "protocol_handler.h"
 
 #include "ecmascript/jspandafile/js_pandafile_manager.h"
 #include "ecmascript/napi/jsnapi_helper.h"
-#include "ecmascript/tagged_array-inl.h"
 
 namespace panda::ecmascript::tooling {
 using namespace std::placeholders;

@@ -15,13 +15,6 @@
 
 #include "tooling/client/domain/debugger_client.h"
 
-#include <map>
-
-#include "common/log_wrapper.h"
-#include "tooling/client/manager/breakpoint_manager.h"
-#include "tooling/client/manager/source_manager.h"
-#include "tooling/client/manager/stack_manager.h"
-#include "tooling/base/pt_json.h"
 #include "tooling/client/session/session.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;

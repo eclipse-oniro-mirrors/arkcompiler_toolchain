@@ -14,15 +14,7 @@
  */
 
 #include "tooling/client/domain/profiler_client.h"
-#include "tooling/base/pt_types.h"
-#include "common/log_wrapper.h"
-#include "tooling/utils/utils.h"
 #include "tooling/client/session/session.h"
-
-#include <map>
-#include <functional>
-#include <cstring>
-#include <fstream>
 
 using Result = panda::ecmascript::tooling::Result;
 using Profile = panda::ecmascript::tooling::Profile;
