@@ -65,11 +65,6 @@ config("libuv_config") {
       "-D_GNU_SOURCE",
       "-D_POSIX_C_SOURCE=200112",
     ]
-
-    # Adding NDEBUG macro manually to avoid compilation
-    # error in debug version, FIX ME
-    # https://gitee.com/openharmony/build/pulls/1206/files
-    defines += [ "NDEBUG" ]
   } else if (is_mingw || is_win) {
     cflags += [
       "-Wno-missing-braces",
@@ -84,11 +79,6 @@ config("libuv_config") {
       "WIN32_LEAN_AND_MEAN",
       "_WIN32_WINNT=0x0600",
     ]
-
-    # Adding NDEBUG macro manually to avoid compilation
-    # error in debug version, FIX ME
-    # https://gitee.com/openharmony/build/pulls/1206/files
-    defines += [ "NDEBUG" ]
 
     libs = [
       "psapi",
@@ -112,11 +102,6 @@ config("libuv_private_config") {
     "//third_party/libuv/src",
     "//third_party/libuv/src/unix",
   ]
-
-  # Adding NDEBUG macro manually to avoid compilation
-  # error in debug version, FIX ME
-  # https://gitee.com/openharmony/build/pulls/1206/files
-  defines = [ "NDEBUG" ]
 }
 
 ohos_source_set("libuv_source") {
