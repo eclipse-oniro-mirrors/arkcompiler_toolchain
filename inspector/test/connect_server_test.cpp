@@ -124,6 +124,8 @@ HWTEST_F(ConnectServerTest, InspectorConnectTest, testing::ext::TestSize.Level0)
     // test ConnectServer is not nullptr
     ASSERT_TRUE(StartServerForSocketPair(oldProcessfd));
     StoreMessage(g_instanceId, HELLO_INSPECTOR_CLIENT);
+    // Waiting for the ConnectServer to start running
+    sleep(WAIT_TIME);
     pid_t pid = fork();
     if (pid == 0) {
         WebSocketClient clientSocket;
