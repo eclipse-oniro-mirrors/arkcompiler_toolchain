@@ -265,14 +265,6 @@ group("ark_toolchain_host_unittest") {
   ]
 }
 
-group("ark_js_host_unittest") {
-  testonly = true
-  deps = [
-    "//arkcompiler/ets_runtime:ark_runtime_host_unittest",
-    "//arkcompiler/toolchain:ark_toolchain_host_unittest",
-  ]
-}
-
 group("runtime_core_host_ut") {
   testonly = true
   if (ark_standalone_build) {

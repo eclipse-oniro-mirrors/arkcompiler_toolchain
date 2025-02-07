@@ -54,6 +54,7 @@ ohos_source_set("libark_client_set") {
     "bounds_checking_function:libsec_shared",
     "cJSON:cjson_static",
     "ets_runtime:libark_jsruntime",
+    "icu:shared_icuuc",
     "libuv:uv",
   ]
 
