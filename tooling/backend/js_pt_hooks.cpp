@@ -84,7 +84,9 @@ void JSPtHooks::LoadModule(std::string_view pandaFileName, std::string_view entr
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
 
     if (debugger_->NotifyScriptParsed(pandaFileName.data(), entryPoint)) {
-        firstTime_ = true;
+        if (!debugger_->IsLaunchAccelerateMode()) {
+            firstTime_ = true;
+        }
     }
 }
 
@@ -110,8 +112,15 @@ void JSPtHooks::SendableMethodEntry(JSHandle<Method> method)
 
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
 
-    if (debugger_->SendableMethodEntry(method)) {
-        firstTime_ = true;
-    };
+    if (debugger_->NotifyScriptParsedBySendable(method)) {
+        if (!debugger_->IsLaunchAccelerateMode()) {
+            firstTime_ = true;
+        }
+    }
+}
+
+void JSPtHooks::DisableFirstTimeFlag()
+{
+    firstTime_ = false;
 }
 }  // namespace panda::ecmascript::tooling

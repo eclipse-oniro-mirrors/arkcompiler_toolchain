@@ -3386,6 +3386,18 @@ std::unique_ptr<BreakpointInfo> BreakpointInfo::Create(const PtJson &params)
     return paramsObject;
 }
 
+std::shared_ptr<BreakpointInfo> BreakpointInfo::CreateAsSharedPtr(int32_t line, int32_t column,
+    std::string url, std::string condition)
+{
+    auto result = std::make_shared<BreakpointInfo>();
+    result->lineNumber_ = line;
+    result->columnNumber_ = column;
+    result->url_ = url;
+    result->condition_ = condition;
+
+    return result;
+}
+
 std::unique_ptr<PtJson> BreakpointInfo::ToJson() const
 {
     std::unique_ptr<PtJson> result = PtJson::CreateObject();

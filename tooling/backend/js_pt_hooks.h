@@ -41,6 +41,7 @@ public:
     void VmStart() override {}
     void VmDeath() override {}
     void SendableMethodEntry(JSHandle<Method> method) override;
+    void DisableFirstTimeFlag() override;
 
 private:
     NO_COPY_SEMANTIC(JSPtHooks);

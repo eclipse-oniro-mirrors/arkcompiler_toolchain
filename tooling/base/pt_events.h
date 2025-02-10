@@ -808,6 +808,12 @@ public:
         return embedderName_.has_value();
     }
 
+    ScriptParsed &SetLocations(std::vector<std::shared_ptr<BreakpointReturnInfo>> locations)
+    {
+        locations_ = locations;
+        return *this;
+    }
+
 private:
     NO_COPY_SEMANTIC(ScriptParsed);
     NO_MOVE_SEMANTIC(ScriptParsed);
@@ -829,6 +835,7 @@ private:
     std::optional<int32_t> codeOffset_ {};
     std::optional<std::string> scriptLanguage_ {};
     std::optional<std::string> embedderName_ {};
+    std::vector<std::shared_ptr<BreakpointReturnInfo>> locations_ {};
 };
 
 class AddHeapSnapshotChunk final : public PtBaseEvents {
