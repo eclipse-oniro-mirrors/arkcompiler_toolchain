@@ -19,6 +19,7 @@
 
 #include "common/log_wrapper.h"
 #include "tooling/base/pt_json.h"
+#include "ws_server.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
 using panda::ecmascript::tooling::PtJson;
@@ -74,7 +75,12 @@ void OnOpenMessage(const std::string& message)
         }
     }
 }
-
+void SendMessageCallBack(const std::string& message)
+{
+    if (g_inspector->connectServer_ != nullptr) {
+        g_inspector->connectServer_->SendMessage(message);
+    }
+}
 void OnInspectorRecordMessage(const std::string& message)
 {
     if (message.find(START_RECORD_MESSAGE, 0) != std::string::npos) {
@@ -123,6 +129,22 @@ bool OnArkUIInspectorMessage(const std::string &message)
     return false;
 }
 
+bool OnCangjieInspectorMessage(const std::string &message)
+{
+    if (message.find("cangjie profiler") != std::string::npos) {
+        if (g_inspector->cangjieCallback_ != nullptr) {
+            LOGI("OnCangjieInspectorMessage, cangjieCallback_ called");
+            g_inspector->cangjieCallback_(message, SendMessageCallBack);
+        } else {
+            LOGE("OnCangjieInspectorMessage, cangjieCallback_ is nullptr");
+        }
+        return true;
+    } else {
+        LOGW("OnCangjieInspectorMessage. unknown request");
+    }
+    return false;
+}
+
 void OnMessage(const std::string &message)
 {
     std::lock_guard<std::mutex> lock(g_connectMutex);
@@ -135,6 +157,9 @@ void OnMessage(const std::string &message)
     if (g_inspector != nullptr && g_inspector->connectServer_ != nullptr) {
         OnConnectedMessage(message);
         if (OnArkUIInspectorMessage(message)) {
+            return;
+        }
+        if (OnCangjieInspectorMessage(message)) {
             return;
         }
         OnOpenMessage(message);
@@ -334,6 +359,15 @@ void SetWMSCallback(const std::function<void(const char *)> &wMSCallback)
         g_inspector = std::make_unique<ConnectInspector>();
     }
     g_inspector->wMSCallback_ = wMSCallback;
+}
+
+void SetCangjieCallback(const std::function<void(const std::string& message, SendMsgCB sendMsg)> &cangjieCallback)
+{
+    std::lock_guard<std::mutex> lock(g_connectMutex);
+    if (g_inspector == nullptr) {
+        g_inspector = std::make_unique<ConnectInspector>();
+    }
+    g_inspector->cangjieCallback_ = cangjieCallback;
 }
 
 ConnectRequest::ConnectRequest(const std::string &message)
