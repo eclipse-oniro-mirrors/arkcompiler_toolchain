@@ -38,8 +38,6 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/smart_stepInto.abc -> /data/test" src="out"/>
             <option name="push" value="test/test/libjsdebugtest.so -> /data/test" src="out"/>
             <option name="push" value="test/test/libdebugger_entry.so -> /data/test" src="out"/>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-            <option name="push" value="test/test/libark_ecma_debugger_test.so -> /data/test" src="out"/>
         </preparer>
     </target>
     <target name="DebuggerCInterpTest">
@@ -68,8 +66,6 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/smart_stepInto.abc -> /data/test" src="out"/>
             <option name="push" value="test/test/libjsdebugtest.so -> /data/test" src="out"/>
             <option name="push" value="test/test/libdebugger_entry.so -> /data/test" src="out"/>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-            <option name="push" value="test/test/libark_ecma_debugger_test.so -> /data/test" src="out"/>
         </preparer>
     </target>
     <target name="DebuggerClientTest">
@@ -124,162 +120,6 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/watch_variable.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/smart_stepInto.abc -> /data/test" src="out"/>
             <option name="push" value="test/test/libark_client.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="DebuggerTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-            <option name="push" value="test/test/libark_ecma_debugger_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="BackendBreakpointFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="BackendExceptionFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="BackendLoadModuleFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="BackendNativeCallingFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="BackendSingleStepFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="DispatchProtocolMessageFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="HeapprofilerCollectgarbageFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="HeapprofilerStartTrackingHeapObjectsFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="HeapprofilerStopTrackingHeapObjectsFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="HeapprofilerTakeHeapSnapshotFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="InitializeDebuggerFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="ProtocolHandlerFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="ProtocolHandlerDispatchFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="ProtocolHandlerGetFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="ProtocolHandlerNotifFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="ProtocolHandlerProcessFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="ProtocolHandlerResponseFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="ProtocolHandlerRunFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="ProtocolHandlerSendReplyFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="ProtocolHandlerCreateErrorReplyFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="WsServerFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="WsServerNotifyDisconnectEventFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="WsServerSendReplyFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="DispatchResponseCreateCodeFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="ConnectServerFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="ConnectServerRunServerFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="ConnectServerRunServerSocketfd1FuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="ConnectServerSendMessageFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="ConnectServerStopServerFuzzTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
-        </preparer>
-    </target>
-    <target name="InspectorConnectTest">
-        <preparer>
-            <option name="push" value="test/test/libark_jsruntime_test.so -> /data/test" src="out"/>
         </preparer>
     </target>
 </configuration>

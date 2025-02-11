@@ -171,7 +171,7 @@ host_unittest_action("DebuggerEntryTest") {
   deps = [
     ":debugger_entry_resource",
     ":jsdebugtest",
-    "$toolchain_root/tooling:libark_ecma_debugger_test",
+    "..:libark_ecma_debugger_test",
   ]
 
   # hiviewdfx libraries
@@ -219,7 +219,7 @@ host_unittest_action("DebuggerTest") {
 
   configs = [ ":debug_api_test" ]
 
-  deps = [ "$toolchain_root/tooling:libark_ecma_debugger_test" ]
+  deps = [ "..:libark_ecma_debugger_test" ]
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
@@ -252,7 +252,7 @@ host_unittest_action("DebuggerCInterpTest") {
   deps = [
     ":debugger_entry_resource",
     ":jsdebugtest",
-    "$toolchain_root/tooling:libark_ecma_debugger_test",
+    "..:libark_ecma_debugger_test",
   ]
 
   # hiviewdfx libraries
@@ -296,7 +296,7 @@ host_unittest_action("DebuggerClientTest") {
 
   deps = [
     ":debugger_client_resource",
-    "$toolchain_root/tooling:libark_ecma_debugger",
+    "..:libark_ecma_debugger_test",
     "../client:libark_client",
   ]
 
@@ -343,7 +343,7 @@ host_unittest_action("DebuggerCIntClientTest") {
 
   deps = [
     ":debugger_client_resource",
-    "$toolchain_root/tooling:libark_ecma_debugger",
+    "..:libark_ecma_debugger_test",
     "../client:libark_client",
   ]
 
