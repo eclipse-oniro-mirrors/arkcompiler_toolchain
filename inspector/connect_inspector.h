@@ -70,6 +70,13 @@ void SetArkUICallback(const std::function<void(const char *)> &arkUICallback);
  */
 void SetWMSCallback(const std::function<void(const char *)> &wMSCallback);
 
+/**
+ * @brief set connect server message handler callback from cangjie.
+ */
+using SendMsgCB = const std::function<void(const std::string& message)>;
+using CJCallback = const std::function<void(const std::string& message, SendMsgCB)>;
+void SetCangjieCallback(CJCallback &cjCallback);
+
 #ifdef __cplusplus
 #if __cplusplus
 }
@@ -95,6 +102,7 @@ public:
     bool isRecording_ = false;
     std::function<void(const char *)> arkuiCallback_;
     std::function<void(const char *)> wMSCallback_;
+    std::function<void(const std::string& message, SendMsgCB)> cangjieCallback_;
 };
 
 class ConnectRequest {
