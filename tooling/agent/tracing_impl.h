@@ -33,6 +33,13 @@ class TracingImpl final {
 public:
     explicit TracingImpl(const EcmaVM *vm, ProtocolChannel *channel) : vm_(vm), frontend_(channel)
     {
+#if defined(ECMASCRIPT_SUPPORT_TRACING)
+        handle_ = new uv_timer_t;
+        uv_loop_t *loop = reinterpret_cast<uv_loop_t *>(vm_->GetLoop());
+        if (loop != nullptr) {
+            uv_timer_init(loop, handle_);
+        }
+#endif
     }
     ~TracingImpl() = default;
 
@@ -96,7 +103,7 @@ private:
     const EcmaVM *vm_ {nullptr};
     Frontend frontend_;
 #if defined(ECMASCRIPT_SUPPORT_TRACING)
-    uv_timer_t handle_ {};
+    uv_timer_t *handle_ {nullptr};
 #endif
 };
 }  // namespace panda::ecmascript::tooling
