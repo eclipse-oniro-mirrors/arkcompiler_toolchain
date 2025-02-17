@@ -100,7 +100,7 @@ public:
     std::function<void(void)> startRecord_;
     std::function<void(void)> stopRecord_;
     bool isRecording_ = false;
-    std::function<void(const char *)> arkuiCallback_;
+    std::function<void(const char *)> arkUICallback_;
     std::function<void(const char *)> wMSCallback_;
     std::function<void(const std::string& message, SendMsgCB)> cangjieCallback_;
 };
