@@ -129,7 +129,7 @@ ohos_shared_library("libark_ecma_debugger") {
   output_name = "libark_tooling"
 }
 
-ohos_shared_library("libark_ecma_debugger_test") {
+ohos_static_library("libark_ecma_debugger_test") {
   testonly = true
   stack_protector_ret = true
   sources = debugger_sources
@@ -155,7 +155,6 @@ ohos_shared_library("libark_ecma_debugger_test") {
   if (enable_hilog) {
     external_deps += [ "hilog:libhilog" ]
   }
-  install_enable = false
 
   if (!is_mingw && !is_mac) {
     output_extension = "so"
