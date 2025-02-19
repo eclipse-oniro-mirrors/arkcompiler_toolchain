@@ -108,11 +108,11 @@ bool OnArkUIInspectorMessage(const std::string &message)
     }
     std::string domain = request.GetDomain();
     if (domain == "ArkUI") {
-        if (g_inspector->arkuiCallback_ != nullptr) {
-            LOGI("OnArkUIInspectorMessage, arkuiCallback_ called");
-            g_inspector->arkuiCallback_(message.c_str());
+        if (g_inspector->arkUICallback_ != nullptr) {
+            LOGI("OnArkUIInspectorMessage, arkUICallback_ called");
+            g_inspector->arkUICallback_(message.c_str());
         } else {
-            LOGE("OnArkUIInspectorMessage, arkuiCallback_ is nullptr");
+            LOGE("OnArkUIInspectorMessage, arkUICallback_ is nullptr");
         }
         return true;
     } else if (domain == "WMS") {
@@ -343,13 +343,13 @@ void SetRecordCallback(const std::function<void(void)> &startRecordFunc,
     g_inspector->stopRecord_ = stopRecordFunc;
 }
 
-void SetArkUICallback(const std::function<void(const char *)> &arkuiCallback)
+void SetArkUICallback(const std::function<void(const char *)> &arkUICallback)
 {
     std::lock_guard<std::mutex> lock(g_connectMutex);
     if (g_inspector == nullptr) {
         g_inspector = std::make_unique<ConnectInspector>();
     }
-    g_inspector->arkuiCallback_ = arkuiCallback;
+    g_inspector->arkUICallback_ = arkUICallback;
 }
 
 void SetWMSCallback(const std::function<void(const char *)> &wMSCallback)
