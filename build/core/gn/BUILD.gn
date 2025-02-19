@@ -72,6 +72,7 @@ group("ets_frontend") {
       target_os == "mac") {
     deps = [
       "$ets_frontend_root/es2panda:es2panda",
+      "$ets_frontend_root/ets2panda/lsp:lsp_packages",
       "$ets_frontend_root/merge_abc:merge_abc",
     ]
   }
