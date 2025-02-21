@@ -21,6 +21,7 @@ config("ark_ecma_debugger_config") {
 
 debugger_sources = [
   "../common/log_wrapper.cpp",
+  "agent/animation_impl.cpp",
   "agent/css_impl.cpp",
   "agent/debugger_impl.cpp",
   "agent/dom_impl.cpp",

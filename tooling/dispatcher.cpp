@@ -22,12 +22,13 @@
 #ifdef ECMASCRIPT_SUPPORT_CPUPROFILER
 #include "agent/profiler_impl.h"
 #endif
-#include "agent/tracing_impl.h"
+#include "agent/animation_impl.h"
 #include "agent/css_impl.h"
 #include "agent/dom_impl.h"
 #include "agent/overlay_impl.h"
 #include "agent/page_impl.h"
 #include "agent/target_impl.h"
+#include "agent/tracing_impl.h"
 #include "protocol_channel.h"
 
 namespace panda::ecmascript::tooling {
@@ -175,6 +176,10 @@ Dispatcher::Dispatcher(const EcmaVM *vm, ProtocolChannel *channel)
     auto page = std::make_unique<PageImpl>();
     dispatchers_["Page"] =
         std::make_unique<PageImpl::DispatcherImpl>(channel, std::move(page));
+
+    auto animation = std::make_unique<AnimationImpl>();
+    dispatchers_["Animation"] =
+        std::make_unique<AnimationImpl::DispatcherImpl>(channel, std::move(animation));
 }
 
 void Dispatcher::Dispatch(const DispatchRequest &request)

@@ -191,6 +191,7 @@ host_unittest_action("DebuggerTest") {
 
   sources = [
     # test file
+    "animation_impl_test.cpp",
     "debugger_commands_test.cpp",
     "debugger_events_test.cpp",
     "debugger_impl_test.cpp",
