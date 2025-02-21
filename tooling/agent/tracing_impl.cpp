@@ -148,7 +148,7 @@ void TracingImpl::Frontend::TracingComplete()
 std::unique_ptr<std::vector<TraceEvent>> TracingImpl::End()
 {
 #if defined(ECMASCRIPT_SUPPORT_TRACING)
-    uv_timer_stop(&handle_);
+    uv_timer_stop(handle_);
 #endif
     auto traceEvents = panda::DFXJSNApi::StopTracing(vm_);
     return traceEvents;
@@ -180,7 +180,7 @@ DispatchResponse TracingImpl::Start(std::unique_ptr<StartParams> params)
 #if defined(ECMASCRIPT_SUPPORT_TRACING)
     if (params->HasBufferUsageReportingInterval()) {
         LOG_DEBUGGER(ERROR) << "HasBufferUsageReportingInterval " << params->GetBufferUsageReportingInterval();
-        if (uv_is_active(reinterpret_cast<uv_handle_t*>(&handle_))) {
+        if (uv_is_active(reinterpret_cast<uv_handle_t*>(handle_))) {
             LOG_DEBUGGER(ERROR) << "uv_is_active!!!";
             return DispatchResponse::Ok();
         }
@@ -189,9 +189,8 @@ DispatchResponse TracingImpl::Start(std::unique_ptr<StartParams> params)
         if (loop == nullptr) {
             return DispatchResponse::Fail("Loop is nullptr");
         }
-        uv_timer_init(loop, &handle_);
-        handle_.data = this;
-        uv_timer_start(&handle_, TracingBufferUsageReport, 0, params->GetBufferUsageReportingInterval());
+        handle_->data = this;
+        uv_timer_start(handle_, TracingBufferUsageReport, 0, params->GetBufferUsageReportingInterval());
         if (DebuggerApi::IsMainThread()) {
             uv_async_send(&loop->wq_async);
         } else {
