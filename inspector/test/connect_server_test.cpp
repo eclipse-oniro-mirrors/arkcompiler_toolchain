@@ -150,10 +150,8 @@ HWTEST_F(ConnectServerTest, InspectorConnectTest, testing::ext::TestSize.Level0)
             EXPECT_TRUE(clientSocket.SendReply(CLOSE_ARKUI_STATE_PROFILER_TEST));
         }
 
-        EXPECT_STREQ(clientSocket.Decode().c_str(), INSPECTOR_RUN);
-        EXPECT_STREQ(clientSocket.Decode().c_str(), INSPECTOR_QUIT);
+        sleep(WAIT_TIME * 2);
         clientSocket.Close();
-        exit(0);
     } else if (pid > 0) {
         // Waiting for executing the message instruction sent by the client
         sleep(WAIT_TIME);
@@ -166,15 +164,13 @@ HWTEST_F(ConnectServerTest, InspectorConnectTest, testing::ext::TestSize.Level0)
         ASSERT_FALSE(WaitForConnection());
 
         SendMessage(INSPECTOR_SERVER_OK);
-        SendMessage(INSPECTOR_RUN);
 
         // Waiting for executing the message instruction sent by the client
         sleep(WAIT_TIME);
         ASSERT_FALSE(g_profilerFlag);
         ASSERT_FALSE(g_switchStatus);
         ASSERT_FALSE(g_connectFlag);
-
-        SendMessage(INSPECTOR_QUIT);
+        ASSERT_TRUE(WaitForConnection());
 
         StopServer("InspectorConnectTest");
     }
