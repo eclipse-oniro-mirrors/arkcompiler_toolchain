@@ -1,1 +1,0 @@
-# Known failure list for ut - release - qemu - toolchain

@@ -1,0 +1,4 @@
+# Known failure list for ut - release - qemu - toolchain
+#23213
+obj/arkcompiler/toolchain/tooling/test/DebuggerTest
+
