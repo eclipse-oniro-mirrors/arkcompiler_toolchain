@@ -75,7 +75,7 @@ void SetWMSCallback(const std::function<void(const char *)> &wMSCallback);
  */
 using SendMsgCB = const std::function<void(const std::string& message)>;
 using CJCallback = const std::function<void(const std::string& message, SendMsgCB)>;
-void SetCangjieCallback(CJCallback &cjCallback);
+void SetCangjieCallback(CJCallback &cangjieCallback);
 
 #ifdef __cplusplus
 #if __cplusplus
