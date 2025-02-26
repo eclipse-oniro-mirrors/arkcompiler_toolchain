@@ -122,13 +122,59 @@ HWTEST_F_L0(TracingImplTest, DispatcherImplEndTest)
     auto tracing = std::make_unique<TracingImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<TracingImpl::DispatcherImpl>(channel, std::move(tracing));
     std::string msg = std::string() + R"({"id":0,"method":"Debugger.end","params":{}})";
-        DispatchRequest request = DispatchRequest(msg);
+    DispatchRequest request = DispatchRequest(msg);
     dispatcherImpl->Dispatch(request);
     if (channel) {
         delete channel;
         channel = nullptr;
     }
     ASSERT_TRUE(result.find("\"id\":0,") != std::string::npos);
+}
+
+HWTEST_F_L0(TracingImplTest, DispatcherImplRepeateStartTest)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
+    ProtocolChannel *channel =  new ProtocolHandler(callback, ecmaVm);
+    auto tracing = std::make_unique<TracingImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<TracingImpl::DispatcherImpl>(channel, std::move(tracing));
+    ecmaVm->SetLoop(uv_default_loop());
+    std::string msg = std::string() + R"({"id":0,"method":"Debugger.start","params":{"categories":"cpu_profiler"}})";
+    DispatchRequest request = DispatchRequest(msg);
+    dispatcherImpl->Dispatch(request);
+    ASSERT_TRUE(result.find("\"id\":0,") != std::string::npos);
+    std::string msg1 = std::string() + R"({"id":0,"method":"Debugger.start","params":{"categories":"cpu_profiler"}})";
+    DispatchRequest request1 = DispatchRequest(msg1);
+    dispatcherImpl->Dispatch(request1);
+    ASSERT_TRUE(result.find("\"id\":0,") != std::string::npos);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(TracingImplTest, DispatcherImplStartAndEndTest)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
+    ProtocolChannel *channel =  new ProtocolHandler(callback, ecmaVm);
+    auto tracing = std::make_unique<TracingImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<TracingImpl::DispatcherImpl>(channel, std::move(tracing));
+    ecmaVm->SetLoop(uv_default_loop());
+    std::string msg = std::string() + R"({"id":0,"method":"Debugger.start","params":{"categories":"cpu_profiler"}})";
+    DispatchRequest request = DispatchRequest(msg);
+    dispatcherImpl->Dispatch(request);
+    ASSERT_TRUE(result.find("\"id\":0,") != std::string::npos);
+    std::string msg1 = std::string() + R"({"id":0,"method":"Debugger.end","params":{}})";
+    DispatchRequest request1 = DispatchRequest(msg1);
+    dispatcherImpl->Dispatch(request1);
+    ASSERT_TRUE(result.find("Tracing.tracingComplete") != std::string::npos);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
 }
 
 HWTEST_F_L0(TracingImplTest, DispatcherImplGetCategoriesTest)
@@ -140,7 +186,7 @@ HWTEST_F_L0(TracingImplTest, DispatcherImplGetCategoriesTest)
     auto tracing = std::make_unique<TracingImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<TracingImpl::DispatcherImpl>(channel, std::move(tracing));
     std::string msg = std::string() + R"({"id":0,"method":"Debugger.getCategories","params":{}})";
-        DispatchRequest request = DispatchRequest(msg);
+    DispatchRequest request = DispatchRequest(msg);
     dispatcherImpl->Dispatch(request);
     if (channel) {
         delete channel;
@@ -158,7 +204,7 @@ HWTEST_F_L0(TracingImplTest, DispatcherImplRecordClockSyncMarkerTest)
     auto tracing = std::make_unique<TracingImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<TracingImpl::DispatcherImpl>(channel, std::move(tracing));
     std::string msg = std::string() + R"({"id":0,"method":"Debugger.recordClockSyncMarker","params":{}})";
-        DispatchRequest request = DispatchRequest(msg);
+    DispatchRequest request = DispatchRequest(msg);
     dispatcherImpl->Dispatch(request);
     if (channel) {
         delete channel;
@@ -176,7 +222,7 @@ HWTEST_F_L0(TracingImplTest, DispatcherImplRequestMemoryDumpTest)
     auto tracing = std::make_unique<TracingImpl>(ecmaVm, channel);
     auto dispatcherImpl = std::make_unique<TracingImpl::DispatcherImpl>(channel, std::move(tracing));
     std::string msg = std::string() + R"({"id":0,"method":"Debugger.requestMemoryDump","params":{}})";
-        DispatchRequest request = DispatchRequest(msg);
+    DispatchRequest request = DispatchRequest(msg);
     dispatcherImpl->Dispatch(request);
     if (channel) {
         delete channel;
