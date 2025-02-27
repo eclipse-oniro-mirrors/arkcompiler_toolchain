@@ -47,7 +47,7 @@ class JsTestBase(unittest.TestCase):
             stdout=subprocess.PIPE
         )
         connection = 0
-        while(connection < 5):
+        while connection < 5:
             arkdb_server = False
             ret = None
             result = subprocess.run(
