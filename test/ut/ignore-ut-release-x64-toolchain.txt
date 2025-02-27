@@ -1,3 +1,1 @@
 # Known failure list for ut - release - x64 - toolchain
-#23195
-obj/arkcompiler/toolchain/tooling/test/DebuggerTest
