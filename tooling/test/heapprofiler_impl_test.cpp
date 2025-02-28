@@ -484,6 +484,56 @@ HWTEST_F_L0(HeapProfilerImplTest, StopTrackingHeapObjects)
     }
 }
 
+HWTEST_F_L0(HeapProfilerImplTest, RepeateStartTrackingHeapObjects)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
+    ecmaVm->SetLoop(uv_default_loop());
+    std::string msg = "";
+    msg += R"({"id":0,"method":"HeapProfiler.StartTrackingHeapObjects","params":{"trackAllocations":false}})";
+    DispatchRequest request1(msg);
+    dispatcherImpl->StartTrackingHeapObjects(request1);
+    ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
+    std::string msg1 = "";
+    msg1 += R"({"id":0,"method":"HeapProfiler.StartTrackingHeapObjects","params":{"trackAllocations":false}})";
+    DispatchRequest request2(msg1);
+    dispatcherImpl->StartTrackingHeapObjects(request2);
+    ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, StartAndStopTrackingHeapObjects)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
+    ecmaVm->SetLoop(uv_default_loop());
+    std::string msg = "";
+    msg += R"({"id":0,"method":"HeapProfiler.StartTrackingHeapObjects","params":{"trackAllocations":false}})";
+    DispatchRequest request1(msg);
+    dispatcherImpl->StartTrackingHeapObjects(request1);
+    ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
+    std::string msg1 = "";
+    msg1 += R"({"id":0,"method":"HeapProfiler.StopTrackingHeapObjects","params":{"reportProgress":false}})";
+    DispatchRequest request2(msg1);
+    dispatcherImpl->StopTrackingHeapObjects(request2);
+    ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
 HWTEST_F_L0(HeapProfilerImplTest, ResetProfiles)
 {
     std::string result = "";

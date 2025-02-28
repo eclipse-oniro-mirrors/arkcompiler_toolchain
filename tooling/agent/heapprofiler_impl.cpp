@@ -314,12 +314,10 @@ void HeapProfilerImpl::Frontend::ResetProfiles()
 HeapProfilerImpl::~HeapProfilerImpl()
 {
     uv_loop_t *loop = reinterpret_cast<uv_loop_t *>(vm_->GetLoop());
-    if (loop != nullptr) {
+    if (handle_!= nullptr && loop != nullptr) {
         uv_close(reinterpret_cast<uv_handle_t*>(handle_), [](uv_handle_t* handle) {
-            if (handle != nullptr) {
-                delete reinterpret_cast<uv_timer_t*>(handle);
-                handle = nullptr;
-            }
+            delete reinterpret_cast<uv_timer_t*>(handle);
+            handle = nullptr;
         });
     }
 }
@@ -396,7 +394,7 @@ DispatchResponse HeapProfilerImpl::StopSampling([[maybe_unused]] std::unique_ptr
 DispatchResponse HeapProfilerImpl::StartTrackingHeapObjects(const StartTrackingHeapObjectsParams &params)
 {
     panda::JSNApi::SetProfilerState(vm_, true);
-    if (uv_is_active(reinterpret_cast<uv_handle_t*>(handle_))) {
+    if (handle_ != nullptr && uv_is_active(reinterpret_cast<uv_handle_t*>(handle_))) {
         return DispatchResponse::Ok();
     }
     bool traceAllocation = params.GetTrackAllocations();
@@ -406,6 +404,10 @@ DispatchResponse HeapProfilerImpl::StartTrackingHeapObjects(const StartTrackingH
     if (loop == nullptr) {
         return DispatchResponse::Fail("Loop is nullptr");
     }
+    if (handle_ == nullptr) {
+        handle_ = new uv_timer_t;
+    }
+    uv_timer_init(loop, handle_);
     handle_->data = this;
     uv_timer_start(handle_, HeapTrackingCallback, 0, INTERVAL * MILLI_TO_MICRO);
     if (DebuggerApi::IsMainThread()) {
@@ -433,7 +435,9 @@ void HeapProfilerImpl::HeapTrackingCallback(uv_timer_t* handle)
 
 DispatchResponse HeapProfilerImpl::StopTrackingHeapObjects(const StopTrackingHeapObjectsParams &params)
 {
-    uv_timer_stop(handle_);
+    if (handle_ != nullptr) {
+        uv_timer_stop(handle_);
+    }
     bool result = false;
     if (params.GetReportProgress()) {
         HeapProfilerProgress progress(&frontend_);

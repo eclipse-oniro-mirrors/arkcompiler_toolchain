@@ -38,16 +38,7 @@ namespace panda::ecmascript::tooling {
 class HeapProfilerImpl final {
 public:
     explicit HeapProfilerImpl(const EcmaVM *vm, ProtocolChannel *channel)
-        : vm_(vm), frontend_(channel), stream_(&frontend_)
-    {
-#if defined(ECMASCRIPT_SUPPORT_HEAPPROFILER)
-        handle_ = new uv_timer_t;
-        uv_loop_t *loop = reinterpret_cast<uv_loop_t *>(vm_->GetLoop());
-        if (loop != nullptr) {
-            uv_timer_init(loop, handle_);
-        }
-#endif
-    }
+        : vm_(vm), frontend_(channel), stream_(&frontend_) {}
     ~HeapProfilerImpl();
 
     DispatchResponse AddInspectedHeapObject(const AddInspectedHeapObjectParams &params);
