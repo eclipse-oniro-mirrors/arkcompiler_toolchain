@@ -196,6 +196,9 @@ void OnMessage(const std::string &message)
                 LOGI("stopDebugger start");
                 g_inspector->setDebugMode_();
             }
+            if (g_setConnectCallBack != nullptr) {
+                g_setConnectCallBack(false);
+            }
         }
         OnInspectorRecordMessage(message);
     }
