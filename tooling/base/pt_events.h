@@ -84,6 +84,8 @@ public:
     Paused() = default;
     ~Paused() override = default;
     std::unique_ptr<PtJson> ToJson() const override;
+    std::unique_ptr<PtJson> ToJson(StackFrame stackFrame) const;
+    std::unique_ptr<PtJson> ToJson(AsyncStack asyncStack, int32_t asyncCallChainDepth) const;
 
     std::string GetName() const override
     {
@@ -93,6 +95,17 @@ public:
     const std::vector<std::unique_ptr<CallFrame>> *GetCallFrames() const
     {
         return &callFrames_;
+    }
+
+    const std::shared_ptr<AsyncStack> *GetAsyncStack() const
+    {
+        return &asyncStack_;
+    }
+
+    Paused &SetAysncStack(std::shared_ptr<AsyncStack> AsyncStack)
+    {
+        asyncStack_ = std::move(AsyncStack);
+        return *this;
     }
 
     Paused &SetCallFrames(std::vector<std::unique_ptr<CallFrame>> callFrames)
@@ -186,6 +199,17 @@ public:
         return data_.has_value();
     }
 
+    Paused &SetAsyncCallChainDepth(int32_t asyncCallChainDepth)
+    {
+        asyncCallChainDepth_ = asyncCallChainDepth;
+        return *this;
+    }
+
+    int32_t GetAsyncCallChainDepth() const
+    {
+        return asyncCallChainDepth_;
+    }
+
     std::vector<BreakpointId> GetHitBreakpoints() const
     {
         return hitBreakpoints_.value_or(std::vector<BreakpointId>());
@@ -207,9 +231,11 @@ private:
     NO_MOVE_SEMANTIC(Paused);
 
     std::vector<std::unique_ptr<CallFrame>> callFrames_ {};
+    std::shared_ptr<AsyncStack> asyncStack_ {};
     std::string reason_ {};
     std::optional<std::unique_ptr<RemoteObject>> data_ {};
     std::optional<std::vector<BreakpointId>> hitBreakpoints_ {};
+    int32_t asyncCallChainDepth_ {0};
 };
 
 class Resumed final : public PtBaseEvents {

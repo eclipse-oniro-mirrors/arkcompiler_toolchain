@@ -368,6 +368,10 @@ void DebuggerImpl::GeneratePausedInfo(PauseReason reason,
         std::unique_ptr<RemoteObject> tmpException = RemoteObject::FromTagged(vm_, exception);
         paused.SetData(std::move(tmpException));
     }
+    if (vm_->GetJsDebuggerManager()->IsAsyncStackTrace()) {
+        paused.SetAsyncCallChainDepth(maxAsyncCallChainDepth_);
+        paused.SetAysncStack(DebuggerApi::GetCurrentAsyncParent(vm_));
+    }
     frontend_.Paused(vm_, paused);
     if (reason != BREAK_ON_START && reason != NATIVE_OUT) {
         singleStepper_.reset();
@@ -773,12 +777,6 @@ void DebuggerImpl::DispatcherImpl::Resume(const DispatchRequest &request)
     SendResponse(request, response);
 }
 
-void DebuggerImpl::DispatcherImpl::SetAsyncCallStackDepth(const DispatchRequest &request)
-{
-    DispatchResponse response = debugger_->SetAsyncCallStackDepth();
-    SendResponse(request, response);
-}
-
 void DebuggerImpl::DispatcherImpl::SetBreakpointByUrl(const DispatchRequest &request)
 {
     std::unique_ptr<SetBreakpointByUrlParams> params = SetBreakpointByUrlParams::Create(request.GetParams());
@@ -830,6 +828,18 @@ void DebuggerImpl::DispatcherImpl::SaveAllPossibleBreakpoints(const DispatchRequ
         return;
     }
     DispatchResponse response = debugger_->SaveAllPossibleBreakpoints(*params);
+    SendResponse(request, response);
+}
+
+void DebuggerImpl::DispatcherImpl::SetAsyncCallStackDepth(const DispatchRequest &request)
+{
+    std::unique_ptr<SetAsyncCallStackDepthParams> params =
+        SetAsyncCallStackDepthParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+    DispatchResponse response = debugger_->SetAsyncCallStackDepth(*params);
     SendResponse(request, response);
 }
 
@@ -1317,11 +1327,6 @@ DispatchResponse DebuggerImpl::Resume([[maybe_unused]] const ResumeParams &param
     return DispatchResponse::Ok();
 }
 
-DispatchResponse DebuggerImpl::SetAsyncCallStackDepth()
-{
-    return DispatchResponse::Fail("SetAsyncCallStackDepth not support now");
-}
-
 void DebuggerImpl::AddBreakpointDetail(const std::string &url,
                                        int32_t lineNumber,
                                        std::string *outId,
@@ -1451,6 +1456,16 @@ DispatchResponse DebuggerImpl::SaveAllPossibleBreakpoints(const SaveAllPossibleB
         return DispatchResponse::Fail("SaveAllPossibleBreakpoints: no pending breakpoint exists");
     }
     SavePendingBreakpoints(params);
+    return DispatchResponse::Ok();
+}
+
+DispatchResponse DebuggerImpl::SetAsyncCallStackDepth(const SetAsyncCallStackDepthParams &params)
+{
+    maxAsyncCallChainDepth_ = params.GetMaxDepth();
+    if (maxAsyncCallChainDepth_) {
+        // enable async stack trace
+        vm_->GetJsDebuggerManager()->SetAsyncStackTrace(true);
+    }
     return DispatchResponse::Ok();
 }
 
@@ -1800,6 +1815,86 @@ bool DebuggerImpl::GenerateCallFrames(std::vector<std::unique_ptr<CallFrame>> *c
         return StackState::CONTINUE;
     };
     return DebuggerApi::StackWalker(vm_, walkerFunc);
+}
+
+bool DebuggerImpl::GenerateAsyncFrames(std::shared_ptr<AsyncStack> asyncStack, bool skipTopFrame)
+{
+    std::vector<std::shared_ptr<StackFrame>> asyncFrames;
+    bool topFrame = true;
+    int32_t stackSize = MAX_CALL_STACK_SIZE_TO_CAPTURE;
+    auto walkerFunc = [this, &asyncFrames, &topFrame, &stackSize](const FrameHandler *frameHandler) -> StackState {
+        if (DebuggerApi::IsNativeMethod(frameHandler) || !stackSize) {
+            return StackState::CONTINUE;
+        }
+        std::shared_ptr<StackFrame> stackFrame = std::make_shared<StackFrame>();
+        if (!GenerateAsyncFrame(stackFrame.get(), frameHandler)) {
+            if (topFrame) {
+                return StackState::FAILED;
+            }
+        } else {
+            topFrame = false;
+            stackSize--;
+            asyncFrames.emplace_back(std::move(stackFrame));
+        }
+        return StackState::CONTINUE;
+    };
+    bool result = DebuggerApi::StackWalker(vm_, walkerFunc);
+    // await need skip top frame
+    if (skipTopFrame && !asyncFrames.empty()) {
+        asyncFrames.erase(asyncFrames.begin());
+    }
+    asyncStack->SetFrames(asyncFrames);
+    return result;
+}
+
+bool DebuggerImpl::GenerateAsyncFrame(StackFrame *stackFrame, const FrameHandler *frameHandler)
+{
+    if (!frameHandler->HasFrame()) {
+        return false;
+    }
+    Method *method = DebuggerApi::GetMethod(frameHandler);
+    auto methodId = method->GetMethodId();
+    const JSPandaFile *jsPandaFile = method->GetJSPandaFile();
+    DebugInfoExtractor *extractor = GetExtractor(jsPandaFile);
+    if (extractor == nullptr) {
+        LOG_DEBUGGER(DEBUG) << "GenerateAsyncFrame: extractor is null";
+        return false;
+    }
+
+    // functionName
+    std::string functionName = method->ParseFunctionName();
+
+    std::string url = extractor->GetSourceFile(methodId);
+    int32_t scriptId = -1;
+    int32_t lineNumber = -1;
+    int32_t columnNumber = -1;
+    auto scriptFunc = [&scriptId](PtScript *script) -> bool {
+        scriptId = script->GetScriptId();
+        return true;
+    };
+    if (!MatchScripts(scriptFunc, url, ScriptMatchType::URL)) {
+        LOG_DEBUGGER(ERROR) << "GenerateAsyncFrame: Unknown url: " << url;
+        return false;
+    }
+    auto callbackLineFunc = [&lineNumber](int32_t line) -> bool {
+        lineNumber = line;
+        return true;
+    };
+    auto callbackColumnFunc = [&columnNumber](int32_t column) -> bool {
+        columnNumber = column;
+        return true;
+    };
+    if (!extractor->MatchLineWithOffset(callbackLineFunc, methodId, DebuggerApi::GetBytecodeOffset(frameHandler)) ||
+        !extractor->MatchColumnWithOffset(callbackColumnFunc, methodId, DebuggerApi::GetBytecodeOffset(frameHandler))) {
+        LOG_DEBUGGER(ERROR) << "GenerateAsyncFrame: unknown offset: " << DebuggerApi::GetBytecodeOffset(frameHandler);
+        return false;
+    }
+    stackFrame->SetFunctionName(functionName);
+    stackFrame->SetScriptId(scriptId);
+    stackFrame->SetUrl(url);
+    stackFrame->SetLineNumber(lineNumber);
+    stackFrame->SetColumnNumber(columnNumber);
+    return true;
 }
 
 void DebuggerImpl::SaveCallFrameHandler(const FrameHandler *frameHandler)

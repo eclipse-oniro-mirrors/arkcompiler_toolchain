@@ -723,13 +723,16 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetAsyncCallStackDepth__001)
     std::string msg = std::string() +
         R"({
             "id":0,
-            "method":"Debugger.setAsyncCallStackDepth"
+            "method":"Debugger.setAsyncCallStackDepth",
+            "params":{
+                "maxDepth":32
+            }
         })";
     DispatchRequest request(msg);
 
     dispatcherImpl->Dispatch(request);
     EXPECT_STREQ(outStrForCallbackCheck.c_str(),
-        R"({"id":0,"result":{"code":1,"message":"SetAsyncCallStackDepth not support now"}})");
+        R"({"id":0,"result":{}})");
     if (protocolChannel) {
         delete protocolChannel;
         protocolChannel = nullptr;

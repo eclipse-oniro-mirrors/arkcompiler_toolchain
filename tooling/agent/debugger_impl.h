@@ -60,6 +60,8 @@ public:
     void SetNativeOutPause(bool nativeOutPause);
     void AddBreakpointDetail(const std::string &url, int32_t lineNumber,
         std::string *outId, std::vector<std::unique_ptr<Location>> *outLocations);
+    bool GenerateAsyncFrames(std::shared_ptr<AsyncStack> asyncStack, bool skipTopFrame);
+    bool GenerateAsyncFrame(StackFrame *stackFrame, const FrameHandler *frameHandler);
 
     DispatchResponse ContinueToLocation(const ContinueToLocationParams &params);
     DispatchResponse Enable(const EnableParams &params, UniqueDebuggerId *id);
@@ -73,7 +75,7 @@ public:
     DispatchResponse RemoveBreakpoint(const RemoveBreakpointParams &params);
     DispatchResponse RemoveBreakpointsByUrl(const RemoveBreakpointsByUrlParams &params);
     DispatchResponse Resume(const ResumeParams &params);
-    DispatchResponse SetAsyncCallStackDepth();
+    DispatchResponse SetAsyncCallStackDepth(const SetAsyncCallStackDepthParams &params);
     DispatchResponse SetBreakpointByUrl(const SetBreakpointByUrlParams &params, std::string *outId,
                                         std::vector<std::unique_ptr<Location>> *outLocations,
                                         bool isSmartBreakpoint = false);
@@ -324,6 +326,7 @@ private:
     bool breakpointsState_ {true};
     bool skipAllPausess_ {false};
     bool mixStackEnabled_ {false};
+    int32_t maxAsyncCallChainDepth_ {0};
     std::unique_ptr<SingleStepper> singleStepper_ {nullptr};
     Location location_ {};
 

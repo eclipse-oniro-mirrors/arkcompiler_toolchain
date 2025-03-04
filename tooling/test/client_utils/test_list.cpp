@@ -72,6 +72,7 @@
 #include "tooling/test/testcases/js_watch_set_type_test.h"
 #include "tooling/test/testcases/js_watch_test.h"
 #include "tooling/test/testcases/js_watch_variable_test.h"
+#include "tooling/test/testcases/js_asyn_stack_test.h"
 
 namespace panda::ecmascript::tooling::test {
 static std::string g_currentTestName = "";
@@ -133,6 +134,7 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsHeapusageRecursionTest", GetJsHeapusageRecursionTest());
     TestUtil::RegisterTest("JsSmartStepoutTest", GetJsSmartStepoutTest());
     TestUtil::RegisterTest("JsAccelerateLaunchTest", GetJsAccelerateLaunchTest());
+    TestUtil::RegisterTest("JsAsynStackTest", GetJsAsynStackTest());
 }
 
 std::vector<const char *> GetTestList()

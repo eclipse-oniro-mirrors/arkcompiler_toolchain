@@ -123,4 +123,11 @@ void JSPtHooks::DisableFirstTimeFlag()
 {
     firstTime_ = false;
 }
+
+void JSPtHooks::GenerateAsyncFrames(std::shared_ptr<AsyncStack> asyncStack, bool skipTopFrame)
+{
+    [[maybe_unused]] LocalScope scope(debugger_->vm_);
+
+    debugger_->GenerateAsyncFrames(asyncStack, skipTopFrame);
+}
 }  // namespace panda::ecmascript::tooling

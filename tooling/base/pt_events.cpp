@@ -55,11 +55,56 @@ std::unique_ptr<PtJson> Paused::ToJson() const
         result->Add("hitBreakpoints", breakpoints);
     }
 
+    if (asyncStack_ && asyncCallChainDepth_) {
+        result->Add("asyncStackTrace", ToJson(*asyncStack_, asyncCallChainDepth_ - 1));
+    }
+
     std::unique_ptr<PtJson> object = PtJson::CreateObject();
     object->Add("method", GetName().c_str());
     object->Add("params", result);
-
     return object;
+}
+
+std::unique_ptr<PtJson> Paused::ToJson(StackFrame stackFrame) const
+{
+    std::unique_ptr<PtJson> result = PtJson::CreateObject();
+
+    std::string functionName = stackFrame.GetFunctionName();
+    std::string url = stackFrame.GetUrl();
+    int32_t scriptId = stackFrame.GetScriptId();
+    int32_t lineNumber = stackFrame.GetLineNumber();
+    int32_t columnNumber = stackFrame.GetColumnNumber();
+    result->Add("functionName", functionName.c_str());
+    result->Add("scriptId", scriptId);
+    result->Add("url", url.c_str());
+    result->Add("lineNumber", lineNumber);
+    result->Add("columnNumber", columnNumber);
+
+    return result;
+}
+
+std::unique_ptr<PtJson> Paused::ToJson(AsyncStack asyncStack, int32_t asyncCallChainDepth) const
+{
+    std::unique_ptr<PtJson> result = PtJson::CreateObject();
+
+    std::unique_ptr<PtJson> array = PtJson::CreateArray();
+    std::vector<std::shared_ptr<StackFrame>> callFrames = asyncStack.GetFrames();
+    size_t len = callFrames.size();
+    for (size_t i = 0; i < len; i++) {
+        array->Push(ToJson(*callFrames[i]));
+    }
+    result->Add("callFrames", array);
+    std::string description = asyncStack.GetDescription();
+    result->Add("description", description.c_str());
+
+    std::weak_ptr<AsyncStack> weakAsyncStack = asyncStack.GetAsyncParent();
+    auto sharedAsyncStack = weakAsyncStack.lock();
+    if (sharedAsyncStack && asyncCallChainDepth) {
+        asyncCallChainDepth--;
+        result->Add("parent", ToJson(*sharedAsyncStack, asyncCallChainDepth));
+    }
+
+    return result;
 }
 
 std::unique_ptr<PtJson> Resumed::ToJson() const

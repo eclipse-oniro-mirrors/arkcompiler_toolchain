@@ -61,6 +61,7 @@ public:
     int StepOverCommand();
     int EnableLaunchAccelerateCommand();
     int SaveAllPossibleBreakpointsCommand();
+    int AsyncStackDepthCommand();
 
     void AddBreakPointInfo(const std::string& url, const int& lineNumber, const int& columnNumber = 0);
     void RecvReply(std::unique_ptr<PtJson> json);

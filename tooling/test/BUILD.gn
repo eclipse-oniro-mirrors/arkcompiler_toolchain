@@ -58,6 +58,7 @@ test_js_files = [
   "common_func",
   "watch_variable",
   "smart_stepInto",
+  "promise",
 ]
 
 foreach(file, test_js_files) {
