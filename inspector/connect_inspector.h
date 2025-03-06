@@ -48,8 +48,7 @@ bool WaitForConnection();
 
 void SetDebugModeCallBack(const std::function<void()>& setDebugMode);
 
-void SetSwitchCallBack(const std::function<void(bool)>& setSwitchStatus,
-    const std::function<void(int32_t)>& createLayoutInfo, int32_t instanceId);
+void SetSwitchCallBack(const std::function<void(int32_t)>& createLayoutInfo, int32_t instanceId);
 
 void SetProfilerCallback(const std::function<void(bool)> &setArkUIStateProfilerStatus);
 
@@ -92,7 +91,6 @@ public:
     std::unordered_map<int32_t, std::string> infoBuffer_;
     std::unique_ptr<ConnectServer> connectServer_;
     std::atomic<bool> waitingForDebugger_ = true;
-    std::function<void(bool)> setSwitchStatus_;
     std::function<void(bool)> setArkUIStateProfilerStatus_;
     std::function<void(int32_t)> createLayoutInfo_;
     std::function<void()> setDebugMode_;
