@@ -75,12 +75,6 @@ void OnOpenMessage(const std::string& message)
         }
     }
 }
-void SendMessageCallBack(const std::string& message)
-{
-    if (g_inspector->connectServer_ != nullptr) {
-        g_inspector->connectServer_->SendMessage(message);
-    }
-}
 void OnInspectorRecordMessage(const std::string& message)
 {
     if (message.find(START_RECORD_MESSAGE, 0) != std::string::npos) {
@@ -134,7 +128,7 @@ bool OnCangjieInspectorMessage(const std::string &message)
     if (message.find("cangjie profiler") != std::string::npos) {
         if (g_inspector->cangjieCallback_ != nullptr) {
             LOGI("OnCangjieInspectorMessage, cangjieCallback_ called");
-            g_inspector->cangjieCallback_(message, SendMessageCallBack);
+            g_inspector->cangjieCallback_(message, SendMessage);
         } else {
             LOGE("OnCangjieInspectorMessage, cangjieCallback_ is nullptr");
         }
