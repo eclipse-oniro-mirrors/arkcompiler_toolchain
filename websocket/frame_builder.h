@@ -39,7 +39,7 @@ public:
     ServerFrameBuilder(bool final, FrameType opcode) : fin_(final), opcode_(opcode)
     {
     }
-    ~ServerFrameBuilder() noexcept = default;
+    virtual ~ServerFrameBuilder() noexcept = default;
 
     ServerFrameBuilder& SetFinal(bool fin);
     ServerFrameBuilder& SetOpcode(FrameType opcode);
