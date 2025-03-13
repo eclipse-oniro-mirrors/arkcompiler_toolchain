@@ -27,8 +27,6 @@ using panda::ecmascript::tooling::Result;
 std::mutex g_connectMutex;
 std::unique_ptr<ConnectInspector> g_inspector = nullptr;
 static constexpr char CONNECTED_MESSAGE[] = "connected";
-static constexpr char OPEN_MESSAGE[] = "layoutOpen";
-static constexpr char CLOSE_MESSAGE[] = "layoutClose";
 static constexpr char REQUEST_MESSAGE[] = "tree";
 static constexpr char STOPDEBUGGER_MESSAGE[] = "stopDebugger";
 static constexpr char OPEN_ARKUI_STATE_PROFILER[] = "ArkUIStateProfilerOpen";
@@ -66,15 +64,6 @@ void OnConnectedMessage(const std::string& message)
     }
 }
 
-void OnOpenMessage(const std::string& message)
-{
-    if (message.find(OPEN_MESSAGE, 0) != std::string::npos) {
-        if (g_inspector->setSwitchStatus_ != nullptr) {
-            LOGI("layoutOpen start");
-            g_inspector->setSwitchStatus_(true);
-        }
-    }
-}
 void OnInspectorRecordMessage(const std::string& message)
 {
     if (message.find(START_RECORD_MESSAGE, 0) != std::string::npos) {
@@ -156,16 +145,6 @@ void OnMessage(const std::string &message)
         if (OnCangjieInspectorMessage(message)) {
             return;
         }
-        OnOpenMessage(message);
-        if (message.find(CLOSE_MESSAGE, 0) != std::string::npos) {
-            if (g_setConnectCallBack != nullptr) {
-                g_setConnectCallBack(false);
-            }
-            if (g_inspector->setSwitchStatus_ != nullptr) {
-                LOGI("layoutClose start");
-                g_inspector->setSwitchStatus_(false);
-            }
-        }
         if (message.find(OPEN_ARKUI_STATE_PROFILER, 0) != std::string::npos) {
             if (g_inspector->setArkUIStateProfilerStatus_ != nullptr) {
                 LOGI("state profiler open");
@@ -198,14 +177,12 @@ void OnMessage(const std::string &message)
     }
 }
 
-void SetSwitchCallBack(const std::function<void(bool)>& setSwitchStatus,
-    const std::function<void(int32_t)>& createLayoutInfo, int32_t instanceId)
+void SetSwitchCallBack(const std::function<void(int32_t)>& createLayoutInfo, int32_t instanceId)
 {
     std::lock_guard<std::mutex> lock(g_connectMutex);
     if (g_inspector == nullptr) {
         g_inspector = std::make_unique<ConnectInspector>();
     }
-    g_inspector->setSwitchStatus_ = setSwitchStatus;
     g_inspector->createLayoutInfo_ = createLayoutInfo;
     g_inspector->instanceId_ = instanceId;
 }
