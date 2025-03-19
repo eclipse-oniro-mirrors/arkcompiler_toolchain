@@ -85,7 +85,7 @@ private:
 
 class GetPossibleAndSetBreakpointByUrlReturns : public PtBaseReturns {
 public:
-    explicit GetPossibleAndSetBreakpointByUrlReturns(std::vector<std::unique_ptr<BreakpointReturnInfo>> locations)
+    explicit GetPossibleAndSetBreakpointByUrlReturns(std::vector<std::shared_ptr<BreakpointReturnInfo>> locations)
         : locations_(std::move(locations))
     {}
     ~GetPossibleAndSetBreakpointByUrlReturns() override = default;
@@ -97,7 +97,7 @@ private:
     NO_COPY_SEMANTIC(GetPossibleAndSetBreakpointByUrlReturns);
     NO_MOVE_SEMANTIC(GetPossibleAndSetBreakpointByUrlReturns);
 
-    std::vector<std::unique_ptr<BreakpointReturnInfo>> locations_ {};
+    std::vector<std::shared_ptr<BreakpointReturnInfo>> locations_ {};
 };
 
 class EvaluateOnCallFrameReturns : public PtBaseReturns {

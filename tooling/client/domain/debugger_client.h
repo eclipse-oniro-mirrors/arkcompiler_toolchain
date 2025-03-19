@@ -59,6 +59,8 @@ public:
     int StepIntoCommand();
     int StepOutCommand();
     int StepOverCommand();
+    int EnableLaunchAccelerateCommand();
+    int SaveAllPossibleBreakpointsCommand();
 
     void AddBreakPointInfo(const std::string& url, const int& lineNumber, const int& columnNumber = 0);
     void RecvReply(std::unique_ptr<PtJson> json);

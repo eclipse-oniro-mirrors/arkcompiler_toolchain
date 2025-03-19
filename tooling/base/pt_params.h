@@ -74,11 +74,23 @@ public:
         return maxScriptsCacheSize_.has_value();
     }
 
+    bool HasEnableOptionsList() const
+    {
+        return enableOptionList_.has_value();
+    }
+
+    std::vector<std::string> GetEnableOptionsList() const
+    {
+        ASSERT(HasEnableOptionsList());
+        return enableOptionList_.value();
+    }
+
 private:
     NO_COPY_SEMANTIC(EnableParams);
     NO_MOVE_SEMANTIC(EnableParams);
 
     std::optional<double> maxScriptsCacheSize_ {};
+    std::optional<std::vector<std::string>> enableOptionList_ {};
 };
 
 class EvaluateOnCallFrameParams : public PtBaseParams {
@@ -1369,6 +1381,34 @@ private:
     NO_MOVE_SEMANTIC(SeriliazationTimeoutCheckEnableParams);
     static constexpr int32_t DEFAULT_THRESHOLD = 8;
     int32_t threshold_ { DEFAULT_THRESHOLD };
+};
+
+class SaveAllPossibleBreakpointsParams : public PtBaseParams {
+public:
+    SaveAllPossibleBreakpointsParams() = default;
+    ~SaveAllPossibleBreakpointsParams() = default;
+
+    static std::unique_ptr<SaveAllPossibleBreakpointsParams> Create(const PtJson &params);
+
+    const std::unordered_map<std::string, std::vector<std::shared_ptr<BreakpointInfo>>> *GetBreakpointsMap() const
+    {
+        if (!HasBreakpointsMap()) {
+            return nullptr;
+        }
+        return &(breakpointsMap_.value());
+    }
+
+    bool HasBreakpointsMap() const
+    {
+        return breakpointsMap_.has_value();
+    }
+
+private:
+    NO_COPY_SEMANTIC(SaveAllPossibleBreakpointsParams);
+    NO_MOVE_SEMANTIC(SaveAllPossibleBreakpointsParams);
+
+    std::optional<std::unordered_map<std::string, std::vector<std::shared_ptr<BreakpointInfo>>>>
+        breakpointsMap_ {};
 };
 }  // namespace panda::ecmascript::tooling
 #endif

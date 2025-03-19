@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "cJSON.h"
 #include "common/macros.h"
@@ -72,6 +73,8 @@ public:
     bool Contains(const char *key) const;
 
     std::string GetKey() const;
+
+    std::vector<std::string> GetKeysArray() const;
 
     cJSON *GetJson() const;
 

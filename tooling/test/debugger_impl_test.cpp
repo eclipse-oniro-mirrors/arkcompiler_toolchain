@@ -194,6 +194,43 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_Enable__002)
     }
 }
 
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_Enable_Accelerate_Launch_Mode)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+    EXPECT_FALSE(ecmaVm->GetJsDebuggerManager()->IsDebugMode());
+
+    std::string msg = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.enable",
+            "params":{
+                "maxScriptsCacheSize":1024,
+                "options":[
+                    "enableLaunchAccelerate"
+                ]
+            }
+        })";
+    DispatchRequest request(msg);
+    dispatcherImpl->Dispatch(request);
+
+    bool condition = outStrForCallbackCheck.find("protocols") != std::string::npos &&
+        outStrForCallbackCheck.find("debuggerId") != std::string::npos &&
+        outStrForCallbackCheck.find("saveAllPossibleBreakpoints") != std::string::npos;
+    EXPECT_TRUE(condition);
+    EXPECT_TRUE(ecmaVm->GetJsDebuggerManager()->IsDebugMode());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
 HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_Disable__001)
 {
     std::string outStrForCallbackCheck = "";

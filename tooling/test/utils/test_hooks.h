@@ -118,6 +118,8 @@ public:
 
     void SendableMethodEntry([[maybe_unused]] JSHandle<Method> method) override {}
 
+    void DisableFirstTimeFlag() override {}
+
     void TerminateTest()
     {
         debugInterface_->UnregisterHooks();

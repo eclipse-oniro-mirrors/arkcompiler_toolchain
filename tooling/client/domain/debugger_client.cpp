@@ -54,6 +54,8 @@ bool DebuggerClient::DispatcherCmd(const std::string &cmd)
         { "step-into", std::bind(&DebuggerClient::StepIntoCommand, this)},
         { "step-out", std::bind(&DebuggerClient::StepOutCommand, this)},
         { "step-over", std::bind(&DebuggerClient::StepOverCommand, this)},
+        { "enable-launch-accelerate", std::bind(&DebuggerClient::EnableLaunchAccelerateCommand, this)},
+        { "saveAllPossibleBreakpoints", std::bind(&DebuggerClient::SaveAllPossibleBreakpointsCommand, this)},
     };
 
     auto entry = dispatcherTable.find(cmd);
@@ -432,5 +434,58 @@ void DebuggerClient::handleResponse(std::unique_ptr<PtJson> json)
         return;
     }
     return;
+}
+
+int DebuggerClient::SaveAllPossibleBreakpointsCommand()
+{
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
+    std::unique_ptr<PtJson> request = PtJson::CreateObject();
+    request->Add("id", id);
+    request->Add("method", "Debugger.saveAllPossibleBreakpoints");
+
+    std::unique_ptr<PtJson> params = PtJson::CreateObject();
+    std::unique_ptr<PtJson> locations = PtJson::CreateObject();
+    std::unique_ptr<PtJson> vector = PtJson::CreateArray();
+
+    std::unique_ptr<PtJson> bp = PtJson::CreateObject();
+    bp->Add("lineNumber", breakPointInfoList_.back().lineNumber);
+    bp->Add("columnNumber", breakPointInfoList_.back().columnNumber);
+    vector->Push(bp);
+    locations->Add(breakPointInfoList_.back().url.c_str(), vector);
+    params->Add("locations", locations);
+    request->Add("params", params);
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Debugger");
+    }
+
+    return 0;
+}
+
+int DebuggerClient::EnableLaunchAccelerateCommand()
+{
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
+    std::unique_ptr<PtJson> request = PtJson::CreateObject();
+    request->Add("id", id);
+    request->Add("method", "Debugger.enable");
+
+    std::unique_ptr<PtJson> params = PtJson::CreateObject();
+    std::unique_ptr<PtJson> options = PtJson::CreateArray();
+
+    options->Push("enableLaunchAccelerate");
+    params->Add("options", options);
+    request->Add("params", params);
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Debugger");
+    }
+
+    return 0;
 }
 } // OHOS::ArkCompiler::Toolchain
