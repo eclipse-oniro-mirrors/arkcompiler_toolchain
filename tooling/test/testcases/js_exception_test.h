@@ -202,7 +202,7 @@ public:
 private:
     std::string pandaFile_ = DEBUGGER_ABC_DIR "exception.abc";
     std::string sourceFile_ = DEBUGGER_JS_DIR "exception.js";
-    std::string entryPoint_ = "_GLOBAL::func_main_0";
+    std::string entryPoint_ = "exception";
 };
 
 std::unique_ptr<TestActions> GetJsExceptionTest()

@@ -194,7 +194,7 @@ public:
 private:
     std::string pandaFile_ = DEBUGGER_ABC_DIR "watch_variable.abc";
     std::string sourceFile_ = DEBUGGER_JS_DIR "watch_variable.js";
-    std::string entryPoint_ = "_GLOBAL::func_main_0";
+    std::string entryPoint_ = "watch_variable";
 };
 
 std::unique_ptr<TestActions> GetJsWatchBasicTypeTest()

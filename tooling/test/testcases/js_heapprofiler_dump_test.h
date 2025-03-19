@@ -115,7 +115,7 @@ public:
 private:
     std::string pandaFile_ = DEBUGGER_ABC_DIR "sample.abc";
     std::string sourceFile_ = DEBUGGER_JS_DIR "sample.js";
-    std::string entryPoint_ = "_GLOBAL::func_main_0";
+    std::string entryPoint_ = "sample";
 };
 
 std::unique_ptr<TestActions> GetJsHeapProfilerDumpTest()

@@ -829,7 +829,7 @@ private:
         RuntimeImpl *runtime_ {nullptr};
     };
 
-    std::string entryPoint_ = "_GLOBAL::func_main_0";
+    std::string entryPoint_ = "variable_first";
     JSPtLocation location_ {nullptr, JSPtLocation::EntityId(0), 0};
     size_t breakpointCounter_ = 0;
 };
