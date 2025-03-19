@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -90,6 +90,10 @@ def main():
     for dep in args.external_deps:
         if dep.startswith("ets_runtime"):
             config_info = read_json_file("{}arkcompiler/ets_runtime/bundle.json".format(args.root_src_dir))
+            target_name = dep.split(":")[1]
+            deps.append(get_full_path_from_target_name(config_info, target_name))
+        elif dep.startswith("base_runtime"):
+            config_info = read_json_file("{}arkcompiler/base_runtime/bundle.json".format(args.root_src_dir))
             target_name = dep.split(":")[1]
             deps.append(get_full_path_from_target_name(config_info, target_name))
         elif dep.startswith("runtime_core"):
