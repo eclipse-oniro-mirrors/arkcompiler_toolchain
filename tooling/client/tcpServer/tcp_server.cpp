@@ -62,6 +62,9 @@ void TcpServer::ServerConnect()
         CloseServer();
         return;
     }
+#if defined(PANDA_TARGET_OHOS)
+    fdsan_exchange_owner_tag(lfd, 0, LOG_DOMAIN);
+#endif
 
     int ret = bind(lfd, (struct sockaddr*)&saddr, sizeof(saddr));
     if (ret == -1) {
@@ -85,6 +88,9 @@ void TcpServer::ServerConnect()
         CloseServer();
         return;
     }
+#if defined(PANDA_TARGET_OHOS)
+    fdsan_exchange_owner_tag(cfd, 0, LOG_DOMAIN);
+#endif
 }
 
 void TcpServer::SendCommand(std::string inputStr)
@@ -137,8 +143,13 @@ void TcpServer::StartTcpServer([[maybe_unused]] void* arg)
         }
     } while (num > 0);
 
+#if defined(PANDA_TARGET_OHOS)
+    fdsan_close_with_tag(cfd, LOG_DOMAIN);
+    fdsan_close_with_tag(lfd, LOG_DOMAIN);
+#else
     close(cfd);
     close(lfd);
+#endif
 
     CloseServer();
     return;
