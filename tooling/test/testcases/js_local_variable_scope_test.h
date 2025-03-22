@@ -133,7 +133,7 @@ public:
 private:
     std::string pandaFile_ = DEBUGGER_ABC_DIR "local_variable_scope.abc";
     std::string sourceFile_ = DEBUGGER_JS_DIR "local_variable_scope.js";
-    std::string entryPoint_ = "_GLOBAL::func_main_0";
+    std::string entryPoint_ = "local_variable_scope";
 
     std::map<std::string, std::string> truthGroundMap_ = {
         {"a", "1"},

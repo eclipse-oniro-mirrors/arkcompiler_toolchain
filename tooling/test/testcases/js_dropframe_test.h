@@ -307,7 +307,7 @@ private:
 
     std::string pandaFile_ = DEBUGGER_ABC_DIR "dropframe.abc";
     std::string sourceFile_ = DEBUGGER_JS_DIR "dropframe.js";
-    std::string entryPoint_ = "_GLOBAL::func_main_0";
+    std::string entryPoint_ = "dropframe";
     size_t breakpointCounter_ = 0;
     size_t dropframeCounter_ = 0;
     bool dropFrameChecked_ = false;

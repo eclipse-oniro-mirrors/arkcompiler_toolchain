@@ -73,9 +73,8 @@ foreach(file, test_js_files) {
     if (file == "module_variable" || file == "export_variable_first" ||
         file == "export_variable_second") {
       extra_args += [ "--module" ]
-      extra_args += [ "--merge-abc" ]
     }
-
+    extra_args += [ "--merge-abc" ]
     in_puts = [ test_js ]
     out_puts = [ test_abc ]
   }

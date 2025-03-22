@@ -337,7 +337,7 @@ public:
 private:
     std::string pandaFile_ = DEBUGGER_ABC_DIR "closure_scope.abc";
     std::string sourceFile_ = DEBUGGER_JS_DIR "closure_scope.js";
-    std::string entryPoint_ = "_GLOBAL::func_main_0";
+    std::string entryPoint_ = "closure_scope";
 };
 
 std::unique_ptr<TestActions> GetJsClosureScopeTest()

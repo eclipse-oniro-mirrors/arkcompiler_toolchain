@@ -132,7 +132,7 @@ public:
 private:
     std::string pandaFile_ = DEBUGGER_ABC_DIR "common_func.abc";
     std::string sourceFile_ = DEBUGGER_JS_DIR "common_func.js";
-    std::string entryPoint_ = "_GLOBAL::func_main_0";
+    std::string entryPoint_ = "common_func";
 };
 
 std::unique_ptr<TestActions> GetJsBreakpointRecursionTest()

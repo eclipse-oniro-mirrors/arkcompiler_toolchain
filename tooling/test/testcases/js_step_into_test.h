@@ -105,7 +105,7 @@ private:
 
     std::string pandaFile_ = DEBUGGER_ABC_DIR "step.abc";
     std::string sourceFile_ = DEBUGGER_JS_DIR "step.js";
-    std::string entryPoint_ = "_GLOBAL::func_main_0";
+    std::string entryPoint_ = "step";
     size_t breakpointCounter_ = 0;
     size_t stepCompleteCounter_ = 0;
     std::vector<JSPtLocation> pointerLocations_;
