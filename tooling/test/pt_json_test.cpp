@@ -313,4 +313,15 @@ HWTEST_F_L0(PtJsonTest, ResultUInt64Test)
     ASSERT_EQ(test->GetUInt64("b", &ui64), Result::SUCCESS);
     EXPECT_EQ(ui64, static_cast<uint64_t>(100));
 }
+
+HWTEST_F_L0(PtJsonTest, GetKeysArraytest)
+{
+    auto test = PtJson::CreateObject();
+    test->Add("a", "ResultUInt64Test");
+    test->Add("b", 100);
+    auto keys = test->GetKeysArray();
+    EXPECT_EQ(keys.size(), 2);
+    EXPECT_TRUE(keys.at(0) == "a");
+    EXPECT_TRUE(keys.at(1) == "b");
+}
 }

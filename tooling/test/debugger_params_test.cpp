@@ -224,6 +224,45 @@ HWTEST_F_L0(DebuggerParamsTest, EnableParamsCreateTest)
     EXPECT_EQ(enableParams->GetMaxScriptsCacheSize(), 100);
 }
 
+HWTEST_F_L0(DebuggerParamsTest, EnableParamsAccelerateLaunchModeCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<EnableParams> enableParams;
+
+    // abnormal
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    enableParams = EnableParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(enableParams, nullptr);
+    EXPECT_FALSE(enableParams->HasMaxScriptsCacheSize());
+
+    // normal
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test",
+        "params":{"options":["enableLaunchAccelerate"], "maxScriptsCacheSize":100}})";
+    enableParams = EnableParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(enableParams, nullptr);
+    EXPECT_EQ(enableParams->GetMaxScriptsCacheSize(), 100);
+    EXPECT_EQ(enableParams->GetEnableOptionsList().size(), 1);
+}
+
+HWTEST_F_L0(DebuggerParamsTest, SaveAllPossibleBreakpointsParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<SaveAllPossibleBreakpointsParams> params;
+
+    // abnormal
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    params = SaveAllPossibleBreakpointsParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_EQ(params, nullptr);
+
+    // normal
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{
+            "locations":{"actualUrl/actualFileName.ts":[{"lineNumber": 7, "columnNumber": 8}]}}})";
+    params = SaveAllPossibleBreakpointsParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(params, nullptr);
+    EXPECT_TRUE(params->HasBreakpointsMap());
+    EXPECT_EQ(params->GetBreakpointsMap()->size(), 1);
+}
+
 HWTEST_F_L0(DebuggerParamsTest, StartSamplingParamsCreateTest)
 {
     std::string msg;

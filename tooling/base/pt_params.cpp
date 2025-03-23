@@ -30,6 +30,22 @@ std::unique_ptr<EnableParams> EnableParams::Create(const PtJson &params)
         error += "Wrong type of 'maxScriptsCacheSize';";
     }
 
+    std::unique_ptr<PtJson> options;
+    std::vector<std::string> enableOptionsList;
+    ret = params.GetArray("options", &options);
+    if (ret == Result::SUCCESS) {
+        int32_t length = options->GetSize();
+        for (int32_t i = 0; i < length; i++) {
+            auto option = options->Get(i);
+            if (option != nullptr && option->IsString()) {
+                enableOptionsList.emplace_back(option->GetString());
+            }
+        }
+        paramsObject->enableOptionList_ = enableOptionsList;
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'options';";
+    }
+
     if (!error.empty()) {
         LOG_DEBUGGER(ERROR) << "EnableParams::Create " << error;
         return nullptr;
@@ -1299,6 +1315,51 @@ std::unique_ptr<SeriliazationTimeoutCheckEnableParams> SeriliazationTimeoutCheck
         LOG_DEBUGGER(ERROR) << "SeriliazationTimeoutCheckEnableParams::Create " << error;
         return nullptr;
     }
+    return paramsObject;
+}
+
+std::unique_ptr<SaveAllPossibleBreakpointsParams> SaveAllPossibleBreakpointsParams::Create(const PtJson &params)
+{
+    auto paramsObject = std::make_unique<SaveAllPossibleBreakpointsParams>();
+    std::unordered_map<std::string, std::vector<std::shared_ptr<BreakpointInfo>>> breakpointMap {};
+    std::string error;
+    Result ret;
+
+    std::unique_ptr<PtJson> locationList;
+    ret = params.GetObject("locations", &locationList);
+    if (ret != Result::SUCCESS) {
+        LOG_DEBUGGER(ERROR) << "SaveAllPossibleBreakpointsParams::Get Breakpoints location: " << error;
+        return nullptr;
+    }
+
+    auto keys = locationList->GetKeysArray();
+    std::unique_ptr<PtJson> breakpoints;
+    for (const auto &key : keys) {
+        ret = locationList->GetArray(key.c_str(), &breakpoints);
+        if (ret == Result::SUCCESS) {
+            int32_t length = breakpoints->GetSize();
+            std::vector<std::shared_ptr<BreakpointInfo>> breakpointList;
+            for (int32_t i = 0; i < length; i++) {
+                auto json = *breakpoints->Get(i);
+                json.Add("url", key.c_str());
+                std::shared_ptr<BreakpointInfo> info = BreakpointInfo::Create(json);
+                if (info == nullptr) {
+                    error += "'breakpoints' items BreakpointInfo is invalid;";
+                    break;
+                }
+                breakpointList.emplace_back(std::move(info));
+            }
+            breakpointMap[key] = breakpointList;
+        } else if (ret == Result::TYPE_ERROR) {
+            error += "Wrong type of 'breakpoints'";
+        }
+    }
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "SaveAllPossibleBreakpointsParams::Create " << error;
+        return nullptr;
+    }
+    paramsObject->breakpointsMap_ = breakpointMap;
+
     return paramsObject;
 }
 }  // namespace panda::ecmascript::tooling

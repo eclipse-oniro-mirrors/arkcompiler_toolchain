@@ -72,6 +72,7 @@ public:
     ErrCode SessionSwitchCommand(const std::string &cmd);
     ErrCode TestCommand(const std::string &cmd);
     ErrCode ExecHelpCommand();
+    ErrCode SaveAllPossibleBreakpointsCommand(const std::string &cmd);
     void OutputCommand(const std::string &cmd, bool flag);
 
     VecStr GetArgList()
