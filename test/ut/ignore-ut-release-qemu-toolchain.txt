@@ -1,2 +1,2 @@
-# Known failure list for ut - release - qemu - toolchain
-
+#24285
+test/test/libjsdebugtest.so
