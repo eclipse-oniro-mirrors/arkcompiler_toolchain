@@ -28,7 +28,6 @@ print()
 
 group("default") {
   deps = [
-    ":base_runtime",
     ":ets_frontend",
     ":ets_runtime",
     ":runtime_core",
@@ -130,8 +129,4 @@ group("toolchain") {
       "$toolchain_root/tooling/client/ark_multi:ark_multi",
     ]
   }
-}
-
-group("base_runtime") {
-  deps = [ "$base_root:libbase_runtime" ]
 }

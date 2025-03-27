@@ -92,10 +92,6 @@ def main():
             config_info = read_json_file("{}arkcompiler/ets_runtime/bundle.json".format(args.root_src_dir))
             target_name = dep.split(":")[1]
             deps.append(get_full_path_from_target_name(config_info, target_name))
-        elif dep.startswith("base_runtime"):
-            config_info = read_json_file("{}arkcompiler/base_runtime/bundle.json".format(args.root_src_dir))
-            target_name = dep.split(":")[1]
-            deps.append(get_full_path_from_target_name(config_info, target_name))
         elif dep.startswith("runtime_core"):
             config_info = read_json_file("{}arkcompiler/runtime_core/bundle.json".format(args.root_src_dir))
             target_name = dep.split(":")[1]
