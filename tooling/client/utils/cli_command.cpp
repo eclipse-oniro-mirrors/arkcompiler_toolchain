@@ -64,6 +64,7 @@ const std::string HELP_MSG = "usage: <command> <options>\n"
     "  step-out(so)                                  step-out\n"
     "  step-over(sov)                                step-over\n"
     "  runtime-disable                               rt-disable\n"
+    "  setAsyncStackDepth                            setAsyncStackDepth\n"
     "  session-new                                   add new session\n"
     "  session-remove                                del a session\n"
     "  session-list                                  list all sessions\n"
@@ -117,6 +118,7 @@ const std::vector<std::string> cmdList = {
     "step-out",
     "step-over",
     "runtime-disable",
+    "setAsyncStackDepth",
     "session-new",
     "session-remove",
     "session-list",
@@ -201,6 +203,8 @@ void CliCommand::CreateOtherCommandMap()
         {std::make_pair("step-over", "sov"), std::bind(&CliCommand::StepCommand, this, "step-over")},
         {std::make_pair("runtime-disable", "rt-disable"),
             std::bind(&CliCommand::RuntimeCommand, this, "runtime-disable")},
+        {std::make_pair("setAsyncStackDepth", "setAsyncStackDepth"),
+            std::bind(&CliCommand::DebuggerCommand, this, "setAsyncStackDepth")},
         {std::make_pair("session-new", "session-new"),
             std::bind(&CliCommand::SessionAddCommand, this, "session-new")},
         {std::make_pair("session-remove", "session-remove"),

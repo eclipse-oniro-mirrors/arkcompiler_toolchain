@@ -43,6 +43,7 @@ bool DebuggerClient::DispatcherCmd(const std::string &cmd)
         { "step", std::bind(&DebuggerClient::StepCommand, this)},
         { "undisplay", std::bind(&DebuggerClient::UndisplayCommand, this)},
         { "watch", std::bind(&DebuggerClient::WatchCommand, this)},
+        { "setAsyncStackDepth", std::bind(&DebuggerClient::AsyncStackDepthCommand, this)},
         { "resume", std::bind(&DebuggerClient::ResumeCommand, this)},
         { "step-into", std::bind(&DebuggerClient::StepIntoCommand, this)},
         { "step-out", std::bind(&DebuggerClient::StepOutCommand, this)},
@@ -220,6 +221,27 @@ int DebuggerClient::UndisplayCommand()
 
 int DebuggerClient::WatchCommand()
 {
+    return 0;
+}
+
+int DebuggerClient::AsyncStackDepthCommand()
+{
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
+    std::unique_ptr<PtJson> request = PtJson::CreateObject();
+    request->Add("id", id);
+    request->Add("method", "Debugger.setAsyncCallStackDepth");
+
+    std::unique_ptr<PtJson> params = PtJson::CreateObject();
+    // 32 : maxAsyncCallChainDepth
+    params->Add("maxDepth", 32);
+    request->Add("params", params);
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Debugger");
+    }
     return 0;
 }
 

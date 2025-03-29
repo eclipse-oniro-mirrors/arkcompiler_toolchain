@@ -42,6 +42,7 @@ public:
     void VmDeath() override {}
     void SendableMethodEntry(JSHandle<Method> method) override;
     void DisableFirstTimeFlag() override;
+    void GenerateAsyncFrames(std::shared_ptr<AsyncStack> asyncStack, bool skipTopFrame) override;
 
 private:
     NO_COPY_SEMANTIC(JSPtHooks);

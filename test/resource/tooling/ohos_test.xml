@@ -36,6 +36,7 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/common_func.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/watch_variable.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/smart_stepInto.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/promise.abc -> /data/test" src="out"/>
             <option name="push" value="test/test/libjsdebugtest.so -> /data/test" src="out"/>
             <option name="push" value="test/test/libdebugger_entry.so -> /data/test" src="out"/>
         </preparer>
@@ -64,6 +65,7 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/common_func.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/watch_variable.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/smart_stepInto.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/promise.abc -> /data/test" src="out"/>
             <option name="push" value="test/test/libjsdebugtest.so -> /data/test" src="out"/>
             <option name="push" value="test/test/libdebugger_entry.so -> /data/test" src="out"/>
         </preparer>
@@ -92,6 +94,7 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/common_func.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/watch_variable.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/smart_stepInto.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/promise.abc -> /data/test" src="out"/>
             <option name="push" value="test/test/libark_client.so -> /data/test" src="out"/>
         </preparer>
     </target>
@@ -119,6 +122,7 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/common_func.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/watch_variable.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/test/smart_stepInto.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/test/promise.abc -> /data/test" src="out"/>
             <option name="push" value="test/test/libark_client.so -> /data/test" src="out"/>
         </preparer>
     </target>
