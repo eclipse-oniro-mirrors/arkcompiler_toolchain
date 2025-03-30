@@ -15,9 +15,6 @@
 
 #include "tooling/client/domain/test_client.h"
 
-#include "common/log_wrapper.h"
-#include "tooling/client/manager/variable_manager.h"
-#include "tooling/base/pt_json.h"
 #include "tooling/client/session/session.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;

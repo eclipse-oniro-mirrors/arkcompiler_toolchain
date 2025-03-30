@@ -31,10 +31,8 @@
 namespace panda::ecmascript::tooling {
 class TracingImpl final {
 public:
-    explicit TracingImpl(const EcmaVM *vm, ProtocolChannel *channel) : vm_(vm), frontend_(channel)
-    {
-    }
-    ~TracingImpl() = default;
+    explicit TracingImpl(const EcmaVM *vm, ProtocolChannel *channel) : vm_(vm), frontend_(channel) {}
+    ~TracingImpl();
 
     std::unique_ptr<std::vector<TraceEvent>> End();
     DispatchResponse GetCategories(std::vector<std::string> categories);
@@ -96,7 +94,7 @@ private:
     const EcmaVM *vm_ {nullptr};
     Frontend frontend_;
 #if defined(ECMASCRIPT_SUPPORT_TRACING)
-    uv_timer_t handle_ {};
+    uv_timer_t *handle_ {nullptr};
 #endif
 };
 }  // namespace panda::ecmascript::tooling

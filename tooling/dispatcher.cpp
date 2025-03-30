@@ -16,19 +16,19 @@
 #include "dispatcher.h"
 
 #include "agent/debugger_impl.h"
-#include "agent/runtime_impl.h"
 #ifdef ECMASCRIPT_SUPPORT_HEAPPROFILER
 #include "agent/heapprofiler_impl.h"
 #endif
 #ifdef ECMASCRIPT_SUPPORT_CPUPROFILER
 #include "agent/profiler_impl.h"
 #endif
-#include "agent/tracing_impl.h"
+#include "agent/animation_impl.h"
 #include "agent/css_impl.h"
 #include "agent/dom_impl.h"
 #include "agent/overlay_impl.h"
 #include "agent/page_impl.h"
 #include "agent/target_impl.h"
+#include "agent/tracing_impl.h"
 #include "protocol_channel.h"
 
 namespace panda::ecmascript::tooling {
@@ -176,6 +176,10 @@ Dispatcher::Dispatcher(const EcmaVM *vm, ProtocolChannel *channel)
     auto page = std::make_unique<PageImpl>();
     dispatchers_["Page"] =
         std::make_unique<PageImpl::DispatcherImpl>(channel, std::move(page));
+
+    auto animation = std::make_unique<AnimationImpl>();
+    dispatchers_["Animation"] =
+        std::make_unique<AnimationImpl::DispatcherImpl>(channel, std::move(animation));
 }
 
 void Dispatcher::Dispatch(const DispatchRequest &request)
@@ -199,5 +203,15 @@ void Dispatcher::Dispatch(const DispatchRequest &request)
             LOG_DEBUGGER(ERROR) << "unknown domain: " << domain;
         }
     }
+}
+
+std::string Dispatcher::GetJsFrames() const
+{
+    auto dispatcher = dispatchers_.find("Debugger");
+    if (dispatcher != dispatchers_.end()) {
+        auto debuggerImpl = reinterpret_cast<DebuggerImpl::DispatcherImpl*>(dispatcher->second.get());
+        return debuggerImpl->GetJsFrames();
+    }
+    return "";
 }
 }  // namespace panda::ecmascript::tooling

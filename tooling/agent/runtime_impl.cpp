@@ -15,12 +15,7 @@
 
 #include "agent/runtime_impl.h"
 
-#include <iomanip>
-
-#include "tooling/base/pt_returns.h"
 #include "protocol_channel.h"
-
-#include "ecmascript/napi/include/dfx_jsnapi.h"
 
 namespace panda::ecmascript::tooling {
 // Whenever adding a new protocol which is not a standard CDP protocol,

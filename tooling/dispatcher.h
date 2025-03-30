@@ -148,6 +148,7 @@ public:
     explicit Dispatcher(const EcmaVM *vm, ProtocolChannel *channel);
     ~Dispatcher() = default;
     void Dispatch(const DispatchRequest &request);
+    std::string GetJsFrames() const;
 
 private:
     std::unordered_map<std::string, std::unique_ptr<DispatcherBase>> dispatchers_ {};

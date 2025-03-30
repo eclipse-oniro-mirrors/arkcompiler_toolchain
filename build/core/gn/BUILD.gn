@@ -37,7 +37,10 @@ group("default") {
 
 group("unittest_packages") {
   testonly = true
-  deps = [ "$toolchain_root:ark_js_host_unittest" ]
+  deps = [
+    "$js_root:ark_runtime_host_unittest",
+    "$toolchain_root:ark_toolchain_host_unittest",
+  ]
 }
 
 group("runtime_core_unittest_packages") {

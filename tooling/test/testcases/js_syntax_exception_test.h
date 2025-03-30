@@ -98,7 +98,7 @@ private:
     const std::string testFile = "syntax_exception";
     std::string pandaFile_ = DEBUGGER_ABC_DIR + testFile + ".abc";
     std::string sourceFile_ = DEBUGGER_JS_DIR + testFile + ".js";
-    std::string entryPoint_ = "_GLOBAL::func_main_0";
+    std::string entryPoint_ = testFile;
     JSPtLocation location_ {nullptr, JSPtLocation::EntityId(0), 0};
     size_t breakpointCounter_ = 0;
     size_t exceptionCounter_ = 0;

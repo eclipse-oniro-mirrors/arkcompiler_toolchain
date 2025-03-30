@@ -14,14 +14,19 @@
  */
 
 #include "connect_inspector.h"
+
 #include <mutex>
+
 #include "common/log_wrapper.h"
+#include "tooling/base/pt_json.h"
+#include "ws_server.h"
+
 namespace OHOS::ArkCompiler::Toolchain {
+using panda::ecmascript::tooling::PtJson;
+using panda::ecmascript::tooling::Result;
 std::mutex g_connectMutex;
 std::unique_ptr<ConnectInspector> g_inspector = nullptr;
 static constexpr char CONNECTED_MESSAGE[] = "connected";
-static constexpr char OPEN_MESSAGE[] = "layoutOpen";
-static constexpr char CLOSE_MESSAGE[] = "layoutClose";
 static constexpr char REQUEST_MESSAGE[] = "tree";
 static constexpr char STOPDEBUGGER_MESSAGE[] = "stopDebugger";
 static constexpr char OPEN_ARKUI_STATE_PROFILER[] = "ArkUIStateProfilerOpen";
@@ -59,16 +64,6 @@ void OnConnectedMessage(const std::string& message)
     }
 }
 
-void OnOpenMessage(const std::string& message)
-{
-    if (message.find(OPEN_MESSAGE, 0) != std::string::npos) {
-        if (g_inspector->setSwitchStatus_ != nullptr) {
-            LOGI("layoutOpen start");
-            g_inspector->setSwitchStatus_(true);
-        }
-    }
-}
-
 void OnInspectorRecordMessage(const std::string& message)
 {
     if (message.find(START_RECORD_MESSAGE, 0) != std::string::npos) {
@@ -88,7 +83,52 @@ void OnInspectorRecordMessage(const std::string& message)
     }
 }
 
-void OnMessage(const std::string& message)
+bool OnArkUIInspectorMessage(const std::string &message)
+{
+    ConnectRequest request(message);
+    if (!request.IsValid()) {
+        return false;
+    }
+    std::string domain = request.GetDomain();
+    if (domain == "ArkUI") {
+        if (g_inspector->arkUICallback_ != nullptr) {
+            LOGI("OnArkUIInspectorMessage, arkUICallback_ called");
+            g_inspector->arkUICallback_(message.c_str());
+        } else {
+            LOGE("OnArkUIInspectorMessage, arkUICallback_ is nullptr");
+        }
+        return true;
+    } else if (domain == "WMS") {
+        if (g_inspector->wMSCallback_ != nullptr) {
+            LOGI("OnArkUIInspectorMessage, wMSCallback_ called");
+            g_inspector->wMSCallback_(message.c_str());
+        } else {
+            LOGE("OnArkUIInspectorMessage, wMSCallback_ is nullptr");
+        }
+        return true;
+    } else {
+        LOGW("OnArkUIInspectorMessage, unknown request");
+    }
+    return false;
+}
+
+bool OnCangjieInspectorMessage(const std::string &message)
+{
+    if (message.find("cangjie profiler") != std::string::npos) {
+        if (g_inspector->cangjieCallback_ != nullptr) {
+            LOGI("OnCangjieInspectorMessage, cangjieCallback_ called");
+            g_inspector->cangjieCallback_(message, SendMessage);
+        } else {
+            LOGE("OnCangjieInspectorMessage, cangjieCallback_ is nullptr");
+        }
+        return true;
+    } else {
+        LOGW("OnCangjieInspectorMessage. unknown request");
+    }
+    return false;
+}
+
+void OnMessage(const std::string &message)
 {
     std::lock_guard<std::mutex> lock(g_connectMutex);
     if (message.empty()) {
@@ -98,18 +138,12 @@ void OnMessage(const std::string& message)
 
     LOGI("ConnectServer OnMessage: %{public}s", message.c_str());
     if (g_inspector != nullptr && g_inspector->connectServer_ != nullptr) {
-        g_inspector->ideMsgQueue_.push(message);
         OnConnectedMessage(message);
-
-        OnOpenMessage(message);
-        if (message.find(CLOSE_MESSAGE, 0) != std::string::npos) {
-            if (g_setConnectCallBack != nullptr) {
-                g_setConnectCallBack(false);
-            }
-            if (g_inspector->setSwitchStatus_ != nullptr) {
-                LOGI("layoutClose start");
-                g_inspector->setSwitchStatus_(false);
-            }
+        if (OnArkUIInspectorMessage(message)) {
+            return;
+        }
+        if (OnCangjieInspectorMessage(message)) {
+            return;
         }
         if (message.find(OPEN_ARKUI_STATE_PROFILER, 0) != std::string::npos) {
             if (g_inspector->setArkUIStateProfilerStatus_ != nullptr) {
@@ -135,19 +169,20 @@ void OnMessage(const std::string& message)
                 LOGI("stopDebugger start");
                 g_inspector->setDebugMode_();
             }
+            if (g_setConnectCallBack != nullptr) {
+                g_setConnectCallBack(false);
+            }
         }
         OnInspectorRecordMessage(message);
     }
 }
 
-void SetSwitchCallBack(const std::function<void(bool)>& setSwitchStatus,
-    const std::function<void(int32_t)>& createLayoutInfo, int32_t instanceId)
+void SetSwitchCallBack(const std::function<void(int32_t)>& createLayoutInfo, int32_t instanceId)
 {
     std::lock_guard<std::mutex> lock(g_connectMutex);
     if (g_inspector == nullptr) {
         g_inspector = std::make_unique<ConnectInspector>();
     }
-    g_inspector->setSwitchStatus_ = setSwitchStatus;
     g_inspector->createLayoutInfo_ = createLayoutInfo;
     g_inspector->instanceId_ = instanceId;
 }
@@ -234,16 +269,6 @@ void StoreMessage(int32_t instanceId, const std::string& message)
     g_inspector->infoBuffer_[instanceId] = message;
 }
 
-void StoreInspectorInfo(const std::string& jsonTreeStr, const std::string& jsonSnapshotStr)
-{
-    std::lock_guard<std::mutex> lock(g_connectMutex);
-    if (g_inspector == nullptr) {
-        return;
-    }
-    g_inspector->layoutInspectorInfo_.tree = jsonTreeStr;
-    g_inspector->layoutInspectorInfo_.snapShot = jsonSnapshotStr;
-}
-
 void RemoveMessage(int32_t instanceId)
 {
     std::lock_guard<std::mutex> lock(g_connectMutex);
@@ -255,14 +280,6 @@ void RemoveMessage(int32_t instanceId)
         return;
     }
     g_inspector->infoBuffer_.erase(instanceId);
-}
-
-void SendLayoutMessage(const std::string& message)
-{
-    LOGI("SendLayoutMessage start to send message");
-    if (g_inspector != nullptr && g_inspector->connectServer_ != nullptr) {
-        g_inspector->connectServer_->SendMessage(message);
-    }
 }
 
 void SendMessage(const std::string& message)
@@ -278,16 +295,6 @@ bool WaitForConnection()
         return true;
     }
     return g_inspector->waitingForDebugger_;
-}
-
-// profiler methods
-
-void SendProfilerMessage(const std::string &message)
-{
-    LOGI("SendStateProfilerMessage start to send message");
-    if (g_inspector != nullptr && g_inspector->connectServer_ != nullptr) {
-        g_inspector->connectServer_->SendMessage(message);
-    }
 }
 
 void SetProfilerCallback(const std::function<void(bool)> &setArkUIStateProfilerStatus)
@@ -308,5 +315,65 @@ void SetRecordCallback(const std::function<void(void)> &startRecordFunc,
     }
     g_inspector->startRecord_ = startRecordFunc;
     g_inspector->stopRecord_ = stopRecordFunc;
+}
+
+void SetArkUICallback(const std::function<void(const char *)> &arkUICallback)
+{
+    std::lock_guard<std::mutex> lock(g_connectMutex);
+    if (g_inspector == nullptr) {
+        g_inspector = std::make_unique<ConnectInspector>();
+    }
+    g_inspector->arkUICallback_ = arkUICallback;
+}
+
+void SetWMSCallback(const std::function<void(const char *)> &wMSCallback)
+{
+    std::lock_guard<std::mutex> lock(g_connectMutex);
+    if (g_inspector == nullptr) {
+        g_inspector = std::make_unique<ConnectInspector>();
+    }
+    g_inspector->wMSCallback_ = wMSCallback;
+}
+
+void SetCangjieCallback(CJCallback &cangjieCallback)
+{
+    std::lock_guard<std::mutex> lock(g_connectMutex);
+    if (g_inspector == nullptr) {
+        g_inspector = std::make_unique<ConnectInspector>();
+    }
+    g_inspector->cangjieCallback_ = cangjieCallback;
+}
+
+ConnectRequest::ConnectRequest(const std::string &message)
+{
+    std::unique_ptr<PtJson> json = PtJson::Parse(message);
+    if (json == nullptr) {
+        LOGE("ConnectRequest, json == nullptr");
+        return;
+    }
+    if (!json->IsObject()) {
+        LOGE("ConnectRequest, json is not object");
+        json->ReleaseRoot();
+        return;
+    }
+
+    Result ret;
+    std::string wholeMethod;
+    ret = json->GetString("method", &wholeMethod);
+    if (ret != Result::SUCCESS || wholeMethod.empty()) {
+        LOGW("ConnectRequest, parse method error");
+        json->ReleaseRoot();
+        return;
+    }
+    std::string::size_type length = wholeMethod.length();
+    std::string::size_type indexPoint = wholeMethod.find_first_of('.', 0);
+    if (indexPoint == std::string::npos || indexPoint == 0 || indexPoint == length - 1) {
+        LOGW("ConnectRequest, method format error, msg = %{public}s", wholeMethod.c_str());
+        json->ReleaseRoot();
+        return;
+    }
+    domain_ = wholeMethod.substr(0, indexPoint);
+    isSuccess_ = true;
+    json->ReleaseRoot();
 }
 } // OHOS::ArkCompiler::Toolchain

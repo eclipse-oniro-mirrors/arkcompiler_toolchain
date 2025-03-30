@@ -199,7 +199,7 @@ private:
     HeapProfilerStream stream_;
     std::vector<std::string> heapProfilerExtendedProtocols_ {};
 #if defined(ECMASCRIPT_SUPPORT_HEAPPROFILER)
-    uv_timer_t handle_ {};
+    uv_timer_t *handle_ {nullptr};
 #endif
 
     friend class HeapProfilerImplFriendTest;

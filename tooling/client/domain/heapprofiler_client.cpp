@@ -14,13 +14,7 @@
  */
 
 #include "tooling/client/domain/heapprofiler_client.h"
-#include "common/log_wrapper.h"
-#include "tooling/utils/utils.h"
 #include "tooling/client/session/session.h"
-
-#include <map>
-#include <functional>
-#include <cstring>
 
 using Result = panda::ecmascript::tooling::Result;
 namespace OHOS::ArkCompiler::Toolchain {

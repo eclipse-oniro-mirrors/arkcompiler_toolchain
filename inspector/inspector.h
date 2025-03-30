@@ -47,6 +47,9 @@ void WaitForDebugger(void* vm);
 
 void StoreDebuggerInfo(int tid, void* vm, const DebuggerPostTask& debuggerPostTask);
 
+// The returned pointer must be released using free() after it is no longer needed.
+// Failure to release the memory will result in memory leaks.
+const char* GetJsBacktrace();
 #if __cplusplus
 }
 #endif
@@ -58,7 +61,7 @@ public:
 
     void OnMessage(std::string&& msg);
 #if defined(OHOS_PLATFORM)
-    uint64_t GetThreadOrTaskId();
+    static uint64_t GetThreadOrTaskId();
 #endif // defined(OHOS_PLATFORM)
 
     static constexpr int32_t DELAY_CHECK_DISPATCH_STATUS = 100;

@@ -15,7 +15,6 @@
 
 #include "tooling/client/manager/watch_manager.h"
 
-#include "common/log_wrapper.h"
 #include "tooling/client/session/session.h"
 
 using PtJson = panda::ecmascript::tooling::PtJson;

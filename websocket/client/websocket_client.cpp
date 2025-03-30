@@ -13,16 +13,11 @@
  * limitations under the License.
  */
 
-#include <sys/socket.h>
-#include <sys/time.h>
 #include <arpa/inet.h>
-#include <sys/un.h>
-#include <unistd.h>
 
 #include "common/log_wrapper.h"
 #include "frame_builder.h"
 #include "handshake_helper.h"
-#include "network.h"
 #include "string_utils.h"
 #include "client/websocket_client.h"
 

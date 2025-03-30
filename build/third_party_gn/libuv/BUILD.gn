@@ -84,11 +84,6 @@ config("libuv_config") {
       "_WIN32_WINNT=0x0600",
     ]
 
-    # Adding NDEBUG macro manually to avoid compilation
-    # error in debug version, FIX ME
-    # https://gitee.com/openharmony/build/pulls/1206/files
-    defines += [ "NDEBUG" ]
-
     libs = [
       "psapi",
       "user32",
@@ -111,11 +106,6 @@ config("libuv_private_config") {
     "//third_party/libuv/src",
     "//third_party/libuv/src/unix",
   ]
-
-  # Adding NDEBUG macro manually to avoid compilation
-  # error in debug version, FIX ME
-  # https://gitee.com/openharmony/build/pulls/1206/files
-  defines = [ "NDEBUG" ]
 }
 
 ohos_source_set("libuv_source") {

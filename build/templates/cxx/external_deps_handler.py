@@ -139,6 +139,11 @@ def main():
                     "json/dummy_bundle.json".format(args.root_src_dir))
             target_name = dep.split(":")[1]
             deps.append(get_full_path_from_target_name(config_info, target_name))
+        elif dep.startswith("protobuf"):
+            config_info = read_json_file("{}arkcompiler/toolchain/build/third_party_gn/" \
+                    "protobuf/dummy_bundle.json".format(args.root_src_dir))
+            target_name = dep.split(":")[1]
+            deps.append(get_full_path_from_target_name(config_info, target_name))
         else:
             print("Component in which the external_dep defined is ommited in the logic of {}!".format(__file__))
             sys.exit(1)

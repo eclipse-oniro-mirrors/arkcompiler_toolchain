@@ -13,18 +13,9 @@
  * limitations under the License.
  */
 
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <thread>
-#include <vector>
-
-#include <securec.h>
 #include <uv.h>
 
-#include "ecmascript/base/string_helper.h"
 #include "ecmascript/js_runtime_options.h"
-#include "ecmascript/napi/include/jsnapi.h"
 #include "ecmascript/platform/file.h"
 #include "tooling/utils/utils.h"
 #ifdef PANDA_TARGET_MACOS

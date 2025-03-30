@@ -15,9 +15,6 @@
 
 #include "agent/dom_impl.h"
 
-#include "base/pt_events.h"
-#include "protocol_channel.h"
-
 namespace panda::ecmascript::tooling {
 void DomImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {

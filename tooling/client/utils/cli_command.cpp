@@ -15,18 +15,6 @@
 
 #include "tooling/client/utils/cli_command.h"
 
-#include <functional>
-#include <iostream>
-
-#include "tooling/client/domain/debugger_client.h"
-#include "tooling/client/domain/runtime_client.h"
-#include "common/log_wrapper.h"
-#include "tooling/client/manager/breakpoint_manager.h"
-#include "tooling/client/manager/domain_manager.h"
-#include "tooling/client/manager/stack_manager.h"
-#include "tooling/client/manager/variable_manager.h"
-#include "tooling/client/session/session.h"
-
 namespace OHOS::ArkCompiler::Toolchain {
 const std::string HELP_MSG = "usage: <command> <options>\n"
     " These are common commands list:\n"
@@ -182,6 +170,10 @@ void CliCommand::CreateCommandMap()
         {std::make_pair("enable", "enable"), std::bind(&CliCommand::DebuggerCommand, this, "enable")},
         {std::make_pair("finish", "fin"), std::bind(&CliCommand::DebuggerCommand, this, "finish")},
         {std::make_pair("frame", "f"), std::bind(&CliCommand::DebuggerCommand, this, "frame")},
+        {std::make_pair("enable-launch-accelerate", "enable-acc"),
+            std::bind(&CliCommand::DebuggerCommand, this, "enable-launch-accelerate")},
+        {std::make_pair("saveAllPossibleBreakpoints", "b-new"),
+            std::bind(&CliCommand::SaveAllPossibleBreakpointsCommand, this, "saveAllPossibleBreakpoints")},
     };
     CreateOtherCommandMap();
 }
@@ -505,6 +497,9 @@ ErrCode CliCommand::PrintCommand(const std::string &cmd)
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
     RuntimeClient &runtimeClient = session->GetDomainManager().GetRuntimeClient();
     if (GetArgList().size() == 1) {
+        if (!Utils::IsNumber(GetArgList()[0])) {
+            return ErrCode::ERR_FAIL;
+        }
         runtimeClient.SetIsInitializeTree(false);
         VariableManager &variableManager = session->GetVariableManager();
         int32_t objectId = variableManager.FindObjectIdWithIndex(std::stoi(GetArgList()[0]));
@@ -620,6 +615,11 @@ ErrCode CliCommand::TestCommand(const std::string &cmd)
         return ErrCode::ERR_FAIL;
     }
     return ErrCode::ERR_OK;
+}
+
+ErrCode CliCommand::SaveAllPossibleBreakpointsCommand(const std::string &cmd)
+{
+    return BreakCommand(cmd);
 }
 
 ErrCode CliCommand::ExecHelpCommand()

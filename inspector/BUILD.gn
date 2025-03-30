@@ -14,7 +14,7 @@
 import("//arkcompiler/toolchain/toolchain.gni")
 
 ohos_source_set("ark_debugger_static") {
-  stack_protector_ret = false
+  stack_protector_ret = true
   defines = []
 
   if (is_mingw || is_mac) {
@@ -54,7 +54,7 @@ ohos_source_set("ark_debugger_static") {
 }
 
 ohos_shared_library("ark_debugger") {
-  stack_protector_ret = false
+  stack_protector_ret = true
   deps = [ ":ark_debugger_static" ]
 
   if (is_mingw) {
@@ -72,7 +72,7 @@ ohos_shared_library("ark_debugger") {
 }
 
 ohos_source_set("connectserver_debugger_static") {
-  stack_protector_ret = false
+  stack_protector_ret = true
   defines = []
 
   if (is_mingw || is_mac) {
@@ -89,9 +89,17 @@ ohos_source_set("connectserver_debugger_static") {
     "$toolchain_root/websocket",
   ]
 
+  external_deps = []
+  if (is_arkui_x && target_os == "ios") {
+    external_deps += [ "cJSON:cjson_static" ]
+  } else {
+    external_deps += [ "cJSON:cjson" ]
+  }
+
   deps = [ "../websocket:websocket_server" ]
   sources = [
     "../common/log_wrapper.cpp",
+    "../tooling/base/pt_json.cpp",
     "connect_inspector.cpp",
     "connect_server.cpp",
   ]
@@ -101,10 +109,9 @@ ohos_source_set("connectserver_debugger_static") {
   }
 
   # hiviewdfx libraries
-  external_deps = hiviewdfx_ext_deps
+  external_deps += hiviewdfx_ext_deps
   external_deps += [ "bounds_checking_function:libsec_shared" ]
   deps += hiviewdfx_deps
-
   configs = [ "..:ark_toolchain_common_config" ]
   subsystem_name = "arkcompiler"
   part_name = "toolchain"

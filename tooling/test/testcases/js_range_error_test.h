@@ -97,7 +97,7 @@ public:
 private:
     std::string pandaFile_ = DEBUGGER_ABC_DIR "range_error.abc";
     std::string sourceFile_ = DEBUGGER_JS_DIR "range_error.js";
-    std::string entryPoint_ = "_GLOBAL::func_main_0";
+    std::string entryPoint_ = "range_error";
     JSPtLocation location_ {nullptr, JSPtLocation::EntityId(0), 0};
     size_t breakpointCounter_ = 0;
     size_t exceptionCounter_ = 0;

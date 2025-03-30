@@ -15,7 +15,6 @@
 
 #include "backend/debugger_executor.h"
 
-#include "ecmascript/debugger/debugger_api.h"
 #include "ecmascript/debugger/js_debugger_manager.h"
 #include "tooling/base/pt_types.h"
 
@@ -232,10 +231,11 @@ bool DebuggerExecutor::SetModuleValue(const EcmaVM *vm, const FrameHandler *fram
     }
     JSThread *thread = vm->GetJSThread();
     JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm));
+    bool result = false;
     if (currentModule->IsSourceTextModule()) {
-        DebuggerApi::SetModuleValue(vm, currentModule, varName, value);
+        result = DebuggerApi::SetModuleValue(vm, currentModule, varName, value);
         vm->GetJsDebuggerManager()->NotifyScopeUpdated(varName, value, Scope::Type::Module());
     }
-    return true;
+    return result;
 }
 }  // namespace panda::ecmascript::tooling

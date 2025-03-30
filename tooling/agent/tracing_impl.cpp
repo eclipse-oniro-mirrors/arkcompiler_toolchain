@@ -15,10 +15,7 @@
 
 #include "agent/tracing_impl.h"
 
-#include "tooling/base/pt_events.h"
 #include "protocol_channel.h"
-
-#include "ecmascript/napi/include/dfx_jsnapi.h"
 
 namespace panda::ecmascript::tooling {
 void TracingImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
@@ -151,7 +148,9 @@ void TracingImpl::Frontend::TracingComplete()
 std::unique_ptr<std::vector<TraceEvent>> TracingImpl::End()
 {
 #if defined(ECMASCRIPT_SUPPORT_TRACING)
-    uv_timer_stop(&handle_);
+    if (handle_ != nullptr) {
+        uv_timer_stop(handle_);
+    }
 #endif
     auto traceEvents = panda::DFXJSNApi::StopTracing(vm_);
     return traceEvents;
@@ -179,11 +178,10 @@ DispatchResponse TracingImpl::Start(std::unique_ptr<StartParams> params)
     if (!panda::DFXJSNApi::StartTracing(vm_, categories)) {
         return DispatchResponse::Fail("Start tracing failed");
     }
-
 #if defined(ECMASCRIPT_SUPPORT_TRACING)
     if (params->HasBufferUsageReportingInterval()) {
         LOG_DEBUGGER(ERROR) << "HasBufferUsageReportingInterval " << params->GetBufferUsageReportingInterval();
-        if (uv_is_active(reinterpret_cast<uv_handle_t*>(&handle_))) {
+        if (handle_ != nullptr && uv_is_active(reinterpret_cast<uv_handle_t*>(handle_))) {
             LOG_DEBUGGER(ERROR) << "uv_is_active!!!";
             return DispatchResponse::Ok();
         }
@@ -192,9 +190,12 @@ DispatchResponse TracingImpl::Start(std::unique_ptr<StartParams> params)
         if (loop == nullptr) {
             return DispatchResponse::Fail("Loop is nullptr");
         }
-        uv_timer_init(loop, &handle_);
-        handle_.data = this;
-        uv_timer_start(&handle_, TracingBufferUsageReport, 0, params->GetBufferUsageReportingInterval());
+        if (handle_ == nullptr) {
+            handle_ = new uv_timer_t;
+        }
+        uv_timer_init(loop, handle_);
+        handle_->data = this;
+        uv_timer_start(handle_, TracingBufferUsageReport, 0, params->GetBufferUsageReportingInterval());
         if (DebuggerApi::IsMainThread()) {
             uv_async_send(&loop->wq_async);
         } else {
@@ -204,6 +205,19 @@ DispatchResponse TracingImpl::Start(std::unique_ptr<StartParams> params)
     }
 #endif
     return DispatchResponse::Ok();
+}
+
+TracingImpl::~TracingImpl()
+{
+#if defined(ECMASCRIPT_SUPPORT_TRACING)
+    uv_loop_t *loop = reinterpret_cast<uv_loop_t *>(vm_->GetLoop());
+    if (handle_!= nullptr && loop != nullptr) {
+        uv_close(reinterpret_cast<uv_handle_t*>(handle_), [](uv_handle_t* handle) {
+            delete reinterpret_cast<uv_timer_t*>(handle);
+            handle = nullptr;
+        });
+    }
+#endif
 }
 
 #if defined(ECMASCRIPT_SUPPORT_TRACING)

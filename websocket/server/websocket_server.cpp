@@ -23,7 +23,6 @@
 #include "common/log_wrapper.h"
 #include "frame_builder.h"
 #include "handshake_helper.h"
-#include "network.h"
 #include "server/websocket_server.h"
 #include "string_utils.h"
 

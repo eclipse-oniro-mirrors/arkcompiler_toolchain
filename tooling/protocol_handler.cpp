@@ -15,8 +15,6 @@
 
 #include "protocol_handler.h"
 
-#include "agent/debugger_impl.h"
-
 namespace panda::ecmascript::tooling {
 void ProtocolHandler::WaitForDebugger()
 {

@@ -103,7 +103,7 @@ public:
 private:
     std::string pandaFile_ = DEBUGGER_ABC_DIR "branch.abc";
     std::string sourceFile_ = DEBUGGER_JS_DIR "branch.js";
-    std::string entryPoint_ = "_GLOBAL::func_main_0";
+    std::string entryPoint_ = "branch";
 };
 
 std::unique_ptr<TestActions> GetJsBreakpointCannotHitTest()

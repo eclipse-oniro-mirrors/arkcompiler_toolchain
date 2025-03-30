@@ -160,7 +160,7 @@ public:
 private:
     std::string pandaFile_ = DEBUGGER_ABC_DIR "container.abc";
     std::string sourceFile_ = DEBUGGER_JS_DIR "container.js";
-    std::string entryPoint_ = "_GLOBAL::func_main_0";
+    std::string entryPoint_ = "container";
 
     const std::map<std::string, std::vector<std::string>> variableMap_ = {
         { "nop", { "undefined" } },

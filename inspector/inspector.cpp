@@ -15,7 +15,6 @@
 
 #include "inspector.h"
 
-#include <chrono>
 #include <shared_mutex>
 #if defined(OHOS_PLATFORM)
 #include <syscall.h>
@@ -24,7 +23,6 @@
 #if defined(OHOS_PLATFORM)
 #include <unistd.h>
 #endif
-#include <unordered_map>
 
 #include "common/log_wrapper.h"
 #include "library_loader.h"
@@ -51,6 +49,7 @@ using WaitForDebugger = void(*)(void*);
 using OnMessage = void(*)(void*, std::string&&);
 using ProcessMessage = void(*)(void*);
 using GetDispatchStatus = int32_t(*)(void*);
+using GetCallFrames = char*(*)(void*);
 
 OnMessage g_onMessage = nullptr;
 InitializeDebugger g_initializeDebugger = nullptr;
@@ -58,6 +57,7 @@ UninitializeDebugger g_uninitializeDebugger = nullptr;
 WaitForDebugger g_waitForDebugger = nullptr;
 ProcessMessage g_processMessage = nullptr;
 GetDispatchStatus g_getDispatchStatus = nullptr;
+GetCallFrames g_getCallFrames = nullptr;
 
 std::atomic<bool> g_hasArkFuncsInited = false;
 std::unordered_map<const void*, Inspector*> g_inspectors;
@@ -216,6 +216,12 @@ bool InitializeArkFunctionsOthers()
         ResetServiceLocked(g_vm, true);
         return false;
     }
+    g_getCallFrames = reinterpret_cast<GetCallFrames>(
+        GetArkDynFunction("GetCallFrames"));
+    if (g_getCallFrames == nullptr) {
+        ResetServiceLocked(g_vm, true);
+        return false;
+    }
     return true;
 }
 #else
@@ -228,6 +234,7 @@ bool InitializeArkFunctionsIOS()
     g_onMessage = reinterpret_cast<OnMessage>(&tooling::OnMessage);
     g_getDispatchStatus = reinterpret_cast<GetDispatchStatus>(&tooling::GetDispatchStatus);
     g_processMessage = reinterpret_cast<ProcessMessage>(&tooling::ProcessMessage);
+    g_getCallFrames = reinterpret_cast<GetCallFrames>(&tooling::GetCallFrames);
     return true;
 }
 #endif
@@ -282,7 +289,7 @@ void Inspector::OnMessage(std::string&& msg)
             });
         } else {
 #if defined(OHOS_PLATFORM)
-            debuggerPostTask_([tid = tidForSocketPair_, vm = vm_, this] {
+            debuggerPostTask_([tid = tidForSocketPair_, vm = vm_] {
                 uint64_t threadOrTaskId = GetThreadOrTaskId();
                 if (tid != static_cast<pid_t>(threadOrTaskId)) {
                     LOGE("Task not in debugger thread for socketpair");
@@ -455,5 +462,21 @@ void StoreDebuggerInfo(int tid, void* vm, const DebuggerPostTask& debuggerPostTa
     if (g_debuggerInfo.find(tid) == g_debuggerInfo.end()) {
         g_debuggerInfo.emplace(tid, std::make_pair(vm, debuggerPostTask));
     }
+}
+
+// The returned pointer must be released using free() after it is no longer needed.
+// Failure to release the memory will result in memory leaks.
+const char* GetJsBacktrace()
+{
+#if defined(OHOS_PLATFORM)
+    void* vm = GetEcmaVM(Inspector::GetThreadOrTaskId());
+    if (g_getCallFrames == nullptr) {
+        LOGE("GetCallFrames symbol resolve failed");
+        return "";
+    }
+    return g_getCallFrames(vm);
+#else
+    return "";
+#endif
 }
 } // namespace OHOS::ArkCompiler::Toolchain

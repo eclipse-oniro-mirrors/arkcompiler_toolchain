@@ -16,7 +16,6 @@
 #include "tooling/base/pt_types.h"
 #include "ecmascript/napi/jsnapi_helper.h"
 #include "ecmascript/debugger/js_debugger.h"
-#include "ecmascript/property_attributes.h"
 
 namespace panda::ecmascript::tooling {
 using ObjectType = RemoteObject::TypeName;
@@ -3384,6 +3383,18 @@ std::unique_ptr<BreakpointInfo> BreakpointInfo::Create(const PtJson &params)
         return nullptr;
     }
     return paramsObject;
+}
+
+std::shared_ptr<BreakpointInfo> BreakpointInfo::CreateAsSharedPtr(int32_t line, int32_t column,
+    std::string url, std::string condition)
+{
+    auto result = std::make_shared<BreakpointInfo>();
+    result->lineNumber_ = line;
+    result->columnNumber_ = column;
+    result->url_ = url;
+    result->condition_ = condition;
+
+    return result;
 }
 
 std::unique_ptr<PtJson> BreakpointInfo::ToJson() const

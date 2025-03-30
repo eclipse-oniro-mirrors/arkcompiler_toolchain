@@ -15,10 +15,6 @@
 
 #include "ws_server.h"
 
-#include <fstream>
-#include <iostream>
-#include <shared_mutex>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include "common/log_wrapper.h"
