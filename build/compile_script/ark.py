@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2025 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -228,6 +228,11 @@ class ArkPy:
                 "description": "Compile arkcompiler target and run regresstest with arkcompiler target.",
                 "gn_targets_depend_on": ["default"],
             },
+            "hybrid": {
+                "flags": ["hybrid", "hybrid_tests"],
+                "description": "Compile ArkJS and STS parts in hybrid mode.",
+                "gn_targets_depend_on": [],
+            },
             "gn_target": {
                 "flags": ["<name of target in \"*.gn*\" file>"],  # any other flags
                 "description":
@@ -320,6 +325,7 @@ class ArkPy:
     def libs_dir(is_arm, is_aot, is_pgo, out_dir, x64_out_dir) -> str:
         if is_arm and is_aot and is_pgo:
             return (f"--libs-dir ../../{out_dir}/arkcompiler/ets_runtime:"
+                    f"../../{out_dir}/arkcompiler/runtime_core:"
                     f"../../{out_dir}/thirdparty/icu:"
                     f"../../{out_dir}/third_party/icu:"
                     f"../../thirdparty/zlib:"
@@ -329,6 +335,7 @@ class ArkPy:
                     f":../../{x64_out_dir}/thirdparty/icu/")
         if not is_arm and is_aot:
             return (f"--libs-dir ../../{out_dir}/arkcompiler/ets_runtime"
+                    f":../../{out_dir}/arkcompiler/runtime_core"
                     f":../../{out_dir}/thirdparty/icu:"
                     f"../../{out_dir}/third_party/icu:"
                     f"../../thirdparty/zlib:"
@@ -402,6 +409,7 @@ class ArkPy:
                               f" --timeout {timeout}" \
                               f" --libs-dir ../../{out_path}/arkcompiler/ets_runtime:../../{out_path}/thirdparty/icu:" \
                               f"../../{out_path}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                              f":../../{out_path}/arkcompiler/runtime_core" \
                               " --ark-arch aarch64" \
                               f" --ark-arch-root=../../{out_path}/common/common/libc/" \
                               f" --ark-tool=../../{out_path}/arkcompiler/ets_runtime/ark_js_vm" \
@@ -428,6 +436,7 @@ class ArkPy:
                           f" --timeout {timeout}" \
                           f" --libs-dir ../../{out_path}/arkcompiler/ets_runtime:../../{out_path}/thirdparty/icu" \
                           f":../../{out_path}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                          f":../../{out_path}/arkcompiler/runtime_core" \
                           f" --ark-tool=../../{out_path}/arkcompiler/ets_runtime/ark_js_vm" \
                           f" --ark-aot-tool=../../{out_path}/arkcompiler/ets_runtime/ark_aot_compiler" \
                           f" --ark-frontend-binary=../../{out_path}/arkcompiler/ets_frontend/es2abc" \
@@ -448,6 +457,7 @@ class ArkPy:
                   f" --libs-dir ../../prebuilts/clang/ohos/linux-x86_64/llvm/lib:../../{out_path}/thirdparty/icu/" \
                   f":../../{out_path}/thirdparty/bounds_checking_function" \
                   f":../../{out_path}/arkcompiler/ets_runtime:" \
+                  f"../../{out_path}/arkcompiler/runtime_core:" \
                   " --ark-arch aarch64" \
                   " --run-jit" \
                   f" --ark-arch-root=../../{out_path}/common/common/libc/" \
@@ -460,6 +470,7 @@ class ArkPy:
             cmd = f"cd arkcompiler/ets_frontend && python3 {test_script_name} {args_to_cmd} --timeout {timeout}" \
                   f" --libs-dir ../../{out_path}/arkcompiler/ets_runtime:../../{out_path}/thirdparty/icu" \
                   f":../../{out_path}/thirdparty/zlib:../../prebuilts/clang/ohos/linux-x86_64/llvm/lib" \
+                  f":../../{out_path}/arkcompiler/runtime_core" \
                   " --run-jit" \
                   f" --ark-tool=../../{out_path}/arkcompiler/ets_runtime/ark_js_vm" \
                   f" --ark-frontend-binary=../../{out_path}/arkcompiler/ets_frontend/es2abc" \
@@ -1015,6 +1026,12 @@ class ArkPy:
             self.build_for_runtime_core_unittest(out_path, gn_args, self.RUNTIME_CORE_UNITTEST_LOG_FILE_NAME)
         elif self.is_dict_flags_match_arg(self.ARG_DICT.get("target").get("regresstest"), arg_list[0]):
             self.build_for_regress_test(out_path, gn_args, arg_list)
+        elif self.is_dict_flags_match_arg(self.ARG_DICT.get("target").get("hybrid"), arg_list[0]):
+            targets = arg_list
+            self.build_for_gn_target(out_path,
+                                    gn_args + ["ark_ets_hybrid=true", "ark_js_hybrid=true"],
+                                    targets,
+                                    self.GN_TARGET_LOG_FILE_NAME)
         else:
             self.build_for_gn_target(out_path, gn_args, arg_list, self.GN_TARGET_LOG_FILE_NAME)
         return

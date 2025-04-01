@@ -65,6 +65,10 @@ config("libuv_config") {
       "-D_GNU_SOURCE",
       "-D_POSIX_C_SOURCE=200112",
     ]
+
+    if (!is_debug) {
+      defines += [ "NDEBUG" ]
+    }
   } else if (is_mingw || is_win) {
     cflags += [
       "-Wno-missing-braces",
