@@ -1,0 +1,15 @@
+{
+    "component": {
+        "build": {
+            "inner_kits": [
+                {
+                  "name": "//arkcompiler/toolchain/build/third_party_gn/node:node_header_notice",
+                  "header": {
+                    "header_files": [],
+                    "header_base": "//third_party/node/src"
+                  }
+                }
+            ]
+        }
+    }
+}
