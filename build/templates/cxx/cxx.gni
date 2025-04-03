@@ -208,6 +208,12 @@ template("ohos_shared_library") {
     subsystem_name = "arkcompiler"
     part_name = "common"
   }
+  not_needed(invoker,
+             [
+               "sanitize",
+               "branch_protector_ret",
+             ])
+
   output_dir = "${root_out_dir}/${subsystem_name}/${part_name}"
   shared_library(target_name) {
     forward_variables_from(invoker,
@@ -314,6 +320,11 @@ template("ohos_source_set") {
   }
   assert(subsystem_name != "")
   assert(part_name != "")
+  not_needed(invoker,
+             [
+               "sanitize",
+               "branch_protector_ret",
+             ])
 
   source_set(target_name) {
     forward_variables_from(invoker,
