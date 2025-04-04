@@ -75,9 +75,11 @@ group("ets_frontend") {
       target_os == "mac") {
     deps = [
       "$ets_frontend_root/es2panda:es2panda",
-      "$ets_frontend_root/ets2panda/lsp:lsp_packages",
       "$ets_frontend_root/merge_abc:merge_abc",
     ]
+    if (target_os != "mac") {
+      deps += [ "$ets_frontend_root/ets2panda/lsp:lsp_packages" ]
+    }
   }
 }
 
@@ -94,9 +96,11 @@ group("static_core") {
     "$ark_root/static_core/compiler:libarktscompiler",
     "$ark_root/static_core/libpandabase:libarktsbase",
     "$ark_root/static_core/libpandafile:libarktsfile",
-    "$ark_root/static_core/static_linker:static_linker",
   ]
-  if (target_os != "mingw") {
+  if (target_os != "mac") {
+    deps += [ "$ark_root/static_core/static_linker:static_linker" ]
+  }
+  if (target_os != "mingw" && target_os != "mac") {
     deps += [ "$ark_root/static_core/runtime:libarkruntime" ]
   }
 }
@@ -108,7 +112,7 @@ group("hybrid") {
     ":static_core",
     "$ark_root/static_core/plugins/ets:etsstdlib(${host_toolchain})",
   ]
-  if (target_os != "mingw") {
+  if (target_os != "mingw" && target_os != "mac") {
     deps += [
       "$ark_root/static_core/plugins/ets/runtime/interop_js:ets_interop_js_napi",
       "$ark_root/static_core/tools/ark_js_napi_cli:ark_js_napi_cli",
