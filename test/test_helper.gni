@@ -125,9 +125,7 @@ template("host_unittest_action") {
 
     deps = []
     if (ark_standalone_build && host_os == "linux" && target_os == "ohos" &&
-        run_with_qemu) {
-      deps += [ ":${_target_name_}ActionWithQemu" ]
-    } else {
+        !run_with_qemu) {
       deps += [ ":${_target_name_}ActionWithoutQemu" ]
     }
   }
