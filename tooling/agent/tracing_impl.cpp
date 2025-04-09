@@ -93,6 +93,10 @@ void TracingImpl::DispatcherImpl::RequestMemoryDump(const DispatchRequest &reque
 {
     std::unique_ptr<RequestMemoryDumpParams> params =
         RequestMemoryDumpParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
     std::string dumpGuid;
     bool success = false;
     DispatchResponse response = tracing_->RequestMemoryDump(std::move(params), dumpGuid, success);
@@ -103,6 +107,10 @@ void TracingImpl::DispatcherImpl::Start(const DispatchRequest &request)
 {
     std::unique_ptr<StartParams> params =
         StartParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
     DispatchResponse response = tracing_->Start(std::move(params));
     SendResponse(request, response);
 }
