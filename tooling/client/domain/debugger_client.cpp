@@ -403,6 +403,10 @@ void DebuggerClient::PausedReply(const std::unique_ptr<PtJson> json)
     std::map<int32_t, std::unique_ptr<CallFrame>> data;
     for (int32_t i = 0; i < callFrames->GetSize(); i++) {
         std::unique_ptr<CallFrame> callFrameInfo = CallFrame::Create(*(callFrames->Get(i)));
+        if (callFrameInfo == nullptr) {
+            LOGE("arkdb: get call frame info error");
+            return;
+        }
         data.emplace(i + 1, std::move(callFrameInfo));
     }
 
