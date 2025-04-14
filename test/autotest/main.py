@@ -14,18 +14,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-Description: __init__.py of the aw package
+Description: Run all test cases.
 """
-from aw.websocket import WebSocket
-from aw.application import Application
-from aw.utils import Utils
-from aw.fport import Fport
-from aw.taskpool import TaskPool
-from aw.cdp import debugger
-from aw.cdp import runtime
-from aw.cdp import heap_profiler
-from aw.cdp import profiler
 
+import sys
 
-communicate_with_debugger_server = Utils.communicate_with_debugger_server
-async_wait_timeout = Utils.async_wait_timeout
+from xdevice.__main__ import main_process
+
+if __name__ == "__main__":
+    argv = "{} {} {}".format(sys.argv[1], sys.argv[2], sys.argv[3])
+    print(">>>>>>>: {}".format(argv))
+    main_process(argv)

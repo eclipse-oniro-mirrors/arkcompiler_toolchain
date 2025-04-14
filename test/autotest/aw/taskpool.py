@@ -18,9 +18,9 @@ Description: A task pool that can execute tasks asynchronously.
 """
 
 import asyncio
-import logging
 from queue import Queue
-from threading import Thread
+from threading import Thread, current_thread
+from time import time
 
 
 class TaskPool(object):
@@ -28,6 +28,7 @@ class TaskPool(object):
         self.task_queue = Queue()
         self.event_loop = None
         self.task_exception = None
+        self.event_loop_thread = None
         self._start_event_loop()
 
     def submit(self, coroutine, callback=None):
@@ -50,7 +51,6 @@ class TaskPool(object):
     def _task_done(self, future):
         # clear the task queue and stop the task pool once an exception occurs in the task
         if future.exception():
-            logging.error(f'future.exception: {future.exception()}')
             while not self.task_queue.empty():
                 self.task_queue.get()
                 self.task_queue.task_done()
@@ -74,7 +74,8 @@ class TaskPool(object):
 
     def _start_event_loop(self):
         loop = asyncio.new_event_loop()
-        event_loop_thread = Thread(target=self._set_and_run_loop, args=(loop,))
-        event_loop_thread.setDaemon(True)
-        event_loop_thread.setName('event_loop_thread')
-        event_loop_thread.start()
+        self.event_loop_thread = Thread(target=self._set_and_run_loop, args=(loop,))
+        self.event_loop_thread.daemon = True
+        # Specifies the thread name to be able to save log of thread to the module_run.log file
+        self.event_loop_thread.name = current_thread().name + "-" + str(time()).replace('.', '')[-5:]
+        self.event_loop_thread.start()

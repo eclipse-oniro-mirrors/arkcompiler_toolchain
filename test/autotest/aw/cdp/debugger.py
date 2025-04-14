@@ -19,7 +19,18 @@ Description: Python CDP Debugger.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, List
+from typing import Optional
+
+
+@dataclass
+class EnableAccelerateLaunchParams:
+    options = ['enableLaunchAccelerate']
+    max_scripts_cache_size: float = 1e7
+
+
+@dataclass
+class SaveAllPossibleBreakpointsParams:
+    locations: dict
 
 
 @dataclass
@@ -87,8 +98,13 @@ class SetBreakpointsLocations:
     locations: list = field(default_factory=list)
 
 
-def enable():
+def enable(params: EnableAccelerateLaunchParams | None):
     command = {'method': 'Debugger.enable'}
+    if params is not None:
+        command['params'] = {
+            'options': params.options,
+            'maxScriptsCacheSize': params.max_scripts_cache_size
+        }
     return command
 
 
@@ -175,4 +191,19 @@ def drop_frame(params: DropFrameParams):
 def smart_step_into(params: SmartStepIntoParams):
     command = {'method': 'Debugger.smartStepInto',
                'params': {'url': params.url, 'lineNumber': params.line_number}}
+    return command
+
+
+def save_all_possible_breakpoints(params: SaveAllPossibleBreakpointsParams):
+    locations = {}
+    for key, value in params.locations.items():
+        positions = []
+        for pos in value:
+            if isinstance(pos, int):
+                positions.append({"lineNumber": pos, "colomnNumber": 0})
+            else:
+                positions.append({"lineNumber": pos[0], "colomnNumber": pos[1]})
+        locations[key] = positions
+    command = {'method': 'Debugger.saveAllPossibleBreakpoints',
+               'params': {'locations': locations}}
     return command
