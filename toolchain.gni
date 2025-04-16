@@ -15,3 +15,11 @@ import("toolchain_config.gni")
 
 toolchain_root = "//arkcompiler/toolchain"
 toolchain_output_path = "toolchain/toolchain"
+
+toolchain_platform_source = []
+
+if (is_mingw) {
+  toolchain_platform_source += [ "$toolchain_root/platform/windows/file.cpp" ]
+} else {
+  toolchain_platform_source += [ "$toolchain_root/platform/unix/file.cpp" ]
+}

@@ -15,6 +15,7 @@
 
 #include "common/log_wrapper.h"
 #include "define.h"
+#include "platform/file.h"
 #include "frame_builder.h"
 #include "network.h"
 #include "websocket_base.h"
@@ -36,11 +37,7 @@ WebSocketBase::~WebSocketBase() noexcept
 {
     if (connectionFd_ != -1) {
         LOGW("WebSocket connection is closed while destructing the object");
-#if defined(PANDA_TARGET_OHOS)
-        fdsan_close_with_tag(connectionFd_, LOG_DOMAIN);
-#else
-        close(connectionFd_);
-#endif
+        FdsanClose(reinterpret_cast<fd_t>(connectionFd_));
         // Reset directly in order to prevent static analyzer warnings.
         connectionFd_ = -1;
     }
@@ -212,11 +209,7 @@ void WebSocketBase::CloseConnectionSocket(ConnectionCloseReason status)
         // Note that `close` must be also done in critical section,
         // otherwise the other thread can continue using the outdated and possibly reassigned file descriptor.
         std::unique_lock lock(connectionMutex_);
-#if defined(PANDA_TARGET_OHOS)
-        fdsan_close_with_tag(connectionFd_, LOG_DOMAIN);
-#else
-        close(connectionFd_);
-#endif
+        FdsanClose(reinterpret_cast<fd_t>(connectionFd_));
         // Reset directly in order to prevent static analyzer warnings.
         connectionFd_ = -1;
     }
@@ -265,9 +258,7 @@ int WebSocketBase::GetConnectionSocket() const
 
 void WebSocketBase::SetConnectionSocket(int socketFd)
 {
-#if defined(PANDA_TARGET_OHOS)
-    fdsan_exchange_owner_tag(socketFd, 0, LOG_DOMAIN);
-#endif
+    FdsanExchangeOwnerTag(reinterpret_cast<fd_t>(socketFd));
     connectionFd_ = socketFd;
 }
 
