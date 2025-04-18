@@ -136,6 +136,8 @@ public:
 protected:
     void SendResponse(const DispatchRequest &request, const DispatchResponse &response,
                       const PtBaseReturns &result = PtBaseReturns());
+    std::string ReturnsValueToString(const int32_t callId, const std::unique_ptr<PtJson> resultObj);
+    std::unique_ptr<PtJson> DispatchResponseToJson(const DispatchResponse &response) const;
 
 private:
     ProtocolChannel *channel_ {nullptr};
@@ -150,8 +152,20 @@ public:
     ~Dispatcher() = default;
     void Dispatch(const DispatchRequest &request);
     std::string GetJsFrames() const;
+    std::string OperateDebugMessage(const char* message) const;
+
+    enum class MethodType {
+        SAVE_ALL_POSSIBLE_BREAKPOINTS,
+        REMOVE_BREAKPOINTS_BY_URL,
+        GET_POSSIBLE_AND_SET_BREAKPOINT_BY_URL,
+        UNKNOWN
+    };
+    MethodType GetMethodType(const std::string &method) const;
 
 private:
+    std::string SaveAllBreakpoints(const DispatchRequest &request, DispatcherBase *dispatcher) const;
+    std::string RemoveBreakpoint(const DispatchRequest &request, DispatcherBase *dispatcher) const;
+    std::string SetBreakpoint(const DispatchRequest &request, DispatcherBase *dispatcher) const;
     std::unordered_map<std::string, std::unique_ptr<DispatcherBase>> dispatchers_ {};
 
     NO_COPY_SEMANTIC(Dispatcher);

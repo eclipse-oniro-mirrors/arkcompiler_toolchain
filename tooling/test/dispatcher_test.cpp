@@ -148,4 +148,82 @@ HWTEST_F_L0(DispatcherTest, DispatcherDispatchTest)
     dispatcher->Dispatch(dispatchRequest2);
     ASSERT_TRUE(result == "");
 }
+
+HWTEST_F_L0(DispatcherTest, SaveAllBreakpointsTest)
+{
+    ProtocolChannel *channel =  new ProtocolHandler(nullptr, ecmaVm);
+    auto dispatcher = std::make_unique<Dispatcher>(ecmaVm, channel);
+
+    std::string result = "";
+    std::string msg = std::string() +
+        R"({
+            "id": 0,
+            "method": "Debugger.saveAllPossibleBreakpoints",
+            "params": {
+                "locations": {
+                    "entry|entry|1.0.0|src/main/ets/pages/Index.ts": [{
+                        "lineNumber": 59,
+                        "columnNumber": 16
+                    }]
+                }
+            }
+        })";
+    result = dispatcher->OperateDebugMessage(msg.c_str());
+    EXPECT_STREQ(result.c_str(),
+        R"({"id":0,"result":{"code":1,"message":"SaveAllPossibleBreakpoints: debugger agent is not enabled"}})");
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DispatcherTest, RemoveBreakpointTest)
+{
+    ProtocolChannel *channel =  new ProtocolHandler(nullptr, ecmaVm);
+    auto dispatcher = std::make_unique<Dispatcher>(ecmaVm, channel);
+
+    std::string result = "";
+    std::string msg = std::string() +
+        R"({
+            "id": 0,
+            "method": "Debugger.removeBreakpointsByUrl",
+            "params": {
+                "url": "entry|entry|1.0.0|src/main/ets/pages/Index.ts"
+            }
+        })";
+    result = dispatcher->OperateDebugMessage(msg.c_str());
+    EXPECT_STREQ(result.c_str(),
+        R"({"id":0,"result":{"code":1,"message":"Unknown url"}})");
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DispatcherTest, SetBreakpointTest)
+{
+    ProtocolChannel *channel =  new ProtocolHandler(nullptr, ecmaVm);
+    auto dispatcher = std::make_unique<Dispatcher>(ecmaVm, channel);
+
+    std::string result = "";
+    std::string msg = std::string() +
+        R"({
+            "id": 0,
+            "method": "Debugger.getPossibleAndSetBreakpointByUrl",
+            "params": {
+                "locations": [{
+                    "url": "entry|entry|1.0.0|src/main/ets/pages/Index.ts",
+                    "lineNumber": 59,
+                    "columnNumber": 16
+                }]
+            }
+        })";
+    result = dispatcher->OperateDebugMessage(msg.c_str());
+    EXPECT_STREQ(result.c_str(),
+        R"({"id":0,"result":{"code":1,"message":"GetPossibleAndSetBreakpointByUrl: debugger agent is not enabled"}})");
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
 }  // namespace panda::test
