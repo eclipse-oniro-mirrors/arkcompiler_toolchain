@@ -19,16 +19,18 @@ Description: Responsible for websocket communication.
 
 import asyncio
 import json
-import logging
 
+from install_lib import install
+
+install('websockets')
 import websockets.protocol
 from websockets import connect, ConnectionClosed
-
-from aw.fport import Fport
+from fport import Fport
 
 
 class WebSocket(object):
-    def __init__(self, connect_server_port, debugger_server_port):
+    def __init__(self, driver, connect_server_port, debugger_server_port, print_protocol=True):
+        self.driver = driver
         self.connect_server_port = connect_server_port
         self.debugger_server_port = debugger_server_port
         self.debugger_server_connection_threshold = 3
@@ -39,46 +41,27 @@ class WebSocket(object):
         self.to_send_msg_queues = {}  # key: instance_id, value: to_send_msg_queue
         self.received_msg_queues = {}  # key: instance_id, value: received_msg_queue
         self.debugger_server_instance = None
+        self.new_instance_flag = None
+        self.log = self.driver.log_info if print_protocol else (lambda s: None)
 
-    @staticmethod
-    async def recv_msg_of_debugger_server(instance_id, queue):
+    async def recv_msg_of_debugger_server(self, instance_id, queue):
         message = await queue.get()
         queue.task_done()
-        logging.info(f'[<==] Instance {instance_id} receive message: {message}')
+        self.log(f'[<==] Instance {instance_id} receive message: {message}')
         return message
 
-    @staticmethod
-    async def send_msg_to_debugger_server(instance_id, queue, message):
+    async def send_msg_to_debugger_server(self, instance_id, queue, message):
         await queue.put(message)
-        logging.info(f'[==>] Instance {instance_id} send message: {message}')
+        self.log(f'[==>] Instance {instance_id} send message: {message}')
         return True
-
-    @staticmethod
-    async def _sender(client, send_queue):
-        assert client.state == websockets.protocol.OPEN, logging.error(f'Client state of _sender is: {client.state}')
-        while True:
-            send_message = await send_queue.get()
-            send_queue.task_done()
-            if send_message == 'close':
-                await client.close(reason='close')
-                return
-            await client.send(json.dumps(send_message))
-
-    @staticmethod
-    async def _receiver(client, received_queue):
-        assert client.state == websockets.protocol.OPEN, logging.error(f'Client state of _receiver is: {client.state}')
-        while True:
-            try:
-                response = await client.recv()
-                await received_queue.put(response)
-            except ConnectionClosed:
-                logging.info('Debugger server connection closed')
-                return
-
+    
     async def get_instance(self):
         instance_id = await self.debugger_server_instance.get()
         self.debugger_server_instance.task_done()
         return instance_id
+    
+    def no_more_instance(self):
+        self.new_instance_flag = False
 
     async def recv_msg_of_connect_server(self):
         message = await self.received_msg_queue_for_connect_server.get()
@@ -87,7 +70,7 @@ class WebSocket(object):
 
     async def send_msg_to_connect_server(self, message):
         await self.to_send_msg_queue_for_connect_server.put(message)
-        logging.info(f'[==>] Connect server send message: {message}')
+        self.log(f'[==>] Connect server send message: {message}')
         return True
 
     async def main_task(self, taskpool, procedure, pid):
@@ -103,6 +86,26 @@ class WebSocket(object):
                                                          taskpool, pid))
         taskpool.submit(procedure(self))
 
+    async def _sender(self, client, send_queue):
+        assert client.state == websockets.protocol.OPEN, f'Client state of _sender is: {client.state}'
+        while True:
+            send_message = await send_queue.get()
+            send_queue.task_done()
+            if send_message == 'close':
+                await client.close(reason='close')
+                return
+            await client.send(json.dumps(send_message))
+
+    async def _receiver(self, client, received_queue):
+        assert client.state == websockets.protocol.OPEN, f'Client state of _receiver is: {client.state}'
+        while True:
+            try:
+                response = await client.recv()
+                await received_queue.put(response)
+            except ConnectionClosed:
+                self.log('Debugger server connection closed')
+                return
+
     def _connect_connect_server(self):
         client = connect(f'ws://localhost:{self.connect_server_port}',
                          open_timeout=10,
@@ -117,13 +120,13 @@ class WebSocket(object):
 
     async def _receiver_of_connect_server(self, client, receive_queue, taskpool, pid):
         assert client.state == websockets.protocol.OPEN, \
-            logging.error(f'Client state of _receiver_of_connect_server is: {client.state}')
+            f'Client state of _receiver_of_connect_server is: {client.state}'
         num_debugger_server_client = 0
         while True:
             try:
                 response = await client.recv()
                 await receive_queue.put(response)
-                logging.info(f'[<==] Connect server receive message: {response}')
+                self.log(f'[<==] Connect server receive message: {response}')
                 response = json.loads(response)
 
                 # The debugger server client is only responsible for adding and removing instances
@@ -132,12 +135,11 @@ class WebSocket(object):
                     instance_id = response['instanceId']
 
                     port = Fport.fport_debugger_server(self.debugger_server_port, pid, instance_id)
-                    assert port > 0, logging.error('Failed to fport debugger server for 3 times, '
-                                                   'the port is very likely occupied')
+                    assert port > 0, 'Failed to fport debugger server for 3 times, the port is very likely occupied'
                     self.debugger_server_port = port
                     debugger_server_client = await self._connect_debugger_server()
-                    logging.info(f'InstanceId: {instance_id}, port: {self.debugger_server_port}, '
-                                 f'debugger server connected')
+                    self.log(f'InstanceId: {instance_id}, port: {self.debugger_server_port}, '
+                             f'debugger server connected')
                     self.debugger_server_port += 1
 
                     to_send_msg_queue = asyncio.Queue()
@@ -157,7 +159,7 @@ class WebSocket(object):
                     num_debugger_server_client -= 1
 
             except ConnectionClosed:
-                logging.info('Connect server connection closed')
+                self.log('Connect server connection closed')
                 return
 
     async def _store_instance(self, instance_id):

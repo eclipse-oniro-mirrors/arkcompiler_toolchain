@@ -17,56 +17,50 @@ limitations under the License.
 Description: Action words of hdc fport.
 """
 
-import logging
-import subprocess
-
 
 class Fport(object):
-    retry_times = 3
-    increase_step = 7
+    def __init__(self, driver):
+        self.driver = driver
+        self.retry_times = 3
+        self.increase_step = 7
 
-    @classmethod
-    def fport_connect_server(cls, port, pid, bundle_name):
+    def fport_connect_server(self, port, pid, bundle_name):
         for _ in range(Fport.retry_times):
-            cmd = ['hdc', 'fport', f'tcp:{port}', f'ark:{pid}@{bundle_name}']
-            logging.info('fport connect server: ' + ' '.join(cmd))
-            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            logging.info(result.stdout.strip())
-            if 'TCP Port listen failed' not in result.stdout.decode('utf-8'):
-                assert result.stdout.decode('utf-8').strip() == 'Forwardport result:OK'
+            cmd = f"fport tcp:{port} ark:{pid}@{bundle_name}"
+            self.driver.log_info('fport connect server: ' + cmd)
+            result = self.driver.hdc(cmd)
+            self.driver.log_info(result)
+            if result == 'Forwardport result:OK':
                 return port
-            else:    # The port is occupied
+            else:    # The port may be occupied
                 port += Fport.increase_step
         return -1
 
-    @classmethod
-    def fport_debugger_server(cls, port, pid, tid=0):
+    def fport_debugger_server(self, port, pid, tid=0):
         for _ in range(Fport.retry_times):
             if tid == 0:
-                cmd = ['hdc', 'fport', f'tcp:{port}', f'ark:{pid}@Debugger']
+                cmd = f"fport tcp:{port} ark:{pid}@Debugger"
             else:
-                cmd = ['hdc', 'fport', f'tcp:{port}', f'ark:{pid}@{tid}@Debugger']
-            logging.info('fport_debugger_server: ' + ' '.join(cmd))
-            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            logging.info(result.stdout.strip())
-            if 'TCP Port listen failed' not in result.stdout.decode('utf-8'):
-                assert result.stdout.decode('utf-8').strip() == 'Forwardport result:OK'
+                cmd = f"fport tcp:{port} ark:{pid}@{tid}@Debugger"
+            self.driver.log_info('fport_debugger_server: ' + cmd)
+            result = self.driver.hdc(cmd)
+            self.driver.log_info(result)
+            if result == 'Forwardport result:OK':
                 return port
-            else:    # The port is occupied
+            else:    # The port may be occupied
                 port += Fport.increase_step
         return -1
 
-    @classmethod
-    def clear_fport(cls):
-        list_fport_cmd = ['hdc', 'fport', 'ls']
-        list_fport_result = subprocess.run(list_fport_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        logging.info(list_fport_result.stdout.strip())
-        list_fport_out = list_fport_result.stdout.decode('utf-8')
-        if 'Empty' in list_fport_out:
+    def clear_fport(self):
+        list_fport_cmd = 'fport ls'
+        list_fport_result = self.driver.hdc(list_fport_cmd)
+        self.driver.log_info(list_fport_result)
+        if 'Empty' in list_fport_result:
             return
-        for fport_item in [item for item in list_fport_out.split('[Forward]') if item != '\r\n']:
-            un_fport_command = (['hdc', 'fport', 'rm'] + [fport_item.split('    ')[1].split(' ')[0]] +
-                                [fport_item.split('    ')[1].split(' ')[1]])
-            un_fport_result = subprocess.run(un_fport_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            logging.info(un_fport_result.stdout.strip())
-            assert 'success' in un_fport_result.stdout.decode('utf-8')
+        for fport_item in [item for item in list_fport_result.split('[Forward]') if 'ark' in item]:
+            un_fport_command = (f"fport rm {fport_item.split('    ')[1].split(' ')[0]} "
+                                f"{fport_item.split('    ')[1].split(' ')[1]}")
+            un_fport_result = self.driver.hdc(un_fport_command)
+            self.driver.log_info(un_fport_command)
+            self.driver.log_info(un_fport_result)
+            assert 'success' in un_fport_result, un_fport_result

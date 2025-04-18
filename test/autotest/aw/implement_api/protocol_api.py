@@ -17,7 +17,12 @@ limitations under the License.
 Description: Python Protocol Domain Interfaces
 """
 
-from aw.types import ProtocolType
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent.parent)) # add aw path to sys.path
+
+from customized_types import ProtocolType
 
 
 class ProtocolImpl(object):
