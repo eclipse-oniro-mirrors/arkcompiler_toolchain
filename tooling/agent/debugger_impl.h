@@ -62,6 +62,7 @@ public:
         std::string *outId, std::vector<std::unique_ptr<Location>> *outLocations);
     bool GenerateAsyncFrames(std::shared_ptr<AsyncStack> asyncStack, bool skipTopFrame);
     bool GenerateAsyncFrame(StackFrame *stackFrame, const FrameHandler *frameHandler);
+    void SetPauseOnNextByteCode(bool pauseOnNextByteCode);
 
     DispatchResponse ContinueToLocation(const ContinueToLocationParams &params);
     DispatchResponse Enable(const EnableParams &params, UniqueDebuggerId *id);
@@ -100,6 +101,9 @@ public:
             std::unique_ptr<RemoteObject> *outRemoteObject,
             std::optional<std::unique_ptr<ExceptionDetails>> *outExceptionDetails);
     DispatchResponse SaveAllPossibleBreakpoints(const SaveAllPossibleBreakpointsParams &params);
+    DispatchResponse SetSymbolicBreakpoints(const SetSymbolicBreakpointsParams &params);
+    DispatchResponse RemoveSymbolicBreakpoints(const RemoveSymbolicBreakpointsParams &params);
+
     /**
      * @brief: match first script and callback
      *
@@ -183,6 +187,8 @@ public:
         void ClientDisconnect(const DispatchRequest &request);
         void CallFunctionOn(const DispatchRequest &request);
         void SaveAllPossibleBreakpoints(const DispatchRequest &request);
+        void SetSymbolicBreakpoints(const DispatchRequest &request);
+        void RemoveSymbolicBreakpoints(const DispatchRequest &request);
 
         enum class Method {
             CONTINUE_TO_LOCATION,
@@ -214,6 +220,8 @@ public:
             CLIENT_DISCONNECT,
             CALL_FUNCTION_ON,
             SAVE_ALL_POSSIBLE_BREAKPOINTS,
+            SET_SYMBOLIC_BREAKPOINTS,
+            REMOVE_SYMBOLIC_BREAKPOINTS,
             UNKNOWN
         };
         Method GetMethodEnum(const std::string& method);

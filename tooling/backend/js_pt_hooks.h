@@ -43,13 +43,14 @@ public:
     void SendableMethodEntry(JSHandle<Method> method) override;
     void DisableFirstTimeFlag() override;
     void GenerateAsyncFrames(std::shared_ptr<AsyncStack> asyncStack, bool skipTopFrame) override;
-
+    void HitSymbolicBreakpoint() override;
 private:
     NO_COPY_SEMANTIC(JSPtHooks);
     NO_MOVE_SEMANTIC(JSPtHooks);
 
     DebuggerImpl *debugger_ {nullptr};
     bool firstTime_ {true};
+    bool breakOnSymbol_ {false};
 };
 }  // namespace panda::ecmascript::tooling
 #endif  // ECMASCRIPT_TOOLING_BACKEND_JS_PT_HOOKS_H

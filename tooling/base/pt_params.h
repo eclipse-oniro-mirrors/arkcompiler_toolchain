@@ -1410,5 +1410,60 @@ private:
     std::optional<std::unordered_map<std::string, std::vector<std::shared_ptr<BreakpointInfo>>>>
         breakpointsMap_ {};
 };
+
+class SetSymbolicBreakpointsParams : public PtBaseParams {
+public:
+    SetSymbolicBreakpointsParams() = default;
+    ~SetSymbolicBreakpointsParams() = default;
+
+    static std::unique_ptr<SetSymbolicBreakpointsParams> Create(const PtJson &params);
+
+    const std::unordered_set<std::string> *GetFunctionNamesSet() const
+    {
+        if (!HasSymbolicBreakpoints()) {
+            return nullptr;
+        }
+        return &(functionNamesSet_.value());
+    }
+
+    bool HasSymbolicBreakpoints() const
+    {
+        return functionNamesSet_.has_value();
+    }
+
+private:
+    NO_COPY_SEMANTIC(SetSymbolicBreakpointsParams);
+    NO_MOVE_SEMANTIC(SetSymbolicBreakpointsParams);
+
+    std::optional<std::unordered_set<std::string>> functionNamesSet_ {};
+};
+
+class RemoveSymbolicBreakpointsParams : public PtBaseParams {
+public:
+    RemoveSymbolicBreakpointsParams() = default;
+    ~RemoveSymbolicBreakpointsParams() = default;
+
+    static std::unique_ptr<RemoveSymbolicBreakpointsParams> Create(const PtJson &params);
+
+    const std::unordered_set<std::string> *GetFunctionNamesSet() const
+    {
+        if (!HasSymbolicBreakpoints()) {
+            return nullptr;
+        }
+        return &(functionNamesSet_.value());
+    }
+
+    bool HasSymbolicBreakpoints() const
+    {
+        return functionNamesSet_.has_value();
+    }
+
+private:
+    NO_COPY_SEMANTIC(RemoveSymbolicBreakpointsParams);
+    NO_MOVE_SEMANTIC(RemoveSymbolicBreakpointsParams);
+
+    std::optional<std::unordered_set<std::string>> functionNamesSet_ {};
+};
+
 }  // namespace panda::ecmascript::tooling
 #endif

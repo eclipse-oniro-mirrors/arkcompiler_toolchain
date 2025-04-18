@@ -123,6 +123,8 @@ public:
     void GenerateAsyncFrames([[maybe_unused]] std::shared_ptr<AsyncStack> asyncStack,
         [[maybe_unused]] bool skipTopFrame) override {}
 
+    void HitSymbolicBreakpoint() override {}
+
     void TerminateTest()
     {
         debugInterface_->UnregisterHooks();

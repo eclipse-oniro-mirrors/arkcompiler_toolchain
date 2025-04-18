@@ -29,6 +29,11 @@ struct BreakPointInfo {
     int columnNumber;
     std::string url;
 };
+
+struct SymbolicBreakpointInfo {
+    std::string functionName;
+};
+
 class DebuggerClient final {
 public:
     DebuggerClient(int32_t sessionId) : sessionId_(sessionId) {}
@@ -62,14 +67,18 @@ public:
     int EnableLaunchAccelerateCommand();
     int SaveAllPossibleBreakpointsCommand();
     int AsyncStackDepthCommand();
+    int SetSymbolicBreakpointsCommand();
+    int RemoveSymbolicBreakpointsCommand();
 
     void AddBreakPointInfo(const std::string& url, const int& lineNumber, const int& columnNumber = 0);
+    void AddSymbolicBreakpointInfo(const std::string& functionName);
     void RecvReply(std::unique_ptr<PtJson> json);
     void PausedReply(const std::unique_ptr<PtJson> json);
     void handleResponse(std::unique_ptr<PtJson> json);
 
 private:
     std::vector<BreakPointInfo> breakPointInfoList_ {};
+    std::vector<SymbolicBreakpointInfo> symbolicBreakpointInfoList_ {};
     int32_t sessionId_;
 };
 } // OHOS::ArkCompiler::Toolchain

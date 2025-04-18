@@ -1362,4 +1362,79 @@ std::unique_ptr<SaveAllPossibleBreakpointsParams> SaveAllPossibleBreakpointsPara
 
     return paramsObject;
 }
+
+std::unique_ptr<SetSymbolicBreakpointsParams> SetSymbolicBreakpointsParams::Create(const PtJson &params)
+{
+    auto paramsObject = std::make_unique<SetSymbolicBreakpointsParams>();
+    std::unordered_set<std::string> functionNamesSet {};
+    std::string error;
+    Result ret;
+
+    std::unique_ptr<PtJson> symbolicBreakpoints;
+    ret = params.GetArray("symbolicBreakpoints", &symbolicBreakpoints);
+    if (ret != Result::SUCCESS) {
+        LOG_DEBUGGER(ERROR) << "SetSymbolicBreakpointsParams::Get SymbolicBreakpoints: " << error;
+        return nullptr;
+    }
+
+    int32_t length = symbolicBreakpoints->GetSize();
+    for (int32_t i = 0; i < length; i++) {
+        auto json = symbolicBreakpoints->Get(i);
+        std::string functionName;
+        ret = json->GetString("functionName", &functionName);
+        if (ret == Result::SUCCESS) {
+            functionNamesSet.insert(std::move(functionName));
+        } else if (ret == Result::TYPE_ERROR) {
+            error += "Wrong type of 'functionName';";
+        } else if (ret == Result::NOT_EXIST) {
+            error += "'functionName' no exists;";
+        }
+    }
+
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "SetSymbolicBreakpointsParams::Create " << error;
+        return nullptr;
+    }
+    paramsObject->functionNamesSet_ = functionNamesSet;
+
+    return paramsObject;
+}
+
+std::unique_ptr<RemoveSymbolicBreakpointsParams> RemoveSymbolicBreakpointsParams::Create(const PtJson &params)
+{
+    auto paramsObject = std::make_unique<RemoveSymbolicBreakpointsParams>();
+    std::unordered_set<std::string> functionNamesSet {};
+    std::string error;
+    Result ret;
+
+    std::unique_ptr<PtJson> symbolicBreakpoints;
+    ret = params.GetArray("symbolicBreakpoints", &symbolicBreakpoints);
+    if (ret != Result::SUCCESS) {
+        LOG_DEBUGGER(ERROR) << "RemoveSymbolicBreakpointsParams::Get SymbolicBreakpoints: " << error;
+        return nullptr;
+    }
+
+    int32_t length = symbolicBreakpoints->GetSize();
+    for (int32_t i = 0; i < length; i++) {
+        auto json = symbolicBreakpoints->Get(i);
+        std::string functionName;
+        ret = json->GetString("functionName", &functionName);
+        if (ret == Result::SUCCESS) {
+            functionNamesSet.insert(std::move(functionName));
+        } else if (ret == Result::TYPE_ERROR) {
+            error += "Wrong type of 'functionName';";
+        } else if (ret == Result::NOT_EXIST) {
+            error += "'functionName' no exists;";
+        }
+    }
+
+    if (!error.empty()) {
+        LOG_DEBUGGER(ERROR) << "RemoveSymbolicBreakpointsParams::Create " << error;
+        return nullptr;
+    }
+    paramsObject->functionNamesSet_ = functionNamesSet;
+
+    return paramsObject;
+}
+
 }  // namespace panda::ecmascript::tooling

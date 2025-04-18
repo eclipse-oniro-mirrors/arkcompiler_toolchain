@@ -473,7 +473,9 @@ void DebuggerImpl::InitializeExtendedProtocolsList()
         "resetSingleStepper",
         "callFunctionOn",
         "smartStepInto",
-        "saveAllPossibleBreakpoints"
+        "saveAllPossibleBreakpoints",
+        "setSymbolicBreakpoints",
+        "removeSymbolicBreakpoints"
     };
     debuggerExtendedProtocols_ = std::move(debuggerProtocolList);
 }
@@ -589,6 +591,12 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
         case Method::SAVE_ALL_POSSIBLE_BREAKPOINTS:
             SaveAllPossibleBreakpoints(request);
             break;
+        case Method::SET_SYMBOLIC_BREAKPOINTS:
+            SetSymbolicBreakpoints(request);
+            break;
+        case Method::REMOVE_SYMBOLIC_BREAKPOINTS:
+            RemoveSymbolicBreakpoints(request);
+            break;
         default:
             SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
             break;
@@ -655,6 +663,10 @@ DebuggerImpl::DispatcherImpl::Method DebuggerImpl::DispatcherImpl::GetMethodEnum
         return Method::CALL_FUNCTION_ON;
     } else if (method == "saveAllPossibleBreakpoints") {
         return Method::SAVE_ALL_POSSIBLE_BREAKPOINTS;
+    } else if (method == "setSymbolicBreakpoints") {
+        return Method::SET_SYMBOLIC_BREAKPOINTS;
+    } else if (method == "removeSymbolicBreakpoints") {
+        return Method::REMOVE_SYMBOLIC_BREAKPOINTS;
     } else {
         return Method::UNKNOWN;
     }
@@ -828,6 +840,30 @@ void DebuggerImpl::DispatcherImpl::SaveAllPossibleBreakpoints(const DispatchRequ
         return;
     }
     DispatchResponse response = debugger_->SaveAllPossibleBreakpoints(*params);
+    SendResponse(request, response);
+}
+
+void DebuggerImpl::DispatcherImpl::SetSymbolicBreakpoints(const DispatchRequest &request)
+{
+    std::unique_ptr<SetSymbolicBreakpointsParams> params =
+        SetSymbolicBreakpointsParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+    DispatchResponse response = debugger_->SetSymbolicBreakpoints(*params);
+    SendResponse(request, response);
+}
+
+void DebuggerImpl::DispatcherImpl::RemoveSymbolicBreakpoints(const DispatchRequest &request)
+{
+    std::unique_ptr<RemoveSymbolicBreakpointsParams> params =
+        RemoveSymbolicBreakpointsParams::Create(request.GetParams());
+    if (params == nullptr) {
+        SendResponse(request, DispatchResponse::Fail("wrong params"));
+        return;
+    }
+    DispatchResponse response = debugger_->RemoveSymbolicBreakpoints(*params);
     SendResponse(request, response);
 }
 
@@ -1459,6 +1495,35 @@ DispatchResponse DebuggerImpl::SaveAllPossibleBreakpoints(const SaveAllPossibleB
     return DispatchResponse::Ok();
 }
 
+DispatchResponse DebuggerImpl::SetSymbolicBreakpoints(const SetSymbolicBreakpointsParams &params)
+{
+    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+        return DispatchResponse::Fail("SetSymbolicBreakpoints: debugger agent is not enabled");
+    }
+    if (!params.HasSymbolicBreakpoints()) {
+        return DispatchResponse::Fail("SetSymbolicBreakpoints: no symbolicBreakpoints exists");
+    }
+    // Symbolic breakpoints support only function names
+    DebuggerApi::SetSymbolicBreakpoint(jsDebugger_, *(params.GetFunctionNamesSet()));
+    
+    return DispatchResponse::Ok();
+}
+
+DispatchResponse DebuggerImpl::RemoveSymbolicBreakpoints(const RemoveSymbolicBreakpointsParams &params)
+{
+    if (!vm_->GetJsDebuggerManager()->IsDebugMode()) {
+        return DispatchResponse::Fail("RemoveSymbolicBreakpoints: debugger agent is not enabled");
+    }
+    if (!params.HasSymbolicBreakpoints()) {
+        return DispatchResponse::Fail("RemoveSymbolicBreakpoints: no symbolBreakpoints removed");
+    }
+    // Symbolic breakpoints support only function names
+    for (const auto& symbolicBreakpoint : *(params.GetFunctionNamesSet())) {
+        DebuggerApi::RemoveSymbolicBreakpoint(jsDebugger_, symbolicBreakpoint);
+    }
+    return DispatchResponse::Ok();
+}
+
 DispatchResponse DebuggerImpl::SetAsyncCallStackDepth(const SetAsyncCallStackDepthParams &params)
 {
     maxAsyncCallChainDepth_ = params.GetMaxDepth();
@@ -1895,6 +1960,11 @@ bool DebuggerImpl::GenerateAsyncFrame(StackFrame *stackFrame, const FrameHandler
     stackFrame->SetLineNumber(lineNumber);
     stackFrame->SetColumnNumber(columnNumber);
     return true;
+}
+
+void DebuggerImpl::SetPauseOnNextByteCode(bool pauseOnNextByteCode)
+{
+    pauseOnNextByteCode_ = pauseOnNextByteCode;
 }
 
 void DebuggerImpl::SaveCallFrameHandler(const FrameHandler *frameHandler)
