@@ -297,6 +297,10 @@ void RuntimeClient::HandleHeapUsage(std::unique_ptr<PtJson> json)
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
     VariableManager &variableManager = session->GetVariableManager();
     std::unique_ptr<GetHeapUsageReturns> heapUsageReturns = GetHeapUsageReturns::Create(*result);
+    if (heapUsageReturns == nullptr) {
+        LOGE("arkdb: get heap usage returns error");
+        return;
+    }
     variableManager.SetHeapUsageInfo(std::move(heapUsageReturns));
     variableManager.ShowHeapUsageInfo();
 }
