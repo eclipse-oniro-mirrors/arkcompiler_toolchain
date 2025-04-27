@@ -62,6 +62,7 @@ ohos_source_set("websocket_base") {
     "network.cpp",
     "websocket_base.cpp",
   ]
+  sources += toolchain_platform_source
 
   subsystem_name = "arkcompiler"
   part_name = "toolchain"

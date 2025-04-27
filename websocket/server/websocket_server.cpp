@@ -21,6 +21,7 @@
 
 #include <fcntl.h>
 #include "common/log_wrapper.h"
+#include "platform/file.h"
 #include "frame_builder.h"
 #include "handshake_helper.h"
 #include "server/websocket_server.h"
@@ -44,11 +45,7 @@ WebSocketServer::~WebSocketServer() noexcept
 {
     if (serverFd_ != -1) {
         LOGW("WebSocket server is closed while destructing the object");
-#if defined(PANDA_TARGET_OHOS)
-        fdsan_close_with_tag(serverFd_, LOG_DOMAIN);
-#else
-        close(serverFd_);
-#endif
+        FdsanClose(reinterpret_cast<fd_t>(serverFd_));
         // Reset directly in order to prevent static analyzer warnings.
         serverFd_ = -1;
     }
@@ -239,9 +236,7 @@ bool WebSocketServer::InitTcpWebSocket(int port, uint32_t timeoutLimit)
         LOGE("InitTcpWebSocket socket init failed, errno = %{public}d", errno);
         return false;
     }
-#if defined(PANDA_TARGET_OHOS)
-    fdsan_exchange_owner_tag(serverFd_, 0, LOG_DOMAIN);
-#endif
+    FdsanExchangeOwnerTag(reinterpret_cast<fd_t>(serverFd_));
     // allow specified port can be used at once and not wait TIME_WAIT status ending
     int sockOptVal = 1;
     if ((setsockopt(serverFd_, SOL_SOCKET, SO_REUSEADDR,
@@ -289,9 +284,7 @@ bool WebSocketServer::InitUnixWebSocket(const std::string& sockName, uint32_t ti
         LOGE("InitUnixWebSocket socket init failed, errno = %{public}d", errno);
         return false;
     }
-#if defined(PANDA_TARGET_OHOS)
-    fdsan_exchange_owner_tag(serverFd_, 0, LOG_DOMAIN);
-#endif
+    FdsanExchangeOwnerTag(reinterpret_cast<fd_t>(serverFd_));
     // set send and recv timeout
     if (!SetWebSocketTimeOut(serverFd_, timeoutLimit)) {
         LOGE("InitUnixWebSocket SetWebSocketTimeOut failed");
@@ -373,11 +366,7 @@ bool WebSocketServer::ConnectUnixWebSocketBySocketpair()
 
 void WebSocketServer::CloseServerSocket()
 {
-#if defined(PANDA_TARGET_OHOS)
-    fdsan_close_with_tag(serverFd_, LOG_DOMAIN);
-#else
-    close(serverFd_);
-#endif
+    FdsanClose(reinterpret_cast<fd_t>(serverFd_));
     serverFd_ = -1;
 }
 
