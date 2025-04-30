@@ -16,6 +16,7 @@
 #include <uv.h>
 
 #include "ecmascript/js_runtime_options.h"
+#include "ecmascript/napi/include/jsnapi_expo.h"
 #include "ecmascript/platform/file.h"
 #include "tooling/utils/utils.h"
 #ifdef PANDA_TARGET_MACOS
