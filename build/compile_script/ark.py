@@ -279,6 +279,10 @@ class ArkPy:
                 "description": "Keep running unittest etc. until errors occured less than N times"
                                " (use 0 to ignore all errors).",
             },
+            "fast-rebuild": {
+                "flags": ["--fast-rebuild", "-fast-rebuild"],
+                "description": "Skip gn gen when not modify gn file",
+            },
         },
         "help": {
             "flags": ["help", "--help", "--h", "-help", "-h"],
@@ -295,6 +299,7 @@ class ArkPy:
     enable_verbose = False
     enable_keepdepfile = False
     ignore_errors = 1
+    fast_rebuild = False
 
     def __main__(self, arg_list: list):
         enable_ccache()
@@ -828,15 +833,18 @@ class ArkPy:
         _write(build_log_path, str_to_build_log, "a")
         # gn command
         print("=== gn gen start ===")
-        code = call_with_output(
-            "{0} gen {1} --args=\"{2}\" --export-compile-commands".format(
-                self.gn_binary_path, out_path, " ".join(gn_args).replace("\"", "\\\"")),
-            build_log_path)
-        if code != 0:
-            print("=== gn gen failed! ===\n")
-            sys.exit(code)
+        if self.fast_rebuild:
+            print("=== skip gn gen ===")
         else:
-            print("=== gn gen success! ===\n")
+            code = call_with_output(
+                "{0} gen {1} --args=\"{2}\" --export-compile-commands".format(
+                    self.gn_binary_path, out_path, " ".join(gn_args).replace("\"", "\\\"")),
+                build_log_path)
+            if code != 0:
+                print("=== gn gen failed! ===\n")
+                sys.exit(code)
+            else:
+                print("=== gn gen success! ===\n")
         # ninja command
         # Always add " -d keeprsp" to ninja command to keep response file("*.rsp"), thus we could get shared libraries
         # of an excutable from its response file.
@@ -1015,9 +1023,6 @@ class ArkPy:
         elif self.is_dict_flags_match_arg(self.ARG_DICT.get("target").get("test262"), arg_list[0]):
             self.build_for_test262(out_path, gn_args, arg_list)
         elif self.is_dict_flags_match_arg(self.ARG_DICT.get("target").get("unittest"), arg_list[0]):
-            if len(arg_list) > 1:
-                print("\033[92m\"unittest\" not support additional arguments.\033[0m\n".format())
-                sys.exit(0)
             self.build_for_unittest(out_path, gn_args, self.UNITTEST_LOG_FILE_NAME)
         elif self.is_dict_flags_match_arg(self.ARG_DICT.get("target").get("runtime_core_unittest"), arg_list[0]):
             if len(arg_list) > 1:
@@ -1074,6 +1079,9 @@ class ArkPy:
                             input_value
                         ))
                         sys.exit(0)
+            # match [option][fast-rebuild] flag
+            elif self.is_dict_flags_match_arg(self.ARG_DICT.get("option").get("fast-rebuild"), arg):
+                self.fast_rebuild = True
             # make a new list with flag that do not match any flag in [option]
             else:
                 arg_list_ret.append(arg)

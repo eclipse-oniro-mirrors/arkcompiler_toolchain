@@ -12,6 +12,7 @@
 # limitations under the License.
 declare_args() {
   ark_standalone_build = true
+  ark_hybrid = false
   use_musl = true
   build_root = "//arkcompiler/toolchain/build"
   run_with_qemu = false
@@ -19,6 +20,7 @@ declare_args() {
   enable_lto_O0 = false
   disable_force_gc = false
   timeout = 1200
+  enable_cmc_gc = false
 }
 
 check_mac_system_and_cpu_script =
