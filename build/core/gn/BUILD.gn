@@ -115,6 +115,7 @@ group("hybrid") {
   if (target_os != "mingw" && target_os != "mac") {
     deps += [
       "$ark_root/static_core/plugins/ets/runtime/interop_js:ets_interop_js_napi",
+      "$ark_root/static_core/plugins/ets/tests/interop_js/test_helper:interop_test_helper",
       "$ark_root/static_core/tools/ark_js_napi_cli:ark_js_napi_cli",
     ]
   }
