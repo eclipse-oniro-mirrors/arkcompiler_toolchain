@@ -56,6 +56,12 @@ bool JSPtHooks::SingleStep(const JSPtLocation &location)
 
     // pause or step complete
     if (debugger_->NotifySingleStep(location)) {
+        // pause for symbol breakpoint
+        if (breakOnSymbol_) {
+            debugger_->NotifyPaused({}, SYMBOL);
+            breakOnSymbol_ = false;
+            return true;
+        }
         debugger_->NotifyPaused({}, OTHER);
         return true;
     }
@@ -122,5 +128,14 @@ void JSPtHooks::SendableMethodEntry(JSHandle<Method> method)
 void JSPtHooks::DisableFirstTimeFlag()
 {
     firstTime_ = false;
+}
+
+void JSPtHooks::HitSymbolicBreakpoint()
+{
+    LOG_DEBUGGER(VERBOSE) << "JSPtHooks: HitSymbolicBreakpoint";
+
+    breakOnSymbol_ = true;
+
+    debugger_->SetPauseOnNextByteCode(true);
 }
 }  // namespace panda::ecmascript::tooling

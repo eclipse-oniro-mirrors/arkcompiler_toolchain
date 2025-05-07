@@ -42,6 +42,7 @@ public:
     void VmDeath() override {}
     void SendableMethodEntry(JSHandle<Method> method) override;
     void DisableFirstTimeFlag() override;
+    void HitSymbolicBreakpoint() override;
 
 private:
     NO_COPY_SEMANTIC(JSPtHooks);
@@ -49,6 +50,7 @@ private:
 
     DebuggerImpl *debugger_ {nullptr};
     bool firstTime_ {true};
+    bool breakOnSymbol_ {false};
 };
 }  // namespace panda::ecmascript::tooling
 #endif  // ECMASCRIPT_TOOLING_BACKEND_JS_PT_HOOKS_H

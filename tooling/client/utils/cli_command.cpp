@@ -35,6 +35,8 @@ const std::string HELP_MSG = "usage: <command> <options>\n"
     "  runtime-enable(rt-enable)                     runtime enable\n"
     "  heapusage(hu)                                 runtime getHeapUsage\n"
     "  break(b)                                      break with options\n"
+    "  setSymbolicBreakpoints                        setSymbolicBreakpoints\n"
+    "  removeSymbolicBreakpoints                     removeSymbolicBreakpoints\n"
     "  backtrack(bt)                                 backtrace\n"
     "  continue(c)                                   continue\n"
     "  delete(d)                                     delete with options\n"
@@ -90,6 +92,8 @@ const std::vector<std::string> cmdList = {
     "runtime-enable",
     "heapusage",
     "break",
+    "setSymbolicBreakpoints",
+    "removeSymbolicBreakpoints",
     "backtrack",
     "continue",
     "delete",
@@ -174,6 +178,10 @@ void CliCommand::CreateCommandMap()
             std::bind(&CliCommand::DebuggerCommand, this, "enable-launch-accelerate")},
         {std::make_pair("saveAllPossibleBreakpoints", "b-new"),
             std::bind(&CliCommand::SaveAllPossibleBreakpointsCommand, this, "saveAllPossibleBreakpoints")},
+        {std::make_pair("setSymbolicBreakpoints", "setSymbolicBreakpoints"),
+            std::bind(&CliCommand::SetSymbolicBreakpointsCommand, this, "setSymbolicBreakpoints")},
+        {std::make_pair("removeSymbolicBreakpoints", "removeSymbolicBreakpoints"),
+            std::bind(&CliCommand::RemoveSymbolicBreakpointsCommand, this, "removeSymbolicBreakpoints")},
     };
     CreateOtherCommandMap();
 }
@@ -353,6 +361,52 @@ ErrCode CliCommand::BreakCommand(const std::string &cmd)
             }
         }
         debuggerCli.AddBreakPointInfo(GetArgList()[0], std::stoi(GetArgList()[1]));
+    } else {
+        OutputCommand(cmd, false);
+        return ErrCode::ERR_FAIL;
+    }
+    
+    result = debuggerCli.DispatcherCmd(cmd);
+    OutputCommand(cmd, true);
+    return result ? ErrCode::ERR_OK : ErrCode::ERR_FAIL;
+}
+
+ErrCode CliCommand::SetSymbolicBreakpointsCommand(const std::string &cmd)
+{
+    bool result = false;
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    DebuggerClient &debuggerCli = session->GetDomainManager().GetDebuggerClient();
+    BreakPointManager &breakpointManager = session->GetBreakPointManager();
+    std::vector<Breaklocation> breaklist_ = breakpointManager.Getbreaklist();
+    if (GetArgList().size() == 1) { //1: one arguments
+        if (Utils::IsNumber(GetArgList()[0])) {
+            OutputCommand(cmd, false);
+            return ErrCode::ERR_FAIL;
+        }
+        debuggerCli.AddSymbolicBreakpointInfo(GetArgList()[0]);
+    } else {
+        OutputCommand(cmd, false);
+        return ErrCode::ERR_FAIL;
+    }
+    
+    result = debuggerCli.DispatcherCmd(cmd);
+    OutputCommand(cmd, true);
+    return result ? ErrCode::ERR_OK : ErrCode::ERR_FAIL;
+}
+
+ErrCode CliCommand::RemoveSymbolicBreakpointsCommand(const std::string &cmd)
+{
+    bool result = false;
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    DebuggerClient &debuggerCli = session->GetDomainManager().GetDebuggerClient();
+    BreakPointManager &breakpointManager = session->GetBreakPointManager();
+    std::vector<Breaklocation> breaklist_ = breakpointManager.Getbreaklist();
+    if (GetArgList().size() == 1) { //1: one arguments
+        if (Utils::IsNumber(GetArgList()[0])) {
+            OutputCommand(cmd, false);
+            return ErrCode::ERR_FAIL;
+        }
+        debuggerCli.AddSymbolicBreakpointInfo(GetArgList()[0]);
     } else {
         OutputCommand(cmd, false);
         return ErrCode::ERR_FAIL;
