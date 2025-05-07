@@ -91,7 +91,7 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsTracingTest", GetJsTracingTest());
     TestUtil::RegisterTest("JsWatchTest", GetJsWatchTest());
 #ifndef USE_CMC_GC
-    // TODO: Need support heapdump
+    // Need support heapdump
     TestUtil::RegisterTest("JsHeapdumpTest", GetJsHeapdumpTest());
     TestUtil::RegisterTest("JsHeapdumpLoopTest", GetJsHeapdumpLoopTest());
 #endif
@@ -114,7 +114,7 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsHeapusageAsyncTest", GetJsHeapusageAsyncTest());
     TestUtil::RegisterTest("JsHeapusageStepTest", GetJsHeapusageStepTest());
 #ifndef USE_CMC_GC
-    // TODO: Need support allocation tracker
+    // Need support allocation tracker
     TestUtil::RegisterTest("JsAllocationtrackTest", GetJsAllocationtrackTest());
     TestUtil::RegisterTest("JsAllocationTrackLoopTest", GetJsAllocationTrackLoopTest());
     TestUtil::RegisterTest("JsAllocationTrackRecursionTest", GetJsAllocationTrackRecursionTest());
