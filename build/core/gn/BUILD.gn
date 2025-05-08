@@ -101,7 +101,12 @@ group("static_core") {
     deps += [ "$ark_root/static_core/static_linker:static_linker" ]
   }
   if (target_os != "mingw" && target_os != "mac") {
-    deps += [ "$ark_root/static_core/runtime:libarkruntime" ]
+    if (ark_hybrid) {
+      deps += [ "$js_root:libark_jsruntime" ]
+    } else {
+      deps += [ "$ark_root/static_core/runtime:libarkruntime" ]
+    }
+
   }
 }
 
@@ -109,7 +114,6 @@ group("hybrid") {
   deps = [
     ":ets_frontend",
     ":ets_runtime",
-    ":static_core",
     "$ark_root/static_core/plugins/ets:etsstdlib(${host_toolchain})",
   ]
   if (target_os != "mingw" && target_os != "mac") {
@@ -119,6 +123,11 @@ group("hybrid") {
       "$ark_root/static_core/tools/ark_js_napi_cli:ark_js_napi_cli",
     ]
   }
+
+  if (!ark_hybrid) {
+    deps += [ ":static_core" ]
+  }
+
 }
 
 group("toolchain") {
