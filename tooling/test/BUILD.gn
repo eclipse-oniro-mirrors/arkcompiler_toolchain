@@ -223,6 +223,7 @@ host_unittest_action("DebuggerTest") {
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
+
   # libuv should be before libark_jsruntime
   # because there are libuv weak symbols in libark_jsruntime
   # and libuv should be loaded before their resolution

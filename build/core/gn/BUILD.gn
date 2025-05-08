@@ -106,7 +106,6 @@ group("static_core") {
     } else {
       deps += [ "$ark_root/static_core/runtime:libarkruntime" ]
     }
-
   }
 }
 
@@ -127,7 +126,6 @@ group("hybrid") {
   if (!ark_hybrid) {
     deps += [ ":static_core" ]
   }
-
 }
 
 group("toolchain") {
