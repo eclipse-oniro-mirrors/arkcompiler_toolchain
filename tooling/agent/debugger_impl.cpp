@@ -2077,6 +2077,7 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
         std::unique_ptr<RemoteObject> closure = std::make_unique<RemoteObject>();
         Local<ObjectRef> closureScopeObj = ObjectRef::New(vm_);
 
+        std::unordered_map<CString, int> nameCount;
         for (const auto &[name, slot] : scopeDebugInfo->scopeInfo) {
             if (IsVariableSkipped(name.c_str())) {
                 continue;
@@ -2086,6 +2087,11 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
             valueHandle.Update(lexicalEnv->GetProperties(slot));
             Local<JSValueRef> value = JSNApiHelper::ToLocal<JSValueRef>(valueHandle);
             Local<JSValueRef> varName = StringRef::NewFromUtf8(vm_, name.c_str());
+            nameCount[name]++;
+            if (nameCount[name] > 1) {
+                CString fullName = name + "$" + ToCString(slot);
+                varName = StringRef::NewFromUtf8(vm_, fullName.c_str());
+            }
             // found 'this' and 'this' is not set in GetLocalScopechain
             if (!thisFound && name == "this") {
                 *thisObj = RemoteObject::FromTagged(vm_, value);
