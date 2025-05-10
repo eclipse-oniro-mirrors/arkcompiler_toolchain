@@ -49,6 +49,8 @@ bool DebuggerClient::DispatcherCmd(const std::string &cmd)
         { "step-over", std::bind(&DebuggerClient::StepOverCommand, this)},
         { "enable-launch-accelerate", std::bind(&DebuggerClient::EnableLaunchAccelerateCommand, this)},
         { "saveAllPossibleBreakpoints", std::bind(&DebuggerClient::SaveAllPossibleBreakpointsCommand, this)},
+        { "setSymbolicBreakpoints", std::bind(&DebuggerClient::SetSymbolicBreakpointsCommand, this)},
+        { "removeSymbolicBreakpoints", std::bind(&DebuggerClient::RemoveSymbolicBreakpointsCommand, this)},
     };
 
     auto entry = dispatcherTable.find(cmd);
@@ -308,6 +310,13 @@ void DebuggerClient::AddBreakPointInfo(const std::string& url, const int& lineNu
     breakPointInfoList_.emplace_back(breakPointInfo);
 }
 
+void DebuggerClient::AddSymbolicBreakpointInfo(const std::string& functionName)
+{
+    SymbolicBreakpointInfo symbolicBreakpointInfo;
+    symbolicBreakpointInfo.functionName = functionName;
+    symbolicBreakpointInfoList_.emplace_back(symbolicBreakpointInfo);
+}
+
 void DebuggerClient::RecvReply(std::unique_ptr<PtJson> json)
 {
     if (json == nullptr) {
@@ -448,6 +457,58 @@ int DebuggerClient::SaveAllPossibleBreakpointsCommand()
     vector->Push(bp);
     locations->Add(breakPointInfoList_.back().url.c_str(), vector);
     params->Add("locations", locations);
+    request->Add("params", params);
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Debugger");
+    }
+
+    return 0;
+}
+
+int DebuggerClient::SetSymbolicBreakpointsCommand()
+{
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
+    std::unique_ptr<PtJson> request = PtJson::CreateObject();
+    request->Add("id", id);
+    request->Add("method", "Debugger.setSymbolicBreakpoints");
+
+    std::unique_ptr<PtJson> params = PtJson::CreateObject();
+    std::unique_ptr<PtJson> symbolicBreakpoints = PtJson::CreateArray();
+
+    std::unique_ptr<PtJson> symbolicBreakpoint = PtJson::CreateObject();
+    symbolicBreakpoint->Add("functionName", symbolicBreakpointInfoList_.back().functionName.c_str());
+    symbolicBreakpoints->Push(symbolicBreakpoint);
+    params->Add("symbolicBreakpoints", symbolicBreakpoints);
+    request->Add("params", params);
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Debugger");
+    }
+
+    return 0;
+}
+
+int DebuggerClient::RemoveSymbolicBreakpointsCommand()
+{
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
+    std::unique_ptr<PtJson> request = PtJson::CreateObject();
+    request->Add("id", id);
+    request->Add("method", "Debugger.removeSymbolicBreakpoints");
+
+    std::unique_ptr<PtJson> params = PtJson::CreateObject();
+    std::unique_ptr<PtJson> symbolicBreakpoints = PtJson::CreateArray();
+
+    std::unique_ptr<PtJson> symbolicBreakpoint = PtJson::CreateObject();
+    symbolicBreakpoint->Add("functionName", symbolicBreakpointInfoList_.back().functionName.c_str());
+    symbolicBreakpoints->Push(symbolicBreakpoint);
+    params->Add("symbolicBreakpoints", symbolicBreakpoints);
     request->Add("params", params);
 
     std::string message = request->Stringify();

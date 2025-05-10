@@ -120,6 +120,8 @@ public:
 
     void DisableFirstTimeFlag() override {}
 
+    void HitSymbolicBreakpoint() override {}
+
     void TerminateTest()
     {
         debugInterface_->UnregisterHooks();
