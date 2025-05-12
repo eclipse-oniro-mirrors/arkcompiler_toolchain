@@ -19,6 +19,14 @@ if (target_cpu == "arm64") {
   TARGET = "aarch64"
 }
 
+declare_args() {
+  toolchain_enable_cmc_gc = false
+}
+
+if (defined(enable_cmc_gc) && !toolchain_enable_cmc_gc) {
+  toolchain_enable_cmc_gc = enable_cmc_gc
+}
+
 if (!ark_standalone_build) {
   build_root = "//build"
   ark_third_party_root = "//third_party"
