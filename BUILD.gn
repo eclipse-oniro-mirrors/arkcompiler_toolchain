@@ -186,10 +186,31 @@ config("ark_toolchain_common_config") {
   } else {
     defines += [ "NDEBUG" ]
   }
+
+  if (defined(enable_cmc_gc) && enable_cmc_gc) {
+    defines += [ "USE_CMC_GC" ]
+    defines += [ "USE_READ_BARRIER" ]
+  }
 }
 
 config("ark_toolchain_public_config") {
   defines = []
+
+  cflags_cc = [
+    "-Wno-unused-command-line-argument",
+    "-Wno-variadic-macros",
+    "-Wno-gnu-anonymous-struct",
+    "-Wno-zero-length-array",
+    "-Wno-nested-anon-types",
+    "-Wno-c99-extensions",
+    "-Wno-unused-parameter",
+    "-Wno-shadow",
+    "-Wno-pedantic",
+    "-Wno-gnu-zero-variadic-macro-arguments",
+    "-Wno-unused-lambda-capture",
+    "-Wno-unused-function",
+    "-Wno-unused-variable",
+  ]
 
   # debug is not compatible with ios for now
   if (!is_mingw && !is_mac && target_os != "ios") {

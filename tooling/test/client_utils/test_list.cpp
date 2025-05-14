@@ -91,8 +91,11 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsSourceTest", GetJsSourceTest());
     TestUtil::RegisterTest("JsTracingTest", GetJsTracingTest());
     TestUtil::RegisterTest("JsWatchTest", GetJsWatchTest());
+#ifndef USE_CMC_GC
+    // Need support heapdump
     TestUtil::RegisterTest("JsHeapdumpTest", GetJsHeapdumpTest());
-    TestUtil::RegisterTest("JsAllocationtrackTest", GetJsAllocationtrackTest());
+    TestUtil::RegisterTest("JsHeapdumpLoopTest", GetJsHeapdumpLoopTest());
+#endif
     TestUtil::RegisterTest("JsStepintoTest", GetJsStepintoTest());
     TestUtil::RegisterTest("JsStepoutTest", GetJsStepoutTest());
     TestUtil::RegisterTest("JsStepoverTest", GetJsStepoverTest());
@@ -111,9 +114,12 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsHeapusageTest", GetJsHeapusageTest());
     TestUtil::RegisterTest("JsHeapusageAsyncTest", GetJsHeapusageAsyncTest());
     TestUtil::RegisterTest("JsHeapusageStepTest", GetJsHeapusageStepTest());
-    TestUtil::RegisterTest("JsHeapdumpLoopTest", GetJsHeapdumpLoopTest());
+#ifndef USE_CMC_GC
+    // Need support allocation tracker
+    TestUtil::RegisterTest("JsAllocationtrackTest", GetJsAllocationtrackTest());
     TestUtil::RegisterTest("JsAllocationTrackLoopTest", GetJsAllocationTrackLoopTest());
     TestUtil::RegisterTest("JsAllocationTrackRecursionTest", GetJsAllocationTrackRecursionTest());
+#endif
     TestUtil::RegisterTest("JsJsWatchBasicTypeTest", GetJsWatchBasicTypeTest());
     TestUtil::RegisterTest("JsJsWatchSetTypeTest", GetJsWatchSetTypeTest());
     TestUtil::RegisterTest("JsJsWatchOtherTypeTest", GetJsWatchOtherTypeTest());
