@@ -40,21 +40,11 @@ bool ExecutePandaFile(panda::ecmascript::EcmaVM *vm,
 {
     panda::LocalScope scope(vm);
 
-    panda::ecmascript::EcmaContext *context1 = nullptr;
-    if (runtimeOptions.IsEnableContext()) {
-        context1 = panda::JSNApi::CreateJSContext(vm);
-        panda::JSNApi::SwitchCurrentContext(vm, context1);
-    }
-
     if (runtimeOptions.WasAOTOutputFileSet()) {
         panda::JSNApi::LoadAotFile(vm, "");
     }
 
     bool ret = panda::JSNApi::Execute(vm, file, entry);
-
-    if (runtimeOptions.IsEnableContext()) {
-        panda::JSNApi::DestroyJSContext(vm, context1);
-    }
 
     return ret;
 }
