@@ -2057,15 +2057,15 @@ std::vector<std::unique_ptr<Scope>> DebuggerImpl::GetClosureScopeChains(const Fr
         thread, DebuggerApi::GetEnv(frameHandler));
     JSMutableHandle<JSTaggedValue> valueHandle = JSMutableHandle<JSTaggedValue>(thread, JSTaggedValue::Hole());
     JSTaggedValue currentEnv = envHandle.GetTaggedValue();
-    if (!currentEnv.IsTaggedArray()) {
+    if (!currentEnv.IsLexicalEnv()) {
         LOG_DEBUGGER(DEBUG) << "GetClosureScopeChains: currentEnv is invalid";
         return closureScopes;
     }
     // check if GetLocalScopeChain has already found and set 'this' value
     bool thisFound = (*thisObj)->HasValue();
     bool closureVarFound = false;
-    // currentEnv = currentEnv->parent until currentEnv becomes undefined
-    for (; currentEnv.IsTaggedArray(); currentEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject())->GetParentEnv()) {
+    // currentEnv = currentEnv->parent until currentEnv is not lexicalEnv
+    for (; currentEnv.IsLexicalEnv(); currentEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject())->GetParentEnv()) {
         LexicalEnv *lexicalEnv = LexicalEnv::Cast(currentEnv.GetTaggedObject());
         envHandle.Update(currentEnv);
         if (lexicalEnv->GetScopeInfo().IsHole()) {
