@@ -1,0 +1,129 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("$build_root/ark.gni")
+
+config("vixl_public_config") {
+  defines = []
+  if (is_debug) {
+    defines += [ "VIXL_DEBUG" ]
+  }
+
+  defines += [ "PANDA_BUILD" ]
+
+  if (defined(ark_standalone_build) && ark_standalone_build) {
+    cflags_cc = [ "-Wno-bitwise-instead-of-logical" ]
+  }
+
+  include_dirs = [
+    "//third_party/vixl",
+    "//third_party/vixl/src",
+  ]
+  if (target_cpu == "arm") {
+    include_dirs += [ "//third_party/vixl/src/aarch32" ]
+  } else if (target_cpu == "arm64" || target_cpu == "amd64" ||
+             target_cpu == "x64" || target_cpu == "x86_64") {
+    include_dirs += [ "//third_party/vixl/src/aarch64" ]
+  }
+}
+
+ohos_static_library("libvixl") {
+  sources = [
+    "//third_party/vixl/src/code-buffer-vixl.cc",
+    "//third_party/vixl/src/compiler-intrinsics-vixl.cc",
+    "//third_party/vixl/src/cpu-features.cc",
+    "//third_party/vixl/src/utils-vixl.cc",
+  ]
+
+  defines = []
+  cflags_cc = [
+    "-std=c++17",
+    "-pedantic",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-fno-rtti",
+    "-fno-exceptions",
+    "-Wno-invalid-offsetof",
+
+    "-Wno-gnu-statement-expression",
+    "-Wno-unused-parameter",
+    "-Wno-unused-result",
+    "-Wno-deprecated-declarations",
+  ]
+  if (is_debug) {
+    cflags_cc += [
+      "-Og",
+      "-ggdb3",
+      "-gdwarf-4",
+    ]
+  }
+
+  if (is_asan) {
+    cflags_cc += [ "-g" ]
+    defines += [ "__SANITIZE_ADDRESS__" ]
+  }
+
+  if (target_cpu == "arm") {
+    sources += [
+      "//third_party/vixl/src/aarch32/assembler-aarch32.cc",
+      "//third_party/vixl/src/aarch32/constants-aarch32.cc",
+      "//third_party/vixl/src/aarch32/disasm-aarch32.cc",
+      "//third_party/vixl/src/aarch32/instructions-aarch32.cc",
+      "//third_party/vixl/src/aarch32/location-aarch32.cc",
+      "//third_party/vixl/src/aarch32/macro-assembler-aarch32.cc",
+      "//third_party/vixl/src/aarch32/operands-aarch32.cc",
+    ]
+    defines += [ "VIXL_INCLUDE_TARGET_A32" ]
+  } else if (target_cpu == "arm64" || target_cpu == "amd64" ||
+             target_cpu == "x64" || target_cpu == "x86_64") {
+    sources += [
+      "//third_party/vixl/src/aarch64/assembler-aarch64.cc",
+      "//third_party/vixl/src/aarch64/assembler-sve-aarch64.cc",
+      "//third_party/vixl/src/aarch64/cpu-aarch64.cc",
+      "//third_party/vixl/src/aarch64/cpu-features-auditor-aarch64.cc",
+      "//third_party/vixl/src/aarch64/decoder-aarch64.cc",
+      "//third_party/vixl/src/aarch64/disasm-aarch64.cc",
+      "//third_party/vixl/src/aarch64/instructions-aarch64.cc",
+      "//third_party/vixl/src/aarch64/logic-aarch64.cc",
+      "//third_party/vixl/src/aarch64/macro-assembler-aarch64.cc",
+      "//third_party/vixl/src/aarch64/macro-assembler-sve-aarch64.cc",
+      "//third_party/vixl/src/aarch64/operands-aarch64.cc",
+      "//third_party/vixl/src/aarch64/pointer-auth-aarch64.cc",
+      "//third_party/vixl/src/aarch64/simulator-aarch64.cc",
+    ]
+    defines += [
+      "VIXL_INCLUDE_TARGET_A64",
+      "VIXL_INCLUDE_SIMULATOR_AARCH64",
+    ]
+  }
+  if (current_cpu == "arm") {
+    cflags_cc += [
+      "-march=armv7-a",
+      "-mfloat-abi=softfp",
+      "-marm",
+      "-mfpu=vfp",
+    ]
+  }
+
+  if (is_mac) {
+    cflags_cc += [ "-DVIXL_CODE_BUFFER_MALLOC" ]
+  } else {
+    cflags_cc += [ "-DVIXL_CODE_BUFFER_MMAP" ]
+  }
+
+  public_configs = [ ":vixl_public_config" ]
+
+  subsystem_name = "thirdparty"
+  part_name = "vixl"
+}
