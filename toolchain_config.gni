@@ -11,16 +11,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if (!defined(enable_cmc_gc)) {
-  enable_cmc_gc = false
-}
-
 if (!defined(ark_standalone_build)) {
   ark_standalone_build = false
 }
 
 if (target_cpu == "arm64") {
   TARGET = "aarch64"
+}
+
+declare_args() {
+  toolchain_enable_cmc_gc = false
+}
+
+if (defined(enable_cmc_gc) && !toolchain_enable_cmc_gc) {
+  toolchain_enable_cmc_gc = enable_cmc_gc
 }
 
 if (!ark_standalone_build) {
