@@ -263,6 +263,31 @@ HWTEST_F_L0(DebuggerParamsTest, SaveAllPossibleBreakpointsParamsCreateTest)
     EXPECT_EQ(params->GetBreakpointsMap()->size(), 1);
 }
 
+HWTEST_F_L0(DebuggerParamsTest, SetSymbolicBreakpointsParamsCreateTest)
+{
+    std::string msg;
+    std::unique_ptr<SetSymbolicBreakpointsParams> params;
+
+    // abnormal
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{}})";
+    params = SetSymbolicBreakpointsParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_EQ(params, nullptr);
+
+    // abnormal
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"symbolicBreakpoints":[
+        {"condition":"testDebug"}]}})";
+    params = SetSymbolicBreakpointsParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_EQ(params, nullptr);
+
+    // normal
+    msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"symbolicBreakpoints":[
+        {"functionName":"testDebug1"}, {"functionName":"testDebug2"}]}})";
+    params = SetSymbolicBreakpointsParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_NE(params, nullptr);
+    EXPECT_TRUE(params->HasSymbolicBreakpoints());
+    EXPECT_EQ(params->GetFunctionNamesSet()->size(), 2);
+}
+
 HWTEST_F_L0(DebuggerParamsTest, StartSamplingParamsCreateTest)
 {
     std::string msg;

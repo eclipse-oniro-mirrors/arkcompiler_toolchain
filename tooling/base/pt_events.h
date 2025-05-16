@@ -173,6 +173,9 @@ public:
             case NATIVE_OUT: {
                 return "Native out";
             }
+            case SYMBOL: {
+                return "Symbol";
+            }
             default: {
                 LOG_DEBUGGER(ERROR) << "Unknown paused reason: " << reason;
             }

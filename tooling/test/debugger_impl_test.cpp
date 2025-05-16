@@ -648,6 +648,66 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_RemoveBreakpointsByUrl__002)
     }
 }
 
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetSymbolBreakpoints_001) 
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+
+    std::string msg = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.setSymbolicBreakpoints",
+            "params":{}
+        })";
+    DispatchRequest request(msg);
+
+    dispatcherImpl->Dispatch(request);
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(), R"({"id":0,"result":{"code":1,"message":"wrong params"}})");
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetSymbolBreakpoints_002) 
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+
+    std::string msg = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.setSymbolicBreakpoints",
+            "params":{
+                "symbolicBreakpoints":[
+                    {
+                        "condition":"testDebug"
+                    }
+                ]
+            }
+        })";
+    DispatchRequest request(msg);
+
+    dispatcherImpl->Dispatch(request);
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(), R"({"id":0,"result":{"code":1,"message":"wrong params"}})");
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
 HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_Resume__001)
 {
     std::string outStrForCallbackCheck = "";
