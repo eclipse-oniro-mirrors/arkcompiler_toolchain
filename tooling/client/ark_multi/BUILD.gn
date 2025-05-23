@@ -31,10 +31,14 @@ ohos_executable("ark_multi") {
 
   external_deps = [
     "bounds_checking_function:libsec_shared",
-    "ets_runtime:libark_jsruntime",
     "icu:shared_icuuc",
     "libuv:uv",
   ]
+  if (defined(ark_hybrid) && ark_hybrid) {
+    external_deps += [ "runtime_core:libarkruntime" ]
+  } else  {
+    external_deps += [ "ets_runtime:libark_jsruntime" ]
+  }
 
   # hiviewdfx libraries
   external_deps += hiviewdfx_ext_deps
