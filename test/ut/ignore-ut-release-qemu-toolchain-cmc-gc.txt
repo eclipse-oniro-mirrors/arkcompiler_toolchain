@@ -1,0 +1,14 @@
+# Known failure list for ut - release - qemu - toolchain -cmc -gc
+
+#24285
+test/test/libjsdebugtest.so
+
+#25856
+obj/arkcompiler/ets_runtime/ecmascript/mem/cmc_gc/libcommon_components_set/gc_hooks.o
+
+#26061
+obj/arkcompiler/toolchain/inspector/test/InspectorConnectTestWithQemu
+obj/arkcompiler/toolchain/tooling/test/DebuggerClientTestWithQemu
+obj/arkcompiler/toolchain/tooling/test/DebuggerEntryTestWithQemu
+obj/arkcompiler/toolchain/tooling/test/DebuggerTestWithQemu
+obj/arkcompiler/toolchain/tooling/test/DebuggerCIntClientTestWithQemu
