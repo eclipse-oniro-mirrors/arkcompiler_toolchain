@@ -158,6 +158,9 @@ public:
         SAVE_ALL_POSSIBLE_BREAKPOINTS,
         REMOVE_BREAKPOINTS_BY_URL,
         GET_POSSIBLE_AND_SET_BREAKPOINT_BY_URL,
+        GET_PROPERTIES,
+        CALL_FUNCTION_ON,
+        EVALUATE_ON_CALL_FRAME,
         UNKNOWN
     };
     MethodType GetMethodType(const std::string &method) const;
@@ -166,6 +169,10 @@ private:
     std::string SaveAllBreakpoints(const DispatchRequest &request, DispatcherBase *dispatcher) const;
     std::string RemoveBreakpoint(const DispatchRequest &request, DispatcherBase *dispatcher) const;
     std::string SetBreakpoint(const DispatchRequest &request, DispatcherBase *dispatcher) const;
+    std::string GetProperties(const DispatchRequest &request, DispatcherBase *dispatcher) const;
+    std::string CallFunctionOn(const DispatchRequest &request, DispatcherBase *dispatcher) const;
+    std::string EvaluateOnCallFrame(const DispatchRequest &request, DispatcherBase *dispatcher) const;
+
     std::unordered_map<std::string, std::unique_ptr<DispatcherBase>> dispatchers_ {};
 
     NO_COPY_SEMANTIC(Dispatcher);

@@ -158,6 +158,8 @@ public:
 
         void ContinueToLocation(const DispatchRequest &request);
         std::string GetJsFrames();
+        std::string EvaluateOnCallFrame(const int32_t callId, std::unique_ptr<EvaluateOnCallFrameParams> params);
+        std::string CallFunctionOn(const int32_t callId, std::unique_ptr<CallFunctionOnParams> params);
         void Dispatch(const DispatchRequest &request) override;
         void Enable(const DispatchRequest &request);
         void Disable(const DispatchRequest &request);
