@@ -15,29 +15,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 #==================================================================
-#文 件 名：                 TestMainExceptionBreakpoints02.py
-#文件说明：                 主线程 debug 调试异常断点 UNCAUGHT 模式
+#文 件 名：                 TestMainMixedDebug.py
+#文件说明：                 主线程 debug 混合调试
 #==================================================================
 测试步骤：
     1.  连接 connect server 和主线程 debugger server
     2.  主线程使能 Runtime 和 Debugger
-    3.  主线程运行等待的调试器
-    4.  主线程解析 entry_ability 和 index 文件
-    5.  设置异常捕获状态 UNCAUGHT
-    6.  主线程 resume(Debugger.resume)命中异常断点,验证异常断点信息 UNCAUGHT 类型异常
-    7.  关闭主线程 debugger server 和 connect server 连接
+    3.  主线程使能混合调试（Debugger.setMixedDebugEnabled）
+    4.  主线程 Index.ets 文件设置断点（Debugger.getPossibleAndSetBreakpointByUrl）
+    5.  触发点击事件，主线程暂停在断点处
+    6.  主线程 stepInto，进入 native 调试（Debugger.stepInto）
+    7.  主线程收到 native 返回的消息后应答，停在下一断点处（Debugger.replyNativeCalling）
+    8.  主线程 stepOver，停在下一行（Debugger.stepOver）
+    9.  主线程 resume（Debugger.resume）
+    10. 主线程去使能 debugger（Debugger.disable）
+    11. 关闭主线程 debugger server 和 connect server 连接
 #==================================================================
 关键代码：
     Index.ets
-        function main() {
-          try {
-            throw new Error("This is a caught error");
-          } catch (error) {
-            console.log("After error");
-          }
-        throw new Error("This is a uncaught error");
-        }
-        main();
+        import testNapi from 'libentry.so';
+        .OnClick(() => {
+            let num = testNapi.add(1, 2)
+            let ans = testNapi.add(num, 3)
+            console.log("testNapi.add run successfully, ans = ", ans)
+        })
 #!!================================================================
 """
 import sys
@@ -54,7 +55,7 @@ from cdp import debugger
 from implement_api import debugger_api, runtime_api
 
 
-class TestMainExceptionBreakpoints02(TestCase):
+class TestMainMixedDebug(TestCase):
     def __init__(self, controllers):
         self.TAG = self.__class__.__name__
         TestCase.__init__(self, self.TAG, controllers)
@@ -64,14 +65,14 @@ class TestMainExceptionBreakpoints02(TestCase):
         self.id_generator = CommonUtils.message_id_generator()
         self.config = {
             'start_mode': '-D',
-            'connect_server_port': 15614,
-            'debugger_server_port': 15615,
-            'bundle_name': 'com.example.mainInstance04',
-            'hap_name': 'MainInstance04.hap',
-            'hap_path': str(resource_path / 'hap' / 'MainInstance04.hap'),
+            'connect_server_port': 15620,
+            'debugger_server_port': 15621,
+            'bundle_name': 'com.example.native01',
+            'hap_name': 'Native01.hap',
+            'hap_path': str(resource_path / 'hap' / 'Native01.hap'),
             'file_path': {
                 'entry_ability': 'entry|entry|1.0.0|src/main/ets/entryability/EntryAbility.ts',
-                'index': 'entry|entry|1.0.0|src/main/ets/pages/Index.ts',
+                'index': 'entry|entry|1.0.0|src/main/ets/pages/Index.ts'
             }
         }
 
@@ -119,6 +120,11 @@ class TestMainExceptionBreakpoints02(TestCase):
         ################################################################################################################
         await self.debugger_impl.send("Debugger.enable", main_thread)
         ################################################################################################################
+        # main thread: Debugger.setMixedDebugEnabled
+        ################################################################################################################
+        params = debugger.SetMixedDebugEnabledParams(enabled=True, mixed_stack_enabled=False)
+        await self.debugger_impl.send("Debugger.setMixedDebugEnabled", main_thread, params)
+        ################################################################################################################
         # main thread: Runtime.runIfWaitingForDebugger
         ################################################################################################################
         await self.runtime_impl.send("Runtime.runIfWaitingForDebugger", main_thread)
@@ -152,26 +158,71 @@ class TestMainExceptionBreakpoints02(TestCase):
         self.common_utils.assert_equal(response['params']['callFrames'][0]['url'], self.config['file_path']['index'])
         self.common_utils.assert_equal(response['params']['reason'], 'Break on start')
         ################################################################################################################
-        # main thread: Debugger.setPauseOnExceptions
+        # main thread: Debugger.removeBreakpointsByUrl
         ################################################################################################################
-        params = debugger.PauseOnExceptionsState.UNCAUGHT
-        await self.debugger_impl.send("Debugger.setPauseOnExceptions", main_thread, params)
+        params = debugger.RemoveBreakpointsUrl(self.config['file_path']['index'])
+        await self.debugger_impl.send("Debugger.removeBreakpointsByUrl", main_thread, params)
+        ################################################################################################################
+        # main thread: Debugger.getPossibleAndSetBreakpointByUrl
+        ################################################################################################################
+        locations = [debugger.BreakLocationUrl(url=self.config['file_path']['index'], line_number=62),
+                     debugger.BreakLocationUrl(url=self.config['file_path']['index'], line_number=63)]
+        params = debugger.SetBreakpointsLocations(locations)
+        response = await self.debugger_impl.send("Debugger.getPossibleAndSetBreakpointsByUrl", main_thread, params)
+        self.common_utils.assert_equal(response['result']['locations'][0]['id'],
+                                       'id:62:0:' + self.config['file_path']['index'])
+        self.common_utils.assert_equal(response['result']['locations'][1]['id'],
+                                       'id:63:0:' + self.config['file_path']['index'])
         ################################################################################################################
         # main thread: Debugger.resume
         ################################################################################################################
         await self.debugger_impl.send("Debugger.resume", main_thread)
         ################################################################################################################
-        # main thread: Debugger.paused
+        # main thread: click on the screen
+        ################################################################################################################
+        self.ui_utils.click_on_middle()
+        ################################################################################################################
+        # main thread: Debugger.paused, hit breakpoint
         ################################################################################################################
         response = await self.debugger_impl.recv("Debugger.paused", main_thread)
         self.common_utils.assert_equal(response['params']['callFrames'][0]['url'], self.config['file_path']['index'])
-        self.common_utils.assert_equal(response['params']['reason'], 'exception')
-        assert 'This is a uncaught error' in response['params']['data']['description'], \
-            f"'uncaught error' is not in description: '{response['params']['data']['description']}'"
+        self.common_utils.assert_equal(response['params']['hitBreakpoints'],
+                                       ['id:62:26:' + self.config['file_path']['index']])
+        ################################################################################################################
+        # main thread: Debugger.stepInto
+        ################################################################################################################
+        await self.debugger_impl.send("Debugger.stepInto", main_thread)
+        ################################################################################################################
+        # main thread: Debugger.nativeCalling
+        ################################################################################################################
+        response = await self.debugger_impl.recv("Debugger.nativeCalling", main_thread)
+        assert response['params']['isStepInto'] is True
+        ################################################################################################################
+        # main thread: Debugger.replyNativeCalling
+        ################################################################################################################
+        params = debugger.ReplyNativeCallingParams()
+        await self.debugger_impl.send("Debugger.replyNativeCalling", main_thread, params)
+        # main thread: Debugger.paused
+        response = await self.debugger_impl.recv("Debugger.paused", main_thread)
+        self.common_utils.assert_equal(response['params']['callFrames'][0]['url'], self.config['file_path']['index'])
+        self.common_utils.assert_equal(response['params']['hitBreakpoints'],
+                                       ['id:63:26:' + self.config['file_path']['index']])
+        ################################################################################################################
+        # main thread: Debugger.stepOver
+        ################################################################################################################
+        await self.debugger_impl.send("Debugger.stepOver", main_thread)
+        # main thread: Debugger.paused
+        response = await self.debugger_impl.recv("Debugger.paused", main_thread)
+        self.common_utils.assert_equal(response['params']['callFrames'][0]['url'], self.config['file_path']['index'])
+        self.common_utils.assert_equal(response['params']['hitBreakpoints'], [])
         ################################################################################################################
         # main thread: Debugger.resume
         ################################################################################################################
         await self.debugger_impl.send("Debugger.resume", main_thread)
+        ################################################################################################################
+        # main thread: Debugger.disable
+        ################################################################################################################
+        await self.debugger_impl.send("Debugger.disable", main_thread)
         ################################################################################################################
         # close the websocket connections
         ################################################################################################################

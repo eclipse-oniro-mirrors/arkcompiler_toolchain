@@ -15,27 +15,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 #==================================================================
-#文 件 名：                 TestMainExceptionBreakpoints02.py
-#文件说明：                 主线程 debug 调试异常断点 UNCAUGHT 模式
+#文 件 名：                 TestMainSmartStepInto.py
+#文件说明：                 主线程 debug 调试 smartStepinto
 #==================================================================
 测试步骤：
     1.  连接 connect server 和主线程 debugger server
     2.  主线程使能 Runtime 和 Debugger
     3.  主线程运行等待的调试器
     4.  主线程解析 entry_ability 和 index 文件
-    5.  设置异常捕获状态 UNCAUGHT
-    6.  主线程 resume(Debugger.resume)命中异常断点,验证异常断点信息 UNCAUGHT 类型异常
-    7.  关闭主线程 debugger server 和 connect server 连接
+    5.  主线程 Index.ts 文件设置断点并运行
+    6.  主线程 resume 验证是否正确命中断点
+    7.  主线程 smartStepInto 验证传回的函数信息
+    8.  关闭主线程 debugger server 和 connect server 连接
 #==================================================================
 关键代码：
     Index.ets
+        function test1() {
+          return taskNumber;
+        }
+        function test2() {
+          return taskNumber + 5;
+        }
         function main() {
-          try {
-            throw new Error("This is a caught error");
-          } catch (error) {
-            console.log("After error");
-          }
-        throw new Error("This is a uncaught error");
+          test1();
+          taskNumber = test1() + test2(); // 设置断点
         }
         main();
 #!!================================================================
@@ -54,7 +57,7 @@ from cdp import debugger
 from implement_api import debugger_api, runtime_api
 
 
-class TestMainExceptionBreakpoints02(TestCase):
+class TestMainSmartStepInto(TestCase):
     def __init__(self, controllers):
         self.TAG = self.__class__.__name__
         TestCase.__init__(self, self.TAG, controllers)
@@ -64,11 +67,11 @@ class TestMainExceptionBreakpoints02(TestCase):
         self.id_generator = CommonUtils.message_id_generator()
         self.config = {
             'start_mode': '-D',
-            'connect_server_port': 15614,
-            'debugger_server_port': 15615,
-            'bundle_name': 'com.example.mainInstance04',
-            'hap_name': 'MainInstance04.hap',
-            'hap_path': str(resource_path / 'hap' / 'MainInstance04.hap'),
+            'connect_server_port': 15624,
+            'debugger_server_port': 15625,
+            'bundle_name': 'com.example.mainInstance03',
+            'hap_name': 'MainInstance03.hap',
+            'hap_path': str(resource_path / 'hap' / 'MainInstance03.hap'),
             'file_path': {
                 'entry_ability': 'entry|entry|1.0.0|src/main/ets/entryability/EntryAbility.ts',
                 'index': 'entry|entry|1.0.0|src/main/ets/pages/Index.ts',
@@ -152,26 +155,57 @@ class TestMainExceptionBreakpoints02(TestCase):
         self.common_utils.assert_equal(response['params']['callFrames'][0]['url'], self.config['file_path']['index'])
         self.common_utils.assert_equal(response['params']['reason'], 'Break on start')
         ################################################################################################################
-        # main thread: Debugger.setPauseOnExceptions
+        # main thread: Debugger.removeBreakpointsByUrl
         ################################################################################################################
-        params = debugger.PauseOnExceptionsState.UNCAUGHT
-        await self.debugger_impl.send("Debugger.setPauseOnExceptions", main_thread, params)
+        params = debugger.RemoveBreakpointsUrl(self.config['file_path']['index'])
+        await self.debugger_impl.send("Debugger.removeBreakpointsByUrl", main_thread, params)
+        ################################################################################################################
+        # main thread: Debugger.getPossibleAndSetBreakpointByUrl
+        ################################################################################################################
+        locations = [debugger.BreakLocationUrl(url=self.config['file_path']['index'], line_number=73)]
+        params = debugger.SetBreakpointsLocations(locations)
+        response = await self.debugger_impl.send("Debugger.getPossibleAndSetBreakpointsByUrl", main_thread, params)
+        self.common_utils.assert_equal(response['result']['locations'][0]['id'],
+                                       'id:73:0:' + self.config['file_path']['index'])
         ################################################################################################################
         # main thread: Debugger.resume
         ################################################################################################################
         await self.debugger_impl.send("Debugger.resume", main_thread)
         ################################################################################################################
-        # main thread: Debugger.paused
+        # main thread: Debugger.paused, hit breakpoint
         ################################################################################################################
         response = await self.debugger_impl.recv("Debugger.paused", main_thread)
         self.common_utils.assert_equal(response['params']['callFrames'][0]['url'], self.config['file_path']['index'])
-        self.common_utils.assert_equal(response['params']['reason'], 'exception')
-        assert 'This is a uncaught error' in response['params']['data']['description'], \
-            f"'uncaught error' is not in description: '{response['params']['data']['description']}'"
+        self.common_utils.assert_equal(response['params']['hitBreakpoints'],
+                                       ['id:73:17:' + self.config['file_path']['index']])
+        ################################################################################################################
+        # main thread: Debugger.smartStepInto
+        ################################################################################################################
+        params = debugger.SmartStepIntoParams(url=self.config['file_path']['index'], line_number=69)
+        await self.debugger_impl.send("Debugger.smartStepInto", main_thread, params)
         ################################################################################################################
         # main thread: Debugger.resume
         ################################################################################################################
         await self.debugger_impl.send("Debugger.resume", main_thread)
+        # main thread: Debugger.paused
+        response = await self.debugger_impl.recv("Debugger.paused", main_thread)
+        self.common_utils.assert_equal(response['params']['callFrames'][0]['url'], self.config['file_path']['index'])
+        self.common_utils.assert_equal(response['params']['callFrames'][0]['functionName'], 'test2')
+        self.common_utils.assert_equal(response['params']['reason'], 'other')
+        self.common_utils.assert_equal(response['params']['hitBreakpoints'],
+                                       ['id:69:11:' + self.config['file_path']['index']])
+        ################################################################################################################
+        # main thread: Debugger.resume
+        ################################################################################################################
+        await self.debugger_impl.send("Debugger.resume", main_thread)
+        ################################################################################################################
+        # main thread: click on the screen
+        ################################################################################################################
+        self.ui_utils.click_on_middle()
+        ################################################################################################################
+        # main thread: Debugger.disable
+        ################################################################################################################
+        await self.debugger_impl.send("Debugger.disable", main_thread)
         ################################################################################################################
         # close the websocket connections
         ################################################################################################################
