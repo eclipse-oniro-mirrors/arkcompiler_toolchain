@@ -15,6 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 #==================================================================
+#文 件 名：                 TestMainBreakpoints.py
+#文件说明：                 主线程 debug 调试之 drop frame
+#==================================================================
 测试步骤：
     1.  连接 connect server 和主线程 debugger server
     2.  主线程使能 Runtime 和 Debugger

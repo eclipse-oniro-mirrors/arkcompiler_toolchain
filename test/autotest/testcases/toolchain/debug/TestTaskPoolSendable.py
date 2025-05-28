@@ -15,30 +15,57 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 #==================================================================
-#文 件 名：                 TestMainBreakpointsSendable.py
-#文件说明：                 主线程 Sendable 对象成员方法上普通断点的设置/取消
+#文 件 名：                 TestTaskPoolSendable.py
+#文件说明：                 跨线程传递 Sendable 对象
 #==================================================================
 测试步骤：
     1.  连接 connect server 和主线程 debugger server
     2.  主线程使能 Runtime 和 Debugger
-    3.  主线程运行等待的调试器
-    4.  主线程解析 entry_ability 和 index 文件
-    5.  主线程 Index.ts 文件设置断点并运行
-    6.  主线程 resume 验证是否正确命中断点
-    7.  关闭主线程 debugger server 和 connect server 连接
+    3.  主线程 resume（Debugger.resume）
+    4.  创建子线程，连接子线程 debugger server
+    5.  子线程使能 Runtime 和 Debugger
+    6.  主线程 Index.ets 文件设置断点（Debugger.getPossibleAndSetBreakpointByUrl）
+    7.  触发点击事件，子线程 Index.ets 文件设置断点（Debugger.getPossibleAndSetBreakpointByUrl）
+    8.  子线程 resume，停在断点处（Debugger.resume）
+    9.  子线程 getProperties，获取 Sendable 对象方法（Debugger.getProperties）
+    10. 子线程 resume，停在下一断点处（Debugger.resume）
+    11. 子线程 getProperties，获取 Sendable 对象方法（Debugger.getProperties）
+    12. 子线程 resume（Debugger.resume）
+    13. 所有线程去使能 debugger（Debugger.disable）
+    14. 关闭所有线程 debugger server 和 connect server 连接
 #==================================================================
 关键代码：
     Index.ets
+        @Concurrent
+        async function taskFunc(person: Person) {
+            let ans = person.calculate(21, 50)
+            person.setScore(100)
+        }
+        async function sendableTest() {
+            let p = new Person('Tony', 9)
+            let task: taskpool.Task = new taskpool.Task(taskFunc, p)
+            await taskpool.execute(task)
+        }
+        .OnClick(() => {
+            sendableTest()
+        })
         @Sendable
-        class TestClass {
-          desc: string = "XXXXXXXX"; // 自定义设置类成员
-          taskNum: number = XXXXXXXX;
-            get getTaskNum(): number { // 自定义设置类成员方法
-              return this.taskNum; // 设置断点
+        class Person {
+            name: string
+            age: number
+            score: number = 0
+            constructor(name: string, age: number) {
+                this.name = name
+                this.age = age
+            }
+            setScore(score: number) {
+                this.score = score // b1
+            }
+            addNumber(num1: number, num2: number) {
+                let result = num1 + num2 // b2
+                return result
             }
         }
-        const testInstance = new TestClass();
-        let taskNumber = testInstance.getTaskNum;
 #!!================================================================
 """
 import sys
@@ -51,11 +78,11 @@ sys.path.append(str(root_path / 'aw'))  # add aw path to sys.path
 from devicetest.core.test_case import TestCase, Step
 from hypium import UiDriver
 from all_utils import CommonUtils, UiUtils
-from cdp import debugger
+from cdp import debugger, runtime
 from implement_api import debugger_api, runtime_api
 
 
-class TestMainBreakpointsSendable(TestCase):
+class TestTaskPoolSendable(TestCase):
     def __init__(self, controllers):
         self.TAG = self.__class__.__name__
         TestCase.__init__(self, self.TAG, controllers)
@@ -65,11 +92,11 @@ class TestMainBreakpointsSendable(TestCase):
         self.id_generator = CommonUtils.message_id_generator()
         self.config = {
             'start_mode': '-D',
-            'connect_server_port': 15612,
-            'debugger_server_port': 15613,
-            'bundle_name': 'com.example.mainInstance02',
-            'hap_name': 'MainInstance02.hap',
-            'hap_path': str(resource_path / 'hap' / 'MainInstance02.hap'),
+            'connect_server_port': 15628,
+            'debugger_server_port': 15629,
+            'bundle_name': 'com.example.taskPool02',
+            'hap_name': 'TaskPool02.hap',
+            'hap_path': str(resource_path / 'hap' / 'TaskPool02.hap'),
             'file_path': {
                 'entry_ability': 'entry|entry|1.0.0|src/main/ets/entryability/EntryAbility.ts',
                 'index': 'entry|entry|1.0.0|src/main/ets/pages/Index.ts',
@@ -153,37 +180,99 @@ class TestMainBreakpointsSendable(TestCase):
         self.common_utils.assert_equal(response['params']['callFrames'][0]['url'], self.config['file_path']['index'])
         self.common_utils.assert_equal(response['params']['reason'], 'Break on start')
         ################################################################################################################
-        # main thread: Debugger.removeBreakpointsByUrl
-        ################################################################################################################
-        params = debugger.RemoveBreakpointsUrl(self.config['file_path']['index'])
-        await self.debugger_impl.send("Debugger.removeBreakpointsByUrl", main_thread, params)
-        ################################################################################################################
-        # main thread: Debugger.getPossibleAndSetBreakpointByUrl
-        ################################################################################################################
-        locations = [debugger.BreakLocationUrl(url=self.config['file_path']['index'], line_number=74)]
-        params = debugger.SetBreakpointsLocations(locations)
-        response = await self.debugger_impl.send("Debugger.getPossibleAndSetBreakpointsByUrl", main_thread, params)
-        self.common_utils.assert_equal(response['result']['locations'][0]['id'],
-                                       'id:74:0:' + self.config['file_path']['index'])
-        ################################################################################################################
         # main thread: Debugger.resume
         ################################################################################################################
         await self.debugger_impl.send("Debugger.resume", main_thread)
         ################################################################################################################
-        # main thread: Debugger.paused, hit breakpoint
+        # worker thread: connect the debugger server
         ################################################################################################################
-        response = await self.debugger_impl.recv("Debugger.paused", main_thread)
-        self.common_utils.assert_equal(response['params']['callFrames'][0]['url'], self.config['file_path']['index'])
-        self.common_utils.assert_equal(response['params']['hitBreakpoints'],
-                                       ['id:74:15:' + self.config['file_path']['index']])
+        worker_thread = await self.debugger_impl.connect_to_debugger_server(self.config['pid'], False)
         ################################################################################################################
-        # main thread: Debugger.resume
+        # worker thread: Runtime.enable
         ################################################################################################################
-        await self.debugger_impl.send("Debugger.resume", main_thread)
-        ###############################################################################################################
+        await self.runtime_impl.send("Runtime.enable", worker_thread)
+        ################################################################################################################
+        # worker thread: Debugger.enable
+        ################################################################################################################
+        await self.debugger_impl.send("Debugger.enable", worker_thread)
+        ################################################################################################################
+        # worker thread: Runtime.runIfWaitingForDebugger
+        ################################################################################################################
+        await self.runtime_impl.send("Runtime.runIfWaitingForDebugger", worker_thread)
+        ################################################################################################################
         # main thread: click on the screen
         ################################################################################################################
         self.ui_utils.click_on_middle()
+        ################################################################################################################
+        # worker thread: Debugger.scriptParsed
+        ################################################################################################################
+        response = await self.debugger_impl.recv("Debugger.scriptParsed", worker_thread)
+        self.common_utils.assert_equal(response['params']['url'], self.config['file_path']['index'])
+        self.common_utils.assert_equal(response['params']['endLine'], 0)
+        # worker thread: Debugger.paused
+        response = await self.debugger_impl.recv("Debugger.paused", worker_thread)
+        self.common_utils.assert_equal(response['params']['callFrames'][0]['url'], self.config['file_path']['index'])
+        self.common_utils.assert_equal(response['params']['reason'], 'Break on start')
+        ################################################################################################################
+        # worker thread: Debugger.removeBreakpointsByUrl
+        ################################################################################################################
+        params = debugger.RemoveBreakpointsUrl(self.config['file_path']['index'])
+        await self.debugger_impl.send("Debugger.removeBreakpointsByUrl", worker_thread, params)
+        ################################################################################################################
+        # worker thread: Debugger.getPossibleAndSetBreakpointByUrl
+        ################################################################################################################
+        locations = [debugger.BreakLocationUrl(url=self.config['file_path']['index'], line_number=95),
+                     debugger.BreakLocationUrl(url=self.config['file_path']['index'], line_number=98)]
+        params = debugger.SetBreakpointsLocations(locations)
+        response = await self.debugger_impl.send("Debugger.getPossibleAndSetBreakpointsByUrl", worker_thread, params)
+        self.common_utils.assert_equal(response['result']['locations'][0]['id'],
+                                       'id:95:0:' + self.config['file_path']['index'])
+        self.common_utils.assert_equal(response['result']['locations'][1]['id'],
+                                       'id:98:0:' + self.config['file_path']['index'])
+        ################################################################################################################
+        # worker thread: Debugger.resume
+        ################################################################################################################
+        await self.debugger_impl.send("Debugger.resume", worker_thread)
+        # worker thread: Debugger.paused
+        response = await self.debugger_impl.recv("Debugger.paused", worker_thread)
+        self.common_utils.assert_equal(response['params']['callFrames'][0]['url'], self.config['file_path']['index'])
+        self.common_utils.assert_equal(response['params']['callFrames'][0]['functionName'], 'addNumber')
+        self.common_utils.assert_equal(response['params']['reason'], 'other')
+        self.common_utils.assert_equal(response['params']['hitBreakpoints'],
+                                       ['id:98:21:' + self.config['file_path']['index']])
+        ################################################################################################################
+        # worker thread: Runtime.getProperties
+        ################################################################################################################
+        params = runtime.GetPropertiesParams('0')
+        response = await self.runtime_impl.send("Runtime.getProperties", worker_thread, params)
+        self.common_utils.assert_equal(response['result']['result'][0]['name'], 'addNumber')
+        assert response['result']['result'][0]['value']['description'].endswith('[Sendable]')
+        ################################################################################################################
+        # worker thread: Debugger.resume
+        ################################################################################################################
+        await self.debugger_impl.send("Debugger.resume", worker_thread)
+        # worker thread: Debugger.paused
+        response = await self.debugger_impl.recv("Debugger.paused", worker_thread)
+        self.common_utils.assert_equal(response['params']['callFrames'][0]['url'], self.config['file_path']['index'])
+        self.common_utils.assert_equal(response['params']['callFrames'][0]['functionName'], 'setScore')
+        self.common_utils.assert_equal(response['params']['reason'], 'other')
+        self.common_utils.assert_equal(response['params']['hitBreakpoints'],
+                                       ['id:95:8:' + self.config['file_path']['index']])
+        ################################################################################################################
+        # worker thread: Runtime.getProperties
+        ################################################################################################################
+        params = runtime.GetPropertiesParams('0')
+        response = await self.runtime_impl.send("Runtime.getProperties", worker_thread, params)
+        self.common_utils.assert_equal(response['result']['result'][0]['name'], 'setScore')
+        assert response['result']['result'][0]['value']['description'].endswith('[Sendable]')
+        ################################################################################################################
+        # worker thread: Debugger.resume
+        ################################################################################################################
+        await self.debugger_impl.send("Debugger.resume", worker_thread)
+        ################################################################################################################
+        # worker thread: Debugger.disable
+        ################################################################################################################
+        await self.debugger_impl.send("Debugger.disable", worker_thread)
         ################################################################################################################
         # main thread: Debugger.disable
         ################################################################################################################
@@ -191,6 +280,7 @@ class TestMainBreakpointsSendable(TestCase):
         ################################################################################################################
         # close the websocket connections
         ################################################################################################################
+        await websocket.send_msg_to_debugger_server(worker_thread.instance_id, worker_thread.send_msg_queue, 'close')
         await websocket.send_msg_to_debugger_server(main_thread.instance_id, main_thread.send_msg_queue, 'close')
         await websocket.send_msg_to_connect_server('close')
         ################################################################################################################
