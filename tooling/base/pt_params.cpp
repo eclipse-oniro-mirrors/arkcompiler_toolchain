@@ -398,6 +398,13 @@ std::unique_ptr<SetBreakpointByUrlParams> SetBreakpointByUrlParams::Create(const
     } else if (ret == Result::TYPE_ERROR) {
         error += "Wrong type of 'condition';";
     }
+    std::string methodName;
+    ret = params.GetString("methodName", &methodName);
+    if (ret == Result::SUCCESS) {
+        paramsObject->methodName_ = std::move(methodName);
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'methodName';";
+    }
     if (!error.empty()) {
         LOG_DEBUGGER(ERROR) << "SetBreakpointByUrlParams::Create " << error;
         return nullptr;
@@ -573,6 +580,9 @@ void SmartStepIntoParams::AddRequireParams(PtJson &params)
     }
     if (!params.Contains("condition")) {
         params.Add("condition", "");
+    }
+    if (!params.Contains("methodName")) {
+        params.Add("methodName", "");
     }
 }
 
