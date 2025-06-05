@@ -14,7 +14,7 @@
 import("//arkcompiler/toolchain/test/test_helper.gni")
 import("$build_root/config/components/ets_frontend/es2abc_config.gni")
 
-module_output_path = "toolchain"
+module_output_path = "toolchain/toolchain"
 
 config("debug_api_test") {
   visibility = [ ":*" ]
