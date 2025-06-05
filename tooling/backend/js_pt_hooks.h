@@ -44,6 +44,7 @@ public:
     void DisableFirstTimeFlag() override;
     void GenerateAsyncFrames(std::shared_ptr<AsyncStack> asyncStack, bool skipTopFrame) override;
     void HitSymbolicBreakpoint() override;
+    const std::unordered_set<std::string> &GetAllRecordNames() const override;
 private:
     NO_COPY_SEMANTIC(JSPtHooks);
     NO_MOVE_SEMANTIC(JSPtHooks);

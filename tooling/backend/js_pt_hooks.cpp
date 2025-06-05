@@ -145,4 +145,9 @@ void JSPtHooks::HitSymbolicBreakpoint()
 
     debugger_->SetPauseOnNextByteCode(true);
 }
+
+const std::unordered_set<std::string> &JSPtHooks::GetAllRecordNames() const
+{
+    return debugger_->GetAllRecordNames();
+}
 }  // namespace panda::ecmascript::tooling

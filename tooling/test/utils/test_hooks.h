@@ -125,6 +125,12 @@ public:
 
     void HitSymbolicBreakpoint() override {}
 
+    const std::unordered_set<std::string> &GetAllRecordNames() const override
+    {
+        static const std::unordered_set<std::string> recordName;
+        return recordName;
+    }
+
     void TerminateTest()
     {
         debugInterface_->UnregisterHooks();
