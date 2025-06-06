@@ -1463,7 +1463,8 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
             }
             return DebuggerApi::SetBreakpoint(jsDebugger_, location, condFuncRef, isSmartBreakpoint);
         };
-        if (!extractor->MatchWithLocation(callbackFunc, lineNumber, columnNumber, url, GetRecordName(url))) {
+        if (!extractor->MatchWithLocation(callbackFunc, lineNumber, columnNumber, url, GetRecordName(url),
+            isSmartBreakpoint, params.GetMethodName())) {
             LOG_DEBUGGER(ERROR) << "failed to set breakpoint location number: "
                 << lineNumber << ":" << columnNumber;
             return DispatchResponse::Fail("Breakpoint not found.");
