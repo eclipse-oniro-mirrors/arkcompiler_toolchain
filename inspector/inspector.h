@@ -50,6 +50,8 @@ void StoreDebuggerInfo(int tid, void* vm, const DebuggerPostTask& debuggerPostTa
 // The returned pointer must be released using free() after it is no longer needed.
 // Failure to release the memory will result in memory leaks.
 const char* GetJsBacktrace();
+
+const char* OperateJsDebugMessage(const char* message);
 #if __cplusplus
 }
 #endif

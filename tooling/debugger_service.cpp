@@ -115,4 +115,23 @@ const char* GetCallFrames(const ::panda::ecmascript::EcmaVM *vm)
     }
     return "";
 }
+
+const char* OperateDebugMessage(const ::panda::ecmascript::EcmaVM *vm, const char* message)
+{
+    if (vm == nullptr || vm->GetJsDebuggerManager() == nullptr) {
+        LOG_DEBUGGER(ERROR) << "VM has already been destroyed";
+        return "";
+    }
+    ProtocolHandler *handler = vm->GetJsDebuggerManager()->GetDebuggerHandler();
+    if (LIKELY(handler != nullptr)) {
+        auto dispatcher = handler->GetDispatcher();
+        if (LIKELY(dispatcher != nullptr)) {
+            auto info = dispatcher->OperateDebugMessage(message);
+            const char* buffer = strdup(info.c_str());
+            return buffer;
+        }
+        return "";
+    }
+    return "";
+}
 }  // namespace panda::ecmascript::tooling

@@ -135,4 +135,54 @@ HWTEST_F_L0(DebuggerServiceTest, GetDispatchStatusTest)
     int32_t GetDispatchStatusTest = GetDispatchStatus(vm);
     ASSERT_TRUE(GetDispatchStatusTest == 0);
 }
+
+HWTEST_F_L0(DebuggerServiceTest, SaveAllBreakpointsTest)
+{
+    const char *message = "{\"id\":0,\"method\":\"Debugger.saveAllPossibleBreakpoints\","
+        "\"params\":{\"locations\":{\"entry|entry|1.0.0|src/main/ets/pages/Index.ts\":"
+        "[{\"lineNumber\":59,\"columnNumber\":16}]}}}";
+    const char *str0 = OperateDebugMessage(nullptr, message);
+    ASSERT_TRUE(str0 != nullptr && *str0 == '\0');
+
+    const char *str1 = OperateDebugMessage(ecmaVm, message);
+    ASSERT_TRUE(str1 != nullptr && *str1 == '\0');
+
+    InitializeDebugger(ecmaVm, nullptr);
+    const char *str2 = OperateDebugMessage(ecmaVm, message);
+    ASSERT_TRUE(str2 != nullptr && *str2 != '\0');
+    UninitializeDebugger(ecmaVm);
+}
+
+HWTEST_F_L0(DebuggerServiceTest, RemoveBreakpointTest)
+{
+    const char *message = "{\"id\":0,\"method\":\"Debugger.removeBreakpointsByUrl\","
+        "\"params\":{\"url\":\"entry|entry|1.0.0|src/main/ets/pages/Index.ts\"}}";
+    const char *str0 = OperateDebugMessage(nullptr, message);
+    ASSERT_TRUE(str0 != nullptr && *str0 == '\0');
+
+    const char *str1 = OperateDebugMessage(ecmaVm, message);
+    ASSERT_TRUE(str1 != nullptr && *str1 == '\0');
+
+    InitializeDebugger(ecmaVm, nullptr);
+    const char *str2 = OperateDebugMessage(ecmaVm, message);
+    ASSERT_TRUE(str2 != nullptr && *str2 != '\0');
+    UninitializeDebugger(ecmaVm);
+}
+
+HWTEST_F_L0(DebuggerServiceTest, SetBreakpointTest)
+{
+    const char *message = "{\"id\":0,\"method\":\"Debugger.getPossibleAndSetBreakpointByUrl\","
+        "\"params\":{\"locations\":[{\"url\":\"entry|entry|1.0.0|src/main/ets/pages/Index.ts\","
+        "\"lineNumber\":59,\"columnNumber\":16}]}}";
+    const char *str0 = OperateDebugMessage(nullptr, message);
+    ASSERT_TRUE(str0 != nullptr && *str0 == '\0');
+
+    const char *str1 = OperateDebugMessage(ecmaVm, message);
+    ASSERT_TRUE(str1 != nullptr && *str1 == '\0');
+
+    InitializeDebugger(ecmaVm, nullptr);
+    const char *str2 = OperateDebugMessage(ecmaVm, message);
+    ASSERT_TRUE(str2 != nullptr && *str2 != '\0');
+    UninitializeDebugger(ecmaVm);
+}
 }  // namespace panda::test

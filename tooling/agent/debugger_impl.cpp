@@ -778,6 +778,18 @@ void DebuggerImpl::DispatcherImpl::RemoveBreakpointsByUrl(const DispatchRequest 
     SendResponse(request, response);
 }
 
+std::string DebuggerImpl::DispatcherImpl::RemoveBreakpointsByUrl(
+    const int32_t callId, std::unique_ptr<RemoveBreakpointsByUrlParams> params)
+{
+    if (params == nullptr) {
+        LOG_DEBUGGER(WARN) << "DebuggerImpl::DispatcherImpl::RemoveBreakpointsByUrl: params is nullptr";
+        return ReturnsValueToString(callId, DispatchResponseToJson(DispatchResponse::Fail("wrong params")));
+    }
+
+    DispatchResponse response = debugger_->RemoveBreakpointsByUrl(*params);
+    return ReturnsValueToString(callId, DispatchResponseToJson(response));
+}
+
 void DebuggerImpl::DispatcherImpl::Resume(const DispatchRequest &request)
 {
     std::unique_ptr<ResumeParams> params = ResumeParams::Create(request.GetParams());
@@ -831,6 +843,24 @@ void DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(const Dispat
     SendResponse(request, response, result);
 }
 
+std::string DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(
+    const int32_t callId, std::unique_ptr<GetPossibleAndSetBreakpointParams> params)
+{
+    if (params == nullptr) {
+        LOG_DEBUGGER(WARN) << "DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl: params is nullptr";
+        return ReturnsValueToString(callId, DispatchResponseToJson(DispatchResponse::Fail("wrong params")));
+    }
+    std::vector<std::shared_ptr<BreakpointReturnInfo>> outLocation;
+    DispatchResponse response = debugger_->GetPossibleAndSetBreakpointByUrl(*params, outLocation);
+    if (outLocation.empty() || !response.IsOk()) {
+        LOG_DEBUGGER(WARN) << "outLocation is empty or response code is not ok";
+        return ReturnsValueToString(callId, DispatchResponseToJson(response));
+    }
+
+    GetPossibleAndSetBreakpointByUrlReturns result(std::move(outLocation));
+    return ReturnsValueToString(callId, result.ToJson());
+}
+
 void DebuggerImpl::DispatcherImpl::SaveAllPossibleBreakpoints(const DispatchRequest &request)
 {
     std::unique_ptr<SaveAllPossibleBreakpointsParams> params =
@@ -841,6 +871,17 @@ void DebuggerImpl::DispatcherImpl::SaveAllPossibleBreakpoints(const DispatchRequ
     }
     DispatchResponse response = debugger_->SaveAllPossibleBreakpoints(*params);
     SendResponse(request, response);
+}
+
+std::string DebuggerImpl::DispatcherImpl::SaveAllPossibleBreakpoints(
+    const int32_t callId, std::unique_ptr<SaveAllPossibleBreakpointsParams> params)
+{
+    if (params == nullptr) {
+        LOG_DEBUGGER(WARN) << "DebuggerImpl::DispatcherImpl::SaveAllPossibleBreakpoints: params is nullptr";
+        return ReturnsValueToString(callId, DispatchResponseToJson(DispatchResponse::Fail("wrong params")));
+    }
+    DispatchResponse response = debugger_->SaveAllPossibleBreakpoints(*params);
+    return ReturnsValueToString(callId, DispatchResponseToJson(response));
 }
 
 void DebuggerImpl::DispatcherImpl::SetSymbolicBreakpoints(const DispatchRequest &request)

@@ -648,7 +648,63 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_RemoveBreakpointsByUrl__002)
     }
 }
 
-HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetSymbolBreakpoints_001) 
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_RemoveBreakpointsByUrl__003)
+{
+    ProtocolChannel *protocolChannel = new ProtocolHandler(nullptr, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+    int32_t callId = 0;
+    std::string msg = std::string() +
+        R"({
+            "id": 0,
+            "method": "Debugger.removeBreakpointsByUrl",
+            "params": {
+                "url": "entry|entry|1.0.0|src/main/ets/pages/Index.ts"
+            }
+        })";
+    std::unique_ptr<RemoveBreakpointsByUrlParams> params =
+        RemoveBreakpointsByUrlParams::Create(DispatchRequest(msg).GetParams());
+    std::string result = dispatcherImpl->RemoveBreakpointsByUrl(callId, std::move(params));
+    EXPECT_STREQ(result.c_str(), R"({"id":0,"result":{"code":1,"message":"Unknown url"}})");
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SaveAllPossibleBreakpoints__001)
+{
+    ProtocolChannel *protocolChannel = new ProtocolHandler(nullptr, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+    int32_t callId = 0;
+    std::string msg = std::string() +
+        R"({
+            "id": 0,
+            "method": "Debugger.saveAllPossibleBreakpoints",
+            "params": {
+                "locations": {
+                    "entry|entry|1.0.0|src/main/ets/pages/Index.ts": [{
+                        "lineNumber": 59,
+                        "columnNumber": 16
+                    }]
+                }
+            }
+        })";
+    std::unique_ptr<SaveAllPossibleBreakpointsParams> params =
+        SaveAllPossibleBreakpointsParams::Create(DispatchRequest(msg).GetParams());
+    std::string result = dispatcherImpl->SaveAllPossibleBreakpoints(callId, std::move(params));
+    EXPECT_STREQ(result.c_str(),
+        R"({"id":0,"result":{"code":1,"message":"SaveAllPossibleBreakpoints: debugger agent is not enabled"}})");
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetSymbolBreakpoints_001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
@@ -1330,6 +1386,36 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpoint__0
     dispatcherImpl->Dispatch(request);
     EXPECT_STREQ(outStrForCallbackCheck.c_str(),
         R"({"id":0,"result":{"locations":[{"lineNumber":3,"columnNumber":20,"id":"invalid","scriptId":0}]}})");
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpointByUrl__001)
+{
+    ProtocolChannel *protocolChannel = new ProtocolHandler(nullptr, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+    int32_t callId = 0;
+    std::string msg = std::string() +
+        R"({
+            "id": 0,
+            "method": "Debugger.getPossibleAndSetBreakpointByUrl",
+            "params": {
+                "locations": [{
+                    "url": "entry|entry|1.0.0|src/main/ets/pages/Index.ts",
+                    "lineNumber": 59,
+                    "columnNumber": 16
+                }]
+            }
+        })";
+    std::unique_ptr<GetPossibleAndSetBreakpointParams> params =
+        GetPossibleAndSetBreakpointParams::Create(DispatchRequest(msg).GetParams());
+    std::string result = dispatcherImpl->GetPossibleAndSetBreakpointByUrl(callId, std::move(params));
+    EXPECT_STREQ(result.c_str(),
+        R"({"id":0,"result":{"code":1,"message":"GetPossibleAndSetBreakpointByUrl: debugger agent is not enabled"}})");
     if (protocolChannel) {
         delete protocolChannel;
         protocolChannel = nullptr;
