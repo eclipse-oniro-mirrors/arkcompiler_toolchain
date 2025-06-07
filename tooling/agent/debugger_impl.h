@@ -303,6 +303,11 @@ private:
         return !breakOnStartEnable_;
     }
 
+    const std::unordered_set<std::string> &GetAllRecordNames() const
+    {
+        return recordNameSet_;
+    }
+
     class Frontend {
     public:
         explicit Frontend(ProtocolChannel *channel) : channel_(channel) {}
@@ -332,6 +337,7 @@ private:
     JSDebugger *jsDebugger_ {nullptr};
 
     std::unordered_map<std::string, std::unordered_set<std::string>> recordNames_ {};
+    std::unordered_set<std::string> recordNameSet_ {};
     std::unordered_map<std::string, std::unordered_set<std::string>> urlFileNameMap_ {};
     std::unordered_map<ScriptId, std::shared_ptr<PtScript>> scripts_ {};
     PauseOnExceptionsState pauseOnException_ {PauseOnExceptionsState::NONE};

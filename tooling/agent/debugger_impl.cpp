@@ -151,6 +151,7 @@ void DebuggerImpl::SaveParsedScriptsAndUrl(const std::string &fileName, const st
 {
     // Save recordName to its corresponding url
     recordNames_[url].insert(recordName);
+    recordNameSet_.insert(recordName);
     // Save parsed fileName to its corresponding url
     urlFileNameMap_[url].insert(fileName);
     // Create and save script
