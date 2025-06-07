@@ -226,4 +226,45 @@ HWTEST_F_L0(DispatcherTest, SetBreakpointTest)
         channel = nullptr;
     }
 }
+
+HWTEST_F_L0(DispatcherTest, OperateDebugMessageTest)
+{
+    ProtocolChannel *channel = new ProtocolHandler(nullptr, ecmaVm);
+    auto dispatcher = std::make_unique<Dispatcher>(ecmaVm, channel);
+    std::string result = "";
+
+    std::string msg = R"({"id":0,"method":"Runtime.getProperties"})";
+    result = dispatcher->OperateDebugMessage(msg.c_str());
+    ASSERT_TRUE(result != "");
+    msg = R"({"id":0,"method":"Runtime.getProperties","params":{"objectId":"1"}})";
+    result = dispatcher->OperateDebugMessage(msg.c_str());
+    ASSERT_TRUE(result != "");
+
+    std::string msg2 = R"({"id":0,"method":"Debugger.callFunctionOn"})";
+    result = dispatcher->OperateDebugMessage(msg2.c_str());
+    ASSERT_TRUE(result != "");
+    msg2 = std::string() + R"({"id":0,"method":"Debugger.callFunctionOn","params":{
+        "callFrameId":"0", "functionDeclaration":"test"}})";
+    result = dispatcher->OperateDebugMessage(msg2.c_str());
+    EXPECT_STREQ(result.c_str(), R"({"id":0,"result":{"code":1,"message":"Invalid callFrameId."}})");
+
+    std::string msg3 = R"({"id":0,"method":"Debugger.evaluateOnCallFrame"})";
+    result = dispatcher->OperateDebugMessage(msg3.c_str());
+    ASSERT_TRUE(result != "");
+    msg3 = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.evaluateOnCallFrame",
+            "params":{
+                "callFrameId":"-1",
+                "expression":"the expression"
+            }
+        })";
+    result = dispatcher->OperateDebugMessage(msg3.c_str());
+    EXPECT_STREQ(result.c_str(), R"({"id":0,"result":{"code":1,"message":"Invalid callFrameId."}})");
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
 }  // namespace panda::test

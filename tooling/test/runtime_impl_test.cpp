@@ -130,7 +130,7 @@ HWTEST_F_L0(RuntimeImplTest, DispatcherImplRunIfWaitingForDebugger)
     }
 }
 
-HWTEST_F_L0(RuntimeImplTest, DispatcherImplGetProperties)
+HWTEST_F_L0(RuntimeImplTest, DispatcherImplGetProperties__001)
 {
     std::string result = "";
     std::function<void(const void*, const std::string &)> callback =
@@ -148,6 +148,23 @@ HWTEST_F_L0(RuntimeImplTest, DispatcherImplGetProperties)
     DispatchRequest request1(msg);
     dispatcherImpl->GetProperties(request1);
     ASSERT_TRUE(result.find("Unknown object id") != std::string::npos);
+    if (channel != nullptr) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(RuntimeImplTest, DispatcherImplGetProperties__002)
+{
+    ProtocolChannel *channel = new ProtocolHandler(nullptr, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<RuntimeImpl::DispatcherImpl>(channel, std::move(runtimeImpl));
+    std::string msg = std::string() + R"({"id":0,"method":"Rumtime.getProperties","params":{"objectId":"0"}})";
+    DispatchRequest request(msg);
+    std::unique_ptr<GetPropertiesParams> params = GetPropertiesParams::Create(request.GetParams());
+    int32_t callId = 0;
+    std::string result = dispatcherImpl->GetProperties(callId, std::move(params));
+    EXPECT_STREQ(result.c_str(), R"({"id":0,"result":{"code":1,"message":"Unknown object id"}})");
     if (channel != nullptr) {
         delete channel;
         channel = nullptr;

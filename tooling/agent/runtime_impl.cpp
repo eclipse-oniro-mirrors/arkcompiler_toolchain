@@ -114,6 +114,34 @@ void RuntimeImpl::DispatcherImpl::GetProperties(const DispatchRequest &request)
     SendResponse(request, response, result);
 }
 
+std::string RuntimeImpl::DispatcherImpl::GetProperties(
+    const int32_t callId, std::unique_ptr<GetPropertiesParams> params)
+{
+    if (params == nullptr) {
+        LOG_DEBUGGER(WARN) << "DispatcherImpl::GetProperties: params is nullptr";
+        return ReturnsValueToString(callId, DispatchResponseToJson(DispatchResponse::Fail("wrong params")));
+    }
+    std::vector<std::unique_ptr<PropertyDescriptor>> outPropertyDesc;
+    std::optional<std::vector<std::unique_ptr<InternalPropertyDescriptor>>> outInternalDescs;
+    std::optional<std::vector<std::unique_ptr<PrivatePropertyDescriptor>>> outPrivateProperties;
+    std::optional<std::unique_ptr<ExceptionDetails>> outExceptionDetails;
+    DispatchResponse response = runtime_->GetProperties(*params, &outPropertyDesc, &outInternalDescs,
+        &outPrivateProperties, &outExceptionDetails);
+    if (outExceptionDetails) {
+        ASSERT(outExceptionDetails.value() != nullptr);
+        LOG_DEBUGGER(WARN) << "GetProperties thrown an exception";
+    }
+    GetPropertiesReturns result(std::move(outPropertyDesc),
+        std::move(outInternalDescs),
+        std::move(outPrivateProperties),
+        std::move(outExceptionDetails));
+    if (!response.IsOk()) {
+        LOG_DEBUGGER(WARN) << "response code is not OK";
+        return ReturnsValueToString(callId, DispatchResponseToJson(response));
+    }
+    return ReturnsValueToString(callId, result.ToJson());
+}
+
 void RuntimeImpl::DispatcherImpl::GetHeapUsage(const DispatchRequest &request)
 {
     double usedSize = 0;

@@ -51,6 +51,7 @@ public:
         void Enable(const DispatchRequest &request);
         void RunIfWaitingForDebugger(const DispatchRequest &request);
         void GetProperties(const DispatchRequest &request);
+        std::string GetProperties(const int32_t callId, std::unique_ptr<GetPropertiesParams> params);
         void GetHeapUsage(const DispatchRequest &request);
 
         enum class Method {

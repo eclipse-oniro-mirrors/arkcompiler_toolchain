@@ -1577,6 +1577,47 @@ DispatchResponse DebuggerImpl::SetAsyncCallStackDepth(const SetAsyncCallStackDep
     return DispatchResponse::Ok();
 }
 
+std::string DebuggerImpl::DispatcherImpl::EvaluateOnCallFrame(
+    const int32_t callId, std::unique_ptr<EvaluateOnCallFrameParams> params)
+{
+    if (params == nullptr) {
+        LOG_DEBUGGER(WARN) << "DispatcherImpl::EvaluateOnCallFrame: params is nullptr";
+        return ReturnsValueToString(callId, DispatchResponseToJson(DispatchResponse::Fail("wrong params")));
+    }
+    std::unique_ptr<RemoteObject> remoteObject;
+    DispatchResponse response = debugger_->EvaluateOnCallFrame(*params, &remoteObject);
+    if (remoteObject == nullptr || !response.IsOk()) {
+        LOG_DEBUGGER(WARN) << "remoteObject is nullptr or response code is not ok";
+        return ReturnsValueToString(callId, DispatchResponseToJson(response));
+    }
+
+    EvaluateOnCallFrameReturns result(std::move(remoteObject));
+    return ReturnsValueToString(callId, result.ToJson());
+}
+
+std::string DebuggerImpl::DispatcherImpl::CallFunctionOn(
+    const int32_t callId, std::unique_ptr<CallFunctionOnParams> params)
+{
+    if (params == nullptr) {
+        LOG_DEBUGGER(WARN) << "DispatcherImpl::CallFunctionOn: params is nullptr";
+        return ReturnsValueToString(callId, DispatchResponseToJson(DispatchResponse::Fail("wrong params")));
+    }
+    std::unique_ptr<RemoteObject> outRemoteObject;
+    std::optional<std::unique_ptr<ExceptionDetails>> outExceptionDetails;
+    DispatchResponse response = debugger_->CallFunctionOn(*params, &outRemoteObject, &outExceptionDetails);
+    if (outExceptionDetails) {
+        ASSERT(outExceptionDetails.value() != nullptr);
+        LOG_DEBUGGER(WARN) << "CallFunctionOn thrown an exception";
+    }
+    if (outRemoteObject == nullptr || !response.IsOk()) {
+        LOG_DEBUGGER(WARN) << "outRemoteObject is nullptr or response code is not ok";
+        return ReturnsValueToString(callId, DispatchResponseToJson(response));
+    }
+
+    CallFunctionOnReturns result(std::move(outRemoteObject), std::move(outExceptionDetails));
+    return ReturnsValueToString(callId, result.ToJson());
+}
+
 void DebuggerImpl::SavePendingBreakpoints(const SaveAllPossibleBreakpointsParams &params)
 {
     for (const auto &entry : *(params.GetBreakpointsMap())) {

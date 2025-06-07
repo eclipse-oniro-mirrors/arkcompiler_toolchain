@@ -185,4 +185,19 @@ HWTEST_F_L0(DebuggerServiceTest, SetBreakpointTest)
     ASSERT_TRUE(str2 != nullptr && *str2 != '\0');
     UninitializeDebugger(ecmaVm);
 }
+
+HWTEST_F_L0(DebuggerServiceTest, OperateDebugMessageTest)
+{
+    const char *message = "{\"id\":0,\"method\":\"Runtime.getProperties\",\"params\":{\"objectId\":\"1\"}}";
+    const char *str0 = OperateDebugMessage(nullptr, message);
+    ASSERT_TRUE(str0 != nullptr && *str0 == '\0');
+
+    const char *str1 = OperateDebugMessage(ecmaVm, message);
+    ASSERT_TRUE(str1 != nullptr && *str1 == '\0');
+
+    InitializeDebugger(ecmaVm, nullptr);
+    const char *str2 = OperateDebugMessage(ecmaVm, message);
+    ASSERT_TRUE(str2 != nullptr && *str2 != '\0');
+    UninitializeDebugger(ecmaVm);
+}
 }  // namespace panda::test

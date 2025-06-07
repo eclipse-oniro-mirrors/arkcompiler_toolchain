@@ -349,6 +349,32 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_EvaluateOnCallFrame__003)
     }
 }
 
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_EvaluateOnCallFrame__004)
+{
+    ProtocolChannel *protocolChannel = new ProtocolHandler(nullptr, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+    int32_t callId = 0;
+    std::string msg = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.evaluateOnCallFrame",
+            "params":{
+                "callFrameId":"-1",
+                "expression":"the expression"
+            }
+        })";
+    std::unique_ptr<EvaluateOnCallFrameParams> params =
+        EvaluateOnCallFrameParams::Create(DispatchRequest(msg).GetParams());
+    std::string result = dispatcherImpl->EvaluateOnCallFrame(callId, std::move(params));
+    EXPECT_STREQ(result.c_str(), R"({"id":0,"result":{"code":1,"message":"Invalid callFrameId."}})");
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
 HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleBreakpoints__001)
 {
     std::string outStrForCallbackCheck = "";
@@ -1453,7 +1479,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_DropFrame__001)
     }
 }
 
-HWTEST_F_L0(DebuggerImplTest, DispatcherImplCallFunctionOn)
+HWTEST_F_L0(DebuggerImplTest, DispatcherImplCallFunctionOn__001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
@@ -1475,6 +1501,24 @@ HWTEST_F_L0(DebuggerImplTest, DispatcherImplCallFunctionOn)
     DispatchRequest request1(msg);
     dispatcherImpl->CallFunctionOn(request1);
     ASSERT_TRUE(outStrForCallbackCheck.find("Unsupport eval now") == std::string::npos);
+    if (protocolChannel != nullptr) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, DispatcherImplCallFunctionOn__002)
+{
+    ProtocolChannel *protocolChannel = new ProtocolHandler(nullptr, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+    std::string msg = std::string() + R"({"id":0,"method":"Debugger.callFunctionOn","params":{
+        "callFrameId":"0", "functionDeclaration":"test"}})";
+    std::unique_ptr<CallFunctionOnParams> params = CallFunctionOnParams::Create(DispatchRequest(msg).GetParams());
+    int32_t callId = 0;
+    std::string result = dispatcherImpl->CallFunctionOn(callId, std::move(params));
+    EXPECT_STREQ(result.c_str(), R"({"id":0,"result":{"code":1,"message":"Invalid callFrameId."}})");
     if (protocolChannel != nullptr) {
         delete protocolChannel;
         protocolChannel = nullptr;
