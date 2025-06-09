@@ -223,6 +223,7 @@ template("ohos_shared_library") {
                              "configs",
                              "subsystem_name",
                              "install_enable",
+                             "license_file",
                              "part_name",
                              "output_dir",
                              "install_images",
