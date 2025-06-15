@@ -189,11 +189,6 @@ config("ark_toolchain_common_config") {
   } else {
     defines += [ "NDEBUG" ]
   }
-
-  if (toolchain_enable_cmc_gc) {
-    defines += [ "USE_CMC_GC" ]
-    defines += [ "USE_READ_BARRIER" ]
-  }
 }
 
 config("ark_toolchain_public_config") {

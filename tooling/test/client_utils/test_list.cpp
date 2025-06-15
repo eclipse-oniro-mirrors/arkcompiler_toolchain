@@ -15,6 +15,7 @@
 
 #include "tooling/test/client_utils/test_list.h"
 
+#include "ecmascript/base/config.h"
 #include "tooling/test/client_utils/test_util.h"
 
 // testcase list
@@ -92,11 +93,11 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsSourceTest", GetJsSourceTest());
     TestUtil::RegisterTest("JsTracingTest", GetJsTracingTest());
     TestUtil::RegisterTest("JsWatchTest", GetJsWatchTest());
-#ifndef USE_CMC_GC
-    // Need support heapdump
-    TestUtil::RegisterTest("JsHeapdumpTest", GetJsHeapdumpTest());
-    TestUtil::RegisterTest("JsHeapdumpLoopTest", GetJsHeapdumpLoopTest());
-#endif
+    if (!g_isEnableCMCGC) {
+        // Need support heapdump
+        TestUtil::RegisterTest("JsHeapdumpTest", GetJsHeapdumpTest());
+        TestUtil::RegisterTest("JsHeapdumpLoopTest", GetJsHeapdumpLoopTest());
+    }
     TestUtil::RegisterTest("JsStepintoTest", GetJsStepintoTest());
     TestUtil::RegisterTest("JsStepoutTest", GetJsStepoutTest());
     TestUtil::RegisterTest("JsStepoverTest", GetJsStepoverTest());
@@ -115,12 +116,12 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsHeapusageTest", GetJsHeapusageTest());
     TestUtil::RegisterTest("JsHeapusageAsyncTest", GetJsHeapusageAsyncTest());
     TestUtil::RegisterTest("JsHeapusageStepTest", GetJsHeapusageStepTest());
-#ifndef USE_CMC_GC
-    // Need support allocation tracker
-    TestUtil::RegisterTest("JsAllocationtrackTest", GetJsAllocationtrackTest());
-    TestUtil::RegisterTest("JsAllocationTrackLoopTest", GetJsAllocationTrackLoopTest());
-    TestUtil::RegisterTest("JsAllocationTrackRecursionTest", GetJsAllocationTrackRecursionTest());
-#endif
+    if (!g_isEnableCMCGC) {
+        // Need support allocation tracker
+        TestUtil::RegisterTest("JsAllocationtrackTest", GetJsAllocationtrackTest());
+        TestUtil::RegisterTest("JsAllocationTrackLoopTest", GetJsAllocationTrackLoopTest());
+        TestUtil::RegisterTest("JsAllocationTrackRecursionTest", GetJsAllocationTrackRecursionTest());
+    }
     TestUtil::RegisterTest("JsJsWatchBasicTypeTest", GetJsWatchBasicTypeTest());
     TestUtil::RegisterTest("JsJsWatchSetTypeTest", GetJsWatchSetTypeTest());
     TestUtil::RegisterTest("JsJsWatchOtherTypeTest", GetJsWatchOtherTypeTest());
