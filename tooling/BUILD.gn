@@ -70,6 +70,7 @@ ohos_source_set("libark_ecma_debugger_set") {
   external_deps += [
     "icu:shared_icuuc",
     "libuv:uv",
+    sdk_libc_secshared_dep,
   ]
 
   if (is_ohos && is_standard_system && !is_arkui_x) {
@@ -143,6 +144,7 @@ ohos_static_library("libark_ecma_debugger_test") {
     "ets_runtime:libark_jsruntime",
     "icu:shared_icuuc",
     "libuv:uv",
+    sdk_libc_secshared_dep,
   ]
   if ((is_arkui_x && target_os == "ios") || target_os == "mac") {
     external_deps += [ "cJSON:cjson_static" ]

@@ -43,6 +43,14 @@ if (is_arkui_x && target_os == "ios") {
 
 websocket_ext_deps += [ "bounds_checking_function:libsec_shared" ]
 
+websocket_base_source = toolchain_platform_source + [
+                          "frame_builder.cpp",
+                          "handshake_helper.cpp",
+                          "http.cpp",
+                          "network.cpp",
+                          "websocket_base.cpp",
+                        ]
+
 ohos_source_set("websocket_base") {
   stack_protector_ret = true
 
@@ -55,14 +63,7 @@ ohos_source_set("websocket_base") {
     libs = [ "log" ]
   }
 
-  sources = [
-    "frame_builder.cpp",
-    "handshake_helper.cpp",
-    "http.cpp",
-    "network.cpp",
-    "websocket_base.cpp",
-  ]
-  sources += toolchain_platform_source
+  sources = websocket_base_source
 
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
@@ -73,7 +74,10 @@ config("websocket_public_config") {
   include_dirs = [ "$toolchain_root/websocket" ]
 }
 
-ohos_source_set("websocket_server") {
+websocket_server_source =
+    websocket_base_source + [ "server/websocket_server.cpp" ]
+
+ohos_static_library("libwebsocket_server") {
   stack_protector_ret = true
 
   configs = websocket_configs
@@ -81,29 +85,12 @@ ohos_source_set("websocket_server") {
 
   external_deps = websocket_ext_deps
   deps = websocket_deps
-  deps += [ ":websocket_base" ]
 
   if (target_os == "android" && !ark_standalone_build) {
     libs = [ "log" ]
   }
 
-  sources = [ "server/websocket_server.cpp" ]
-
-  subsystem_name = "arkcompiler"
-  part_name = "toolchain"
-}
-
-# required for runtime_core ArkTS inspector
-ohos_static_library("libwebsocket_server") {
-  stack_protector_ret = true
-
-  public_configs = [ ":websocket_public_config" ]
-
-  deps = [ ":websocket_server" ]
-  external_deps = [
-    "bounds_checking_function:libsec_shared",
-    "openssl:libcrypto_shared",
-  ]
+  sources = websocket_server_source
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
 }
