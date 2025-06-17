@@ -101,7 +101,7 @@ group("static_core") {
     deps += [ "$ark_root/static_core/static_linker:static_linker" ]
   }
   if (target_os != "mingw" && target_os != "mac") {
-    if (ark_hybrid) {
+    if (ark_use_cmc_gc) {
       deps += [ "$js_root:libark_jsruntime" ]
     } else {
       deps += [ "$ark_root/static_core/runtime:libarkruntime" ]
@@ -123,7 +123,7 @@ group("hybrid") {
     ]
   }
 
-  if (!ark_hybrid) {
+  if (!ark_use_cmc_gc) {
     deps += [ ":static_core" ]
   }
 }

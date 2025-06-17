@@ -12,7 +12,7 @@
 # limitations under the License.
 declare_args() {
   ark_standalone_build = true
-  ark_hybrid = false
+  ark_use_cmc_gc = false
   use_musl = true
   build_root = "//arkcompiler/toolchain/build"
   run_with_qemu = false
