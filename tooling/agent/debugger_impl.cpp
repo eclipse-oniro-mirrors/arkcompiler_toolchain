@@ -1464,8 +1464,9 @@ DispatchResponse DebuggerImpl::SetBreakpointByUrl(const SetBreakpointByUrlParams
             }
             return DebuggerApi::SetBreakpoint(jsDebugger_, location, condFuncRef, isSmartBreakpoint);
         };
+        std::string methodName = params.HasMethodName() ? params.GetMethodName() : "";
         if (!extractor->MatchWithLocation(callbackFunc, lineNumber, columnNumber, url, GetRecordName(url),
-            isSmartBreakpoint, params.GetMethodName())) {
+            isSmartBreakpoint, methodName)) {
             LOG_DEBUGGER(ERROR) << "failed to set breakpoint location number: "
                 << lineNumber << ":" << columnNumber;
             return DispatchResponse::Fail("Breakpoint not found.");
