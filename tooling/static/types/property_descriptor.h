@@ -16,7 +16,7 @@
 #ifndef PANDA_TOOLING_INSPECTOR_TYPES_PROPERTY_DESCRIPTOR_H
 #define PANDA_TOOLING_INSPECTOR_TYPES_PROPERTY_DESCRIPTOR_H
 
-#include "macros.h"
+#include "libarkbase/macros.h"
 
 #include "types/remote_object.h"
 #include "json_serialization/serializable.h"
