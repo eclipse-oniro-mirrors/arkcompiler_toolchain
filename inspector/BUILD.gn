@@ -30,7 +30,7 @@ ohos_source_set("ark_debugger_static") {
     libs = [ "log" ]
   }
 
-  deps = [ "../websocket:websocket_server" ]
+  deps = [ "../websocket:libwebsocket_server" ]
   sources = [
     "../common/log_wrapper.cpp",
     "inspector.cpp",
@@ -96,7 +96,7 @@ ohos_source_set("connectserver_debugger_static") {
     external_deps += [ "cJSON:cjson" ]
   }
 
-  deps = [ "../websocket:websocket_server" ]
+  deps = [ "../websocket:libwebsocket_server" ]
   sources = [
     "../common/log_wrapper.cpp",
     "../tooling/base/pt_json.cpp",

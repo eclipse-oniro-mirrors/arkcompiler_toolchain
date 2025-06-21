@@ -34,7 +34,7 @@ host_unittest_action("WebSocketTest") {
 
   deps = [
     "$toolchain_root/websocket:websocket_client",
-    "$toolchain_root/websocket:websocket_server",
+    "$toolchain_root/websocket:libwebsocket_server",
   ]
 
   # hiviewdfx libraries
