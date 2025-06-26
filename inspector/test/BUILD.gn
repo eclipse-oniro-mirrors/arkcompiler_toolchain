@@ -14,7 +14,7 @@
 import("//arkcompiler/toolchain/test/test_helper.gni")
 import("//arkcompiler/toolchain/toolchain.gni")
 
-module_output_path = "toolchain"
+module_output_path = "toolchain/toolchain"
 
 host_unittest_action("InspectorConnectTest") {
   module_out_path = module_output_path
