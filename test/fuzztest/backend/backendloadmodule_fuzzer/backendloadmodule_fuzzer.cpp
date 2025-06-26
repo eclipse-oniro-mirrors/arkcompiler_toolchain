@@ -16,7 +16,7 @@
 #include "backendloadmodule_fuzzer.h"
 #include "ecmascript/napi/include/jsnapi.h"
 #include "agent/debugger_impl.h"
-#include "tooling/backend/js_pt_hooks.h"
+#include "tooling/dynamic/backend/js_pt_hooks.h"
 
 using namespace panda;
 using namespace panda::ecmascript;

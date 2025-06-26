@@ -28,7 +28,7 @@
 #include "library_loader.h"
 
 #if defined(IOS_PLATFORM)
-#include "tooling/debugger_service.h"
+#include "tooling/dynamic/debugger_service.h"
 #endif
 
 #if defined(ENABLE_FFRT_INTERFACES)

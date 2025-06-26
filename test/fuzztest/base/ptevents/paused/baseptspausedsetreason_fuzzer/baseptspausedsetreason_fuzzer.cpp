@@ -15,8 +15,8 @@
 
 #include "baseptspausedsetreason_fuzzer.h"
 #include "ecmascript/napi/include/jsnapi.h"
-#include "tooling/base/pt_events.h"
-#include "tooling/dispatcher.h"
+#include "tooling/dynamic/base/pt_events.h"
+#include "tooling/dynamic/dispatcher.h"
 #include "test/fuzztest/common_fuzzer/common_fuzzer.h"
 
 using namespace panda;
