@@ -18,7 +18,7 @@
 #include <mutex>
 
 #include "common/log_wrapper.h"
-#include "tooling/base/pt_json.h"
+#include "tooling/dynamic/base/pt_json.h"
 #include "ws_server.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
