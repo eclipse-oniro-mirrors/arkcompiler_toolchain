@@ -132,9 +132,9 @@ group("toolchain") {
   }
   if (target_os != "mingw") {
     deps += [
-      "$toolchain_root/tooling/dynamic/client:libark_client",
-      "$toolchain_root/tooling/dynamic/client/ark_cli:arkdb",
-      "$toolchain_root/tooling/dynamic/client/ark_multi:ark_multi",
+      "$toolchain_root/tooling/client:libark_client",
+      "$toolchain_root/tooling/client/ark_cli:arkdb",
+      "$toolchain_root/tooling/client/ark_multi:ark_multi",
     ]
   }
 }

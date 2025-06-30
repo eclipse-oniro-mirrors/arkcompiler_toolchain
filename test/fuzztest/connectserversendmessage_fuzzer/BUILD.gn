@@ -31,7 +31,7 @@ ohos_fuzztest("ConnectServerSendMessageFuzzTest") {
 
   deps = [
     "../../../inspector:connectserver_debugger",
-    "../../../tooling/dynamic:libark_ecma_debugger_set",
+    "../../../tooling:libark_ecma_debugger_set",
   ]
 
   # hiviewdfx libraries

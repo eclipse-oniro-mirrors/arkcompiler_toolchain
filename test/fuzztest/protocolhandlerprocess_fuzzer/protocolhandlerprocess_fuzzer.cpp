@@ -15,7 +15,7 @@
 
 #include "protocolhandlerprocess_fuzzer.h"
 #include "ecmascript/napi/include/jsnapi.h"
-#include "tooling/dynamic/protocol_handler.h"
+#include "tooling/protocol_handler.h"
 
 using namespace panda;
 using namespace panda::ecmascript;

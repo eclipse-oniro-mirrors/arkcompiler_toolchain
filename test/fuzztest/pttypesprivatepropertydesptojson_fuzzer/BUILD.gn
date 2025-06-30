@@ -27,7 +27,7 @@ ohos_fuzztest("PtTypesPrivatePropertyDespToJsonFuzzTest") {
 
   configs = [ "//arkcompiler/toolchain:toolchain_test_config" ]
 
-  deps = [ "../../../tooling/dynamic:libark_ecma_debugger_set" ]
+  deps = [ "../../../tooling:libark_ecma_debugger_set" ]
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps

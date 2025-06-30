@@ -16,7 +16,7 @@
 #include "heapprofilerdisable_fuzzer.h"
 #include "ecmascript/napi/include/jsnapi.h"
 #include "agent/heapprofiler_impl.h"
-#include "tooling/dynamic/dispatcher.h"
+#include "tooling/dispatcher.h"
 
 using namespace panda;
 using namespace panda::ecmascript;

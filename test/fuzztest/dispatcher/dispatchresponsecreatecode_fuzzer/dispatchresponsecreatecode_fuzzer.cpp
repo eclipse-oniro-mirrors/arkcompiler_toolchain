@@ -15,7 +15,7 @@
 
 #include "dispatchresponsecreatecode_fuzzer.h"
 #include "ecmascript/napi/include/jsnapi.h"
-#include "tooling/dynamic/dispatcher.h"
+#include "tooling/dispatcher.h"
 
 using namespace panda;
 using namespace panda::ecmascript;

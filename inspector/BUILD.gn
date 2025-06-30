@@ -99,7 +99,7 @@ ohos_source_set("connectserver_debugger_static") {
   deps = [ "../websocket:websocket_server" ]
   sources = [
     "../common/log_wrapper.cpp",
-    "../tooling/dynamic/base/pt_json.cpp",
+    "../tooling/base/pt_json.cpp",
     "connect_inspector.cpp",
     "connect_server.cpp",
   ]

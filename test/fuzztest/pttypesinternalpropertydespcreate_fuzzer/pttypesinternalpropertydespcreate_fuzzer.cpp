@@ -15,7 +15,7 @@
 
 #include "pttypesinternalpropertydespcreate_fuzzer.h"
 #include "ecmascript/napi/include/jsnapi.h"
-#include "tooling/dynamic/base/pt_types.h"
+#include "tooling/base/pt_types.h"
 
 using namespace panda;
 using namespace panda::ecmascript;
