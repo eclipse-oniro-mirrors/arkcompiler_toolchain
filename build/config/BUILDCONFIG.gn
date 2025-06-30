@@ -12,7 +12,6 @@
 # limitations under the License.
 declare_args() {
   ark_standalone_build = true
-  ark_use_cmc_gc = false
   ark_hybrid = false
   use_musl = true
   build_root = "//arkcompiler/toolchain/build"
