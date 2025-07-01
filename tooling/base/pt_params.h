@@ -357,17 +357,6 @@ public:
         return condition_.has_value();
     }
 
-    bool HasMethodName() const
-    {
-        return methodName_.has_value();
-    }
-
-    const std::string &GetMethodName() const
-    {
-        ASSERT(HasMethodName());
-        return methodName_.value();
-    }
-
 private:
     NO_COPY_SEMANTIC(SetBreakpointByUrlParams);
     NO_MOVE_SEMANTIC(SetBreakpointByUrlParams);
@@ -378,7 +367,6 @@ private:
     std::optional<std::string> scriptHash_ {};
     std::optional<int32_t> columnNumber_ {0};
     std::optional<std::string> condition_ {};
-    std::optional<std::string> methodName_ {};
 };
 
 
