@@ -50,9 +50,9 @@ void InspectorServer::Kill()
     server_.Kill();
 }
 
-void InspectorServer::Run()
+void InspectorServer::Run(const std::string& msg)
 {
-    server_.Run();
+    server_.Run(msg);
 }
 
 void InspectorServer::OnValidate(std::function<void()> &&handler)

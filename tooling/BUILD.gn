@@ -31,14 +31,29 @@ ohos_shared_library("libark_ecma_debugger") {
   output_name = "libark_tooling"
 }
 
-ohos_shared_library("libark_tooling_plus") {
-  deps = [ "./static/:libark_tooling_plus_static" ]
+ohos_shared_library("libarkinspector_plus") {
+  deps = [
+    "./static/:libarkinspector_plus_static",
+  ]
 
+  install_enable = true
+  external_deps = [
+    "runtime_core:arktsdisassembler",
+    "runtime_core:libarktsbase_package",
+    "runtime_core:libarkruntime",
+  ]
+
+  external_deps += hiviewdfx_ext_deps
+ 
   if (is_mingw || is_win) {
     output_extension = "dll"
+  } else if (is_mac) {
+    output_extension = "dylib"
   } else {
     output_extension = "so"
   }
+
+  output_name = "arkinspector"
   part_name = "toolchain"
   subsystem_name = "arkcompiler"
 }

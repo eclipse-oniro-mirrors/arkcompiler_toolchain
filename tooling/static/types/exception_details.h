@@ -15,7 +15,7 @@
 #ifndef PANDA_TOOLING_INSPECTOR_EXCEPTION_DETAILS_H
 #define PANDA_TOOLING_INSPECTOR_EXCEPTION_DETAILS_H
 
-#include "tooling/inspector/json_serialization/serializable.h"
+#include "json_serialization/serializable.h"
 
 #include <optional>
 #include <string>

@@ -72,9 +72,11 @@ ohos_source_set("libark_ecma_debugger_set") {
   } else {
     external_deps += [ "cJSON:cjson" ]
   }
+  external_deps += [ "ets_runtime:libark_jsruntime" ]
   external_deps += [
     "icu:shared_icuuc",
     "libuv:uv",
+    sdk_libc_secshared_dep
   ]
 
   if (is_ohos && is_standard_system && !is_arkui_x) {
@@ -87,7 +89,8 @@ ohos_source_set("libark_ecma_debugger_set") {
 
   external_deps += [ "runtime_core:libarkfile_static" ]
   deps += hiviewdfx_deps
-
+  deps += [ "../hybrid_step:arkhybridstep" ]
+  
   if (enable_leak_check) {
     sources += [ "$js_root/ecmascript/dfx/native_dfx/backtrace.cpp" ]
     defines += [
@@ -107,8 +110,6 @@ ohos_static_library("libark_ecma_debugger_static") {
   if (is_mac) {
     external_deps += [ "cJSON:cjson_static" ]
   }
-
-
 
   # hiviewdfx libraries
   external_deps += hiviewdfx_ext_deps
@@ -168,6 +169,7 @@ ohos_static_library("libark_ecma_debugger_test") {
 
   # hiviewdfx libraries
   external_deps += hiviewdfx_ext_deps
+  deps += [ "../hybrid_step:arkhybridstep" ]
   deps += hiviewdfx_deps
   if (enable_hilog) {
     external_deps += [ "hilog:libhilog" ]

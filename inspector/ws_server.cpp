@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,6 +14,7 @@
  */
 
 #include "ws_server.h"
+#include "init_static.h"
 
 #include <unistd.h>
 
@@ -30,7 +31,7 @@ WsServer::WsServer(const DebugInfo& debugInfo, const std::function<void(std::str
 
 WsServer::~WsServer() = default;
 
-void WsServer::RunServer()
+void WsServer::RunServer(bool isHybrid)
 {
     {
         std::lock_guard<std::mutex> lock(wsMutex_);
@@ -65,6 +66,9 @@ void WsServer::RunServer()
             if (!webSocket_->InitUnixWebSocket(debugInfo_.socketfd)) {
                 return;
             }
+        }
+        if (isHybrid) {
+            StartDebuggerForStatic(webSocket_, true);
         }
 #endif
     }
