@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,7 @@
 #include <mutex>
 
 namespace OHOS::ArkCompiler::Toolchain {
+std::mutex g_sendReplymutex;
 static std::string ToString(CloseStatusCode status)
 {
     if (status == CloseStatusCode::NO_STATUS_CODE) {
@@ -48,6 +49,7 @@ WebSocketBase::~WebSocketBase() noexcept
 // we just add the 'isLast' parameter to indicate whether it is the last frame.
 bool WebSocketBase::SendReply(const std::string& message, FrameType frameType, bool isLast) const
 {
+    std::lock_guard<std::mutex> lock(g_sendReplymutex);
     if (connectionState_.load() != ConnectionState::OPEN) {
         LOGE("SendReply failed, websocket not connected");
         return false;

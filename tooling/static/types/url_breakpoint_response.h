@@ -16,7 +16,7 @@
 #ifndef PANDA_TOOLING_INSPECTOR_TYPES_URL_BREAKPOINT_RESPONSE_H
 #define PANDA_TOOLING_INSPECTOR_TYPES_URL_BREAKPOINT_RESPONSE_H
 
-#include "tooling/inspector/json_serialization/serializable.h"
+#include "json_serialization/serializable.h"
 
 #include <vector>
 

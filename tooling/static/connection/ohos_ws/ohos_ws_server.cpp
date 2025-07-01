@@ -20,59 +20,50 @@
 #include "os/thread.h"
 #include "utils/logger.h"
 
+#include "inspector.h"
 namespace ark::tooling::inspector {
 [[maybe_unused]] static constexpr std::string_view G_ARK_TS_INSPECTOR_NAME = "ArkEtsDebugger";
 
-bool OhosWsServer::RunOne()
+bool OhosWsServer::ParseMessage(const std::string& msg)
 {
-    if (!endpoint_.IsConnected() && !AcceptNewWsConnection()) {
+    if (endpoint_ == nullptr) {
+        return false;
+    }
+    if (!endpoint_->IsConnected() && !AcceptNewWsConnection()) {
         LOG(WARNING, DEBUGGER) << "Inspector server is unable to establish a new connection, exiting";
         return false;
     }
 
-    auto message = endpoint_.Decode();
-    if (!message.empty()) {
-        if (Endpoint::IsDecodeDisconnectMsg(message)) {
-            LOG(WARNING, DEBUGGER) << "Inspector server received `disconnect`, exiting";
-            return false;
-        }
-        HandleMessage(message);
-    }
+    HandleMessage(msg);
     return true;
 }
 
 bool OhosWsServer::Start([[maybe_unused]] uint32_t port)
 {
-    bool succeeded = false;
+    return true;
+}
 
-#if !defined(PANDA_TARGET_OHOS)
-    succeeded = endpoint_.InitTcpWebSocket(port);
-    uint32_t name = port;
-#else
-    auto pid = os::thread::GetPid();
-    std::string name = std::to_string(pid) + std::string(G_ARK_TS_INSPECTOR_NAME);
-    succeeded = endpoint_.InitUnixWebSocket(name);
-#endif
-    if (succeeded) {
-        LOG(INFO, DEBUGGER) << "Inspector server listening on " << name;
-        return true;
+void OhosWsServer::InitEndPoint(std::shared_ptr<void> endPoint)
+{
+    if (endPoint == nullptr) {
+        LOG(ERROR, DEBUGGER) << "OhosWsServer::InitEndPoint endPoint is nullptr";
+        return;
     }
-    LOG(ERROR, DEBUGGER) << "Failed to bind Inspector server on " << name;
-    return false;
+
+    endpoint_ = std::static_pointer_cast<OHOS::ArkCompiler::Toolchain::WebSocketServer>(endPoint);
 }
 
 bool OhosWsServer::Stop()
 {
     // Stop event loop before closing endpoint server.
     Kill();
-    endpoint_.Close();
     socketpairMode_ = false;
     return true;
 }
 
 bool OhosWsServer::StartForSocketpair(int socketfd)
 {
-    bool succeeded = endpoint_.InitUnixWebSocket(socketfd);
+    bool succeeded = endpoint_->InitUnixWebSocket(socketfd);
     if (succeeded) {
         LOG(INFO, DEBUGGER) << "Inspector server listening on " << socketfd;
         socketpairMode_ = true;
@@ -86,9 +77,9 @@ bool OhosWsServer::StartForSocketpair(int socketfd)
 bool OhosWsServer::AcceptNewWsConnection()
 {
     if (socketpairMode_) {
-        return endpoint_.ConnectUnixWebSocketBySocketpair();
+        return endpoint_->ConnectUnixWebSocketBySocketpair();
     }
-    return endpoint_.AcceptNewConnection();
+    return endpoint_->AcceptNewConnection();
 }
 
 }  // namespace ark::tooling::inspector
