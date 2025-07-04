@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,8 +14,8 @@
  */
 
 #include "backend/js_pt_hooks.h"
-
 #include "agent/debugger_impl.h"
+#include "../hybrid_step/debug_step_flags.h"
 
 namespace panda::ecmascript::tooling {
 void JSPtHooks::DebuggerStmt([[maybe_unused]] const JSPtLocation &location)
@@ -47,6 +47,11 @@ bool JSPtHooks::SingleStep(const JSPtLocation &location)
     LOG_DEBUGGER(VERBOSE) << "JSPtHooks: SingleStep => " << location.GetBytecodeOffset();
 
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
+
+    if (DebugStepFlags::Get().GetStat2DynInto()) {
+        debugger_->NotifyPaused({}, BREAK_ON_START);
+        DebugStepFlags::Get().SetStat2DynInto(false);
+    }
     if (UNLIKELY(firstTime_)) {
         firstTime_ = false;
 

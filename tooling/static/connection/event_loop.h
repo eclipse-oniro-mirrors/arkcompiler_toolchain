@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,10 +27,10 @@ public:
     bool Kill();
 
     // Run the event loop until paused.
-    void Run();
+    void Run(const std::string& msg);
 
     // Run at most one event loop handler, may block.
-    virtual bool RunOne() = 0;
+    virtual bool ParseMessage(const std::string& msg) = 0;
 
     // Pause the event loop. Wait for the current task to finish.
     void Pause() ACQUIRE_SHARED(taskExecution_)
