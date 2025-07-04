@@ -50,7 +50,6 @@ using OnMessage = void(*)(void*, std::string&&);
 using ProcessMessage = void(*)(void*);
 using GetDispatchStatus = int32_t(*)(void*);
 using GetCallFrames = char*(*)(void*);
-using OperateDebugMessage = char*(*)(void*, const char*);
 
 OnMessage g_onMessage = nullptr;
 InitializeDebugger g_initializeDebugger = nullptr;
@@ -59,7 +58,6 @@ WaitForDebugger g_waitForDebugger = nullptr;
 ProcessMessage g_processMessage = nullptr;
 GetDispatchStatus g_getDispatchStatus = nullptr;
 GetCallFrames g_getCallFrames = nullptr;
-OperateDebugMessage g_operateDebugMessage = nullptr;
 
 std::atomic<bool> g_hasArkFuncsInited = false;
 std::unordered_map<const void*, Inspector*> g_inspectors;
@@ -224,12 +222,6 @@ bool InitializeArkFunctionsOthers()
         ResetServiceLocked(g_vm, true);
         return false;
     }
-    g_operateDebugMessage = reinterpret_cast<OperateDebugMessage>(
-        GetArkDynFunction("OperateDebugMessage"));
-    if (g_operateDebugMessage == nullptr) {
-        ResetServiceLocked(g_vm, true);
-        return false;
-    }
     return true;
 }
 #else
@@ -243,7 +235,6 @@ bool InitializeArkFunctionsIOS()
     g_getDispatchStatus = reinterpret_cast<GetDispatchStatus>(&tooling::GetDispatchStatus);
     g_processMessage = reinterpret_cast<ProcessMessage>(&tooling::ProcessMessage);
     g_getCallFrames = reinterpret_cast<GetCallFrames>(&tooling::GetCallFrames);
-    g_operateDebugMessage = reinterpret_cast<OperateDebugMessage>(&tooling::OperateDebugMessage);
     return true;
 }
 #endif
@@ -484,20 +475,6 @@ const char* GetJsBacktrace()
         return "";
     }
     return g_getCallFrames(vm);
-#else
-    return "";
-#endif
-}
-
-const char* OperateJsDebugMessage([[maybe_unused]] const char* message)
-{
-#if defined(OHOS_PLATFORM)
-    void* vm = GetEcmaVM(Inspector::GetThreadOrTaskId());
-    if (g_operateDebugMessage == nullptr) {
-        LOGE("OperateDebugMessage symbol resolve failed");
-        return "";
-    }
-    return g_operateDebugMessage(vm, message);
 #else
     return "";
 #endif
