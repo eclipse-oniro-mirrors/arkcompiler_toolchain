@@ -592,7 +592,7 @@ void RuntimeImpl::GetGeneratorObjectValue(Local<JSValueRef> value,
         SetKeyValue(jsValueRef, outPropertyDesc, "[[GeneratorState]]");
         jsValueRef = genObjRef->GetGeneratorFunction(vm_);
         SetKeyValue(jsValueRef, outPropertyDesc, "[[GeneratorFunction]]");
-        jsValueRef = JSNApi::GetGlobalObject(vm_);
+        jsValueRef = JSNApi::GetGlobalObject(vm_, DebuggerApi::GetCurrentGlobalEnv(vm_));
         SetKeyValue(jsValueRef, outPropertyDesc, "[[GeneratorReceiver]]");
     }
 }

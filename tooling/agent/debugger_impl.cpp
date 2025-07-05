@@ -1265,10 +1265,20 @@ DispatchResponse DebuggerImpl::EvaluateOnCallFrame(const EvaluateOnCallFramePara
         return DispatchResponse::Create(ret);
     }
 
+    Local<JSValueRef> currentContext = DebuggerApi::GetCurrentGlobalEnv(vm_);
+    Local<ObjectRef> globalObj = JSNApi::GetGlobalObject(vm_, currentContext);
+    DebuggerExecutor::SetEvaluateToGlobal(vm_, globalObj);
+
+    Local<JSValueRef> originContext = JSNApi::GetCurrentContext(vm_);
+    JSNApi::SwitchContext(vm_, currentContext);
+
     auto funcRef = DebuggerApi::GenerateFuncFromBuffer(vm_, dest.data(), dest.size(),
         JSPandaFile::ENTRY_FUNCTION_NAME);
     auto res = DebuggerApi::EvaluateViaFuncCall(const_cast<EcmaVM *>(vm_), funcRef,
         callFrameHandlers_[callFrameId]);
+    
+    JSNApi::SwitchContext(vm_, originContext);
+
     if (vm_->GetJSThread()->HasPendingException()) {
         LOG_DEBUGGER(ERROR) << "EvaluateValue: has pending exception";
         std::string msg;
@@ -2384,7 +2394,7 @@ std::unique_ptr<Scope> DebuggerImpl::GetGlobalScopeChain(const FrameHandler *fra
         .SetClassName(ObjectClassName::Global)
         .SetDescription(RemoteObject::GlobalDescription);
     globalScope->SetType(Scope::Type::Global()).SetObject(std::move(global));
-    globalObj = JSNApi::GetGlobalObject(vm_);
+    globalObj = JSNApi::GetGlobalObject(vm_, DebuggerApi::GetCurrentGlobalEnv(vm_, frameHandler));
     DebuggerApi::AddInternalProperties(vm_, globalObj, ArkInternalValueType::Scope,  runtime_->internalObjects_);
     auto *sp = DebuggerApi::GetSp(frameHandler);
     scopeObjects_[sp][Scope::Type::Global()].push_back(runtime_->curObjectId_);
