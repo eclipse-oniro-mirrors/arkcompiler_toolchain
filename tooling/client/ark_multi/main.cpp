@@ -13,11 +13,13 @@
  * limitations under the License.
  */
 
+#include <list>
 #include <uv.h>
 
 #include "ecmascript/js_runtime_options.h"
 #include "ecmascript/napi/include/jsnapi_expo.h"
 #include "ecmascript/platform/file.h"
+#include "ecmascript/platform/mutex.h"
 #include "tooling/utils/utils.h"
 #ifdef PANDA_TARGET_MACOS
 #include <unistd.h>
