@@ -29,6 +29,7 @@ public:
     ~DebuggerExecutor() = default;
 
     static void Initialize(const EcmaVM *vm);
+    static void SetEvaluateToGlobal(const EcmaVM *vm, Local<ObjectRef> &globalObj);
 
     static Local<JSValueRef> GetValue(const EcmaVM *vm, const FrameHandler *frameHandler, Local<StringRef> name);
     static bool SetValue(const EcmaVM *vm, FrameHandler *frameHandler,

@@ -23,10 +23,19 @@ void DebuggerExecutor::Initialize(const EcmaVM *vm)
 {
     [[maybe_unused]] EcmaHandleScope handleScope(vm->GetJSThread());
     Local<ObjectRef> globalObj = JSNApi::GetGlobalObject(vm);
-    globalObj->Set(vm, StringRef::NewFromUtf8(vm, "debuggerSetValue"), FunctionRef::New(
-        const_cast<panda::EcmaVM*>(vm), DebuggerExecutor::DebuggerSetValue));
-    globalObj->Set(vm, StringRef::NewFromUtf8(vm, "debuggerGetValue"), FunctionRef::New(
-        const_cast<panda::EcmaVM*>(vm), DebuggerExecutor::DebuggerGetValue));
+    SetEvaluateToGlobal(vm, globalObj);
+}
+
+void DebuggerExecutor::SetEvaluateToGlobal(const EcmaVM *vm, Local<ObjectRef> &globalObj)
+{
+    auto setStr = StringRef::NewFromUtf8(vm, "debuggerSetValue");
+    auto getStr = StringRef::NewFromUtf8(vm, "debuggerGetValue");
+    if (!globalObj->Has(vm, setStr) || !globalObj->Has(vm, getStr)) {
+        globalObj->Set(vm, setStr, FunctionRef::New(
+            const_cast<panda::EcmaVM*>(vm), DebuggerExecutor::DebuggerSetValue));
+        globalObj->Set(vm, getStr, FunctionRef::New(
+            const_cast<panda::EcmaVM*>(vm), DebuggerExecutor::DebuggerGetValue));
+    }
 }
 
 Local<JSValueRef> DebuggerExecutor::DebuggerGetValue(JsiRuntimeCallInfo *runtimeCallInfo)
