@@ -32,7 +32,7 @@ ohos_fuzztest("WsServerSendReplyFuzzTest") {
   deps = [
     "$toolchain_root/inspector:ark_debugger",
     "$toolchain_root/inspector:connectserver_debugger",
-    "$toolchain_root/tooling:libark_ecma_debugger_set",
+    "$toolchain_root/tooling/dynamic:libark_ecma_debugger_set",
   ]
 
   # hiviewdfx libraries
