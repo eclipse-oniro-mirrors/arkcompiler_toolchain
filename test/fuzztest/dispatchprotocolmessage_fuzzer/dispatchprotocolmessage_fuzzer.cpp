@@ -15,7 +15,7 @@
 
 #include "dispatchprotocolmessage_fuzzer.h"
 #include "ecmascript/napi/include/jsnapi.h"
-#include "tooling/debugger_service.h"
+#include "tooling/dynamic/debugger_service.h"
 
 using namespace panda;
 using namespace panda::ecmascript;
