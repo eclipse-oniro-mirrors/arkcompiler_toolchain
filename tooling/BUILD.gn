@@ -39,7 +39,7 @@ ohos_shared_library("libarkinspector_plus") {
   install_enable = true
   external_deps = [
     "runtime_core:arktsdisassembler",
-    "runtime_core:libarktsbase_package",
+    "runtime_core:libarktsbase",
     "runtime_core:libarkruntime",
   ]
 
