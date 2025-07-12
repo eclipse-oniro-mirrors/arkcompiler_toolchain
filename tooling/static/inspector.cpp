@@ -23,12 +23,12 @@
 #include "debugger/breakpoint.h"
 #include "macros.h"
 #include "os/mutex.h"
-#include "runtime.h"
+#include "include/runtime.h"
 #include "utils/logger.h"
 
 #include "error.h"
 #include "evaluation/base64.h"
-#include "sampler/sampling_profiler.h"
+#include "tooling/sampler/sampling_profiler.h"
 #include "types/remote_object.h"
 #include "types/scope.h"
 
@@ -73,7 +73,6 @@ Inspector::~Inspector()
     // Current implementation destroys `Inspector` after server connection is closed,
     // hence no need to notify client
     inspectorServer_.Kill();
-    serverThread_.join();
     HandleError(debugger_.UnregisterHooks());
 }
 
@@ -87,12 +86,11 @@ void Inspector::CollectModules()
     });
 }
 
-void Inspector::Run()
+void Inspector::Run(const std::string& msg)
 {
     CollectModules();
 
-    serverThread_ = std::thread(&InspectorServer::Run, &inspectorServer_);
-    os::thread::SetThreadName(serverThread_.native_handle(), "InspectorServer");
+    inspectorServer_.Run(msg);
 }
 
 void Inspector::Stop()
@@ -269,6 +267,7 @@ void Inspector::RunIfWaitingForDebugger(PtThread thread)
     waitDebuggerCond_.Signal();
 }
 
+//For Hybrid it was not used, instead it use 1.0 waitForDebugger
 void Inspector::WaitForDebugger()
 {
     os::memory::LockHolder<os::memory::Mutex> lock(waitDebuggerMutex_);

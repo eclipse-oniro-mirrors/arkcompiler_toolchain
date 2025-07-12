@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,8 +16,8 @@
 #ifndef PANDA_TOOLING_INSPECTOR_TYPES_PROPERTY_PREVIEW_H
 #define PANDA_TOOLING_INSPECTOR_TYPES_PROPERTY_PREVIEW_H
 
-#include "tooling/inspector/types/remote_object_type.h"
-#include "tooling/inspector/json_serialization/serializable.h"
+#include "types/remote_object_type.h"
+#include "json_serialization/serializable.h"
 
 #include <optional>
 #include <string>

@@ -24,12 +24,13 @@ namespace ark::tooling::inspector {
 // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
 class OhosWsServer final : public OhosWsServerEndpoint {
 public:
-    bool RunOne() override;
+    bool ParseMessage(const std::string& msg) override;
 
     // Creates socket and starts listening
     bool Start(uint32_t port = 0);
     bool Stop();
     bool StartForSocketpair(int socketfd);
+    void InitEndPoint(std::shared_ptr<void> endPoint);
 
 private:
     bool socketpairMode_ {false};

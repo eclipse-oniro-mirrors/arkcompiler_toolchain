@@ -24,7 +24,7 @@
 #include <string_view>
 #include <vector>
 
-#include "console_call_type.h"
+#include "include/console_call_type.h"
 #include "include/tooling/pt_thread.h"
 
 #include "common.h"
@@ -59,7 +59,7 @@ public:
     NO_MOVE_SEMANTIC(InspectorServer);
 
     void Kill();
-    void Run();
+    void Run(const std::string& msg);
 
     void OnValidate(std::function<void()> &&handler);
     void OnOpen(std::function<void()> &&handler);

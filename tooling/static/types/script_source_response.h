@@ -16,7 +16,7 @@
 #ifndef PANDA_TOOLING_INSPECTOR_TYPES_SCRIPT_SOURCE_RESPONSE_H
 #define PANDA_TOOLING_INSPECTOR_TYPES_SCRIPT_SOURCE_RESPONSE_H
 
-#include "tooling/inspector/json_serialization/serializable.h"
+#include "json_serialization/serializable.h"
 
 #include "macros.h"
 #include "utils/json_builder.h"

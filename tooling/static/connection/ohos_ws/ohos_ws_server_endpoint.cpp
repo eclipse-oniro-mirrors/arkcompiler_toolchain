@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,14 +18,16 @@
 namespace ark::tooling::inspector {
 OhosWsServerEndpoint::OhosWsServerEndpoint() noexcept
 {
-    endpoint_.SetValidateConnectionCallback([this](auto) {
-        // a new connection will be accepted only after the prior is finished,
-        // which is ensured by websocket implementation
-        onValidate_();
-        return true;
-    });
+    if (endpoint_ != nullptr) {
+        endpoint_->SetValidateConnectionCallback([this](auto) {
+            // a new connection will be accepted only after the prior is finished,
+            // which is ensured by websocket implementation
+            onValidate_();
+            return true;
+        });
 
-    endpoint_.SetOpenConnectionCallback([this] { onOpen_(); });
-    endpoint_.SetFailConnectionCallback([this] { onFail_(); });
+        endpoint_->SetOpenConnectionCallback([this] { onOpen_(); });
+        endpoint_->SetFailConnectionCallback([this] { onFail_(); });
+    }
 }
 }  // namespace ark::tooling::inspector

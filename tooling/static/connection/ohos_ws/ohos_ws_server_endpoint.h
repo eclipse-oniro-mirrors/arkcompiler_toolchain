@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,7 +19,8 @@
 #include "server/websocket_server.h"
 
 #include "connection/server_endpoint_base.h"
-
+#include "../../common/macros.h"
+#include "inspector.h"
 namespace ark::tooling::inspector {
 // Server endpoint based on OHOS websocket implementation
 // NOLINTNEXTLINE(fuchsia-multiple-inheritance)
@@ -31,14 +32,16 @@ public:
     OhosWsServerEndpoint() noexcept;
 
 protected:
-    Endpoint endpoint_;  // NOLINT(misc-non-private-member-variables-in-classes)
+    std::shared_ptr<Endpoint> endpoint_;  // NOLINT(misc-non-private-member-variables-in-classes)
 
 private:
     void SendMessage(const std::string &message) override
     {
         auto wasSent = false;
-        if (endpoint_.IsConnected()) {
-            wasSent = endpoint_.SendReply(message);
+        if (endpoint_ != nullptr) {
+            if (endpoint_->IsConnected()) {
+                wasSent = endpoint_->SendReply(message);
+            }
         }
         if (!wasSent) {
             LOG(INFO, DEBUGGER) << "Did not send message: " << message;

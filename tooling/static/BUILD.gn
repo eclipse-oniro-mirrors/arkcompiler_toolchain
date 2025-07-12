@@ -14,6 +14,7 @@
 import("../../toolchain.gni")
 
 libarkinspector_sources = [
+  "init.cpp",
   "connection/endpoint_base.cpp",
   "connection/event_loop.cpp",
   "connection/ohos_ws/ohos_ws_server.cpp",
@@ -28,7 +29,6 @@ libarkinspector_sources = [
   "debugger/thread_state.cpp",
   "error.cpp",
   "evaluation/evaluation_engine.cpp",
-  "init.cpp",
   "inspector.cpp",
   "inspector_server.cpp",
   "json_serialization/jrpc_error.cpp",
@@ -54,19 +54,39 @@ config("libarkinspector_config") {
     "-Wno-null-pointer-subtraction",
     "-Wno-error=unknown-warning-option",
   ]
-
+  include_dirs = [ "./" ]
+  include_dirs += [ "../" ]
+  include_dirs += [ "../../" ]
+  defines = []
+  if (enable_hilog) {
+    defines += [ "ENABLE_HILOG" ]
+  }
   # required for arkcompiler_toolchain compilation
   if (is_ohos) {
-    defines = [ "OHOS_PLATFORM" ]
+    defines += [ "OHOS_PLATFORM" ]
   }
 }
 
-ohos_static_library("libark_tooling_plus_static") {
+ohos_static_library("libarkinspector_plus_static") {
   sources = libarkinspector_sources
-  external_deps = hiviewdfx_ext_deps
+
+  configs = [
+    ":libarkinspector_config"
+  ]
+  external_deps = [
+    "runtime_core:libarktscompiler",
+    "runtime_core:arktsdisassembler",
+    "runtime_core:libarktsbase_package",
+  ]
+  deps = [
+    "../../websocket:libwebsocket_server",
+    "../hybrid_step:arkhybridstep",
+  ]
 
   if (is_mingw || is_win) {
     output_extension = "dll"
+  } else if (is_mac) {
+    output_extension = "dylib"
   } else {
     output_extension = "so"
   }
