@@ -71,7 +71,7 @@ public:
     void ThreadEnd(PtThread thread) override;
     void VmDeath() override;
 
-    void Run();
+    void Run(const std::string& msg);
     void Stop();
     void WaitForDebugger();
 

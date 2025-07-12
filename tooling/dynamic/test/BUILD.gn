@@ -92,7 +92,10 @@ ohos_shared_library("debugger_entry") {
   foreach(file, test_js_files) {
     deps += [ ":gen_${file}_abc" ]
   }
-  external_deps = [ "libuv:uv" ]
+  external_deps = [ 
+    "libuv:uv",
+    "ets_runtime:libark_jsruntime"
+  ]
   if (enable_hilog) {
     external_deps += [ "hilog:libhilog" ]
   }
@@ -309,6 +312,7 @@ host_unittest_action("DebuggerClientTest") {
   external_deps += [
     "bounds_checking_function:libsec_shared",
     "cJSON:cjson_static",
+    "ets_runtime:libark_jsruntime",
     "icu:shared_icui18n",
     "icu:shared_icuuc",
     "libuv:uv",
@@ -356,6 +360,7 @@ host_unittest_action("DebuggerCIntClientTest") {
   external_deps += [
     "bounds_checking_function:libsec_shared",
     "cJSON:cjson_static",
+    "ets_runtime:libark_jsruntime",
     "icu:shared_icui18n",
     "icu:shared_icuuc",
     "libuv:uv",
