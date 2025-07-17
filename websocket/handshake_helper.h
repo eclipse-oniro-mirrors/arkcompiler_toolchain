@@ -29,10 +29,12 @@ public:
     // WebSocket Globally Unique Identifier
     static constexpr std::string_view WEB_SOCKET_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
     // The value of |Sec-WebSocket-Key| header field MUST be a nonce consisting of a randomly selected 16-byte value
-    static constexpr size_t KEY_LENGTH = GetBase64EncodingLength(16);
+    static constexpr size_t SEC_WEBSOCKET_KEY_BYTES_LEN = 16;
+    static constexpr size_t KEY_LENGTH = GetBase64EncodingLength(SEC_WEBSOCKET_KEY_BYTES_LEN);
     // SHA1 will write SHA_DIGEST_LENGTH == 20 bytes of output
     static constexpr size_t ENCODED_KEY_LEN = GetBase64EncodingLength(SHA_DIGEST_LENGTH);
 
+    static std::string GenerateRandomSecWSKey();
     static bool EncodeKey(std::string_view key, unsigned char (&destination)[ENCODED_KEY_LEN + 1]);
     static bool EncodeKey(const unsigned char(&key)[KEY_LENGTH + 1], unsigned char (&destination)[ENCODED_KEY_LEN + 1]);
 

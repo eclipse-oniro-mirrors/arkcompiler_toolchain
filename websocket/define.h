@@ -18,6 +18,7 @@
 
 #include <openssl/sha.h>
 #include <openssl/evp.h>
+#include <openssl/rand.h>
 #include <securec.h>
 #if defined(WINDOWS_PLATFORM)
 #include <winsock2.h>
