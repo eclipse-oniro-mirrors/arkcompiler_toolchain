@@ -22,13 +22,11 @@
 #include "client/websocket_client.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
-static bool ValidateServerHandShake(HttpResponse& response)
+bool WebSocketClient::ValidateServerHandShake(HttpResponse& response)
 {
     static constexpr std::string_view HTTP_SWITCHING_PROTOCOLS_STATUS_CODE = "101";
     static constexpr std::string_view HTTP_RESPONSE_REQUIRED_UPGRADE = "websocket";
     static constexpr std::string_view HTTP_RESPONSE_REQUIRED_CONNECTION = "upgrade";
-    // NB! `defaultWebSocketKey` must match "Sec-WebSocket-Key" used in `WebSocketClient`.
-    static constexpr unsigned char defaultWebSocketKey[] = "64b4B+s5JDlgkdg7NekJ+g==";
 
     // in accordance to https://www.rfc-editor.org/rfc/rfc6455#section-4.1
     if (response.status != HTTP_SWITCHING_PROTOCOLS_STATUS_CODE) {
@@ -46,7 +44,7 @@ static bool ValidateServerHandShake(HttpResponse& response)
     // The same WebSocket-Key is used for all connections
     // - must either use a randomly-selected, as required by spec or do this calculation statically.
     unsigned char expectedSecWebSocketAccept[WebSocketKeyEncoder::ENCODED_KEY_LEN + 1];
-    if (!WebSocketKeyEncoder::EncodeKey(defaultWebSocketKey, expectedSecWebSocketAccept)) {
+    if (!WebSocketKeyEncoder::EncodeKey(secWebSocketKey_, expectedSecWebSocketAccept)) {
         LOGE("ValidateServerHandShake failed to generate expected Sec-WebSocket-Accept token");
         return false;
     }
@@ -180,8 +178,10 @@ bool WebSocketClient::ClientSendWSUpgradeReq()
         return true;
     }
 
-    // length without null-terminator
-    if (!Send(GetConnectionSocket(), CLIENT_WEBSOCKET_UPGRADE_REQ, sizeof(CLIENT_WEBSOCKET_UPGRADE_REQ) - 1, 0)) {
+    secWebSocketKey_ = WebSocketKeyEncoder::GenerateRandomSecWSKey();
+    std::string upgradeReq = std::string(CLIENT_WS_UPGRADE_REQ_BEFORE_KEY) + secWebSocketKey_ +
+                             std::string(CLIENT_WS_UPGRADE_REQ_AFTER_KEY);
+    if (!Send(GetConnectionSocket(), upgradeReq.data(), upgradeReq.size(), 0)) {
         LOGE("ClientSendWSUpgradeReq::client send wsupgrade req failed, error = %{public}d, desc = %{public}sn",
             errno, strerror(errno));
         CloseOnInitFailure();

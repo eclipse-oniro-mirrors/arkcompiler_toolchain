@@ -47,6 +47,7 @@ private:
     std::string CreateFrame(bool isLast, FrameType frameType) const override;
     std::string CreateFrame(bool isLast, FrameType frameType, const std::string& payload) const override;
     std::string CreateFrame(bool isLast, FrameType frameType, std::string&& payload) const override;
+    bool ValidateServerHandShake(HttpResponse& response);
 
 private:
     static constexpr std::array<std::string_view, 4> SOCKET_STATE_NAMES = {
@@ -56,20 +57,21 @@ private:
         "closed"
     };
 
-    // May replace default websocket-key with randomly generated, as required by spec.
-    static constexpr char CLIENT_WEBSOCKET_UPGRADE_REQ[] = "GET / HTTP/1.1\r\n"
-                                                                "Connection: Upgrade\r\n"
-                                                                "Pragma: no-cache\r\n"
-                                                                "Cache-Control: no-cache\r\n"
-                                                                "Upgrade: websocket\r\n"
-                                                                "Sec-WebSocket-Version: 13\r\n"
-                                                                "Accept-Encoding: gzip, deflate, br\r\n"
-                                                                "Sec-WebSocket-Key: 64b4B+s5JDlgkdg7NekJ+g==\r\n"
-                                                                "Sec-WebSocket-Extensions: permessage-deflate\r\n"
-                                                                "\r\n";
+    static constexpr char CLIENT_WS_UPGRADE_REQ_BEFORE_KEY[] = "GET / HTTP/1.1\r\n"
+                                                               "Connection: Upgrade\r\n"
+                                                               "Pragma: no-cache\r\n"
+                                                               "Cache-Control: no-cache\r\n"
+                                                               "Upgrade: websocket\r\n"
+                                                               "Sec-WebSocket-Version: 13\r\n"
+                                                               "Accept-Encoding: gzip, deflate, br\r\n"
+                                                               "Sec-WebSocket-Key: ";
+
+    static constexpr char CLIENT_WS_UPGRADE_REQ_AFTER_KEY[] = "\r\nSec-WebSocket-Extensions: permessage-deflate\r\n"
+                                                              "\r\n";
 
     static constexpr int NET_SUCCESS = 1;
     static constexpr uint8_t MASK_KEY[] = {0xa, 0xb, 0xc, 0xd};
+    std::string secWebSocketKey_;
 };
 } // namespace OHOS::ArkCompiler::Toolchain
 
