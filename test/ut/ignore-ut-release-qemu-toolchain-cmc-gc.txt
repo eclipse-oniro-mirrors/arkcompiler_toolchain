@@ -1,0 +1,8 @@
+# Known failure list for ut - release - qemu - toolchain -cmc -gc
+
+#26061
+obj/arkcompiler/toolchain/tooling/test/DebuggerClientTestWithQemu
+obj/arkcompiler/toolchain/tooling/test/DebuggerEntryTestWithQemu
+obj/arkcompiler/toolchain/tooling/test/DebuggerTestWithQemu
+obj/arkcompiler/toolchain/tooling/test/DebuggerCIntClientTestWithQemu
+
