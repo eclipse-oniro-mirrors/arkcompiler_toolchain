@@ -27,7 +27,6 @@ config("debug_api_test") {
 
   include_dirs = [
     "$toolchain_root/websocket",
-    "//arkcompiler/ets_runtime",
     "../..",
   ]
 }
