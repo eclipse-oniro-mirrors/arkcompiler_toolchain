@@ -49,14 +49,16 @@ class HeapProfilerImpl(ProtocolImpl):
     async def stop_tracking_heap_objects(self, message_id, connection, params):
         response = await comm_with_debugger_server(self.websocket, connection,
                                                    heap_profiler.stop_tracking_heap_objects(), message_id)
-        while response.startswith('{"method":"HeapProfiler.lastSeenObjectId"'):
+        while response.startswith('{"method":"HeapProfiler.lastSeenObjectId"') \
+                or response.startswith('{"method":"HeapProfiler.heapStatsUpdate"'):
             response = await self.websocket.recv_msg_of_debugger_server(connection.instance_id,
                                                                         connection.received_msg_queue)
         assert r'\"location_fields\":[\"object_index\",\"script_id\",\"line\",\"column\"]' in response, \
             f'\"location_fields\":[\"object_index\",\"script_id\",\"line\",\"column\"] not in {response}'
         pre_response = response
         while response.startswith('{"method":"HeapProfiler.addHeapSnapshotChunk"') \
-                or response.startswith('{"method":"HeapProfiler.lastSeenObjectId"'):
+                or response.startswith('{"method":"HeapProfiler.lastSeenObjectId"') \
+                or response.startswith('{"method":"HeapProfiler.heapStatsUpdate"'):
             if response.startswith('{"method":"HeapProfiler.addHeapSnapshotChunk"'):
                 pre_response = response
             response = await self.websocket.recv_msg_of_debugger_server(connection.instance_id,

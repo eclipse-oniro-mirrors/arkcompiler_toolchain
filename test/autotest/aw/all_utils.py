@@ -22,14 +22,13 @@ import os
 import re
 import subprocess
 import threading
-import time
 from typing import Union
 
 from hypium import SystemUI, BY, MatchPattern
 
 from fport import Fport
 from taskpool import TaskPool
-from websocket import WebSocket
+from toolchain_websocket import ToolchainWebSocket
 
 
 class TimeRecord:
@@ -161,8 +160,8 @@ class CommonUtils(object):
                                                          config['bundle_name'])
         assert connect_server_port > 0, 'Failed to fport connect server for 3 times, the port is very likely occupied'
         config['connect_server_port'] = connect_server_port
-        config['websocket'] = WebSocket(self.driver, config['connect_server_port'], config['debugger_server_port'],
-                                        config.get('print_protocol', True))
+        config['websocket'] = ToolchainWebSocket(self.driver, config['connect_server_port'], 
+                                                config['debugger_server_port'], config.get('print_protocol', True))
         config['taskpool'] = TaskPool()
 
     def hot_reload(self, hqf_path: Union[str, list]):

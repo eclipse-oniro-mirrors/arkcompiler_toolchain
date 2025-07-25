@@ -21,14 +21,14 @@ import asyncio
 import json
 
 from install_lib import install
+from fport import Fport
 
 install('websockets')
 import websockets.protocol
 from websockets import connect, ConnectionClosed
-from fport import Fport
 
 
-class WebSocket(object):
+class ToolchainWebSocket(object):
     def __init__(self, driver, connect_server_port, debugger_server_port, print_protocol=True):
         self.driver = driver
         self.connect_server_port = connect_server_port
@@ -54,12 +54,12 @@ class WebSocket(object):
         await queue.put(message)
         self.log(f'[==>] Instance {instance_id} send message: {message}')
         return True
-    
+
     async def get_instance(self):
         instance_id = await self.debugger_server_instance.get()
         self.debugger_server_instance.task_done()
         return instance_id
-    
+
     def no_more_instance(self):
         self.new_instance_flag = False
 
