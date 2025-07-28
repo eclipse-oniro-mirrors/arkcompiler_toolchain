@@ -19,7 +19,7 @@ Description: Python CDP Debugger.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 
 
 @dataclass
@@ -89,6 +89,14 @@ class BreakLocationUrl:
 
 
 @dataclass
+class SymbolicBreakpoint:
+    functionName: str
+
+    def to_json(self):
+        return {'functionName': self.functionName}
+
+
+@dataclass
 class RemoveBreakpointsUrl:
     url: str = ""
 
@@ -96,6 +104,11 @@ class RemoveBreakpointsUrl:
 @dataclass
 class SetBreakpointsLocations:
     locations: list = field(default_factory=list)
+
+
+@dataclass
+class SymbolicBreakpoints:
+    SymbolicBreakpoints: List[SymbolicBreakpoint] = field(default_factory=list)
 
 
 def enable(params: EnableAccelerateLaunchParams | None):
@@ -125,6 +138,24 @@ def get_possible_and_set_breakpoint_by_url(params: SetBreakpointsLocations):
         locations.append(location.to_json())
     command = {'method': 'Debugger.getPossibleAndSetBreakpointByUrl',
                'params': {'locations': locations}}
+    return command
+
+
+def set_symbolic_breakpoints(params: SymbolicBreakpoints):
+    symbolicBreakpoints = []
+    for symbolicBreakpoint in params.SymbolicBreakpoints:
+        symbolicBreakpoints.append(symbolicBreakpoint.to_json())
+    command = {'method': 'Debugger.setSymbolicBreakpoints',
+               'params': {'symbolicBreakpoints': symbolicBreakpoints}}
+    return command
+
+
+def remove_symbolic_breakpoints(params: SymbolicBreakpoints):
+    symbolicBreakpoints = []
+    for symbolicBreakpoint in params.SymbolicBreakpoints:
+        symbolicBreakpoints.append(symbolicBreakpoint.to_json())
+    command = {'method': 'Debugger.removeSymbolicBreakpoints',
+               'params': {'symbolicBreakpoints': symbolicBreakpoints}}
     return command
 
 

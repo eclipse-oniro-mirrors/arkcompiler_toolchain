@@ -124,6 +124,17 @@ class TestMainBasicFuncWithGPSOff(TestCase):
         ################################################################################################################
         await self.debugger_impl.send("Debugger.enable", main_thread)
         ################################################################################################################
+        # main thread: Debugger.setSymbolicBreakpoints
+        ################################################################################################################
+        symbolicBreakpoints = [debugger.SymbolicBreakpoint(functionName='testDebug')]
+        for i in range(1, 51):
+            symbolicBreakpoints.append(debugger.SymbolicBreakpoint(functionName='testDebug' + str(i)))
+        params = debugger.SymbolicBreakpoints(symbolicBreakpoints)
+        start_time = datetime.now()
+        await self.debugger_impl.send("Debugger.setSymbolicBreakpoints", main_thread, params)
+        end_time = datetime.now()
+        self.performance_utils.add_time_data("SetSymbolicBreakpoints", 10, (end_time - start_time).microseconds // 1000)
+        ################################################################################################################
         # main thread: Runtime.runIfWaitingForDebugger
         ################################################################################################################
         await self.runtime_impl.send("Runtime.runIfWaitingForDebugger", main_thread)
@@ -630,6 +641,29 @@ class TestMainBasicFuncWithGPSOff(TestCase):
         ################################################################################################################
         params = debugger.RemoveBreakpointsUrl(self.config['file_path']['params'])
         await self.debugger_impl.send("Debugger.removeBreakpointsByUrl", main_thread, params)
+        ################################################################################################################
+        # main thread: Debugger.removeSymbolicBreakpoints
+        ################################################################################################################
+        symbolicBreakpoints = [debugger.SymbolicBreakpoint(functionName='testDebug')]
+        for i in range(1, 51):
+            symbolicBreakpoints.append(debugger.SymbolicBreakpoint(functionName='testDebug' + str(i)))
+        params = debugger.SymbolicBreakpoints(symbolicBreakpoints)
+        start_time = datetime.now()
+        await self.debugger_impl.send("Debugger.removeSymbolicBreakpoints", main_thread, params)
+        end_time = datetime.now()
+        self.performance_utils.add_time_data("RemoveSymbolicBreakpoints", 10,
+                                             (end_time - start_time).microseconds // 1000)
+        for i in range(999):
+            start_time = datetime.now()
+            await self.debugger_impl.send("Debugger.setSymbolicBreakpoints", main_thread, params)
+            end_time = datetime.now()
+            self.performance_utils.add_time_data("SetSymbolicBreakpoints", 10,
+                                                    (end_time - start_time).microseconds // 1000)
+            start_time = datetime.now()
+            await self.debugger_impl.send("Debugger.removeSymbolicBreakpoints", main_thread, params)
+            end_time = datetime.now()
+            self.performance_utils.add_time_data("RemoveSymbolicBreakpoints", 10,
+                                                    (end_time - start_time).microseconds // 1000)
         ################################################################################################################
         # main thread: Debugger.resume
         ################################################################################################################
