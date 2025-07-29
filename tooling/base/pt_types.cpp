@@ -545,7 +545,7 @@ std::string ObjectRemoteObject::DescriptionForArray(const EcmaVM *ecmaVm, Local<
 
 std::string ObjectRemoteObject::DescriptionForRegexp(const EcmaVM *ecmaVm, Local<RegExpRef> tagged)
 {
-    std::string regExpSource = tagged->GetOriginalSource(ecmaVm)->ToString(ecmaVm);
+    std::string regExpSource = tagged->GetOriginalSource(ecmaVm)->DebuggerToString(ecmaVm);
     std::string regExpFlags = tagged->GetOriginalFlags(ecmaVm);
     return "/" + regExpSource + "/" + regExpFlags;
 }
@@ -577,9 +577,9 @@ std::string ObjectRemoteObject::DescriptionForMap(const EcmaVM *ecmaVm, Local<Ma
         if (jsVKey->IsObject(ecmaVm)) {
             description += "Object";
         } else if (jsVKey->IsString(ecmaVm)) {
-            description += cPre + jsVKey->ToString(ecmaVm)->ToString(ecmaVm) + cPre;
+            description += cPre + jsVKey->ToString(ecmaVm)->DebuggerToString(ecmaVm) + cPre;
         } else {
-            description += jsVKey->ToString(ecmaVm)->ToString(ecmaVm);
+            description += jsVKey->ToString(ecmaVm)->DebuggerToString(ecmaVm);
         }
 
         description += " => ";
@@ -587,9 +587,9 @@ std::string ObjectRemoteObject::DescriptionForMap(const EcmaVM *ecmaVm, Local<Ma
         if (jsVValue->IsObject(ecmaVm)) {
             description += "Object";
         } else if (jsVValue->IsString(ecmaVm)) {
-            description += cPre + jsVValue->ToString(ecmaVm)->ToString(ecmaVm) + cPre;
+            description += cPre + jsVValue->ToString(ecmaVm)->DebuggerToString(ecmaVm) + cPre;
         } else {
-            description += jsVValue->ToString(ecmaVm)->ToString(ecmaVm);
+            description += jsVValue->ToString(ecmaVm)->DebuggerToString(ecmaVm);
         }
         if (index == tagged->GetSize(ecmaVm) - 1 || index >= 4) { // 4:The count of elements
             description += tagged->GetSize(ecmaVm) > 5 ? ", ..." : ""; // 5:The count of elements
@@ -621,9 +621,9 @@ std::string ObjectRemoteObject::DescriptionForWeakMap(const EcmaVM *ecmaVm, Loca
         if (jsVKey->IsObject(ecmaVm)) {
             description += "Object";
         } else if (jsVKey->IsString(ecmaVm)) {
-            description += cPre + jsVKey->ToString(ecmaVm)->ToString(ecmaVm) + cPre;
+            description += cPre + jsVKey->ToString(ecmaVm)->DebuggerToString(ecmaVm) + cPre;
         } else {
-            description += jsVKey->ToString(ecmaVm)->ToString(ecmaVm);
+            description += jsVKey->ToString(ecmaVm)->DebuggerToString(ecmaVm);
         }
 
         description += " => ";
@@ -631,9 +631,9 @@ std::string ObjectRemoteObject::DescriptionForWeakMap(const EcmaVM *ecmaVm, Loca
         if (jsVValue->IsObject(ecmaVm)) {
             description += "Object";
         } else if (jsVValue->IsString(ecmaVm)) {
-            description += cPre + jsVValue->ToString(ecmaVm)->ToString(ecmaVm) + cPre;
+            description += cPre + jsVValue->ToString(ecmaVm)->DebuggerToString(ecmaVm) + cPre;
         } else {
-            description += jsVValue->ToString(ecmaVm)->ToString(ecmaVm);
+            description += jsVValue->ToString(ecmaVm)->DebuggerToString(ecmaVm);
         }
         if (index == tagged->GetSize(ecmaVm) - 1 || index >= 4) { // 4:The count of elements
             description += tagged->GetSize(ecmaVm) > 5 ? ", ..." : ""; // 5:The count of elements
@@ -666,9 +666,9 @@ std::string ObjectRemoteObject::DescriptionForSet(const EcmaVM *ecmaVm, Local<Se
         if (jsValue->IsObject(ecmaVm)) {
             description += "Object";
         } else if (jsValue->IsString(ecmaVm)) {
-            description += cPre + jsValue->ToString(ecmaVm)->ToString(ecmaVm) + cPre;
+            description += cPre + jsValue->ToString(ecmaVm)->DebuggerToString(ecmaVm) + cPre;
         } else {
-            description += jsValue->ToString(ecmaVm)->ToString(ecmaVm);
+            description += jsValue->ToString(ecmaVm)->DebuggerToString(ecmaVm);
         }
         if (index == tagged->GetSize(ecmaVm) - 1 || index >= 4) { // 4:The count of elements
             description += tagged->GetSize(ecmaVm) > 5 ? ", ..." : ""; // 5:The count of elements
@@ -699,9 +699,9 @@ std::string ObjectRemoteObject::DescriptionForWeakSet(const EcmaVM *ecmaVm, Loca
         if (jsValue->IsObject(ecmaVm)) {
             description += "Object";
         } else if (jsValue->IsString(ecmaVm)) {
-            description += cPre + jsValue->ToString(ecmaVm)->ToString(ecmaVm) + cPre;
+            description += cPre + jsValue->ToString(ecmaVm)->DebuggerToString(ecmaVm) + cPre;
         } else {
-            description += jsValue->ToString(ecmaVm)->ToString(ecmaVm);
+            description += jsValue->ToString(ecmaVm)->DebuggerToString(ecmaVm);
         }
         if (index == tagged->GetSize(ecmaVm) - 1 || index >= 4) { // 4:The count of elements
             description += tagged->GetSize(ecmaVm) > 5 ? ", ..." : ""; // 5:The count of elements
@@ -727,7 +727,7 @@ std::string ObjectRemoteObject::DescriptionForError(const EcmaVM *ecmaVm, Local<
     std::string strName = Local<ObjectRef>(tagged)->Get(ecmaVm, name)->ToString(ecmaVm)->ToString(ecmaVm);
     // add message
     Local<JSValueRef> message = StringRef::NewFromUtf8(ecmaVm, "message");
-    std::string strMessage = Local<ObjectRef>(tagged)->Get(ecmaVm, message)->ToString(ecmaVm)->ToString(ecmaVm);
+    std::string strMessage = Local<ObjectRef>(tagged)->Get(ecmaVm, message)->ToString(ecmaVm)->DebuggerToString(ecmaVm);
     if (strMessage.empty()) {
         return strName;
     } else {
@@ -804,7 +804,7 @@ std::string ObjectRemoteObject::DescriptionForPrimitiveNumber(const EcmaVM *ecma
 
 std::string ObjectRemoteObject::DescriptionForPrimitiveString(const EcmaVM *ecmaVm, const Local<JSValueRef> &tagged)
 {
-    std::string strValue = tagged->ToString(ecmaVm)->ToString(ecmaVm);
+    std::string strValue = tagged->ToString(ecmaVm)->DebuggerToString(ecmaVm);
     std::string description = RemoteObject::JSPrimitiveStringDescription + "{[[PrimitiveValue]]: " + strValue + "}";
     return description;
 }
@@ -965,7 +965,7 @@ std::string ObjectRemoteObject::DescriptionForVector()
 
 std::string SymbolRemoteObject::DescriptionForSymbol(const EcmaVM *ecmaVm, Local<SymbolRef> tagged) const
 {
-    std::string description = "Symbol(" + tagged->GetDescription(ecmaVm)->ToString(ecmaVm) + ")";
+    std::string description = "Symbol(" + tagged->GetDescription(ecmaVm)->DebuggerToString(ecmaVm) + ")";
     return description;
 }
 
@@ -1342,7 +1342,7 @@ std::unique_ptr<PropertyDescriptor> PropertyDescriptor::FromProperty(const EcmaV
     std::string nameStr;
     if (name->IsSymbol(ecmaVm)) {
         Local<SymbolRef> symbol(name);
-        nameStr = "Symbol(" + Local<SymbolRef>(name)->GetDescription(ecmaVm)->ToString(ecmaVm) + ")";
+        nameStr = "Symbol(" + Local<SymbolRef>(name)->GetDescription(ecmaVm)->DebuggerToString(ecmaVm) + ")";
         debuggerProperty->symbol_ = RemoteObject::FromTagged(ecmaVm, name);
     } else {
         nameStr = name->ToString(ecmaVm)->ToString(ecmaVm);

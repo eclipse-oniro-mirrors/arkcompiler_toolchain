@@ -14,6 +14,9 @@
  */
 
 #include "tooling/base/pt_types.h"
+#include "common_components/base/utf_helper.h"
+#include "ecmascript/js_regexp.h"
+#include "ecmascript/object_factory.h"
 #include "ecmascript/tests/test_helper.h"
 #include "protocol_handler.h"
 
@@ -1040,5 +1043,88 @@ HWTEST_F_L0(PtTypesTest, BreakpointReturnInfoCreateTest)
     msg = std::string() + R"({"id":0,"method":"Debugger.Test","params":{"id":"Test","scriptId":5}})";
     breakpointReturnInfo = BreakpointReturnInfo::Create(DispatchRequest(msg).GetParams());
     EXPECT_EQ(breakpointReturnInfo, nullptr);
+}
+
+HWTEST_F_L0(PtTypesTest, InvalidUtf16Test)
+{
+    const char16_t invalidUtf16[] = { 0xD800 };
+    Local<StringRef> invalidStrRef = StringRef::NewFromUtf16(ecmaVm, invalidUtf16);
+    std::string invalidStrInDebugger = invalidStrRef->DebuggerToString(ecmaVm);
+
+    auto utf8 = reinterpret_cast<const uint8_t*>(invalidStrInDebugger.c_str());
+    size_t utf8Len = invalidStrInDebugger.size();
+    for (size_t i = 0; i < utf8Len;) {
+        std::pair<int32_t, size_t> result =
+            common::utf_helper::ConvertUtf8ToUnicodeChar(utf8 + i, utf8Len - i);
+        // -1: invalid utf8
+        ASSERT_TRUE(result.first != -1);
+        i += result.second;
+    }
+}
+
+HWTEST_F_L0(PtTypesTest, InvalidUtf16DescriptionTest)
+{
+    const char16_t invalidUtf16[] = { 0xD800 };
+    Local<StringRef> invalidStrRef = StringRef::NewFromUtf16(ecmaVm, invalidUtf16);
+    JSHandle<JSTaggedValue> invalidStrHandle(thread, JSNApiHelper::ToJSTaggedValue(*invalidStrRef));
+    std::string invalidStrInDebugger = invalidStrRef->DebuggerToString(ecmaVm);
+    std::string invalidStr = invalidStrRef->ToString(ecmaVm);
+    ASSERT_TRUE(invalidStrInDebugger != invalidStr);
+
+    // String
+    StringRemoteObject strObj(ecmaVm, invalidStrRef);
+    EXPECT_EQ(strObj.GetDescription(), invalidStrInDebugger);
+
+    // Primitive String
+    ObjectFactory *factory = ecmaVm->GetFactory();
+    JSHandle<JSTaggedValue> primitiveStrHandle =
+        JSHandle<JSTaggedValue>::Cast(factory->NewJSPrimitiveRef(PrimitiveType::PRIMITIVE_STRING, invalidStrHandle));
+    Local<JSValueRef> primitiveStr = JSNApiHelper::ToLocal<JSValueRef>(primitiveStrHandle);
+    std::string primitiveStrDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, primitiveStr);
+    ASSERT_TRUE(primitiveStrDesc.find(invalidStrInDebugger) != std::string::npos);
+
+    // RegExp
+    JSHandle<JSHClass> jsRegExpClass = factory->NewEcmaHClass(JSRegExp::SIZE, JSType::JS_REG_EXP);
+    JSHandle<JSRegExp> jsRegExp = JSHandle<JSRegExp>::Cast(factory->NewJSObject(jsRegExpClass));
+    jsRegExp->SetOriginalSource(thread, invalidStrHandle.GetTaggedValue());
+    JSHandle<JSTaggedValue> jsRegExpHandle = JSHandle<JSTaggedValue>::Cast(jsRegExp);
+    Local<RegExpRef> regExpRef = JSNApiHelper::ToLocal<RegExpRef>(jsRegExpHandle);
+    std::string regExpDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, regExpRef);
+    ASSERT_TRUE(regExpDesc.find(invalidStrInDebugger) != std::string::npos);
+
+    // Map
+    Local<MapRef> mapRef = MapRef::New(ecmaVm);
+    mapRef->Set(ecmaVm, invalidStrRef, invalidStrRef);
+    std::string mapDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, mapRef);
+    ASSERT_TRUE(mapDesc.find(invalidStrInDebugger) != std::string::npos);
+
+    // WeakMap
+    Local<WeakMapRef> weakMapRef = WeakMapRef::New(ecmaVm);
+    weakMapRef->Set(ecmaVm, primitiveStr, invalidStrRef);
+    std::string weakMapDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, weakMapRef);
+    ASSERT_TRUE(weakMapDesc.find(invalidStrInDebugger) != std::string::npos);
+
+    // Set
+    Local<SetRef> setRef = SetRef::New(ecmaVm);
+    setRef->Add(ecmaVm, invalidStrRef);
+    std::string setDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, setRef);
+    ASSERT_TRUE(setDesc.find(invalidStrInDebugger) != std::string::npos);
+
+    // WeakSet
+    Local<WeakSetRef> weakSetRef = WeakSetRef::New(ecmaVm);
+    weakSetRef->Add(ecmaVm, invalidStrRef);
+    std::string weakSetDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, weakSetRef);
+    ASSERT_TRUE(weakSetDesc.find(invalidStrInDebugger) != std::string::npos);
+
+    // Error
+    Local<JSValueRef> error = Exception::Error(ecmaVm, invalidStrRef);
+    std::string errorDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, error);
+    ASSERT_TRUE(errorDesc.find(invalidStrInDebugger) != std::string::npos);
+
+    // Symbol
+    Local<SymbolRef> symbol = SymbolRef::New(ecmaVm, invalidStrRef);
+    SymbolRemoteObject symbolObj(ecmaVm, symbol);
+    std::string symbolDesc = symbolObj.GetDescription();
+    ASSERT_TRUE(symbolDesc.find(invalidStrInDebugger) != std::string::npos);
 }
 }  // namespace panda::test
