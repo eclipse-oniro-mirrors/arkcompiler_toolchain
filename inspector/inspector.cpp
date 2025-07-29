@@ -442,8 +442,8 @@ void StopDebug(void* vm)
     if (debuggerInfo != g_debuggerInfo.end()) {
         g_debuggerInfo.erase(debuggerInfo);
     }
-    g_uninitializeDebugger(vm);
     ResetServiceLocked(vm, true);
+    g_uninitializeDebugger(vm);
     LOGI("StopDebug end");
 }
 
