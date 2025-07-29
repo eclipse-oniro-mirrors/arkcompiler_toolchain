@@ -48,6 +48,8 @@ test_js_files = [
   "export_variable_first",
   "export_variable_second",
   "module_variable",
+  "local_export",
+  "module_watch",
   "dropframe",
   "local_variable_scope",
   "container",
@@ -71,7 +73,8 @@ foreach(file, test_js_files) {
     dst_file = rebase_path(test_abc)
     extra_args = [ "--debug" ]
     if (file == "module_variable" || file == "export_variable_first" ||
-        file == "export_variable_second") {
+        file == "export_variable_second" || file == "local_export" ||
+        file == "module_watch") {
       extra_args += [ "--module" ]
     }
     extra_args += [ "--merge-abc" ]

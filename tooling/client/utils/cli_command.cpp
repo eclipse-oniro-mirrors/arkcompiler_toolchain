@@ -547,7 +547,8 @@ ErrCode CliCommand::ShowstackCommand(const std::string &cmd)
 
 ErrCode CliCommand::PrintCommand(const std::string &cmd)
 {
-    if (GetArgList().size() > 1) {
+    int TWO_ARGS = 2;
+    if (GetArgList().size() > TWO_ARGS) {
         OutputCommand(cmd, false);
         return ErrCode::ERR_FAIL;
     }
@@ -561,6 +562,15 @@ ErrCode CliCommand::PrintCommand(const std::string &cmd)
         runtimeClient.SetIsInitializeTree(false);
         VariableManager &variableManager = session->GetVariableManager();
         int32_t objectId = variableManager.FindObjectIdWithIndex(std::stoi(GetArgList()[0]));
+        runtimeClient.SetObjectId(std::to_string(objectId));
+    }
+    if (GetArgList().size() == TWO_ARGS) {
+        if (!Utils::IsNumber(GetArgList()[1])) {
+            return ErrCode::ERR_FAIL;
+        }
+        runtimeClient.SetIsInitializeTree(false);
+        VariableManager &variableManager = session->GetVariableManager();
+        int32_t objectId = std::stoi(GetArgList()[1]);
         runtimeClient.SetObjectId(std::to_string(objectId));
     }
     result = runtimeClient.DispatcherCmd(cmd);
