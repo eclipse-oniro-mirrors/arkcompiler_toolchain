@@ -69,6 +69,7 @@
 #include "tooling/test/testcases/js_tracing_test.h"
 #include "tooling/test/testcases/js_watch_basic_type_test.h"
 #include "tooling/test/testcases/js_watch_closure_variable_test.h"
+#include "tooling/test/testcases/js_watch_module_test.h"
 #include "tooling/test/testcases/js_watch_other_type_test.h"
 #include "tooling/test/testcases/js_watch_set_type_test.h"
 #include "tooling/test/testcases/js_watch_test.h"
@@ -90,6 +91,7 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsExceptionTest", GetJsExceptionTest());
     TestUtil::RegisterTest("JsContainerTest", GetJsContainerTest());
     TestUtil::RegisterTest("JsModuleVariableTest", GetJsModuleVariableTest());
+    TestUtil::RegisterTest("JsWatchModuleTest", GetJsWatchModuleTest());
     TestUtil::RegisterTest("JsSourceTest", GetJsSourceTest());
     TestUtil::RegisterTest("JsTracingTest", GetJsTracingTest());
     TestUtil::RegisterTest("JsWatchTest", GetJsWatchTest());
