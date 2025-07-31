@@ -103,7 +103,7 @@ private:
         JsonObjectBuilder builder;
         build(builder);
         auto message = std::move(builder).Build();
-        LOG(DEBUG, DEBUGGER) << "Sending " << message;
+        LOG(INFO, DEBUGGER) << "Sending " << message;
         SendMessage(message);
     }
 
