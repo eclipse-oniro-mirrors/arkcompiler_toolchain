@@ -88,8 +88,6 @@ void Inspector::CollectModules()
 
 void Inspector::Run(const std::string& msg)
 {
-    CollectModules();
-
     inspectorServer_.Run(msg);
 }
 
@@ -138,6 +136,9 @@ void Inspector::MethodEntry(PtThread thread, Method * /* method */)
     if (stack.IsCFrame()) {
         return;
     }
+    if (debuggableThread == nullptr) {
+        return;
+    }
     if (debuggableThread->OnMethodEntry()) {
         HandleError(debugger_.NotifyFramePop(thread, 0));
     }
@@ -152,7 +153,7 @@ void Inspector::SourceNameInsert(const panda_file::DebugInfoExtractor *extractor
     }
     for (const auto &sourceName : sourceNames) {
         // Get src file name
-        auto scriptId = inspectorServer_.GetSourceManager().GetScriptId(sourceName);
+        auto [scriptId, isNew] = inspectorServer_.GetSourceManager().GetScriptId(sourceName);
         inspectorServer_.CallDebuggerScriptParsed(scriptId, sourceName);
     }
 }
@@ -165,9 +166,6 @@ void Inspector::LoadModule(std::string_view fileName)
         [this, fileName](auto &file) {
             if (file.GetFilename() == fileName) {
                 debugInfoCache_.AddPandaFile(file, true);
-                const auto *extractor = debugInfoCache_.GetDebugInfo(&file);
-                SourceNameInsert(extractor);
-                ResolveBreakpoints(file, extractor);
             }
 
             return true;
@@ -767,11 +765,6 @@ void Inspector::DebuggerEnable()
         dbgThread.Reset();
     }
     breakpointStorage_.Reset();
-    Runtime::GetCurrent()->GetClassLinker()->EnumeratePandaFiles([this](auto &file) {
-        const auto *extractor = debugInfoCache_.GetDebugInfo(&file);
-        SourceNameInsert(extractor);
-        return true;
-    });
 }
 
 void Inspector::RegisterMethodHandlers()
