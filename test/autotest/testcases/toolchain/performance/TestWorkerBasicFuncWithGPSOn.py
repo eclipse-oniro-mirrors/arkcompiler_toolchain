@@ -259,6 +259,17 @@ class TestWorkerBasicFuncWithGPSOn(TestCase):
         ################################################################################################################
         await self.debugger_impl.send("Debugger.enable", worker_thread)
         ################################################################################################################
+        # main thread: Debugger.setSymbolicBreakpoints
+        ################################################################################################################
+        symbolicBreakpoints = [debugger.SymbolicBreakpoint(functionName='testDropFrame')]
+        for i in range(1, 51):
+            symbolicBreakpoints.append(debugger.SymbolicBreakpoint(functionName='testDebug' + str(i)))
+        params = debugger.SymbolicBreakpoints(symbolicBreakpoints)
+        start_time = datetime.now()
+        await self.debugger_impl.send("Debugger.setSymbolicBreakpoints", worker_thread, params)
+        end_time = datetime.now()
+        self.performance_utils.add_time_data("SetSymbolicBreakpoints", 10, (end_time - start_time).microseconds // 1000)
+        ################################################################################################################
         # worker thread: Runtime.runIfWaitingForDebugger
         ################################################################################################################
         await self.runtime_impl.send("Runtime.runIfWaitingForDebugger", worker_thread)
@@ -329,20 +340,6 @@ class TestWorkerBasicFuncWithGPSOn(TestCase):
         self.common_utils.assert_equal(response['params']['callFrames'][0]['url'],
                                        self.config['file_path']['drop_frame'])
         self.common_utils.assert_equal(response['params']['reason'], 'Break on start')
-        ################################################################################################################
-        # worker thread: Debugger.removeBreakpointsByUrl
-        ################################################################################################################
-        params = debugger.RemoveBreakpointsUrl(self.config['file_path']['drop_frame'])
-        await self.debugger_impl.send("Debugger.removeBreakpointsByUrl", worker_thread, params)
-        ################################################################################################################
-        # worker thread: Debugger.getPossibleAndSetBreakpointByUrl
-        ################################################################################################################
-        locations = [debugger.BreakLocationUrl(url=self.config['file_path']['drop_frame'], line_number=4)]
-        params = debugger.SetBreakpointsLocations(locations)
-        response = await self.debugger_impl.send("Debugger.getPossibleAndSetBreakpointsByUrl",
-                                                 worker_thread, params)
-        self.common_utils.assert_equal(response['result']['locations'][0]['id'],
-                                       'id:4:0:' + self.config['file_path']['drop_frame'])
         ################################################################################################################
         # worker thread: Debugger.resume
         ################################################################################################################
@@ -472,7 +469,13 @@ class TestWorkerBasicFuncWithGPSOn(TestCase):
             self.performance_utils.add_time_data("StepOut(worker)", 8, (end_time - start_time).microseconds // 1000)
             # Debugger.resume
             await self.debugger_impl.send("Debugger.resume", worker_thread)
-            await self.debugger_impl.recv("Debugger.paused", worker_thread)
+            if i != 499:
+                await self.debugger_impl.recv("Debugger.paused", worker_thread)
+            else:
+                response = await self.debugger_impl.recv("Debugger.paused", worker_thread)
+                print("response is ", response)
+                self.common_utils.assert_equal(response['params']['callFrames'][0]['functionName'], 'testDropFrame')
+                self.common_utils.assert_equal(response['params']['reason'], 'Symbol')
         ################################################################################################################
         # worker thread: Debugger.dropFrame
         ################################################################################################################
@@ -490,10 +493,11 @@ class TestWorkerBasicFuncWithGPSOn(TestCase):
             self.performance_utils.add_time_data("ResumeAndPaused(worker)", 8,
                                                  (end_time - start_time).microseconds // 1000)
         ################################################################################################################
-        # worker thread: Debugger.removeBreakpointsByUrl
+        # main thread: Debugger.removeSymbolicBreakpoints
         ################################################################################################################
-        params = debugger.RemoveBreakpointsUrl(self.config['file_path']['drop_frame'])
-        await self.debugger_impl.send("Debugger.removeBreakpointsByUrl", worker_thread, params)
+        symbolicBreakpoints = [debugger.SymbolicBreakpoint(functionName='testDropFrame')]
+        params = debugger.SymbolicBreakpoints(symbolicBreakpoints)
+        await self.debugger_impl.send("Debugger.removeSymbolicBreakpoints", worker_thread, params)
         ################################################################################################################
         # worker thread: Debugger.resume
         ################################################################################################################
@@ -754,6 +758,29 @@ class TestWorkerBasicFuncWithGPSOn(TestCase):
         ################################################################################################################
         params = debugger.RemoveBreakpointsUrl(self.config['file_path']['params'])
         await self.debugger_impl.send("Debugger.removeBreakpointsByUrl", worker_thread, params)
+        ################################################################################################################
+        # main thread: Debugger.removeSymbolicBreakpoints
+        ################################################################################################################
+        symbolicBreakpoints = [debugger.SymbolicBreakpoint(functionName='testDropFrame')]
+        for i in range(1, 51):
+            symbolicBreakpoints.append(debugger.SymbolicBreakpoint(functionName='testDebug' + str(i)))
+        params = debugger.SymbolicBreakpoints(symbolicBreakpoints)
+        start_time = datetime.now()
+        await self.debugger_impl.send("Debugger.removeSymbolicBreakpoints", worker_thread, params)
+        end_time = datetime.now()
+        self.performance_utils.add_time_data("RemoveSymbolicBreakpoints", 10,
+                                             (end_time - start_time).microseconds // 1000)
+        for i in range(999):
+            start_time = datetime.now()
+            await self.debugger_impl.send("Debugger.setSymbolicBreakpoints", worker_thread, params)
+            end_time = datetime.now()
+            self.performance_utils.add_time_data("SetSymbolicBreakpoints", 10,
+                                                 (end_time - start_time).microseconds // 1000)
+            start_time = datetime.now()
+            await self.debugger_impl.send("Debugger.removeSymbolicBreakpoints", worker_thread, params)
+            end_time = datetime.now()
+            self.performance_utils.add_time_data("RemoveSymbolicBreakpoints", 10,
+                                                 (end_time - start_time).microseconds // 1000)
         ################################################################################################################
         # worker thread: Debugger.resume
         ################################################################################################################

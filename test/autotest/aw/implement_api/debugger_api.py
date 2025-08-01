@@ -42,6 +42,8 @@ class DebuggerImpl(ProtocolImpl):
                                "removeBreakpointsByUrl": (self.remove_breakpoints_by_url, ProtocolType.send),
                                "getPossibleAndSetBreakpointsByUrl": (self.get_possible_and_set_breakpoints_by_url,
                                                                      ProtocolType.send),
+                               "setSymbolicBreakpoints": (self.set_symbolic_breakpoints, ProtocolType.send),
+                               "removeSymbolicBreakpoints": (self.remove_symbolic_breakpoints, ProtocolType.send),
                                "stepOver": (self.step_over, ProtocolType.send),
                                "stepInto": (self.step_into, ProtocolType.send),
                                "stepOut": (self.step_out, ProtocolType.send),
@@ -139,6 +141,22 @@ class DebuggerImpl(ProtocolImpl):
         CommonUtils.assert_equal(response['id'], message_id)
         return response
 
+    async def set_symbolic_breakpoints(self, message_id, connection, params):
+        response = await comm_with_debugger_server(self.websocket, connection,
+                                                   debugger.set_symbolic_breakpoints(params),
+                                                   message_id)
+        response = json.loads(response)
+        CommonUtils.assert_equal(response['id'], message_id)
+        return response
+
+    async def remove_symbolic_breakpoints(self, message_id, connection, params):
+        response = await comm_with_debugger_server(self.websocket, connection,
+                                                   debugger.remove_symbolic_breakpoints(params),
+                                                   message_id)
+        response = json.loads(response)
+        CommonUtils.assert_equal(response['id'], message_id)
+        return response
+
     async def step_over(self, message_id, connection, params):
         response = await comm_with_debugger_server(self.websocket, connection,
                                                    debugger.step_over(), message_id)
@@ -211,7 +229,7 @@ class DebuggerImpl(ProtocolImpl):
         response = json.loads(response)
         CommonUtils.assert_equal(response['id'], message_id)
         return response
-    
+
     async def save_all_possible_breakpoints(self, message_id, connection, params):
         response = await comm_with_debugger_server(self.websocket, connection,
                                                    debugger.save_all_possible_breakpoints(params), message_id)

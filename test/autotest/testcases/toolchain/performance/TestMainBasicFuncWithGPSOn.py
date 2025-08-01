@@ -124,6 +124,17 @@ class TestMainBasicFuncWithGPSOn(TestCase):
         ################################################################################################################
         await self.debugger_impl.send("Debugger.enable", main_thread)
         ################################################################################################################
+        # main thread: Debugger.setSymbolicBreakpoints
+        ################################################################################################################
+        symbolicBreakpoints = [debugger.SymbolicBreakpoint(functionName='testDropFrame')]
+        for i in range(1, 51):
+            symbolicBreakpoints.append(debugger.SymbolicBreakpoint(functionName='testDebug' + str(i)))
+        params = debugger.SymbolicBreakpoints(symbolicBreakpoints)
+        start_time = datetime.now()
+        await self.debugger_impl.send("Debugger.setSymbolicBreakpoints", main_thread, params)
+        end_time = datetime.now()
+        self.performance_utils.add_time_data("SetSymbolicBreakpoints", 10, (end_time - start_time).microseconds // 1000)
+        ################################################################################################################
         # main thread: Runtime.runIfWaitingForDebugger
         ################################################################################################################
         await self.runtime_impl.send("Runtime.runIfWaitingForDebugger", main_thread)
@@ -209,20 +220,6 @@ class TestMainBasicFuncWithGPSOn(TestCase):
         self.common_utils.assert_equal(response['params']['callFrames'][0]['url'],
                                        self.config['file_path']['drop_frame'])
         self.common_utils.assert_equal(response['params']['reason'], 'Break on start')
-        ################################################################################################################
-        # main thread: Debugger.removeBreakpointsByUrl
-        ################################################################################################################
-        params = debugger.RemoveBreakpointsUrl(self.config['file_path']['drop_frame'])
-        await self.debugger_impl.send("Debugger.removeBreakpointsByUrl", main_thread, params)
-        ################################################################################################################
-        # main thread: Debugger.getPossibleAndSetBreakpointByUrl
-        ################################################################################################################
-        locations = [debugger.BreakLocationUrl(url=self.config['file_path']['drop_frame'], line_number=4)]
-        params = debugger.SetBreakpointsLocations(locations)
-        response = await self.debugger_impl.send("Debugger.getPossibleAndSetBreakpointsByUrl",
-                                                 main_thread, params)
-        self.common_utils.assert_equal(response['result']['locations'][0]['id'],
-                                       'id:4:0:' + self.config['file_path']['drop_frame'])
         ################################################################################################################
         # main thread: Debugger.resume
         ################################################################################################################
@@ -350,7 +347,13 @@ class TestMainBasicFuncWithGPSOn(TestCase):
             self.performance_utils.add_time_data("StepOut", 8, (end_time - start_time).microseconds // 1000)
             # Debugger.resume
             await self.debugger_impl.send("Debugger.resume", main_thread)
-            await self.debugger_impl.recv("Debugger.paused", main_thread)
+            if i != 499:
+                await self.debugger_impl.recv("Debugger.paused", main_thread)
+            else:
+                response = await self.debugger_impl.recv("Debugger.paused", main_thread)
+                print("response is ", response)
+                self.common_utils.assert_equal(response['params']['callFrames'][0]['functionName'], 'testDropFrame')
+                self.common_utils.assert_equal(response['params']['reason'], 'Symbol')
         ################################################################################################################
         # main thread: Debugger.dropFrame
         ################################################################################################################
@@ -367,10 +370,11 @@ class TestMainBasicFuncWithGPSOn(TestCase):
             end_time = datetime.now()
             self.performance_utils.add_time_data("ResumeAndPaused", 8, (end_time - start_time).microseconds // 1000)
         ################################################################################################################
-        # main thread: Debugger.removeBreakpointsByUrl
+        # main thread: Debugger.removeSymbolicBreakpoints
         ################################################################################################################
-        params = debugger.RemoveBreakpointsUrl(self.config['file_path']['drop_frame'])
-        await self.debugger_impl.send("Debugger.removeBreakpointsByUrl", main_thread, params)
+        symbolicBreakpoints = [debugger.SymbolicBreakpoint(functionName='testDropFrame')]
+        params = debugger.SymbolicBreakpoints(symbolicBreakpoints)
+        await self.debugger_impl.send("Debugger.removeSymbolicBreakpoints", main_thread, params)
         ################################################################################################################
         # main thread: Debugger.resume
         ################################################################################################################
@@ -630,6 +634,29 @@ class TestMainBasicFuncWithGPSOn(TestCase):
         ################################################################################################################
         params = debugger.RemoveBreakpointsUrl(self.config['file_path']['params'])
         await self.debugger_impl.send("Debugger.removeBreakpointsByUrl", main_thread, params)
+        ################################################################################################################
+        # main thread: Debugger.removeSymbolicBreakpoints
+        ################################################################################################################
+        symbolicBreakpoints = [debugger.SymbolicBreakpoint(functionName='testDropFrame')]
+        for i in range(1, 51):
+            symbolicBreakpoints.append(debugger.SymbolicBreakpoint(functionName='testDebug' + str(i)))
+        params = debugger.SymbolicBreakpoints(symbolicBreakpoints)
+        start_time = datetime.now()
+        await self.debugger_impl.send("Debugger.removeSymbolicBreakpoints", main_thread, params)
+        end_time = datetime.now()
+        self.performance_utils.add_time_data("RemoveSymbolicBreakpoints", 10,
+                                             (end_time - start_time).microseconds // 1000)
+        for i in range(999):
+            start_time = datetime.now()
+            await self.debugger_impl.send("Debugger.setSymbolicBreakpoints", main_thread, params)
+            end_time = datetime.now()
+            self.performance_utils.add_time_data("SetSymbolicBreakpoints", 10,
+                                                 (end_time - start_time).microseconds // 1000)
+            start_time = datetime.now()
+            await self.debugger_impl.send("Debugger.removeSymbolicBreakpoints", main_thread, params)
+            end_time = datetime.now()
+            self.performance_utils.add_time_data("RemoveSymbolicBreakpoints", 10,
+                                                 (end_time - start_time).microseconds // 1000)
         ################################################################################################################
         # main thread: Debugger.resume
         ################################################################################################################
