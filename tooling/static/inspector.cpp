@@ -715,10 +715,10 @@ void Inspector::ReplyNativeCalling(PtThread thread)
 void Inspector::ProfilerSetSamplingInterval(int32_t interval)
 {
     os::memory::ReadLockHolder lock(vmDeathLock_);
-    if (UNLIKELY(CheckVmDead())) {
+    if (UNLIKELY(CheckVmDead() || interval < 0)) {
         return;
     }
-    samplingInterval_ = interval;
+    samplingInterval_ = static_cast<uint32_t>(interval);
 }
 
 Expected<bool, std::string> Inspector::ProfilerStart()
