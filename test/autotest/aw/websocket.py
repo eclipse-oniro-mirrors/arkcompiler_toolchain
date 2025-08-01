@@ -31,6 +31,7 @@ from fport import Fport
 class WebSocket(object):
     def __init__(self, driver, connect_server_port, debugger_server_port, print_protocol=True):
         self.driver = driver
+        self.server_ip = driver._deivce.host
         self.connect_server_port = connect_server_port
         self.debugger_server_port = debugger_server_port
         self.debugger_server_connection_threshold = 3
@@ -54,12 +55,12 @@ class WebSocket(object):
         await queue.put(message)
         self.log(f'[==>] Instance {instance_id} send message: {message}')
         return True
-    
+
     async def get_instance(self):
         instance_id = await self.debugger_server_instance.get()
         self.debugger_server_instance.task_done()
         return instance_id
-    
+
     def no_more_instance(self):
         self.new_instance_flag = False
 
@@ -107,13 +108,13 @@ class WebSocket(object):
                 return
 
     def _connect_connect_server(self):
-        client = connect(f'ws://localhost:{self.connect_server_port}',
+        client = connect(f'ws://{self.server_ip}:{self.connect_server_port}',
                          open_timeout=10,
                          ping_interval=None)
         return client
 
     def _connect_debugger_server(self):
-        client = connect(f'ws://localhost:{self.debugger_server_port}',
+        client = connect(f'ws://{self.server_ip}:{self.debugger_server_port}',
                          open_timeout=6,
                          ping_interval=None)
         return client
