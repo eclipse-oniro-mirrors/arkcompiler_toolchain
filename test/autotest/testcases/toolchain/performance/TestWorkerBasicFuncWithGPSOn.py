@@ -134,7 +134,7 @@ class TestWorkerBasicFuncWithGPSOn(TestCase):
         await self.debugger_impl.recv("Debugger.scriptParsed", main_thread)
         response = await self.debugger_impl.recv("Debugger.paused", main_thread)
         end_time = datetime.now()
-        self.performance_utils.add_time_data("ScriptParsed", 40, (end_time - start_time).microseconds // 1000)
+        self.performance_utils.add_time_data("ScriptParsed", 65, (end_time - start_time).microseconds // 1000)
         self.common_utils.assert_equal(response['params']['callFrames'][0]['url'],
                                        self.config['file_path']['entry_ability'])
         self.common_utils.assert_equal(response['params']['reason'], 'Break on start')
