@@ -1025,7 +1025,11 @@ void InspectorServer::AddCallFrameInfo(JsonArrayBuilder &callFrames, const CallF
                                        const std::optional<RemoteObject> &objThis)
 {
     callFrames.Add([&](JsonObjectBuilder &callFrame) {
-        auto scriptId = sourceManager_.GetScriptId(callFrameInfo.sourceFile);
+        auto [scriptId, isNew] = sourceManager_.GetScriptId(callFrameInfo.sourceFile);
+
+        if (isNew) {
+            CallDebuggerScriptParsed(scriptId, callFrameInfo.sourceFile);
+        }
 
         callFrame.AddProperty("callFrameId", std::to_string(callFrameInfo.frameId));
         callFrame.AddProperty("functionName", callFrameInfo.methodName.data());
@@ -1047,7 +1051,11 @@ void InspectorServer::AddLocations(UrlBreakpointResponse &response, const std::s
                                    size_t lineNumber, [[maybe_unused]] PtThread thread)
 {
     for (auto sourceFile : sourceFiles) {
-        auto scriptId = sourceManager_.GetScriptId(sourceFile);
+        auto [scriptId, isNew] = sourceManager_.GetScriptId(sourceFile);
+
+        if (isNew) {
+            CallDebuggerScriptParsed(scriptId, sourceFile);
+        }
         response.AddLocation(Location {scriptId, lineNumber});
     }
 }

@@ -36,7 +36,7 @@ void EndpointBase::HandleMessage(const std::string &message)
         return;
     }
 
-    LOG(DEBUG, DEBUGGER) << "Received " << message;
+    LOG(INFO, DEBUGGER) << "Received " << message;
 
     auto sessionId = request.GetValue<JsonObject::StringT>("sessionId");
     auto id = request.GetValue<JsonObject::NumT>("id");

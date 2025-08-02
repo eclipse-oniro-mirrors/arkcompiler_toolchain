@@ -21,19 +21,20 @@
 #include "types/numeric_id.h"
 
 namespace ark::tooling::inspector {
-ScriptId SourceManager::GetScriptId(std::string_view fileName)
+std::pair<ScriptId, bool> SourceManager::GetScriptId(std::string_view fileName)
 {
     os::memory::LockHolder lock(mutex_);
 
     auto p = fileNameToId_.emplace(std::string(fileName), fileNameToId_.size());
     ScriptId id(p.first->second);
+    bool isNewForThread = knownSources_.insert(id).second;
 
     if (p.second) {
         std::string_view name {p.first->first};
         idToFileName_.emplace(id, name);
     }
 
-    return id;
+    return {id, isNewForThread};
 }
 
 std::string_view SourceManager::GetSourceFileName(ScriptId id) const
