@@ -23,7 +23,7 @@ using namespace OHOS::ArkCompiler::Toolchain;
 namespace panda::test {
 class HttpDecoderTest : public testing::Test {
 public:
-    static constexpr std::string_view REQUEST_HEADERS = "GET / HTTP/1.1\r\n"
+    static constexpr std::string_view REQUEST_ORIGIN_HEADERS = "GET / HTTP/1.1\r\n"
         "Host: 127.0.0.1:19015\r\n"
         "Connection: Upgrade\r\n"
         "Pragma: no-cache\r\n"
@@ -31,6 +31,20 @@ public:
         "User-Agent: Mozilla/5.0 (X11; Linux x86_64) Chrome/117.0.0.0 Safari/537.36\r\n"
         "Upgrade: websocket\r\n"
         "Origin: dvtls://dvtls\r\n"
+        "Sec-WebSocket-Version: 13\r\n"
+        "Accept-Encoding: gzip, deflate, br\r\n"
+        "Accept-Language: en-US,en;q=0.9\r\n"
+        "Sec-WebSocket-Key: AyuTxzyBTJJdViDskomT0Q==\r\n"
+        "Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n";
+    std::string originRequestHeaders = std::string(REQUEST_ORIGIN_HEADERS);
+
+    static constexpr std::string_view REQUEST_HEADERS = "GET / HTTP/1.1\r\n"
+        "Host: 127.0.0.1:19015\r\n"
+        "Connection: Upgrade\r\n"
+        "Pragma: no-cache\r\n"
+        "Cache-Control: no-cache\r\n"
+        "User-Agent: Mozilla/5.0 (X11; Linux x86_64) Chrome/117.0.0.0 Safari/537.36\r\n"
+        "Upgrade: websocket\r\n"
         "Sec-WebSocket-Version: 13\r\n"
         "Accept-Encoding: gzip, deflate, br\r\n"
         "Accept-Language: en-US,en;q=0.9\r\n"
@@ -63,7 +77,7 @@ public:
     static constexpr std::string_view EXPECTED_SEC_WEBSOCKET_KEY    = "AyuTxzyBTJJdViDskomT0Q==";
 };
 
-HWTEST_F(HttpDecoderTest, TestRequestDecode, testing::ext::TestSize.Level0)
+HWTEST_F(HttpDecoderTest, TestRequestDecode_1, testing::ext::TestSize.Level0)
 {
     HttpRequest parsed;
     auto succeeded = HttpRequest::Decode(requestHeaders, parsed);
@@ -73,6 +87,14 @@ HWTEST_F(HttpDecoderTest, TestRequestDecode, testing::ext::TestSize.Level0)
     ASSERT_EQ(parsed.connection, EXPECTED_CONNECTION);
     ASSERT_EQ(parsed.upgrade, EXPECTED_UPGRADE);
     ASSERT_EQ(parsed.secWebSocketKey, EXPECTED_SEC_WEBSOCKET_KEY);
+}
+
+HWTEST_F(HttpDecoderTest, TestRequestDecode_2, testing::ext::TestSize.Level0)
+{
+    HttpRequest parsed;
+    auto succeeded = HttpRequest::Decode(originRequestHeaders, parsed);
+
+    ASSERT_FALSE(succeeded);
 }
 
 HWTEST_F(HttpDecoderTest, TestAbnormalRequestDecode, testing::ext::TestSize.Level0)
