@@ -37,13 +37,14 @@ public:
     NO_COPY_SEMANTIC(SourceManager);
     NO_MOVE_SEMANTIC(SourceManager);
 
-    ScriptId GetScriptId(std::string_view fileName);
+    std::pair<ScriptId, bool> GetScriptId(std::string_view fileName);
     [[nodiscard]] std::string_view GetSourceFileName(ScriptId id) const;
 
 private:
     mutable os::memory::Mutex mutex_;
     std::unordered_map<std::string, ScriptId> fileNameToId_ GUARDED_BY(mutex_);
     std::unordered_map<ScriptId, std::string_view> idToFileName_ GUARDED_BY(mutex_);
+    std::unordered_set<ScriptId> knownSources_ GUARDED_BY(mutex_);
 };
 }  // namespace ark::tooling::inspector
 
