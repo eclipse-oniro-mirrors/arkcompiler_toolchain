@@ -16,7 +16,7 @@
 #ifndef ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_SYMBOLICBREAKPOINT_LOOP_TEST_H
 #define ECMASCRIPT_TOOLING_TEST_TESTCASES_JS_SYMBOLICBREAKPOINT_LOOP_TEST_H
 
-#include "tooling/test/client_utils/test_util.h"
+#include "tooling/dynamic/test/client_utils/test_util.h"
 
 namespace panda::ecmascript::tooling::test {
 class JsSymbolicBreakpointTest : public TestActions {

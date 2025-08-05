@@ -74,12 +74,13 @@ ohos_static_library("libarkinspector_plus_static") {
     ":libarkinspector_config"
   ]
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "runtime_core:libarktscompiler",
     "runtime_core:arktsdisassembler",
     "runtime_core:libarktsbase_package",
   ]
   deps = [
-    "../../websocket:websocket_server", 
+    "../../websocket:libwebsocket_server", 
     "../hybrid_step:arkhybridstep",
   ]
 

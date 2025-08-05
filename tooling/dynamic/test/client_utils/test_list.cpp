@@ -22,6 +22,7 @@
 #include "tooling/dynamic/test/testcases/js_allocationtrack_loop_test.h"
 #include "tooling/dynamic/test/testcases/js_allocationtrack_recursion_test.h"
 #include "tooling/dynamic/test/testcases/js_allocationtrack_test.h"
+#include "tooling/dynamic/test/testcases/js_asyn_stack_test.h"
 #include "tooling/dynamic/test/testcases/js_breakpoint_arrow_test.h"
 #include "tooling/dynamic/test/testcases/js_breakpoint_async_test.h"
 #include "tooling/dynamic/test/testcases/js_breakpoint_cannot_hit_test.h"
@@ -71,7 +72,9 @@
 #include "tooling/dynamic/test/testcases/js_watch_other_type_test.h"
 #include "tooling/dynamic/test/testcases/js_watch_set_type_test.h"
 #include "tooling/dynamic/test/testcases/js_watch_test.h"
+#include "tooling/dynamic/test/testcases/js_watch_module_test.h"
 #include "tooling/dynamic/test/testcases/js_watch_variable_test.h"
+#include "tooling/dynamic/test/testcases/js_symbolbreakpoint_test.h"
 
 namespace panda::ecmascript::tooling::test {
 static std::string g_currentTestName = "";
