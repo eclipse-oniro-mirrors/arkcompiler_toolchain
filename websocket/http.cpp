@@ -62,6 +62,10 @@ bool HttpRequest::Decode(const std::string& request, HttpRequest& parsed)
         return false;
     }
 
+    if (request.find(ORIGIN) != std::string::npos) {
+        return false;
+    }
+
     parsed.version = DecodeVersion(request, pos);
     parsed.connection = DecodeHeader(request, CONNECTION);
     parsed.upgrade = DecodeHeader(request, UPGRADE);

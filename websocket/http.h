@@ -24,6 +24,7 @@ struct HttpBase {
     static constexpr std::string_view GET = "GET";
     static constexpr std::string_view CONNECTION = "Connection: ";
     static constexpr std::string_view UPGRADE = "Upgrade: ";
+    static constexpr std::string_view ORIGIN = "Origin: ";
     static constexpr std::string_view SEC_WEBSOCKET_ACCEPT = "Sec-WebSocket-Accept: ";
     static constexpr std::string_view SEC_WEBSOCKET_KEY = "Sec-WebSocket-Key: ";
 
