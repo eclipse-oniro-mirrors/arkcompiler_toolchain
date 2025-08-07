@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,6 +14,7 @@
  */
 
 #include "inspector.h"
+#include "init_static.h"
 
 #include <shared_mutex>
 #if defined(OHOS_PLATFORM)
@@ -28,7 +29,7 @@
 #include "library_loader.h"
 
 #if defined(IOS_PLATFORM)
-#include "tooling/debugger_service.h"
+#include "tooling/dynamic/debugger_service.h"
 #endif
 
 #if defined(ENABLE_FFRT_INTERFACES)
@@ -81,7 +82,33 @@ constexpr char ARK_DEBUGGER_SHARED_LIB[] = "libark_tooling.so";
 #endif
 #endif
 
-void* HandleClient(void* const server)
+struct ClientArgs {
+    void* server;
+    bool isHybrid;
+};
+
+void* HandleHybridClient(void* arg)
+{
+    ClientArgs* args = static_cast<ClientArgs*>(arg);
+    auto server = args->server;
+    LOGI("HandleClient");
+    if (server == nullptr) {
+        LOGE("HandleClient server nullptr");
+        return nullptr;
+    }
+
+#if defined(IOS_PLATFORM) || defined(MAC_PLATFORM)
+    pthread_setname_np("OS_DebugThread");
+#else
+    pthread_setname_np(pthread_self(), "OS_DebugThread");
+#endif
+
+    static_cast<WsServer*>(server)->RunServer(args->isHybrid);
+    delete args;
+    return nullptr;
+}
+
+void* HandleNormalClient(void* const server)
 {
     LOGI("HandleClient");
     if (server == nullptr) {
@@ -149,7 +176,9 @@ void ResetServiceLocked(void *vm, bool isCloseHandle)
 }
 
 bool InitializeInspector(
-    void* vm, const DebuggerPostTask& debuggerPostTask, const DebugInfo& debugInfo, int tidForSocketPair = 0)
+    void* vm, const DebuggerPostTask& debuggerPostTask,
+    const DebugInfo& debugInfo,
+    int tidForSocketPair = 0, bool isHybrid = false)
 {
     std::unique_lock<std::shared_mutex> lock(g_mutex);
     auto iter = g_inspectors.find(vm);
@@ -166,14 +195,24 @@ bool InitializeInspector(
     newInspector->vm_ = vm;
     newInspector->debuggerPostTask_ = debuggerPostTask;
     newInspector->websocketServer_ = std::make_unique<WsServer>(debugInfo,
-        std::bind(&Inspector::OnMessage, newInspector, std::placeholders::_1));
+        std::bind(&Inspector::OnMessage, newInspector, std::placeholders::_1, isHybrid));
 
     pthread_t tid;
-    if (pthread_create(&tid, nullptr, &HandleClient, static_cast<void *>(
-        newInspector->websocketServer_.get())) != 0) {
-        LOGE("Create inspector thread failed");
-        return false;
+    
+    auto server = static_cast<void *>(newInspector->websocketServer_.get());
+    if (isHybrid) {
+        ClientArgs* args = new ClientArgs{server, isHybrid};
+        if (pthread_create(&tid, nullptr, &HandleHybridClient, args)) {
+            LOGE("Create inspector thread failed");
+            return false;
+        };
+    } else {
+        if (pthread_create(&tid, nullptr, &HandleNormalClient, server)) {
+            LOGE("Create inspector thread failed");
+            return false;
+        };
     }
+
     newInspector->websocketServer_->tid_ = tid;
 
     return true;
@@ -273,8 +312,11 @@ bool InitializeArkFunctions()
 
 } // namespace
 
-void Inspector::OnMessage(std::string&& msg)
+void Inspector::OnMessage(std::string&& msg, bool isHybrid)
 {
+    if (isHybrid) {
+        HandleMessage(std::move(msg));
+    }
     g_onMessage(vm_, std::move(msg));
 
     // message will be processed soon if the debugger thread is in running or waiting status
@@ -348,7 +390,7 @@ void *GetEcmaVM(int tid)
     return g_debuggerInfo[tid].first;
 }
 
-bool InitializeDebuggerForSocketpair(void* vm)
+bool InitializeDebuggerForSocketpair(void* vm, bool isHybrid)
 {
 #if !defined(IOS_PLATFORM)
     if (!LoadArkDebuggerLibrary()) {
@@ -359,12 +401,18 @@ bool InitializeDebuggerForSocketpair(void* vm)
         LOGE("Initialize ark functions failed");
         return false;
     }
+    if (isHybrid) {
+        if (!InitializeArkFunctionsForStatic()) {
+            LOGE("Initialize ark functions failed");
+            return false;
+        };
+    }
     g_initializeDebugger(vm, std::bind(&SendReply, vm, std::placeholders::_2));
     return true;
 }
 
 // for ohos platform.
-bool StartDebugForSocketpair(int tid, int socketfd)
+bool StartDebugForSocketpair(int tid, int socketfd, bool isHybrid)
 {
     LOGI("StartDebugForSocketpair, tid = %{private}d, socketfd = %{private}d", tid, socketfd);
     void* vm = GetEcmaVM(tid);
@@ -378,7 +426,7 @@ bool StartDebugForSocketpair(int tid, int socketfd)
     }
     const DebuggerPostTask &debuggerPostTask = GetDebuggerPostTask(tid);
     DebugInfo debugInfo = {socketfd};
-    if (!InitializeInspector(vm, debuggerPostTask, debugInfo, tid)) {
+    if (!InitializeInspector(vm, debuggerPostTask, debugInfo, tid, isHybrid)) {
         LOGE("Initialize inspector failed");
         return false;
     }
@@ -425,7 +473,18 @@ void WaitForDebugger(void* vm)
     g_waitForDebugger(vm);
 }
 
-void StopDebug(void* vm)
+
+int StartDebugger(uint32_t port, bool breakOnStart)
+{
+    return StartDebuggerInitForStatic(port, breakOnStart);
+}
+ 
+int StopDebugger()
+{
+    return StopDebuggerInitForStatic();
+}
+
+void StopDebug(void* vm, bool isHybrid)
 {
     LOGI("StopDebug start, vm is %{private}p", vm);
     std::unique_lock<std::shared_mutex> lock(g_mutex);
@@ -444,6 +503,9 @@ void StopDebug(void* vm)
     }
     ResetServiceLocked(vm, true);
     g_uninitializeDebugger(vm);
+    if (isHybrid) {
+        StopDebuggerForStatic();
+    }
     LOGI("StopDebug end");
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,7 +16,7 @@
 #include "backendnativecalling_fuzzer.h"
 #include "ecmascript/napi/include/jsnapi.h"
 #include "agent/debugger_impl.h"
-#include "tooling/backend/js_pt_hooks.h"
+#include "tooling/dynamic/backend/js_pt_hooks.h"
 
 using namespace panda;
 using namespace panda::ecmascript;

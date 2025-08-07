@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,15 +35,19 @@ extern "C" {
 bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
     int32_t instanceId, const DebuggerPostTask& debuggerPostTask, int port);
 
-bool StartDebugForSocketpair(int tid, int socketfd);
+bool StartDebugForSocketpair(int tid, int socketfd, bool isHybrid = false);
 
-bool InitializeDebuggerForSocketpair(void* vm);
+bool InitializeDebuggerForSocketpair(void* vm, bool isHybrid = false);
 
-void StopDebug(void* vm);
+void StopDebug(void* vm, bool isHybrid = false);
 
 void StopOldDebug(int tid, const std::string& componentName);
 
 void WaitForDebugger(void* vm);
+
+int StartDebugger(uint32_t port, bool breakOnStart);
+
+int StopDebugger();
 
 void StoreDebuggerInfo(int tid, void* vm, const DebuggerPostTask& debuggerPostTask);
 
@@ -61,7 +65,7 @@ public:
     Inspector() = default;
     ~Inspector() = default;
 
-    void OnMessage(std::string&& msg);
+    void OnMessage(std::string&& msg, bool isHybrid = false);
 #if defined(OHOS_PLATFORM)
     static uint64_t GetThreadOrTaskId();
 #endif // defined(OHOS_PLATFORM)

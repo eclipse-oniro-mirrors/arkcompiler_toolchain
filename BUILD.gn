@@ -236,7 +236,7 @@ config("toolchain_test_config") {
   visibility = [
     "./inspector/test/*",
     "./test/fuzztest/*",
-    "./tooling/test/*",
+    "./tooling/dynamic/test/*",
     "./websocket/test/*",
   ]
 
@@ -253,9 +253,10 @@ group("ark_toolchain_packages") {
     "./inspector:ark_debugger",
     "./inspector:connectserver_debugger",
     "./tooling:libark_ecma_debugger",
-    "./tooling/client:libark_client",
-    "./tooling/client/ark_cli:arkdb",
-    "./tooling/client/ark_multi:ark_multi",
+    "./tooling:libarkinspector_plus",
+    "./tooling/dynamic/client:libark_client",
+    "./tooling/dynamic/client/ark_cli:arkdb",
+    "./tooling/dynamic/client/ark_multi:ark_multi",
   ]
 }
 
@@ -264,7 +265,7 @@ group("ark_toolchain_unittest") {
   deps = []
   deps += [
     "./inspector/test:unittest",
-    "./tooling/test:unittest",
+    "./tooling/dynamic/test:unittest",
     "./websocket/test:unittest",
   ]
   if (is_ohos && is_standard_system) {
@@ -279,7 +280,7 @@ group("ark_toolchain_host_unittest") {
   # js unittest
   deps += [
     "./inspector/test:host_unittest",
-    "./tooling/test:host_unittest",
+    "./tooling/dynamic/test:host_unittest",
     "./websocket/test:host_unittest",
   ]
 }
