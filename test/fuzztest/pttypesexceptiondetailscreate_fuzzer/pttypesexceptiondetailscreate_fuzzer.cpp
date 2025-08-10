@@ -33,11 +33,9 @@ namespace OHOS {
         // if data: "{\"\":1,"
         // cJSON_ParseWithLength will heap-buffer-overflow
         // https://github.com/DaveGamble/cJSON/issues/804
-        cJSON* cjson = NULL;
-        if (cjson != NULL) {
-            PtJson pjson(cjson);
-            auto details = ExceptionDetails::Create(pjson);
-            cJSON_Delete(cjson);
+        std::unique_ptr<PtJson> pjson = PtJson::Parse(std::string((const char*)data, size));
+        if (pjson != NULL) {
+            auto details = ExceptionDetails::Create(*pjson);
         }
 
         JSNApi::DestroyJSVM(vm);

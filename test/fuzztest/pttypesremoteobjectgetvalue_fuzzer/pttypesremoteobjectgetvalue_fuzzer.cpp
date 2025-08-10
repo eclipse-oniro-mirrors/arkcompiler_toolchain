@@ -30,9 +30,17 @@ namespace OHOS {
         if (size <= 0 || data == NULL) {
             return;
         }
+        double input = 0;
+        if (size > sizeof(double)) {
+            size = sizeof(double);
+        }
+        if (memcpy_s(&input, sizeof(double), data, size) != 0) {
+            std::cout << "memcpy_s failed";
+            UNREACHABLE();
+        }
+        Local value(NumberRef::New(vm, input));
         RemoteObject obj;
-        Local<PrimitiveRef> val = JSValueRef::Undefined(vm);
-        obj.SetValue(val);
+        obj.SetValue(value);
         Local<JSValueRef> ref = obj.GetValue();
         ref.IsEmpty();
         obj.HasValue();

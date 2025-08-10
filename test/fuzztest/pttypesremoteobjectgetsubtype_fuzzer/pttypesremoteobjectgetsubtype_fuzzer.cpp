@@ -32,6 +32,7 @@ namespace OHOS {
         }
         RemoteObject obj;
         obj.SetSubType(std::string((const char*)data, size));
+        obj.HasSubType();
         std::string type = obj.GetSubType();
         JSNApi::DestroyJSVM(vm);
     }

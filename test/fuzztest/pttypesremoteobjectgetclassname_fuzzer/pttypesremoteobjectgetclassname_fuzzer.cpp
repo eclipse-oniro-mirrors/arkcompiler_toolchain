@@ -32,6 +32,7 @@ namespace OHOS {
         }
         RemoteObject obj;
         obj.SetClassName(std::string((const char*)data, size));
+        obj.HasClassName();
         obj.GetClassName();
         JSNApi::DestroyJSVM(vm);
     }

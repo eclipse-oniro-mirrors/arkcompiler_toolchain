@@ -31,6 +31,7 @@ namespace OHOS {
             return;
         }
         RemoteObject obj;
+        obj.SetType(std::string((const char*)data, size));
         std::string type = obj.GetType();
         JSNApi::DestroyJSVM(vm);
     }
