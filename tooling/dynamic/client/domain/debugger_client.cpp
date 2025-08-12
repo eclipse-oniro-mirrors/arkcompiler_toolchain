@@ -49,6 +49,7 @@ bool DebuggerClient::DispatcherCmd(const std::string &cmd)
         { "step-out", std::bind(&DebuggerClient::StepOutCommand, this)},
         { "step-over", std::bind(&DebuggerClient::StepOverCommand, this)},
         { "enable-launch-accelerate", std::bind(&DebuggerClient::EnableLaunchAccelerateCommand, this)},
+        { "removeBreakpointsByUrl", std::bind(&DebuggerClient::RemoveBreakpointsByUrlCommand, this)},
         { "saveAllPossibleBreakpoints", std::bind(&DebuggerClient::SaveAllPossibleBreakpointsCommand, this)},
         { "setSymbolicBreakpoints", std::bind(&DebuggerClient::SetSymbolicBreakpointsCommand, this)},
         { "removeSymbolicBreakpoints", std::bind(&DebuggerClient::RemoveSymbolicBreakpointsCommand, this)},
@@ -339,6 +340,11 @@ void DebuggerClient::AddSymbolicBreakpointInfo(const std::string& functionName)
     symbolicBreakpointInfoList_.emplace_back(symbolicBreakpointInfo);
 }
 
+void DebuggerClient::AddUrl(const std::string& url)
+{
+    urlList_.push_back(url);
+}
+
 void DebuggerClient::RecvReply(std::unique_ptr<PtJson> json)
 {
     if (json == nullptr) {
@@ -535,6 +541,27 @@ int DebuggerClient::RemoveSymbolicBreakpointsCommand()
     symbolicBreakpoint->Add("functionName", symbolicBreakpointInfoList_.back().functionName.c_str());
     symbolicBreakpoints->Push(symbolicBreakpoint);
     params->Add("symbolicBreakpoints", symbolicBreakpoints);
+    request->Add("params", params);
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Debugger");
+    }
+
+    return 0;
+}
+
+int DebuggerClient::RemoveBreakpointsByUrlCommand()
+{
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    uint32_t id = session->GetMessageId();
+
+    std::unique_ptr<PtJson> request = PtJson::CreateObject();
+    request->Add("id", id);
+    request->Add("method", "Debugger.removeBreakpointsByUrl");
+
+    std::unique_ptr<PtJson> params = PtJson::CreateObject();
+    params->Add("url", urlList_.back().c_str());
     request->Add("params", params);
 
     std::string message = request->Stringify();

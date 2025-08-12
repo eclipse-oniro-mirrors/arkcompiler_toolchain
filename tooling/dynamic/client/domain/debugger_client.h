@@ -69,14 +69,16 @@ public:
     int AsyncStackDepthCommand();
     int SetSymbolicBreakpointsCommand();
     int RemoveSymbolicBreakpointsCommand();
-
+    int RemoveBreakpointsByUrlCommand();
     void AddBreakPointInfo(const std::string& url, const int& lineNumber, const int& columnNumber = 0);
     void AddSymbolicBreakpointInfo(const std::string& functionName);
+    void AddUrl(const std::string& url);
     void RecvReply(std::unique_ptr<PtJson> json);
     void PausedReply(const std::unique_ptr<PtJson> json);
     void handleResponse(std::unique_ptr<PtJson> json);
 
 private:
+    std::vector<std::string> urlList_ {};
     std::vector<BreakPointInfo> breakPointInfoList_ {};
     std::vector<SymbolicBreakpointInfo> symbolicBreakpointInfoList_ {};
     int32_t sessionId_;

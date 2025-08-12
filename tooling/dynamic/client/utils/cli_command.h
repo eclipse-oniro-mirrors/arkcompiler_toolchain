@@ -75,6 +75,7 @@ public:
     ErrCode SaveAllPossibleBreakpointsCommand(const std::string &cmd);
     ErrCode SetSymbolicBreakpointsCommand(const std::string &cmd);
     ErrCode RemoveSymbolicBreakpointsCommand(const std::string &cmd);
+    ErrCode RemoveBreakpointsByUrlCommand(const std::string &cmd);
     void OutputCommand(const std::string &cmd, bool flag);
 
     VecStr GetArgList()

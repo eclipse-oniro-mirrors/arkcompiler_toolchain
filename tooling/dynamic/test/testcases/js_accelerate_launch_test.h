@@ -32,6 +32,12 @@ public:
             // Debugger.saveAllPossibleBreakpoints
             {SocketAction::SEND, "b-new " DEBUGGER_JS_DIR "sample.js 22"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::SEND, "b-new " "test.js 22"},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::SEND, "removeBreakpointsByUrl " "test.js"},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
+            {SocketAction::SEND, "removeBreakpointsByUrl " "test1.js"},
+            {SocketAction::RECV, "Unknown url", ActionRule::STRING_CONTAIN},
             {SocketAction::SEND, "run"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, MatchRule::replySuccess},
             // load sample.js
