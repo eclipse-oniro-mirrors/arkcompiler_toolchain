@@ -63,6 +63,7 @@ public:
     bool GenerateAsyncFrames(std::shared_ptr<AsyncStack> asyncStack, bool skipTopFrame);
     bool GenerateAsyncFrame(StackFrame *stackFrame, const FrameHandler *frameHandler);
     void SetPauseOnNextByteCode(bool pauseOnNextByteCode);
+    void SetDebuggerAccessor(JSHandle<GlobalEnv> &globalEnv);
 
     DispatchResponse ContinueToLocation(const ContinueToLocationParams &params);
     DispatchResponse Enable(const EnableParams &params, UniqueDebuggerId *id);
