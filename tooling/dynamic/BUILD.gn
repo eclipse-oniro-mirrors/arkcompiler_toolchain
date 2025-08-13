@@ -69,7 +69,6 @@ ohos_source_set("libark_ecma_debugger_set") {
   }
   external_deps += [ "ets_runtime:libark_jsruntime" ]
   external_deps += [
-    "icu:shared_icuuc",
     "libuv:uv",
     sdk_libc_secshared_dep
   ]
@@ -85,7 +84,7 @@ ohos_source_set("libark_ecma_debugger_set") {
   external_deps += [ "runtime_core:libarkfile_static" ]
   deps += hiviewdfx_deps
   deps += [ "../hybrid_step:arkhybridstep" ]
-  
+
   if (enable_leak_check) {
     sources += [ "$js_root/ecmascript/dfx/native_dfx/backtrace.cpp" ]
     defines += [
@@ -140,7 +139,6 @@ ohos_static_library("libark_ecma_debugger_test") {
   defines = [ "OHOS_UNIT_TEST" ]
   deps = []
   external_deps = [
-    "icu:shared_icuuc",
     "libuv:uv",
   ]
   external_deps += [ "ets_runtime:libark_jsruntime" ]
