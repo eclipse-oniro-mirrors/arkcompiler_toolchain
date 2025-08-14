@@ -22,7 +22,6 @@
 #include "tooling/dynamic/test/testcases/js_allocationtrack_loop_test.h"
 #include "tooling/dynamic/test/testcases/js_allocationtrack_recursion_test.h"
 #include "tooling/dynamic/test/testcases/js_allocationtrack_test.h"
-#include "tooling/dynamic/test/testcases/js_asyn_stack_test.h"
 #include "tooling/dynamic/test/testcases/js_breakpoint_arrow_test.h"
 #include "tooling/dynamic/test/testcases/js_breakpoint_async_test.h"
 #include "tooling/dynamic/test/testcases/js_breakpoint_cannot_hit_test.h"
@@ -143,7 +142,6 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsHeapusageRecursionTest", GetJsHeapusageRecursionTest());
     TestUtil::RegisterTest("JsSmartStepoutTest", GetJsSmartStepoutTest());
     TestUtil::RegisterTest("JsAccelerateLaunchTest", GetJsAccelerateLaunchTest());
-    TestUtil::RegisterTest("JsAsynStackTest", GetJsAsynStackTest());
     TestUtil::RegisterTest("JsSymbolicBreakpointTest", GetJsSymbolicBreakpointTest());
 }
 
