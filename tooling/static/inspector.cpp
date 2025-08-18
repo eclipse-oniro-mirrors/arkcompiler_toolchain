@@ -102,8 +102,14 @@ void Inspector::ConsoleCall(PtThread thread, ConsoleCallType type, uint64_t time
     os::memory::ReadLockHolder lock(debuggerEventsLock_);
 
     auto *debuggableThread = GetDebuggableThread(thread);
-    ASSERT(debuggableThread != nullptr);
-    inspectorServer_.CallRuntimeConsoleApiCalled(thread, type, timestamp, debuggableThread->OnConsoleCall(arguments));
+    if (debuggableThread != nullptr) {
+        inspectorServer_.CallRuntimeConsoleApiCalled(
+            thread,
+            type,
+            timestamp,
+            debuggableThread->OnConsoleCall(arguments)
+        );
+    }
 }
 
 // CC-OFFNXT(G.FUN.01-CPP) Decreasing the number of arguments will decrease the clarity of the code.
@@ -113,8 +119,9 @@ void Inspector::Exception(PtThread thread, Method * /* method */, const PtLocati
     os::memory::ReadLockHolder lock(debuggerEventsLock_);
 
     auto *debuggableThread = GetDebuggableThread(thread);
-    ASSERT(debuggableThread != nullptr);
-    debuggableThread->OnException(catchLocation.GetBytecodeOffset() == panda_file::INVALID_OFFSET);
+    if (debuggableThread != nullptr) {
+        debuggableThread->OnException(catchLocation.GetBytecodeOffset() == panda_file::INVALID_OFFSET);
+    }
 }
 
 void Inspector::FramePop(PtThread thread, Method * /* method */, bool /* was_popped_by_exception */)
@@ -122,8 +129,9 @@ void Inspector::FramePop(PtThread thread, Method * /* method */, bool /* was_pop
     os::memory::ReadLockHolder lock(debuggerEventsLock_);
 
     auto *debuggableThread = GetDebuggableThread(thread);
-    ASSERT(debuggableThread != nullptr);
-    debuggableThread->OnFramePop();
+    if (debuggableThread != nullptr) {
+        debuggableThread->OnFramePop();
+    }
 }
 
 void Inspector::MethodEntry(PtThread thread, Method * /* method */)
@@ -131,7 +139,6 @@ void Inspector::MethodEntry(PtThread thread, Method * /* method */)
     os::memory::ReadLockHolder lock(debuggerEventsLock_);
 
     auto *debuggableThread = GetDebuggableThread(thread);
-    ASSERT(debuggableThread != nullptr);
     auto stack = StackWalker::Create(thread.GetManagedThread());
     if (stack.IsCFrame()) {
         return;
@@ -139,8 +146,10 @@ void Inspector::MethodEntry(PtThread thread, Method * /* method */)
     if (debuggableThread == nullptr) {
         return;
     }
-    if (debuggableThread->OnMethodEntry()) {
-        HandleError(debugger_.NotifyFramePop(thread, 0));
+    if (debuggableThread != nullptr) {
+        if (debuggableThread->OnMethodEntry()) {
+            HandleError(debugger_.NotifyFramePop(thread, 0));
+        }
     }
 }
 
@@ -189,8 +198,9 @@ void Inspector::SingleStep(PtThread thread, Method *method, const PtLocation &lo
     }
 
     auto *debuggableThread = GetDebuggableThread(thread);
-    ASSERT(debuggableThread != nullptr);
-    debuggableThread->OnSingleStep(location, sourceFile);
+    if (debuggableThread != nullptr) {
+        debuggableThread->OnSingleStep(location, sourceFile);
+    }
 }
 
 void Inspector::ThreadStart(PtThread thread)
