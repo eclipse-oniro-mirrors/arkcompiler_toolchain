@@ -26,7 +26,7 @@ ohos_executable("arkdb") {
     "../../../../websocket",
   ]
 
-  deps = [ 
+  deps = [
     "../:libark_client_set",
     "../../:libark_ecma_debugger_set",
   ]
@@ -35,7 +35,6 @@ ohos_executable("arkdb") {
     "bounds_checking_function:libsec_shared",
     "cJSON:cjson",
     "ets_runtime:libark_jsruntime",
-    "icu:shared_icuuc",
     "libuv:uv",
   ]
 
