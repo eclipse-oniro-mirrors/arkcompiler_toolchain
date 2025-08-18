@@ -25,6 +25,7 @@
 #include "error.h"
 #include "types/numeric_id.h"
 
+#include "../../hybrid_step/debug_step_flags.h"
 namespace ark::tooling::inspector {
 
 void ThreadState::Reset()
@@ -177,6 +178,13 @@ bool ThreadState::OnMethodEntry()
 void ThreadState::OnSingleStep(const PtLocation &location, const char *sourceFile)
 {
     ASSERT(!paused_);
+    DebugStepFlags::Get().SetStat2DynInto(true);
+    if (DebugStepFlags::Get().GetDyn2StatInto()) {
+        LOG(DEBUG, DEBUGGER) << "SingleStep from Dynamic";
+        paused_ = true;
+        DebugStepFlags::Get().SetDyn2StatInto(false);
+        return;
+    }
 
     if (breakOnStart_) {
         std::string_view file = sourceFile;
