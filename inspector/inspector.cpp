@@ -36,9 +36,6 @@
 #include "ffrt.h"
 #endif
 
-#include <string>
-#include <regex>
-
 namespace OHOS::ArkCompiler::Toolchain {
 namespace {
 enum DispatchStatus : int32_t {
@@ -318,17 +315,9 @@ bool InitializeArkFunctions()
 void Inspector::OnMessage(std::string&& msg, bool isHybrid)
 {
     if (isHybrid) {
-        std::regex pattern("\"sessionId\":\\s*(\\d)");
-        std::smatch matches;
-        if (std::regex_search(msg, matches, pattern)) {
-            HandleMessage(std::move(msg));
-        } else {
-            HandleMessage(std::move(msg)); // IDE not adjusted
-            g_onMessage(vm_, std::move(msg));
-        }
-    } else {
-        g_onMessage(vm_, std::move(msg));
+        HandleMessage(std::move(msg));
     }
+    g_onMessage(vm_, std::move(msg));
 
     // message will be processed soon if the debugger thread is in running or waiting status
     if (g_getDispatchStatus(vm_) != DispatchStatus::UNKNOWN) {
@@ -512,14 +501,8 @@ void StopDebug(void* vm, bool isHybrid)
     if (debuggerInfo != g_debuggerInfo.end()) {
         g_debuggerInfo.erase(debuggerInfo);
     }
-    ResetServiceLocked(vm, false);
+    ResetServiceLocked(vm, true);
     g_uninitializeDebugger(vm);
-#if !defined(IOS_PLATFORM)
-    if (g_handle != nullptr) {
-        CloseHandle(g_handle);
-        g_handle = nullptr;
-    }
-#endif
     if (isHybrid) {
         StopDebuggerForStatic();
     }

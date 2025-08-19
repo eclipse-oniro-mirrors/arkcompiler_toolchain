@@ -20,14 +20,14 @@
 namespace panda::ecmascript::tooling {
 void JSPtHooks::DebuggerStmt([[maybe_unused]] const JSPtLocation &location)
 {
-    LOG_DEBUGGER(DEBUG) << "JSPHooks: Debugger Statement";
+    LOG_DEBUGGER(VERBOSE) << "JSPHooks: Debugger Statement";
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
     debugger_->NotifyPaused({}, DEBUGGERSTMT);
 }
 
 void JSPtHooks::Breakpoint(const JSPtLocation &location)
 {
-    LOG_DEBUGGER(DEBUG) << "JSPtHooks: Breakpoint => " << location.GetMethodId() << ": "
+    LOG_DEBUGGER(VERBOSE) << "JSPtHooks: Breakpoint => " << location.GetMethodId() << ": "
                          << location.GetBytecodeOffset();
 
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
@@ -36,7 +36,7 @@ void JSPtHooks::Breakpoint(const JSPtLocation &location)
 
 void JSPtHooks::Exception([[maybe_unused]] const JSPtLocation &location)
 {
-    LOG_DEBUGGER(DEBUG) << "JSPtHooks: Exception";
+    LOG_DEBUGGER(VERBOSE) << "JSPtHooks: Exception";
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
 
     debugger_->NotifyPaused({}, EXCEPTION);
@@ -44,16 +44,13 @@ void JSPtHooks::Exception([[maybe_unused]] const JSPtLocation &location)
 
 bool JSPtHooks::SingleStep(const JSPtLocation &location)
 {
-    LOG_DEBUGGER(DEBUG) << "JSPtHooks: SingleStep => " << location.GetBytecodeOffset();
+    LOG_DEBUGGER(VERBOSE) << "JSPtHooks: SingleStep => " << location.GetBytecodeOffset();
 
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
 
-    DebugStepFlags::Get().SetDyn2StatInto(true);
     if (DebugStepFlags::Get().GetStat2DynInto()) {
-        LOG_DEBUGGER(DEBUG) << "SingleStep from Static";
-        debugger_->NotifyPaused({}, OTHER);
+        debugger_->NotifyPaused({}, BREAK_ON_START);
         DebugStepFlags::Get().SetStat2DynInto(false);
-        return false;
     }
     if (UNLIKELY(firstTime_)) {
         firstTime_ = false;
@@ -93,7 +90,7 @@ bool JSPtHooks::NativeOut()
 
 void JSPtHooks::LoadModule(std::string_view pandaFileName, std::string_view entryPoint)
 {
-    LOG_DEBUGGER(DEBUG) << "JSPtHooks: LoadModule: " << pandaFileName;
+    LOG_DEBUGGER(VERBOSE) << "JSPtHooks: LoadModule: " << pandaFileName;
 
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
 
@@ -106,7 +103,7 @@ void JSPtHooks::LoadModule(std::string_view pandaFileName, std::string_view entr
 
 void JSPtHooks::NativeCalling(const void *nativeAddress)
 {
-    LOG_DEBUGGER(DEBUG) << "JSPtHooks: NativeCalling, addr = " << nativeAddress;
+    LOG_DEBUGGER(VERBOSE) << "JSPtHooks: NativeCalling, addr = " << nativeAddress;
 
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
 
@@ -122,7 +119,7 @@ void JSPtHooks::NativeReturn(const void *nativeAddress)
 
 void JSPtHooks::SendableMethodEntry(JSHandle<Method> method)
 {
-    LOG_DEBUGGER(DEBUG) << "JSPtHooks: MethodEntry";
+    LOG_DEBUGGER(VERBOSE) << "JSPtHooks: MethodEntry";
 
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
 
@@ -147,7 +144,7 @@ void JSPtHooks::GenerateAsyncFrames(std::shared_ptr<AsyncStack> asyncStack, bool
 
 void JSPtHooks::HitSymbolicBreakpoint()
 {
-    LOG_DEBUGGER(DEBUG) << "JSPtHooks: HitSymbolicBreakpoint";
+    LOG_DEBUGGER(VERBOSE) << "JSPtHooks: HitSymbolicBreakpoint";
 
     breakOnSymbol_ = true;
 

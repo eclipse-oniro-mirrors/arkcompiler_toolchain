@@ -112,6 +112,6 @@ void WaitForDebugger()
 
 void HandleMessage(std::string &&msg)
 {
-    LOG(ERROR, DEBUGGER) << "Static OnMessage start";
+    LOG(ERROR, DEBUGGER) << "FTDEG HandleMessage start";
     g_inspector->Run(msg);
 }
