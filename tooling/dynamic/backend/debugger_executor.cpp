@@ -23,10 +23,10 @@ void DebuggerExecutor::Initialize(const EcmaVM *vm)
 {
     [[maybe_unused]] EcmaHandleScope handleScope(vm->GetJSThread());
     Local<ObjectRef> globalObj = JSNApi::GetGlobalObject(vm);
-    SetEvaluateToGlobal(vm, globalObj);
+    SetDebuggerAccessor(vm, globalObj);
 }
 
-void DebuggerExecutor::SetEvaluateToGlobal(const EcmaVM *vm, Local<ObjectRef> &globalObj)
+void DebuggerExecutor::SetDebuggerAccessor(const EcmaVM *vm, Local<ObjectRef> &globalObj)
 {
     auto setStr = StringRef::NewFromUtf8(vm, "debuggerSetValue");
     auto getStr = StringRef::NewFromUtf8(vm, "debuggerGetValue");

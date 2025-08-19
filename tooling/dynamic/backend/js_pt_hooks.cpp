@@ -158,4 +158,9 @@ const std::unordered_set<std::string> &JSPtHooks::GetAllRecordNames() const
 {
     return debugger_->GetAllRecordNames();
 }
+
+void JSPtHooks::SetDebuggerAccessor(JSHandle<GlobalEnv> &globalEnv)
+{
+    debugger_->SetDebuggerAccessor(globalEnv);
+}
 }  // namespace panda::ecmascript::tooling

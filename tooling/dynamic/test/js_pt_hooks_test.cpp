@@ -129,4 +129,15 @@ HWTEST_F_L0(JSPtHooksTest, NativeReturnTest)
     jspthooks->NativeReturn(nullptr);
     ASSERT_NE(jspthooks, nullptr);
 }
+
+HWTEST_F_L0(JSPtHooksTest, SetDebuggerAccessorTest)
+{
+    [[maybe_unused]] auto debugger = std::make_unique<DebuggerImpl>(ecmaVm, nullptr, nullptr);
+    Local<JSValueRef> newContext = JSNApi::CreateContext(ecmaVm);
+    Local<ObjectRef> globalObj = JSNApi::GetGlobalObject(ecmaVm, newContext);
+    Local<JSValueRef> setStr = StringRef::NewFromUtf8(ecmaVm, "debuggerSetValue");
+    Local<JSValueRef> getStr = StringRef::NewFromUtf8(ecmaVm, "debuggerGetValue");
+    EXPECT_TRUE(globalObj->Has(ecmaVm, setStr));
+    EXPECT_TRUE(globalObj->Has(ecmaVm, getStr));
+}
 }

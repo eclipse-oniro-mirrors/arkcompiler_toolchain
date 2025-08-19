@@ -1266,9 +1266,6 @@ DispatchResponse DebuggerImpl::EvaluateOnCallFrame(const EvaluateOnCallFramePara
     }
 
     Local<JSValueRef> currentContext = DebuggerApi::GetCurrentGlobalEnv(vm_);
-    Local<ObjectRef> globalObj = JSNApi::GetGlobalObject(vm_, currentContext);
-    DebuggerExecutor::SetEvaluateToGlobal(vm_, globalObj);
-
     Local<JSValueRef> originContext = JSNApi::GetCurrentContext(vm_);
     JSNApi::SwitchContext(vm_, currentContext);
 
@@ -2534,5 +2531,13 @@ Local<FunctionRef> DebuggerImpl::CheckAndGenerateCondFunc(const std::optional<st
         }
     }
     return FunctionRef::Undefined(vm_);
+}
+
+void DebuggerImpl::SetDebuggerAccessor(JSHandle<GlobalEnv> &globalEnv)
+{
+    auto thread = vm_->GetJSThread();
+    JSHandle<JSTaggedValue> global(thread, globalEnv->GetGlobalObject());
+    Local<ObjectRef> globalObj = JSNApiHelper::ToLocal<ObjectRef>(global);
+    DebuggerExecutor::SetDebuggerAccessor(vm_, globalObj);
 }
 }  // namespace panda::ecmascript::tooling
