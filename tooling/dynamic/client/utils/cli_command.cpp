@@ -37,7 +37,6 @@ const std::string HELP_MSG = "usage: <command> <options>\n"
     "  break(b)                                      break with options\n"
     "  setSymbolicBreakpoints                        setSymbolicBreakpoints\n"
     "  removeSymbolicBreakpoints                     removeSymbolicBreakpoints\n"
-    "  removeBreakpointsByUrl                        removeBreakpointsByUrl\n"
     "  backtrack(bt)                                 backtrace\n"
     "  continue(c)                                   continue\n"
     "  delete(d)                                     delete with options\n"
@@ -96,7 +95,6 @@ const std::vector<std::string> cmdList = {
     "break",
     "setSymbolicBreakpoints",
     "removeSymbolicBreakpoints",
-    "removeBreakpointsByUrl",
     "backtrack",
     "continue",
     "delete",
@@ -186,8 +184,6 @@ void CliCommand::CreateCommandMap()
             std::bind(&CliCommand::SetSymbolicBreakpointsCommand, this, "setSymbolicBreakpoints")},
         {std::make_pair("removeSymbolicBreakpoints", "removeSymbolicBreakpoints"),
             std::bind(&CliCommand::RemoveSymbolicBreakpointsCommand, this, "removeSymbolicBreakpoints")},
-        {std::make_pair("removeBreakpointsByUrl", "removeBreakpointsByUrl"),
-            std::bind(&CliCommand::RemoveBreakpointsByUrlCommand, this, "removeBreakpointsByUrl")},
     };
     CreateOtherCommandMap();
 }
@@ -415,27 +411,6 @@ ErrCode CliCommand::RemoveSymbolicBreakpointsCommand(const std::string &cmd)
             return ErrCode::ERR_FAIL;
         }
         debuggerCli.AddSymbolicBreakpointInfo(GetArgList()[0]);
-    } else {
-        OutputCommand(cmd, false);
-        return ErrCode::ERR_FAIL;
-    }
-    
-    result = debuggerCli.DispatcherCmd(cmd);
-    OutputCommand(cmd, true);
-    return result ? ErrCode::ERR_OK : ErrCode::ERR_FAIL;
-}
-
-ErrCode CliCommand::RemoveBreakpointsByUrlCommand(const std::string &cmd)
-{
-    bool result = false;
-    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
-    DebuggerClient &debuggerCli = session->GetDomainManager().GetDebuggerClient();
-    if (GetArgList().size() == 1) { //1: one arguments
-        if (Utils::IsNumber(GetArgList()[0])) {
-            OutputCommand(cmd, false);
-            return ErrCode::ERR_FAIL;
-        }
-        debuggerCli.AddUrl(GetArgList()[0]);
     } else {
         OutputCommand(cmd, false);
         return ErrCode::ERR_FAIL;
