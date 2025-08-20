@@ -100,8 +100,10 @@ config("ark_toolchain_common_config") {
     defines += [
       "PANDA_TARGET_UNIX",
       "PANDA_TARGET_LINUX",
-      "PANDA_USE_FUTEX",
     ]
+    if (!is_asan) {
+      defines += [ "PANDA_USE_FUTEX" ]
+    }
   } else if (is_mingw) {
     cflags_cc += [
       "-std=c++17",
@@ -121,8 +123,10 @@ config("ark_toolchain_common_config") {
     defines += [
       "PANDA_TARGET_ANDROID",
       "PANDA_TARGET_UNIX",
-      "PANDA_USE_FUTEX",
     ]
+    if (!is_asan) {
+      defines += [ "PANDA_USE_FUTEX" ]
+    }
     if (!ark_standalone_build) {
       defines += [ "ENABLE_ANLOG" ]
     }
@@ -134,8 +138,10 @@ config("ark_toolchain_common_config") {
   } else {
     defines += [
       "PANDA_TARGET_UNIX",
-      "PANDA_USE_FUTEX",
     ]
+    if (!is_asan) {
+      defines += [ "PANDA_USE_FUTEX" ]
+    }
     if (!is_standard_system && (current_cpu != "arm" || is_wearable_product)) {
       defines += [ "PANDA_TARGET_MOBILE" ]
     }
