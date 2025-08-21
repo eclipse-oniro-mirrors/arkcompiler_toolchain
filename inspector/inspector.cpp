@@ -508,6 +508,9 @@ void StopDebug(void* vm, bool isHybrid)
 #else
     uint32_t tid = g_inspectors[vm]->tid_;
 #endif
+#if defined(OHOS_PLATFORM)
+    tid = g_inspectors[vm]->tidForSocketPair_;
+#endif // defined(OHOS_PLATFORM)
     auto debuggerInfo = g_debuggerInfo.find(tid);
     if (debuggerInfo != g_debuggerInfo.end()) {
         g_debuggerInfo.erase(debuggerInfo);
