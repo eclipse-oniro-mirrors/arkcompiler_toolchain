@@ -35,6 +35,15 @@ void InitializeDebugger(::panda::ecmascript::EcmaVM *vm,
     vm->GetJsDebuggerManager()->SetDebuggerHandler(new ProtocolHandler(onResponse, vm));
 }
 
+void SetDebugApp(::panda::ecmascript::EcmaVM *vm)
+{
+    if (vm == nullptr || vm->GetJsDebuggerManager() == nullptr) {
+        LOG_DEBUGGER(DEBUG) << "VM has already been destroyed";
+        return;
+    }
+    vm->GetJsDebuggerManager()->SetIsDebugApp(true);
+}
+
 void UninitializeDebugger(::panda::ecmascript::EcmaVM *vm)
 {
     if (vm == nullptr || vm->GetJsDebuggerManager() == nullptr) {
