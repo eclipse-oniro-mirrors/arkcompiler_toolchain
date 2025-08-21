@@ -140,7 +140,7 @@ public:
         LOG_DEBUGGER(FATAL) << "Test " << testName_ << " failed";
     }
 
-    void SetDebuggerAccessor(JSHandle<GlobalEnv> &globalEnv) override {}
+    void SetDebuggerAccessor(const JSHandle<GlobalEnv> &globalEnv) override {}
 
     ~TestHooks() = default;
 

@@ -29,7 +29,7 @@ public:
     ~DebuggerExecutor() = default;
 
     static void Initialize(const EcmaVM *vm);
-    static void SetDebuggerAccessor(const EcmaVM *vm, Local<ObjectRef> &globalObj);
+    static void SetDebuggerAccessor(const EcmaVM *vm, const Local<JSValueRef> &globalEnv);
 
     static Local<JSValueRef> GetValue(const EcmaVM *vm, const FrameHandler *frameHandler, Local<StringRef> name);
     static bool SetValue(const EcmaVM *vm, FrameHandler *frameHandler,
@@ -48,7 +48,7 @@ private:
     static Local<JSValueRef> GetLexicalValue(const EcmaVM *vm, const FrameHandler *frameHandler,
                                              Local<StringRef> name);
     static Local<JSValueRef> GetModuleValue(const EcmaVM *vm, const FrameHandler *frameHandler, Local<StringRef> name);
-    static Local<JSValueRef> GetGlobalValue(const EcmaVM *vm, Local<StringRef> name);
+    static Local<JSValueRef> GetGlobalValue(const EcmaVM *vm, const FrameHandler *frameHandler, Local<StringRef> name);
 
     static bool SetLocalValue(const EcmaVM *vm, FrameHandler *frameHandler,
                               Local<StringRef> name, Local<JSValueRef> value);
@@ -56,7 +56,8 @@ private:
                                 Local<StringRef> name, Local<JSValueRef> value);
     static bool SetModuleValue(const EcmaVM *vm, const FrameHandler *frameHandler,
                                Local<StringRef> name, Local<JSValueRef> value);
-    static bool SetGlobalValue(const EcmaVM *vm, Local<StringRef> name, Local<JSValueRef> value);
+    static bool SetGlobalValue(const EcmaVM *vm, const FrameHandler *frameHandler,
+                               Local<StringRef> name, Local<JSValueRef> value);
 
     static constexpr uint32_t NUM_ARGS = 2;
 };

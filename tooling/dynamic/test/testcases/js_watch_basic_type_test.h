@@ -81,6 +81,11 @@ public:
                 [this](auto recv, auto, auto) -> bool {
                     return RecvWatchVaribleInfo(recv, "bigint", "999n");
                 }},
+            {SocketAction::SEND, "watch globalVar"},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE,
+                [this](auto recv, auto, auto) -> bool {
+                    return RecvWatchVaribleInfo(recv, "string", "globalVar");
+                }},
 
             {SocketAction::SEND, "resume"},
             {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},

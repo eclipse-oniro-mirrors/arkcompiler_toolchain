@@ -16,25 +16,28 @@
 #include "backend/debugger_executor.h"
 
 #include "ecmascript/debugger/js_debugger_manager.h"
+#include "ecmascript/napi/jsnapi_helper.h"
 #include "tooling/dynamic/base/pt_types.h"
 
 namespace panda::ecmascript::tooling {
 void DebuggerExecutor::Initialize(const EcmaVM *vm)
 {
     [[maybe_unused]] EcmaHandleScope handleScope(vm->GetJSThread());
-    Local<ObjectRef> globalObj = JSNApi::GetGlobalObject(vm);
-    SetDebuggerAccessor(vm, globalObj);
+    Local<JSValueRef> globalEnv =
+        JSNApiHelper::ToLocal<JSValueRef>(JSHandle<JSTaggedValue>(vm->GetGlobalEnv()));
+    SetDebuggerAccessor(vm, globalEnv);
 }
 
-void DebuggerExecutor::SetDebuggerAccessor(const EcmaVM *vm, Local<ObjectRef> &globalObj)
+void DebuggerExecutor::SetDebuggerAccessor(const EcmaVM *vm, const Local<JSValueRef> &globalEnv)
 {
     auto setStr = StringRef::NewFromUtf8(vm, "debuggerSetValue");
     auto getStr = StringRef::NewFromUtf8(vm, "debuggerGetValue");
+    Local<ObjectRef> globalObj = JSNApi::GetGlobalObject(vm, globalEnv);
     if (!globalObj->Has(vm, setStr) || !globalObj->Has(vm, getStr)) {
-        globalObj->Set(vm, setStr, FunctionRef::New(
-            const_cast<panda::EcmaVM*>(vm), DebuggerExecutor::DebuggerSetValue));
-        globalObj->Set(vm, getStr, FunctionRef::New(
-            const_cast<panda::EcmaVM*>(vm), DebuggerExecutor::DebuggerGetValue));
+        globalObj->Set(vm, setStr, FunctionRef::New(const_cast<panda::EcmaVM*>(vm),
+            globalEnv, DebuggerExecutor::DebuggerSetValue));
+        globalObj->Set(vm, getStr, FunctionRef::New(const_cast<panda::EcmaVM*>(vm),
+            globalEnv, DebuggerExecutor::DebuggerGetValue));
     }
 }
 
@@ -109,7 +112,7 @@ Local<JSValueRef> DebuggerExecutor::GetValue(const EcmaVM *vm, const FrameHandle
     if (!value.IsEmpty()) {
         return value;
     }
-    value = GetGlobalValue(vm, name);
+    value = GetGlobalValue(vm, frameHandler, name);
     if (!value.IsEmpty()) {
         return value;
     }
@@ -129,7 +132,7 @@ bool DebuggerExecutor::SetValue(const EcmaVM *vm, FrameHandler *frameHandler,
     if (SetModuleValue(vm, frameHandler, name, value)) {
         return true;
     }
-    if (SetGlobalValue(vm, name, value)) {
+    if (SetGlobalValue(vm, frameHandler, name, value)) {
         return true;
     }
 
@@ -201,16 +204,18 @@ bool DebuggerExecutor::SetLexicalValue(const EcmaVM *vm, const FrameHandler *fra
     return true;
 }
 
-Local<JSValueRef> DebuggerExecutor::GetGlobalValue(const EcmaVM *vm, Local<StringRef> name)
+Local<JSValueRef> DebuggerExecutor::GetGlobalValue(const EcmaVM *vm, const FrameHandler *frameHandler,
+                                                   Local<StringRef> name)
 {
-    return DebuggerApi::GetGlobalValue(vm, name);
+    return DebuggerApi::GetGlobalValue(vm, frameHandler, name);
 }
 
-bool DebuggerExecutor::SetGlobalValue(const EcmaVM *vm, Local<StringRef> name, Local<JSValueRef> value)
+bool DebuggerExecutor::SetGlobalValue(const EcmaVM *vm, const FrameHandler *frameHandler,
+                                      Local<StringRef> name, Local<JSValueRef> value)
 {
     std::string varName = name->ToString(vm);
     vm->GetJsDebuggerManager()->NotifyScopeUpdated(varName, value, Scope::Type::Global());
-    return DebuggerApi::SetGlobalValue(vm, name, value);
+    return DebuggerApi::SetGlobalValue(vm, frameHandler, name, value);
 }
 
 Local<JSValueRef> DebuggerExecutor::GetModuleValue(const EcmaVM *vm, const FrameHandler *frameHandler,
