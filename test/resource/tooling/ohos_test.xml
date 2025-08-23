@@ -98,7 +98,6 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/smart_stepInto.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/local_export.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/module_watch.abc -> /data/test" src="out"/>
-            <option name="push" value="test/test/libark_client.so -> /data/test" src="out"/>
         </preparer>
     </target>
     <target name="DebuggerCIntClientTest">
@@ -127,7 +126,6 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/smart_stepInto.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/local_export.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/module_watch.abc -> /data/test" src="out"/>
-            <option name="push" value="test/test/libark_client.so -> /data/test" src="out"/>
         </preparer>
     </target>
 </configuration>
