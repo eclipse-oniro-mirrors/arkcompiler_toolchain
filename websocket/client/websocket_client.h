@@ -18,6 +18,7 @@
 
 #include "websocket_base.h"
 #include "http.h"
+#include "network.h"
 #include <array>
 #include <atomic>
 #include <iostream>
@@ -27,6 +28,9 @@
 namespace OHOS::ArkCompiler::Toolchain {
 class WebSocketClient final : public WebSocketBase {
 public:
+    static constexpr size_t SEC_WEBSOCKET_KEY_BYTES_LEN = 16;
+    static constexpr size_t KEY_LENGTH = GetBase64EncodingLength(SEC_WEBSOCKET_KEY_BYTES_LEN);
+
     ~WebSocketClient() noexcept override = default;
 
     void Close();
@@ -70,7 +74,7 @@ private:
 
     static constexpr int NET_SUCCESS = 1;
     static constexpr uint8_t MASK_KEY[] = {0xa, 0xb, 0xc, 0xd};
-    std::string secWebSocketKey_;
+    char secWebSocketKey_[KEY_LENGTH + 1] = {};
 };
 } // namespace OHOS::ArkCompiler::Toolchain
 

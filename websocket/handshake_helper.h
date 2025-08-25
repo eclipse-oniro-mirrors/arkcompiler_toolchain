@@ -34,7 +34,7 @@ public:
     // SHA1 will write SHA_DIGEST_LENGTH == 20 bytes of output
     static constexpr size_t ENCODED_KEY_LEN = GetBase64EncodingLength(SHA_DIGEST_LENGTH);
 
-    static std::string GenerateRandomSecWSKey();
+    static bool GenerateRandomSecWSKey(char (&destination)[KEY_LENGTH + 1]);
     static bool EncodeKey(std::string_view key, unsigned char (&destination)[ENCODED_KEY_LEN + 1]);
     static bool EncodeKey(const unsigned char(&key)[KEY_LENGTH + 1], unsigned char (&destination)[ENCODED_KEY_LEN + 1]);
 

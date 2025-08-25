@@ -18,22 +18,24 @@
 
 namespace OHOS::ArkCompiler::Toolchain {
 /* static */
-std::string WebSocketKeyEncoder::GenerateRandomSecWSKey()
+bool WebSocketKeyEncoder::GenerateRandomSecWSKey(char (&destination)[KEY_LENGTH + 1])
 {
     std::array<unsigned char, SEC_WEBSOCKET_KEY_BYTES_LEN> bytes {};
     if (RAND_bytes(bytes.data(), bytes.size()) != 1) {
         LOGE("RAND_bytes failed to generate secure random bytes");
-        return "";
+        return false;
     }
 
-    std::array<unsigned char, KEY_LENGTH + 1> encoded {};
     // base64-encoding is done via EVP_EncodeBlock, which writes a null-terminated string.
-    int encodedBytes = EVP_EncodeBlock(encoded.data(), bytes.data(), SEC_WEBSOCKET_KEY_BYTES_LEN);
+    int encodedBytes = EVP_EncodeBlock(reinterpret_cast<unsigned char *>(destination),
+                                       bytes.data(), SEC_WEBSOCKET_KEY_BYTES_LEN);
     if (encodedBytes != KEY_LENGTH) {
         LOGE("EVP_EncodeBlock failed to encode Sec-WebSocket-Key bytes, encodedBytes = %{public}d", encodedBytes);
-        return "";
+        destination[0] = '\0';
+        return false;
     }
-    return std::string(reinterpret_cast<char *>(encoded.data()), KEY_LENGTH);
+    destination[KEY_LENGTH] = '\0';
+    return true;
 }
 
 /* static */

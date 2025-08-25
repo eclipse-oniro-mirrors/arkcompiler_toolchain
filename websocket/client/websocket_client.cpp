@@ -178,7 +178,10 @@ bool WebSocketClient::ClientSendWSUpgradeReq()
         return true;
     }
 
-    secWebSocketKey_ = WebSocketKeyEncoder::GenerateRandomSecWSKey();
+    if (!WebSocketKeyEncoder::GenerateRandomSecWSKey(secWebSocketKey_)) {
+        LOGE("ClientSendWSUpgradeReq::client failed to generate Sec-WebSocket-Key");
+        return false;
+    }
     std::string upgradeReq = std::string(CLIENT_WS_UPGRADE_REQ_BEFORE_KEY) + secWebSocketKey_ +
                              std::string(CLIENT_WS_UPGRADE_REQ_AFTER_KEY);
     if (!Send(GetConnectionSocket(), upgradeReq.data(), upgradeReq.size(), 0)) {
