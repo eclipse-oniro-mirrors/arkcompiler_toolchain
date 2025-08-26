@@ -128,7 +128,7 @@ class TestMainBasicFuncWithGPSOn(TestCase):
         ################################################################################################################
         symbolicBreakpoints = [debugger.SymbolicBreakpoint(functionName='testDropFrame')]
         for i in range(1, 51):
-            symbolicBreakpoints.append(debugger.SymbolicBreakpoint(functionName='testDebug' + str(i)))
+            symbolicBreakpoints.append(debugger.SymbolicBreakpoint(functionName=f'testDebug{i}'))
         params = debugger.SymbolicBreakpoints(symbolicBreakpoints)
         start_time = datetime.now()
         await self.debugger_impl.send("Debugger.setSymbolicBreakpoints", main_thread, params)
@@ -639,7 +639,7 @@ class TestMainBasicFuncWithGPSOn(TestCase):
         ################################################################################################################
         symbolicBreakpoints = [debugger.SymbolicBreakpoint(functionName='testDropFrame')]
         for i in range(1, 51):
-            symbolicBreakpoints.append(debugger.SymbolicBreakpoint(functionName='testDebug' + str(i)))
+            symbolicBreakpoints.append(debugger.SymbolicBreakpoint(functionName=f'testDebug{i}'))
         params = debugger.SymbolicBreakpoints(symbolicBreakpoints)
         start_time = datetime.now()
         await self.debugger_impl.send("Debugger.removeSymbolicBreakpoints", main_thread, params)
