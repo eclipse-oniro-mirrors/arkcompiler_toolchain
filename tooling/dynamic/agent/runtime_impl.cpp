@@ -30,25 +30,32 @@ void RuntimeImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
     Method method = GetMethodEnum(request.GetMethod());
     LOG_DEBUGGER(DEBUG) << "dispatch [" << request.GetMethod() << "] to RuntimeImpl";
+    DispatchResponse response = DispatchResponse::Fail("unknown method: " + request.GetMethod());
+    std::unique_ptr<PtBaseReturns> result = nullptr;
     switch (method) {
         case Method::ENABLE:
-            Enable(request);
+            response = Enable(request, result);
             break;
         case Method::DISABLE:
-            Disable(request);
+            response = Disable(request);
             break;
         case Method::GET_PROPERTIES:
-            GetProperties(request);
+            response = GetProperties(request, result);
             break;
         case Method::RUN_IF_WAITING_FOR_DEBUGGER:
-            RunIfWaitingForDebugger(request);
+            response = RunIfWaitingForDebugger(request);
             break;
         case Method::GET_HEAP_USAGE:
-            GetHeapUsage(request);
+            response = GetHeapUsage(request, result);
             break;
         default:
-            SendResponse(request, DispatchResponse::Fail("unknown method: " + request.GetMethod()));
+            response = DispatchResponse::Fail("unknown method: " + request.GetMethod());
             break;
+    }
+    if (result) {
+        SendResponse(request, response, *result);
+    } else {
+        SendResponse(request, response);
     }
 }
 
@@ -69,32 +76,33 @@ RuntimeImpl::DispatcherImpl::Method RuntimeImpl::DispatcherImpl::GetMethodEnum(c
     }
 }
 
-void RuntimeImpl::DispatcherImpl::Enable(const DispatchRequest &request)
+DispatchResponse RuntimeImpl::DispatcherImpl::Enable(const DispatchRequest &request,
+    std::unique_ptr<PtBaseReturns> &result)
 {
     DispatchResponse response = runtime_->Enable();
     runtime_->InitializeExtendedProtocolsList();
-    EnableReturns result(runtime_->runtimeExtendedProtocols_);
-    SendResponse(request, response, result);
+    result = std::make_unique<EnableReturns>(runtime_->runtimeExtendedProtocols_);
+    return response;
 }
 
-void RuntimeImpl::DispatcherImpl::Disable(const DispatchRequest &request)
+DispatchResponse RuntimeImpl::DispatcherImpl::Disable(const DispatchRequest &request)
 {
     DispatchResponse response = runtime_->Disable();
-    SendResponse(request, response);
+    return response;
 }
 
-void RuntimeImpl::DispatcherImpl::RunIfWaitingForDebugger(const DispatchRequest &request)
+DispatchResponse RuntimeImpl::DispatcherImpl::RunIfWaitingForDebugger(const DispatchRequest &request)
 {
     DispatchResponse response = runtime_->RunIfWaitingForDebugger();
-    SendResponse(request, response);
+    return response;
 }
 
-void RuntimeImpl::DispatcherImpl::GetProperties(const DispatchRequest &request)
+DispatchResponse RuntimeImpl::DispatcherImpl::GetProperties(const DispatchRequest &request,
+    std::unique_ptr<PtBaseReturns> &result)
 {
     std::unique_ptr<GetPropertiesParams> params = GetPropertiesParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
 
     std::vector<std::unique_ptr<PropertyDescriptor>> outPropertyDesc;
@@ -107,11 +115,11 @@ void RuntimeImpl::DispatcherImpl::GetProperties(const DispatchRequest &request)
         ASSERT(outExceptionDetails.value() != nullptr);
         LOG_DEBUGGER(WARN) << "GetProperties thrown an exception";
     }
-    GetPropertiesReturns result(std::move(outPropertyDesc),
+    result = std::make_unique<GetPropertiesReturns>(std::move(outPropertyDesc),
         std::move(outInternalDescs),
         std::move(outPrivateProperties),
         std::move(outExceptionDetails));
-    SendResponse(request, response, result);
+    return response;
 }
 
 std::string RuntimeImpl::DispatcherImpl::GetProperties(
@@ -142,13 +150,14 @@ std::string RuntimeImpl::DispatcherImpl::GetProperties(
     return ReturnsValueToString(callId, result.ToJson());
 }
 
-void RuntimeImpl::DispatcherImpl::GetHeapUsage(const DispatchRequest &request)
+DispatchResponse RuntimeImpl::DispatcherImpl::GetHeapUsage(const DispatchRequest &request,
+    std::unique_ptr<PtBaseReturns> &result)
 {
     double usedSize = 0;
     double totalSize = 0;
     DispatchResponse response = runtime_->GetHeapUsage(&usedSize, &totalSize);
-    GetHeapUsageReturns result(usedSize, totalSize);
-    SendResponse(request, response, result);
+    result = std::make_unique<GetHeapUsageReturns>(usedSize, totalSize);
+    return response;
 }
 
 bool RuntimeImpl::Frontend::AllowNotify() const

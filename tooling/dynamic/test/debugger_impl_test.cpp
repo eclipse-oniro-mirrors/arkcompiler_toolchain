@@ -1493,13 +1493,16 @@ HWTEST_F_L0(DebuggerImplTest, DispatcherImplCallFunctionOn__001)
     std::string msg = std::string() + R"({"id":0,"method":"Debugger.callFunctionOn","params":{
         "callFrameId":"0", "functionDeclaration":0}})";
     DispatchRequest request(msg);
-    dispatcherImpl->CallFunctionOn(request);
+    std::unique_ptr<PtBaseReturns> result = nullptr;
+    DispatchResponse response = dispatcherImpl->CallFunctionOn(request, result);
+    protocolChannel->SendResponse(request, response, *result);
     ASSERT_TRUE(outStrForCallbackCheck.find("wrong params") != std::string::npos);
 
     msg = std::string() + R"({"id":0,"method":"Debugger.callFunctionOn","params":{
         "callFrameId":"0", "functionDeclaration":"test"}})";
     DispatchRequest request1(msg);
-    dispatcherImpl->CallFunctionOn(request1);
+    response = dispatcherImpl->CallFunctionOn(request1, result);
+    protocolChannel->SendResponse(request1, response, *result);
     ASSERT_TRUE(outStrForCallbackCheck.find("Unsupport eval now") == std::string::npos);
     if (protocolChannel != nullptr) {
         delete protocolChannel;

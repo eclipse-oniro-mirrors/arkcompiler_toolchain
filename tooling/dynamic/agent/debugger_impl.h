@@ -157,41 +157,47 @@ public:
             : DispatcherBase(channel), debugger_(std::move(debugger)) {}
         ~DispatcherImpl() override = default;
 
-        void ContinueToLocation(const DispatchRequest &request);
+        DispatchResponse ContinueToLocation(const DispatchRequest &request);
         std::string GetJsFrames();
         std::string EvaluateOnCallFrame(const int32_t callId, std::unique_ptr<EvaluateOnCallFrameParams> params);
         std::string CallFunctionOn(const int32_t callId, std::unique_ptr<CallFunctionOnParams> params);
         void Dispatch(const DispatchRequest &request) override;
-        void Enable(const DispatchRequest &request);
-        void Disable(const DispatchRequest &request);
-        void EvaluateOnCallFrame(const DispatchRequest &request);
-        void GetPossibleBreakpoints(const DispatchRequest &request);
-        void GetScriptSource(const DispatchRequest &request);
-        void Pause(const DispatchRequest &request);
-        void RemoveBreakpoint(const DispatchRequest &request);
-        void RemoveBreakpointsByUrl(const DispatchRequest &request);
-        void Resume(const DispatchRequest &request);
-        void SetAsyncCallStackDepth(const DispatchRequest &request);
-        void SetBreakpointByUrl(const DispatchRequest &request);
-        void SetBreakpointsActive(const DispatchRequest &request);
-        void SetPauseOnExceptions(const DispatchRequest &request);
-        void SetSkipAllPauses(const DispatchRequest &request);
-        void SetNativeRange(const DispatchRequest &request);
-        void ResetSingleStepper(const DispatchRequest &request);
-        void StepInto(const DispatchRequest &request);
-        void SmartStepInto(const DispatchRequest &request);
-        void StepOut(const DispatchRequest &request);
-        void StepOver(const DispatchRequest &request);
-        void SetMixedDebugEnabled(const DispatchRequest &request);
-        void SetBlackboxPatterns(const DispatchRequest &request);
-        void ReplyNativeCalling(const DispatchRequest &request);
-        void GetPossibleAndSetBreakpointByUrl(const DispatchRequest &request);
-        void DropFrame(const DispatchRequest &request);
+        DispatchResponse Enable(const DispatchRequest &request, std::unique_ptr<PtBaseReturns> &result);
+        DispatchResponse Disable(const DispatchRequest &request);
+        DispatchResponse EvaluateOnCallFrame(const DispatchRequest &request,
+            std::unique_ptr<PtBaseReturns> &result);
+        DispatchResponse GetPossibleBreakpoints(const DispatchRequest &request,
+            std::unique_ptr<PtBaseReturns> &result);
+        DispatchResponse GetScriptSource(const DispatchRequest &request,
+            std::unique_ptr<PtBaseReturns> &result);
+        DispatchResponse Pause(const DispatchRequest &request);
+        DispatchResponse RemoveBreakpoint(const DispatchRequest &request);
+        DispatchResponse RemoveBreakpointsByUrl(const DispatchRequest &request);
+        DispatchResponse Resume(const DispatchRequest &request);
+        DispatchResponse SetAsyncCallStackDepth(const DispatchRequest &request);
+        DispatchResponse SetBreakpointByUrl(const DispatchRequest &request,
+            std::unique_ptr<PtBaseReturns> &result);
+        DispatchResponse SetBreakpointsActive(const DispatchRequest &request);
+        DispatchResponse SetPauseOnExceptions(const DispatchRequest &request);
+        DispatchResponse SetSkipAllPauses(const DispatchRequest &request);
+        DispatchResponse SetNativeRange(const DispatchRequest &request);
+        DispatchResponse ResetSingleStepper(const DispatchRequest &request);
+        DispatchResponse StepInto(const DispatchRequest &request);
+        DispatchResponse SmartStepInto(const DispatchRequest &request);
+        DispatchResponse StepOut(const DispatchRequest &request);
+        DispatchResponse StepOver(const DispatchRequest &request);
+        DispatchResponse SetMixedDebugEnabled(const DispatchRequest &request);
+        DispatchResponse SetBlackboxPatterns(const DispatchRequest &request);
+        DispatchResponse ReplyNativeCalling(const DispatchRequest &request);
+        DispatchResponse GetPossibleAndSetBreakpointByUrl(const DispatchRequest &request,
+            std::unique_ptr<PtBaseReturns> &result);
+        DispatchResponse DropFrame(const DispatchRequest &request);
         void ClientDisconnect(const DispatchRequest &request);
-        void CallFunctionOn(const DispatchRequest &request);
-        void SaveAllPossibleBreakpoints(const DispatchRequest &request);
-        void SetSymbolicBreakpoints(const DispatchRequest &request);
-        void RemoveSymbolicBreakpoints(const DispatchRequest &request);
+        DispatchResponse CallFunctionOn(const DispatchRequest &request,
+            std::unique_ptr<PtBaseReturns> &result);
+        DispatchResponse SaveAllPossibleBreakpoints(const DispatchRequest &request);
+        DispatchResponse SetSymbolicBreakpoints(const DispatchRequest &request);
+        DispatchResponse RemoveSymbolicBreakpoints(const DispatchRequest &request);
         std::string SaveAllPossibleBreakpoints(const int32_t callId,
             std::unique_ptr<SaveAllPossibleBreakpointsParams> params);
         std::string RemoveBreakpointsByUrl(const int32_t callId,

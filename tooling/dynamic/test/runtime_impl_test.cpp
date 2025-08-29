@@ -83,8 +83,10 @@ HWTEST_F_L0(RuntimeImplTest, DispatcherImplEnable)
     auto dispatcherImpl = std::make_unique<RuntimeImpl::DispatcherImpl>(channel, std::move(runtimeImpl));
 
     std::string msg = std::string() + R"({"id":0,"method":"Rumtime.enable","params":{}})";
+    std::unique_ptr<PtBaseReturns> res = nullptr;
     DispatchRequest request1(msg);
-    dispatcherImpl->Enable(request1);
+    DispatchResponse response = dispatcherImpl->Enable(request1, res);
+    channel->SendResponse(request1, response, *res);
     ASSERT_TRUE(result.find("protocols") != std::string::npos);
     if (channel != nullptr) {
         delete channel;
@@ -103,7 +105,8 @@ HWTEST_F_L0(RuntimeImplTest, DispatcherImplDisable)
 
     std::string msg = std::string() + R"({"id":0,"method":"Rumtime.disable","params":{}})";
     DispatchRequest request1(msg);
-    dispatcherImpl->Disable(request1);
+    DispatchResponse response = dispatcherImpl->Disable(request1);
+    channel->SendResponse(request1, response, PtBaseReturns());
     ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
     if (channel != nullptr) {
         delete channel;
@@ -122,7 +125,8 @@ HWTEST_F_L0(RuntimeImplTest, DispatcherImplRunIfWaitingForDebugger)
 
     std::string msg = std::string() + R"({"id":0,"method":"Rumtime.runIfWaitingForDebugger","params":{}})";
     DispatchRequest request1(msg);
-    dispatcherImpl->RunIfWaitingForDebugger(request1);
+    DispatchResponse response = dispatcherImpl->RunIfWaitingForDebugger(request1);
+    channel->SendResponse(request1, response, PtBaseReturns());
     ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
     if (channel != nullptr) {
         delete channel;
@@ -141,12 +145,15 @@ HWTEST_F_L0(RuntimeImplTest, DispatcherImplGetProperties__001)
 
     std::string msg = std::string() + R"({"id":0,"method":"Rumtime.getProperties","params":{"objectId":0}})";
     DispatchRequest request(msg);
-    dispatcherImpl->GetProperties(request);
+    std::unique_ptr<PtBaseReturns> res = nullptr;
+    DispatchResponse response = dispatcherImpl->GetProperties(request, res);
+    channel->SendResponse(request, response, *res);
     ASSERT_TRUE(result.find("wrong params") != std::string::npos);
 
     msg = std::string() + R"({"id":0,"method":"Rumtime.getProperties","params":{"objectId":"0"}})";
     DispatchRequest request1(msg);
-    dispatcherImpl->GetProperties(request1);
+    response = dispatcherImpl->GetProperties(request1, res);
+    channel->SendResponse(request1, response, *res);
     ASSERT_TRUE(result.find("Unknown object id") != std::string::npos);
     if (channel != nullptr) {
         delete channel;
@@ -182,7 +189,9 @@ HWTEST_F_L0(RuntimeImplTest, DispatcherImplGetHeapUsage)
 
     std::string msg = std::string() + R"({"id":0,"method":"Rumtime.getHeapUsage ","params":{}})";
     DispatchRequest request(msg);
-    dispatcherImpl->GetHeapUsage(request);
+    std::unique_ptr<PtBaseReturns> res = nullptr;
+    DispatchResponse response = dispatcherImpl->GetHeapUsage(request, res);
+    channel->SendResponse(request, response, *res);
     ASSERT_TRUE(result.find("usedSize") != std::string::npos);
     ASSERT_TRUE(result.find("totalSize") != std::string::npos);
     if (channel != nullptr) {
