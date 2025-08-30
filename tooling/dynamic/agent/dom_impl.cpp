@@ -16,7 +16,8 @@
 #include "agent/dom_impl.h"
 
 namespace panda::ecmascript::tooling {
-void DomImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
+std::optional<std::string> DomImpl::DispatcherImpl::Dispatch(const DispatchRequest &request,
+    [[maybe_unused]] bool crossLanguageDebug)
 {
     Method method = GetMethodEnum(request.GetMethod());
     LOG_DEBUGGER(INFO) << "dispatch [" << request.GetMethod() << "] to DomImpl";
@@ -28,6 +29,7 @@ void DomImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
             SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
             break;
     }
+    return std::nullopt;
 }
 
 DomImpl::DispatcherImpl::Method DomImpl::DispatcherImpl::GetMethodEnum(const std::string& method)

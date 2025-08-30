@@ -32,7 +32,8 @@ void ProfilerImpl::InitializeExtendedProtocolsList()
     profilerExtendedProtocols_ = std::move(profilerProtocolList);
 }
 
-void ProfilerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
+std::optional<std::string> ProfilerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request,
+    [[maybe_unused]] bool crossLanguageDebug)
 {
     Method method = GetMethodEnum(request.GetMethod());
     LOG_DEBUGGER(DEBUG) << "dispatch [" << request.GetMethod() << "] to ProfilerImpl";
@@ -83,6 +84,7 @@ void ProfilerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
             SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
             break;
     }
+    return std::nullopt;
 }
 
 ProfilerImpl::DispatcherImpl::Method ProfilerImpl::DispatcherImpl::GetMethodEnum(const std::string& method)

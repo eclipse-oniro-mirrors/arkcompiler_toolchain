@@ -18,7 +18,8 @@
 #include "protocol_channel.h"
 
 namespace panda::ecmascript::tooling {
-void TracingImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
+std::optional<std::string> TracingImpl::DispatcherImpl::Dispatch(const DispatchRequest &request,
+    [[maybe_unused]] bool crossLanguageDebug)
 {
     Method method = GetMethodEnum(request.GetMethod());
     LOG_DEBUGGER(DEBUG) << "dispatch [" << request.GetMethod() << "] to TracingImpl";
@@ -42,6 +43,7 @@ void TracingImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
             SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
             break;
     }
+    return std::nullopt;
 }
 
 TracingImpl::DispatcherImpl::Method TracingImpl::DispatcherImpl::GetMethodEnum(const std::string& method)

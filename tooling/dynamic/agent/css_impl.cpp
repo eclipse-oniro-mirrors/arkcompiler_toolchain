@@ -16,7 +16,8 @@
 #include "agent/css_impl.h"
 
 namespace panda::ecmascript::tooling {
-void CssImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
+std::optional<std::string> CssImpl::DispatcherImpl::Dispatch(const DispatchRequest &request,
+    [[maybe_unused]] bool crossLanguageDebug)
 {
     Method method = GetMethodEnum(request.GetMethod());
     LOG_DEBUGGER(INFO) << "dispatch [" << request.GetMethod() << "] to CssImpl";
@@ -28,6 +29,7 @@ void CssImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
             SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
             break;
     }
+    return std::nullopt;
 }
 
 CssImpl::DispatcherImpl::Method CssImpl::DispatcherImpl::GetMethodEnum(const std::string& method)

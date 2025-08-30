@@ -168,10 +168,9 @@ HWTEST_F_L0(RuntimeImplTest, DispatcherImplGetProperties__002)
     auto dispatcherImpl = std::make_unique<RuntimeImpl::DispatcherImpl>(channel, std::move(runtimeImpl));
     std::string msg = std::string() + R"({"id":0,"method":"Rumtime.getProperties","params":{"objectId":"0"}})";
     DispatchRequest request(msg);
-    std::unique_ptr<GetPropertiesParams> params = GetPropertiesParams::Create(request.GetParams());
-    int32_t callId = 0;
-    std::string result = dispatcherImpl->GetProperties(callId, std::move(params));
-    EXPECT_STREQ(result.c_str(), R"({"id":0,"result":{"code":1,"message":"Unknown object id"}})");
+    std::unique_ptr<PtBaseReturns> resultPtr;
+    DispatchResponse response = dispatcherImpl->GetProperties(request, resultPtr);
+    EXPECT_STREQ(response.GetMessage().c_str(), "Unknown object id");
     if (channel != nullptr) {
         delete channel;
         channel = nullptr;

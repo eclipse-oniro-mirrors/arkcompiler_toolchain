@@ -126,9 +126,12 @@ const char* OperateDebugMessage(const ::panda::ecmascript::EcmaVM *vm, const cha
     if (LIKELY(handler != nullptr)) {
         auto dispatcher = handler->GetDispatcher();
         if (LIKELY(dispatcher != nullptr)) {
-            auto info = dispatcher->OperateDebugMessage(message);
-            const char* buffer = strdup(info.c_str());
-            return buffer;
+            DispatchRequest request(message);
+            auto info = dispatcher->Dispatch(request, true);
+            if (info.has_value()) {
+                const char* buffer = strdup(info.value().c_str());
+                return buffer;
+            }
         }
         return "";
     }

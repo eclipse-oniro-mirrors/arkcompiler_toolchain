@@ -16,7 +16,8 @@
 #include "agent/overlay_impl.h"
 
 namespace panda::ecmascript::tooling {
-void OverlayImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
+std::optional<std::string> OverlayImpl::DispatcherImpl::Dispatch(const DispatchRequest &request,
+    [[maybe_unused]] bool crossLanguageDebug)
 {
     Method method = GetMethodEnum(request.GetMethod());
     LOG_DEBUGGER(INFO) << "dispatch [" << request.GetMethod() << "] to OverlayImpl";
@@ -28,6 +29,7 @@ void OverlayImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
             SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
             break;
     }
+    return std::nullopt;
 }
 
 OverlayImpl::DispatcherImpl::Method OverlayImpl::DispatcherImpl::GetMethodEnum(const std::string& method)

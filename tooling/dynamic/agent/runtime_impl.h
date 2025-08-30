@@ -46,12 +46,11 @@ public:
             : DispatcherBase(channel), runtime_(std::move(runtime)) {}
         ~DispatcherImpl() override = default;
 
-        void Dispatch(const DispatchRequest &request) override;
+        std::optional<std::string> Dispatch(const DispatchRequest &request, bool crossLanguageDebug = false) override;
         DispatchResponse Disable(const DispatchRequest &request);
         DispatchResponse Enable(const DispatchRequest &request, std::unique_ptr<PtBaseReturns> &result);
         DispatchResponse RunIfWaitingForDebugger(const DispatchRequest &request);
         DispatchResponse GetProperties(const DispatchRequest &request, std::unique_ptr<PtBaseReturns> &result);
-        std::string GetProperties(const int32_t callId, std::unique_ptr<GetPropertiesParams> params);
         DispatchResponse GetHeapUsage(const DispatchRequest &request, std::unique_ptr<PtBaseReturns> &result);
 
         enum class Method {

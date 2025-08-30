@@ -159,9 +159,7 @@ public:
 
         DispatchResponse ContinueToLocation(const DispatchRequest &request);
         std::string GetJsFrames();
-        std::string EvaluateOnCallFrame(const int32_t callId, std::unique_ptr<EvaluateOnCallFrameParams> params);
-        std::string CallFunctionOn(const int32_t callId, std::unique_ptr<CallFunctionOnParams> params);
-        void Dispatch(const DispatchRequest &request) override;
+        std::optional<std::string> Dispatch(const DispatchRequest &request, bool crossLanguageDebug = false) override;
         DispatchResponse Enable(const DispatchRequest &request, std::unique_ptr<PtBaseReturns> &result);
         DispatchResponse Disable(const DispatchRequest &request);
         DispatchResponse EvaluateOnCallFrame(const DispatchRequest &request,
@@ -198,12 +196,6 @@ public:
         DispatchResponse SaveAllPossibleBreakpoints(const DispatchRequest &request);
         DispatchResponse SetSymbolicBreakpoints(const DispatchRequest &request);
         DispatchResponse RemoveSymbolicBreakpoints(const DispatchRequest &request);
-        std::string SaveAllPossibleBreakpoints(const int32_t callId,
-            std::unique_ptr<SaveAllPossibleBreakpointsParams> params);
-        std::string RemoveBreakpointsByUrl(const int32_t callId,
-            std::unique_ptr<RemoveBreakpointsByUrlParams> params);
-        std::string GetPossibleAndSetBreakpointByUrl(const int32_t callId,
-            std::unique_ptr<GetPossibleAndSetBreakpointParams> params);
 
         enum class Method {
             CONTINUE_TO_LOCATION,
