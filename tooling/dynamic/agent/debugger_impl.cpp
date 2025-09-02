@@ -86,7 +86,7 @@ bool DebuggerImpl::NotifyScriptParsed(const std::string &fileName, std::string_v
         LOG_DEBUGGER(DEBUG) << "NotifyScriptParsed: Unmerge file: " << fileName;
         return false;
     }
-    
+
     const char *recordName = entryPoint.data();
     auto mainMethodIndex = panda_file::File::EntityId(jsPandaFile->GetMainMethodIndex(recordName));
     const std::string &source = extractor->GetSourceCode(mainMethodIndex);
@@ -505,103 +505,111 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
 {
     Method method = GetMethodEnum(request.GetMethod());
     LOG_DEBUGGER(DEBUG) << "dispatch [" << request.GetMethod() << "] to DebuggerImpl";
+    if (method == Method::CLIENT_DISCONNECT) {
+        ClientDisconnect(request);
+        return;
+    }
+    DispatchResponse response = DispatchResponse::Fail("unknown method: " + request.GetMethod());
+    std::unique_ptr<PtBaseReturns> result = nullptr;
     switch (method) {
         case Method::CONTINUE_TO_LOCATION:
-            ContinueToLocation(request);
+            response = ContinueToLocation(request);
             break;
         case Method::ENABLE:
-            Enable(request);
+            response = Enable(request, result);
             break;
         case Method::DISABLE:
-            Disable(request);
+            response = Disable(request);
             break;
         case Method::EVALUATE_ON_CALL_FRAME:
-            EvaluateOnCallFrame(request);
+            response = EvaluateOnCallFrame(request, result);
             break;
         case Method::GET_POSSIBLE_BREAKPOINTS:
-            GetPossibleBreakpoints(request);
+            response = GetPossibleBreakpoints(request, result);
             break;
         case Method::GET_SCRIPT_SOURCE:
-            GetScriptSource(request);
+            response = GetScriptSource(request, result);
             break;
         case Method::PAUSE:
-            Pause(request);
+            response = Pause(request);
             break;
         case Method::REMOVE_BREAKPOINT:
-            RemoveBreakpoint(request);
+            response = RemoveBreakpoint(request);
             break;
         case Method::REMOVE_BREAKPOINTS_BY_URL:
-            RemoveBreakpointsByUrl(request);
+            response = RemoveBreakpointsByUrl(request);
             break;
         case Method::RESUME:
-            Resume(request);
+            response = Resume(request);
             break;
         case Method::SET_ASYNC_CALL_STACK_DEPTH:
-            SetAsyncCallStackDepth(request);
+            response = SetAsyncCallStackDepth(request);
             break;
         case Method::SET_BREAKPOINT_BY_URL:
-            SetBreakpointByUrl(request);
+            response = SetBreakpointByUrl(request, result);
             break;
         case Method::SET_BREAKPOINTS_ACTIVE:
-            SetBreakpointsActive(request);
+            response = SetBreakpointsActive(request);
             break;
         case Method::SET_PAUSE_ON_EXCEPTIONS:
-            SetPauseOnExceptions(request);
+            response = SetPauseOnExceptions(request);
             break;
         case Method::SET_SKIP_ALL_PAUSES:
-            SetSkipAllPauses(request);
+            response = SetSkipAllPauses(request);
             break;
         case Method::STEP_INTO:
-            StepInto(request);
+            response = StepInto(request);
             break;
         case Method::SMART_STEP_INTO:
-            SmartStepInto(request);
+            response = SmartStepInto(request);
             break;
         case Method::STEP_OUT:
-            StepOut(request);
+            response = StepOut(request);
             break;
         case Method::STEP_OVER:
-            StepOver(request);
+            response = StepOver(request);
             break;
         case Method::SET_MIXED_DEBUG_ENABLED:
-            SetMixedDebugEnabled(request);
+            response = SetMixedDebugEnabled(request);
             break;
         case Method::SET_BLACKBOX_PATTERNS:
-            SetBlackboxPatterns(request);
+            response = SetBlackboxPatterns(request);
             break;
         case Method::REPLY_NATIVE_CALLING:
-            ReplyNativeCalling(request);
+            response = ReplyNativeCalling(request);
             break;
         case Method::GET_POSSIBLE_AND_SET_BREAKPOINT_BY_URL:
-            GetPossibleAndSetBreakpointByUrl(request);
+            response = GetPossibleAndSetBreakpointByUrl(request, result);
             break;
         case Method::DROP_FRAME:
-            DropFrame(request);
+            response = DropFrame(request);
             break;
         case Method::SET_NATIVE_RANGE:
-            SetNativeRange(request);
+            response = SetNativeRange(request);
             break;
         case Method::RESET_SINGLE_STEPPER:
-            ResetSingleStepper(request);
-            break;
-        case Method::CLIENT_DISCONNECT:
-            ClientDisconnect(request);
+            response = ResetSingleStepper(request);
             break;
         case Method::CALL_FUNCTION_ON:
-            CallFunctionOn(request);
+            response = CallFunctionOn(request, result);
             break;
         case Method::SAVE_ALL_POSSIBLE_BREAKPOINTS:
-            SaveAllPossibleBreakpoints(request);
+            response = SaveAllPossibleBreakpoints(request);
             break;
         case Method::SET_SYMBOLIC_BREAKPOINTS:
-            SetSymbolicBreakpoints(request);
+            response = SetSymbolicBreakpoints(request);
             break;
         case Method::REMOVE_SYMBOLIC_BREAKPOINTS:
-            RemoveSymbolicBreakpoints(request);
+            response = RemoveSymbolicBreakpoints(request);
             break;
         default:
-            SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
+            response = DispatchResponse::Fail("Unknown method: " + request.GetMethod());
             break;
+    }
+    if (result) {
+        SendResponse(request, response, *result);
+    } else {
+        SendResponse(request, response);
     }
 }
 
@@ -674,110 +682,105 @@ DebuggerImpl::DispatcherImpl::Method DebuggerImpl::DispatcherImpl::GetMethodEnum
     }
 }
 
-void DebuggerImpl::DispatcherImpl::ContinueToLocation(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::ContinueToLocation(const DispatchRequest &request)
 {
     std::unique_ptr<ContinueToLocationParams> params = ContinueToLocationParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
-    
     DispatchResponse response = debugger_->ContinueToLocation(*params);
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::Enable(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::Enable(const DispatchRequest &request,
+    std::unique_ptr<PtBaseReturns> &result)
 {
     std::unique_ptr<EnableParams> params = EnableParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
 
     UniqueDebuggerId id;
     DispatchResponse response = debugger_->Enable(*params, &id);
 
     debugger_->InitializeExtendedProtocolsList();
-    DebuggerEnableReturns result(id, debugger_->debuggerExtendedProtocols_);
-    SendResponse(request, response, result);
+    result = std::make_unique<DebuggerEnableReturns>(id, debugger_->debuggerExtendedProtocols_);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::Disable(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::Disable(const DispatchRequest &request)
 {
     DispatchResponse response = debugger_->Disable();
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::EvaluateOnCallFrame(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::EvaluateOnCallFrame(const DispatchRequest &request,
+    std::unique_ptr<PtBaseReturns> &result)
 {
     std::unique_ptr<EvaluateOnCallFrameParams> params = EvaluateOnCallFrameParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
     std::unique_ptr<RemoteObject> result1;
     DispatchResponse response = debugger_->EvaluateOnCallFrame(*params, &result1);
     if (result1 == nullptr) {
-        SendResponse(request, response);
-        return;
+        return response;
     }
 
-    EvaluateOnCallFrameReturns result(std::move(result1));
-    SendResponse(request, response, result);
+    result = std::make_unique<EvaluateOnCallFrameReturns>(std::move(result1));
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::GetPossibleBreakpoints(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::GetPossibleBreakpoints(const DispatchRequest &request,
+    std::unique_ptr<PtBaseReturns> &result)
 {
     std::unique_ptr<GetPossibleBreakpointsParams> params = GetPossibleBreakpointsParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
     std::vector<std::unique_ptr<BreakLocation>> locations;
     DispatchResponse response = debugger_->GetPossibleBreakpoints(*params, &locations);
-    GetPossibleBreakpointsReturns result(std::move(locations));
-    SendResponse(request, response, result);
+    result = std::make_unique<GetPossibleBreakpointsReturns>(std::move(locations));
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::GetScriptSource(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::GetScriptSource(const DispatchRequest &request,
+    std::unique_ptr<PtBaseReturns> &result)
 {
     std::unique_ptr<GetScriptSourceParams> params = GetScriptSourceParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
     std::string source;
     DispatchResponse response = debugger_->GetScriptSource(*params, &source);
-    GetScriptSourceReturns result(source);
-    SendResponse(request, response, result);
+    result = std::make_unique<GetScriptSourceReturns>(source);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::Pause(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::Pause(const DispatchRequest &request)
 {
     DispatchResponse response = debugger_->Pause();
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::RemoveBreakpoint(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::RemoveBreakpoint(const DispatchRequest &request)
 {
     std::unique_ptr<RemoveBreakpointParams> params = RemoveBreakpointParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
     DispatchResponse response = debugger_->RemoveBreakpoint(*params);
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::RemoveBreakpointsByUrl(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::RemoveBreakpointsByUrl(const DispatchRequest &request)
 {
     std::unique_ptr<RemoveBreakpointsByUrlParams> params = RemoveBreakpointsByUrlParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
     DispatchResponse response = debugger_->RemoveBreakpointsByUrl(*params);
-    SendResponse(request, response);
+    return response;
 }
 
 std::string DebuggerImpl::DispatcherImpl::RemoveBreakpointsByUrl(
@@ -792,57 +795,55 @@ std::string DebuggerImpl::DispatcherImpl::RemoveBreakpointsByUrl(
     return ReturnsValueToString(callId, DispatchResponseToJson(response));
 }
 
-void DebuggerImpl::DispatcherImpl::Resume(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::Resume(const DispatchRequest &request)
 {
     std::unique_ptr<ResumeParams> params = ResumeParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
     DispatchResponse response = debugger_->Resume(*params);
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::SetBreakpointByUrl(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::SetBreakpointByUrl(const DispatchRequest &request,
+    std::unique_ptr<PtBaseReturns> &result)
 {
     std::unique_ptr<SetBreakpointByUrlParams> params = SetBreakpointByUrlParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
 
     std::string outId;
     std::vector<std::unique_ptr<Location>> outLocations;
     DispatchResponse response = debugger_->SetBreakpointByUrl(*params, &outId, &outLocations);
-    SetBreakpointByUrlReturns result(outId, std::move(outLocations));
-    SendResponse(request, response, result);
+    result = std::make_unique<SetBreakpointByUrlReturns>(outId, std::move(outLocations));
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::SetBreakpointsActive(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::SetBreakpointsActive(const DispatchRequest &request)
 {
     std::unique_ptr<SetBreakpointsActiveParams> params = SetBreakpointsActiveParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
 
     DispatchResponse response = debugger_->SetBreakpointsActive(*params);
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(const DispatchRequest &request,
+    std::unique_ptr<PtBaseReturns> &result)
 {
     std::unique_ptr<GetPossibleAndSetBreakpointParams> params =
         GetPossibleAndSetBreakpointParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
 
     std::vector<std::shared_ptr<BreakpointReturnInfo>> outLocation;
     DispatchResponse response = debugger_->GetPossibleAndSetBreakpointByUrl(*params, outLocation);
-    GetPossibleAndSetBreakpointByUrlReturns result(std::move(outLocation));
-    SendResponse(request, response, result);
+    result = std::make_unique<GetPossibleAndSetBreakpointByUrlReturns>(std::move(outLocation));
+    return response;
 }
 
 std::string DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(
@@ -863,16 +864,15 @@ std::string DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(
     return ReturnsValueToString(callId, result.ToJson());
 }
 
-void DebuggerImpl::DispatcherImpl::SaveAllPossibleBreakpoints(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::SaveAllPossibleBreakpoints(const DispatchRequest &request)
 {
     std::unique_ptr<SaveAllPossibleBreakpointsParams> params =
         SaveAllPossibleBreakpointsParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
     DispatchResponse response = debugger_->SaveAllPossibleBreakpoints(*params);
-    SendResponse(request, response);
+    return response;
 }
 
 std::string DebuggerImpl::DispatcherImpl::SaveAllPossibleBreakpoints(
@@ -886,164 +886,151 @@ std::string DebuggerImpl::DispatcherImpl::SaveAllPossibleBreakpoints(
     return ReturnsValueToString(callId, DispatchResponseToJson(response));
 }
 
-void DebuggerImpl::DispatcherImpl::SetSymbolicBreakpoints(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::SetSymbolicBreakpoints(const DispatchRequest &request)
 {
     std::unique_ptr<SetSymbolicBreakpointsParams> params =
         SetSymbolicBreakpointsParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
     DispatchResponse response = debugger_->SetSymbolicBreakpoints(*params);
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::RemoveSymbolicBreakpoints(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::RemoveSymbolicBreakpoints(const DispatchRequest &request)
 {
     std::unique_ptr<RemoveSymbolicBreakpointsParams> params =
         RemoveSymbolicBreakpointsParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
     DispatchResponse response = debugger_->RemoveSymbolicBreakpoints(*params);
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::SetAsyncCallStackDepth(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::SetAsyncCallStackDepth(const DispatchRequest &request)
 {
     std::unique_ptr<SetAsyncCallStackDepthParams> params =
         SetAsyncCallStackDepthParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
     DispatchResponse response = debugger_->SetAsyncCallStackDepth(*params);
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::SetPauseOnExceptions(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::SetPauseOnExceptions(const DispatchRequest &request)
 {
     std::unique_ptr<SetPauseOnExceptionsParams> params = SetPauseOnExceptionsParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
 
     DispatchResponse response = debugger_->SetPauseOnExceptions(*params);
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::SetSkipAllPauses(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::SetSkipAllPauses(const DispatchRequest &request)
 {
     std::unique_ptr<SetSkipAllPausesParams> params = SetSkipAllPausesParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
 
     DispatchResponse response = debugger_->SetSkipAllPauses(*params);
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::SetNativeRange(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::SetNativeRange(const DispatchRequest &request)
 {
     std::unique_ptr<SetNativeRangeParams> params = SetNativeRangeParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
     DispatchResponse response = debugger_->SetNativeRange(*params);
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::ResetSingleStepper(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::ResetSingleStepper(const DispatchRequest &request)
 {
     std::unique_ptr<ResetSingleStepperParams> params = ResetSingleStepperParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
     DispatchResponse response = debugger_->ResetSingleStepper(*params);
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::StepInto(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::StepInto(const DispatchRequest &request)
 {
     std::unique_ptr<StepIntoParams> params = StepIntoParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
     DispatchResponse response = debugger_->StepInto(*params);
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::SmartStepInto(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::SmartStepInto(const DispatchRequest &request)
 {
     std::unique_ptr<SmartStepIntoParams> params = SmartStepIntoParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
     DispatchResponse response = debugger_->SmartStepInto(*params);
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::StepOut(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::StepOut(const DispatchRequest &request)
 {
     DispatchResponse response = debugger_->StepOut();
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::StepOver(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::StepOver(const DispatchRequest &request)
 {
     std::unique_ptr<StepOverParams> params = StepOverParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
     DispatchResponse response = debugger_->StepOver(*params);
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::SetMixedDebugEnabled(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::SetMixedDebugEnabled(const DispatchRequest &request)
 {
     std::unique_ptr<SetMixedDebugParams> params = SetMixedDebugParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
     DispatchResponse response = debugger_->SetMixedDebugEnabled(*params);
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::ReplyNativeCalling(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::ReplyNativeCalling(const DispatchRequest &request)
 {
     std::unique_ptr<ReplyNativeCallingParams> params = ReplyNativeCallingParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
     DispatchResponse response = debugger_->ReplyNativeCalling(*params);
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::SetBlackboxPatterns(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::SetBlackboxPatterns(const DispatchRequest &request)
 {
     DispatchResponse response = debugger_->SetBlackboxPatterns();
-    SendResponse(request, response);
+    return response;
 }
 
-void DebuggerImpl::DispatcherImpl::DropFrame(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::DropFrame(const DispatchRequest &request)
 {
     std::unique_ptr<DropFrameParams> params = DropFrameParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
     DispatchResponse response = debugger_->DropFrame(*params);
-    SendResponse(request, response);
+    return response;
 }
 
 // inner message, not SendResponse to outer
@@ -1052,12 +1039,12 @@ void DebuggerImpl::DispatcherImpl::ClientDisconnect([[maybe_unused]] const Dispa
     debugger_->ClientDisconnect();
 }
 
-void DebuggerImpl::DispatcherImpl::CallFunctionOn(const DispatchRequest &request)
+DispatchResponse DebuggerImpl::DispatcherImpl::CallFunctionOn(const DispatchRequest &request,
+    std::unique_ptr<PtBaseReturns> &result)
 {
     std::unique_ptr<CallFunctionOnParams> params = CallFunctionOnParams::Create(request.GetParams());
     if (params == nullptr) {
-        SendResponse(request, DispatchResponse::Fail("wrong params"));
-        return;
+        return DispatchResponse::Fail("wrong params");
     }
 
     std::unique_ptr<RemoteObject> outRemoteObject;
@@ -1068,12 +1055,11 @@ void DebuggerImpl::DispatcherImpl::CallFunctionOn(const DispatchRequest &request
         LOG_DEBUGGER(WARN) << "CallFunctionOn thrown an exception";
     }
     if (outRemoteObject == nullptr) {
-        SendResponse(request, response);
-        return;
+        return response;
     }
 
-    CallFunctionOnReturns result(std::move(outRemoteObject), std::move(outExceptionDetails));
-    SendResponse(request, response, result);
+    result = std::make_unique<CallFunctionOnReturns>(std::move(outRemoteObject), std::move(outExceptionDetails));
+    return response;
 }
 
 bool DebuggerImpl::Frontend::AllowNotify(const EcmaVM *vm) const
@@ -1273,7 +1259,7 @@ DispatchResponse DebuggerImpl::EvaluateOnCallFrame(const EvaluateOnCallFramePara
         JSPandaFile::ENTRY_FUNCTION_NAME);
     auto res = DebuggerApi::EvaluateViaFuncCall(const_cast<EcmaVM *>(vm_), funcRef,
         callFrameHandlers_[callFrameId]);
-    
+
     JSNApi::SwitchContext(vm_, originContext);
 
     if (vm_->GetJSThread()->HasPendingException()) {
@@ -1559,7 +1545,7 @@ DispatchResponse DebuggerImpl::SetSymbolicBreakpoints(const SetSymbolicBreakpoin
     }
     // Symbolic breakpoints support only function names
     DebuggerApi::SetSymbolicBreakpoint(jsDebugger_, *(params.GetFunctionNamesSet()));
-    
+
     return DispatchResponse::Ok();
 }
 

@@ -47,12 +47,12 @@ public:
         ~DispatcherImpl() override = default;
 
         void Dispatch(const DispatchRequest &request) override;
-        void Disable(const DispatchRequest &request);
-        void Enable(const DispatchRequest &request);
-        void RunIfWaitingForDebugger(const DispatchRequest &request);
-        void GetProperties(const DispatchRequest &request);
+        DispatchResponse Disable(const DispatchRequest &request);
+        DispatchResponse Enable(const DispatchRequest &request, std::unique_ptr<PtBaseReturns> &result);
+        DispatchResponse RunIfWaitingForDebugger(const DispatchRequest &request);
+        DispatchResponse GetProperties(const DispatchRequest &request, std::unique_ptr<PtBaseReturns> &result);
         std::string GetProperties(const int32_t callId, std::unique_ptr<GetPropertiesParams> params);
-        void GetHeapUsage(const DispatchRequest &request);
+        DispatchResponse GetHeapUsage(const DispatchRequest &request, std::unique_ptr<PtBaseReturns> &result);
 
         enum class Method {
             ENABLE,
