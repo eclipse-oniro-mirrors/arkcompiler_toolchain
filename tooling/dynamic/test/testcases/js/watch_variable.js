@@ -328,4 +328,6 @@ var o = {
     }
 }
 
+let globalVar = "globalVar"
+
 o.foo();

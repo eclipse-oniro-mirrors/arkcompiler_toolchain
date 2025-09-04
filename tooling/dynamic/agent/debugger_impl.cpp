@@ -2519,11 +2519,9 @@ Local<FunctionRef> DebuggerImpl::CheckAndGenerateCondFunc(const std::optional<st
     return FunctionRef::Undefined(vm_);
 }
 
-void DebuggerImpl::SetDebuggerAccessor(JSHandle<GlobalEnv> &globalEnv)
+void DebuggerImpl::SetDebuggerAccessor(const JSHandle<GlobalEnv> &globalEnv)
 {
-    auto thread = vm_->GetJSThread();
-    JSHandle<JSTaggedValue> global(thread, globalEnv->GetGlobalObject());
-    Local<ObjectRef> globalObj = JSNApiHelper::ToLocal<ObjectRef>(global);
-    DebuggerExecutor::SetDebuggerAccessor(vm_, globalObj);
+    Local<JSValueRef> global = JSNApiHelper::ToLocal<JSValueRef>(JSHandle<JSTaggedValue>(globalEnv));
+    DebuggerExecutor::SetDebuggerAccessor(vm_, global);
 }
 }  // namespace panda::ecmascript::tooling

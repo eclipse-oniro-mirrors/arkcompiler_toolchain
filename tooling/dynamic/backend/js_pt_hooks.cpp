@@ -157,7 +157,7 @@ const std::unordered_set<std::string> &JSPtHooks::GetAllRecordNames() const
     return debugger_->GetAllRecordNames();
 }
 
-void JSPtHooks::SetDebuggerAccessor(JSHandle<GlobalEnv> &globalEnv)
+void JSPtHooks::SetDebuggerAccessor(const JSHandle<GlobalEnv> &globalEnv)
 {
     debugger_->SetDebuggerAccessor(globalEnv);
 }
