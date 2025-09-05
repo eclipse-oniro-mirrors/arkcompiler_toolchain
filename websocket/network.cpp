@@ -74,6 +74,9 @@ bool Send(int32_t client, const char* buf, size_t totalLen, int32_t flags)
 
 uint64_t NetToHostLongLong(uint8_t* buf, uint32_t len)
 {
+    if (buf == nullptr) {
+        return 0;
+    }
     uint64_t result = 0;
     for (uint32_t i = 0; i < len; i++) {
         result |= buf[i];
