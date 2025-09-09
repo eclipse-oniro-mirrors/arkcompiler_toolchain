@@ -509,7 +509,7 @@ void StopDebug(void* vm, bool isHybrid)
     uint32_t tid = g_inspectors[vm]->tid_;
 #endif
 #if defined(OHOS_PLATFORM)
-    tid = g_inspectors[vm]->tidForSocketPair_;
+    tid = static_cast<uint32_t>(g_inspectors[vm]->tidForSocketPair_);
 #endif // defined(OHOS_PLATFORM)
     auto debuggerInfo = g_debuggerInfo.find(tid);
     if (debuggerInfo != g_debuggerInfo.end()) {
