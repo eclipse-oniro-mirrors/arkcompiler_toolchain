@@ -34,7 +34,7 @@ public:
             : DispatcherBase(channel), target_(std::move(target)) {}
         ~DispatcherImpl() override = default;
         void SetAutoAttach(const DispatchRequest &request);
-        void Dispatch(const DispatchRequest &request) override;
+        std::optional<std::string> Dispatch(const DispatchRequest &request, bool crossLanguageDebug = false) override;
 
         enum class Method {
             SET_AUTO_ATTACH,

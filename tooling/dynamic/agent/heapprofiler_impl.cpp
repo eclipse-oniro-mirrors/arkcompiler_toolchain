@@ -26,7 +26,8 @@ void HeapProfilerImpl::InitializeExtendedProtocolsList()
     heapProfilerExtendedProtocols_ = std::move(heapProfilerProtocolList);
 }
 
-void HeapProfilerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
+std::optional<std::string> HeapProfilerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request,
+    [[maybe_unused]] bool crossLanguageDebug)
 {
     Method method = GetMethodEnum(request.GetMethod());
     LOG_DEBUGGER(DEBUG) << "dispatch [" << request.GetMethod() << "] to HeapProfilerImpl";
@@ -71,6 +72,7 @@ void HeapProfilerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
             SendResponse(request, DispatchResponse::Fail("Unknown method: " + request.GetMethod()));
             break;
     }
+    return std::nullopt;
 }
 
 HeapProfilerImpl::DispatcherImpl::Method HeapProfilerImpl::DispatcherImpl::GetMethodEnum(const std::string& method)

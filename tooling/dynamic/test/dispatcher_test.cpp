@@ -154,7 +154,6 @@ HWTEST_F_L0(DispatcherTest, SaveAllBreakpointsTest)
     ProtocolChannel *channel =  new ProtocolHandler(nullptr, ecmaVm);
     auto dispatcher = std::make_unique<Dispatcher>(ecmaVm, channel);
 
-    std::string result = "";
     std::string msg = std::string() +
         R"({
             "id": 0,
@@ -168,8 +167,9 @@ HWTEST_F_L0(DispatcherTest, SaveAllBreakpointsTest)
                 }
             }
         })";
-    result = dispatcher->OperateDebugMessage(msg.c_str());
-    EXPECT_STREQ(result.c_str(),
+    DispatchRequest request(msg);
+    std::optional<std::string> result = dispatcher->Dispatch(request, true);
+    EXPECT_STREQ(result.value().c_str(),
         R"({"id":0,"result":{"code":1,"message":"SaveAllPossibleBreakpoints: debugger agent is not enabled"}})");
     if (channel) {
         delete channel;
@@ -182,7 +182,6 @@ HWTEST_F_L0(DispatcherTest, RemoveBreakpointTest)
     ProtocolChannel *channel =  new ProtocolHandler(nullptr, ecmaVm);
     auto dispatcher = std::make_unique<Dispatcher>(ecmaVm, channel);
 
-    std::string result = "";
     std::string msg = std::string() +
         R"({
             "id": 0,
@@ -191,8 +190,9 @@ HWTEST_F_L0(DispatcherTest, RemoveBreakpointTest)
                 "url": "entry|entry|1.0.0|src/main/ets/pages/Index.ts"
             }
         })";
-    result = dispatcher->OperateDebugMessage(msg.c_str());
-    EXPECT_STREQ(result.c_str(),
+    DispatchRequest request(msg);
+    std::optional<std::string> result = dispatcher->Dispatch(request, true);
+    EXPECT_STREQ(result.value().c_str(),
         R"({"id":0,"result":{"code":1,"message":"Unknown url"}})");
     if (channel) {
         delete channel;
@@ -205,7 +205,6 @@ HWTEST_F_L0(DispatcherTest, SetBreakpointTest)
     ProtocolChannel *channel =  new ProtocolHandler(nullptr, ecmaVm);
     auto dispatcher = std::make_unique<Dispatcher>(ecmaVm, channel);
 
-    std::string result = "";
     std::string msg = std::string() +
         R"({
             "id": 0,
@@ -218,8 +217,9 @@ HWTEST_F_L0(DispatcherTest, SetBreakpointTest)
                 }]
             }
         })";
-    result = dispatcher->OperateDebugMessage(msg.c_str());
-    EXPECT_STREQ(result.c_str(),
+    DispatchRequest request(msg);
+    std::optional<std::string> result = dispatcher->Dispatch(request, true);
+    EXPECT_STREQ(result.value().c_str(),
         R"({"id":0,"result":{"code":1,"message":"GetPossibleAndSetBreakpointByUrl: debugger agent is not enabled"}})");
     if (channel) {
         delete channel;
@@ -231,26 +231,30 @@ HWTEST_F_L0(DispatcherTest, OperateDebugMessageTest)
 {
     ProtocolChannel *channel = new ProtocolHandler(nullptr, ecmaVm);
     auto dispatcher = std::make_unique<Dispatcher>(ecmaVm, channel);
-    std::string result = "";
-
+    std::optional<std::string> result;
     std::string msg = R"({"id":0,"method":"Runtime.getProperties"})";
-    result = dispatcher->OperateDebugMessage(msg.c_str());
-    ASSERT_TRUE(result != "");
+    DispatchRequest request(msg);
+    result = dispatcher->Dispatch(request, true);
+    ASSERT_TRUE(result.has_value());
     msg = R"({"id":0,"method":"Runtime.getProperties","params":{"objectId":"1"}})";
-    result = dispatcher->OperateDebugMessage(msg.c_str());
-    ASSERT_TRUE(result != "");
+    DispatchRequest request2(msg);
+    result = dispatcher->Dispatch(request2, true);
+    ASSERT_TRUE(result.has_value());
 
     std::string msg2 = R"({"id":0,"method":"Debugger.callFunctionOn"})";
-    result = dispatcher->OperateDebugMessage(msg2.c_str());
-    ASSERT_TRUE(result != "");
+    DispatchRequest request3(msg2);
+    result = dispatcher->Dispatch(request3, true);
+    ASSERT_TRUE(result.has_value());
     msg2 = std::string() + R"({"id":0,"method":"Debugger.callFunctionOn","params":{
         "callFrameId":"0", "functionDeclaration":"test"}})";
-    result = dispatcher->OperateDebugMessage(msg2.c_str());
-    EXPECT_STREQ(result.c_str(), R"({"id":0,"result":{"code":1,"message":"Invalid callFrameId."}})");
+    DispatchRequest request4(msg2);
+    result = dispatcher->Dispatch(request4, true);
+    EXPECT_STREQ(result.value().c_str(), R"({"id":0,"result":{"code":1,"message":"Invalid callFrameId."}})");
 
     std::string msg3 = R"({"id":0,"method":"Debugger.evaluateOnCallFrame"})";
-    result = dispatcher->OperateDebugMessage(msg3.c_str());
-    ASSERT_TRUE(result != "");
+    DispatchRequest request5(msg3);
+    result = dispatcher->Dispatch(request5, true);
+    ASSERT_TRUE(result.has_value());
     msg3 = std::string() +
         R"({
             "id":0,
@@ -260,8 +264,9 @@ HWTEST_F_L0(DispatcherTest, OperateDebugMessageTest)
                 "expression":"the expression"
             }
         })";
-    result = dispatcher->OperateDebugMessage(msg3.c_str());
-    EXPECT_STREQ(result.c_str(), R"({"id":0,"result":{"code":1,"message":"Invalid callFrameId."}})");
+    DispatchRequest request6(msg3);
+    result = dispatcher->Dispatch(request6, true);
+    EXPECT_STREQ(result.value().c_str(), R"({"id":0,"result":{"code":1,"message":"Invalid callFrameId."}})");
     if (channel) {
         delete channel;
         channel = nullptr;

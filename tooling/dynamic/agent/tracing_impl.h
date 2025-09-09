@@ -49,7 +49,7 @@ public:
         DispatcherImpl(ProtocolChannel *channel, std::unique_ptr<TracingImpl> tracing)
             : DispatcherBase(channel), tracing_(std::move(tracing)) {}
         ~DispatcherImpl() override = default;
-        void Dispatch(const DispatchRequest &request) override;
+        std::optional<std::string> Dispatch(const DispatchRequest &request, bool crossLanguageDebug = false) override;
         void End(const DispatchRequest &request);
         void GetCategories(const DispatchRequest &request);
         void RecordClockSyncMarker(const DispatchRequest &request);

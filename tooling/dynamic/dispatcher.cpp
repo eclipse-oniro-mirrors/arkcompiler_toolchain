@@ -208,16 +208,16 @@ Dispatcher::Dispatcher(const EcmaVM *vm, ProtocolChannel *channel)
         std::make_unique<AnimationImpl::DispatcherImpl>(channel, std::move(animation));
 }
 
-void Dispatcher::Dispatch(const DispatchRequest &request)
+std::optional<std::string> Dispatcher::Dispatch(const DispatchRequest &request, bool crossLanguageDebug) const
 {
     if (!request.IsValid()) {
         LOG_DEBUGGER(ERROR) << "Unknown request";
-        return;
+        return std::nullopt;
     }
     const std::string &domain = request.GetDomain();
     auto dispatcher = dispatchers_.find(domain);
     if (dispatcher != dispatchers_.end()) {
-        dispatcher->second->Dispatch(request);
+        return dispatcher->second->Dispatch(request, crossLanguageDebug);
     } else {
         if (domain == "Test") {
             if (request.GetMethod() == "fail") {
@@ -229,56 +229,9 @@ void Dispatcher::Dispatch(const DispatchRequest &request)
             LOG_DEBUGGER(ERROR) << "unknown domain: " << domain;
         }
     }
+    return std::nullopt;
 }
 
-std::string Dispatcher::OperateDebugMessage(const char* message) const
-{
-    DispatchRequest request(message);
-    const std::string &domain = request.GetDomain();
-    auto dispatcher = dispatchers_.find(domain);
-    if (dispatcher == dispatchers_.end()) {
-        LOG_DEBUGGER(ERROR) << "unknown domain: " << domain;
-        return "";
-    }
-    std::string method = request.GetMethod();
-    MethodType methodType = GetMethodType(method);
-    switch (methodType) {
-        case MethodType::SAVE_ALL_POSSIBLE_BREAKPOINTS:
-            return SaveAllBreakpoints(request, dispatcher->second.get());
-        case MethodType::REMOVE_BREAKPOINTS_BY_URL:
-            return RemoveBreakpoint(request, dispatcher->second.get());
-        case MethodType::GET_POSSIBLE_AND_SET_BREAKPOINT_BY_URL:
-            return SetBreakpoint(request, dispatcher->second.get());
-        case MethodType::GET_PROPERTIES:
-            return GetProperties(request, dispatcher->second.get());
-        case MethodType::CALL_FUNCTION_ON:
-            return CallFunctionOn(request, dispatcher->second.get());
-        case MethodType::EVALUATE_ON_CALL_FRAME:
-            return EvaluateOnCallFrame(request, dispatcher->second.get());
-        default:
-            LOG_DEBUGGER(ERROR) << "unknown method: " << method;
-            return "";
-    }
-    return "";
-}
-
-Dispatcher::MethodType Dispatcher::GetMethodType(const std::string &method) const
-{
-    static const std::unordered_map<std::string, MethodType> methodMap = {
-        {"saveAllPossibleBreakpoints", MethodType::SAVE_ALL_POSSIBLE_BREAKPOINTS},
-        {"removeBreakpointsByUrl", MethodType::REMOVE_BREAKPOINTS_BY_URL},
-        {"getPossibleAndSetBreakpointByUrl", MethodType::GET_POSSIBLE_AND_SET_BREAKPOINT_BY_URL},
-        {"getProperties", MethodType::GET_PROPERTIES},
-        {"callFunctionOn", MethodType::CALL_FUNCTION_ON},
-        {"evaluateOnCallFrame", MethodType::EVALUATE_ON_CALL_FRAME}
-    };
-    auto it = methodMap.find(method);
-    if (it == methodMap.end()) {
-        LOG_DEBUGGER(ERROR) << "unknown method: " << method;
-        return MethodType::UNKNOWN;
-    }
-    return it->second;
-}
 
 std::string Dispatcher::GetJsFrames() const
 {
@@ -288,50 +241,5 @@ std::string Dispatcher::GetJsFrames() const
         return debuggerImpl->GetJsFrames();
     }
     return "";
-}
-
-std::string Dispatcher::SaveAllBreakpoints(const DispatchRequest &request, DispatcherBase *dispatcher) const
-{
-    auto debuggerImpl = reinterpret_cast<DebuggerImpl::DispatcherImpl*>(dispatcher);
-    std::unique_ptr<SaveAllPossibleBreakpointsParams> params =
-        SaveAllPossibleBreakpointsParams::Create(request.GetParams());
-    return debuggerImpl->SaveAllPossibleBreakpoints(request.GetCallId(), std::move(params));
-}
-
-std::string Dispatcher::RemoveBreakpoint(const DispatchRequest &request, DispatcherBase *dispatcher) const
-{
-    auto debuggerImpl = reinterpret_cast<DebuggerImpl::DispatcherImpl*>(dispatcher);
-    std::unique_ptr<RemoveBreakpointsByUrlParams> params =
-        RemoveBreakpointsByUrlParams::Create(request.GetParams());
-    return debuggerImpl->RemoveBreakpointsByUrl(request.GetCallId(), std::move(params));
-}
-
-std::string Dispatcher::SetBreakpoint(const DispatchRequest &request, DispatcherBase *dispatcher) const
-{
-    auto debuggerImpl = reinterpret_cast<DebuggerImpl::DispatcherImpl*>(dispatcher);
-    std::unique_ptr<GetPossibleAndSetBreakpointParams> params =
-        GetPossibleAndSetBreakpointParams::Create(request.GetParams());
-    return debuggerImpl->GetPossibleAndSetBreakpointByUrl(request.GetCallId(), std::move(params));
-}
-
-std::string Dispatcher::GetProperties(const DispatchRequest &request, DispatcherBase *dispatcher) const
-{
-    auto runtimeImpl = reinterpret_cast<RuntimeImpl::DispatcherImpl*>(dispatcher);
-    std::unique_ptr<GetPropertiesParams> params = GetPropertiesParams::Create(request.GetParams());
-    return runtimeImpl->GetProperties(request.GetCallId(), std::move(params));
-}
-
-std::string Dispatcher::CallFunctionOn(const DispatchRequest &request, DispatcherBase *dispatcher) const
-{
-    auto debuggerImpl = reinterpret_cast<DebuggerImpl::DispatcherImpl*>(dispatcher);
-    std::unique_ptr<CallFunctionOnParams> params = CallFunctionOnParams::Create(request.GetParams());
-    return debuggerImpl->CallFunctionOn(request.GetCallId(), std::move(params));
-}
-
-std::string Dispatcher::EvaluateOnCallFrame(const DispatchRequest &request, DispatcherBase *dispatcher) const
-{
-    auto debuggerImpl = reinterpret_cast<DebuggerImpl::DispatcherImpl*>(dispatcher);
-    std::unique_ptr<EvaluateOnCallFrameParams> params = EvaluateOnCallFrameParams::Create(request.GetParams());
-    return debuggerImpl->EvaluateOnCallFrame(request.GetCallId(), std::move(params));
 }
 }  // namespace panda::ecmascript::tooling

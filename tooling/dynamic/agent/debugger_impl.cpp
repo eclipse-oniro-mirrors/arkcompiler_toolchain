@@ -501,13 +501,14 @@ std::vector<void *> DebuggerImpl::GetNativeAddr()
 {
     return DebuggerApi::GetNativePointer(vm_);
 }
-void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
+std::optional<std::string> DebuggerImpl::DispatcherImpl::Dispatch(
+    const DispatchRequest &request, [[maybe_unused]] bool crossLanguageDebug)
 {
     Method method = GetMethodEnum(request.GetMethod());
     LOG_DEBUGGER(DEBUG) << "dispatch [" << request.GetMethod() << "] to DebuggerImpl";
     if (method == Method::CLIENT_DISCONNECT) {
         ClientDisconnect(request);
-        return;
+        return std::nullopt;
     }
     DispatchResponse response = DispatchResponse::Fail("unknown method: " + request.GetMethod());
     std::unique_ptr<PtBaseReturns> result = nullptr;
@@ -606,11 +607,18 @@ void DebuggerImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
             response = DispatchResponse::Fail("Unknown method: " + request.GetMethod());
             break;
     }
+    if (crossLanguageDebug) {
+        if (result != nullptr) {
+            return ReturnsValueToString(request.GetCallId(), result->ToJson());
+        }
+        return ReturnsValueToString(request.GetCallId(), DispatchResponseToJson(response));
+    }
     if (result) {
         SendResponse(request, response, *result);
     } else {
         SendResponse(request, response);
     }
+    return std::nullopt;
 }
 
 DebuggerImpl::DispatcherImpl::Method DebuggerImpl::DispatcherImpl::GetMethodEnum(const std::string& method)
@@ -783,18 +791,6 @@ DispatchResponse DebuggerImpl::DispatcherImpl::RemoveBreakpointsByUrl(const Disp
     return response;
 }
 
-std::string DebuggerImpl::DispatcherImpl::RemoveBreakpointsByUrl(
-    const int32_t callId, std::unique_ptr<RemoveBreakpointsByUrlParams> params)
-{
-    if (params == nullptr) {
-        LOG_DEBUGGER(WARN) << "DebuggerImpl::DispatcherImpl::RemoveBreakpointsByUrl: params is nullptr";
-        return ReturnsValueToString(callId, DispatchResponseToJson(DispatchResponse::Fail("wrong params")));
-    }
-
-    DispatchResponse response = debugger_->RemoveBreakpointsByUrl(*params);
-    return ReturnsValueToString(callId, DispatchResponseToJson(response));
-}
-
 DispatchResponse DebuggerImpl::DispatcherImpl::Resume(const DispatchRequest &request)
 {
     std::unique_ptr<ResumeParams> params = ResumeParams::Create(request.GetParams());
@@ -846,24 +842,6 @@ DispatchResponse DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(
     return response;
 }
 
-std::string DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl(
-    const int32_t callId, std::unique_ptr<GetPossibleAndSetBreakpointParams> params)
-{
-    if (params == nullptr) {
-        LOG_DEBUGGER(WARN) << "DebuggerImpl::DispatcherImpl::GetPossibleAndSetBreakpointByUrl: params is nullptr";
-        return ReturnsValueToString(callId, DispatchResponseToJson(DispatchResponse::Fail("wrong params")));
-    }
-    std::vector<std::shared_ptr<BreakpointReturnInfo>> outLocation;
-    DispatchResponse response = debugger_->GetPossibleAndSetBreakpointByUrl(*params, outLocation);
-    if (outLocation.empty() || !response.IsOk()) {
-        LOG_DEBUGGER(WARN) << "outLocation is empty or response code is not ok";
-        return ReturnsValueToString(callId, DispatchResponseToJson(response));
-    }
-
-    GetPossibleAndSetBreakpointByUrlReturns result(std::move(outLocation));
-    return ReturnsValueToString(callId, result.ToJson());
-}
-
 DispatchResponse DebuggerImpl::DispatcherImpl::SaveAllPossibleBreakpoints(const DispatchRequest &request)
 {
     std::unique_ptr<SaveAllPossibleBreakpointsParams> params =
@@ -873,17 +851,6 @@ DispatchResponse DebuggerImpl::DispatcherImpl::SaveAllPossibleBreakpoints(const 
     }
     DispatchResponse response = debugger_->SaveAllPossibleBreakpoints(*params);
     return response;
-}
-
-std::string DebuggerImpl::DispatcherImpl::SaveAllPossibleBreakpoints(
-    const int32_t callId, std::unique_ptr<SaveAllPossibleBreakpointsParams> params)
-{
-    if (params == nullptr) {
-        LOG_DEBUGGER(WARN) << "DebuggerImpl::DispatcherImpl::SaveAllPossibleBreakpoints: params is nullptr";
-        return ReturnsValueToString(callId, DispatchResponseToJson(DispatchResponse::Fail("wrong params")));
-    }
-    DispatchResponse response = debugger_->SaveAllPossibleBreakpoints(*params);
-    return ReturnsValueToString(callId, DispatchResponseToJson(response));
 }
 
 DispatchResponse DebuggerImpl::DispatcherImpl::SetSymbolicBreakpoints(const DispatchRequest &request)
@@ -1572,47 +1539,6 @@ DispatchResponse DebuggerImpl::SetAsyncCallStackDepth(const SetAsyncCallStackDep
         vm_->GetJsDebuggerManager()->SetAsyncStackTrace(true);
     }
     return DispatchResponse::Ok();
-}
-
-std::string DebuggerImpl::DispatcherImpl::EvaluateOnCallFrame(
-    const int32_t callId, std::unique_ptr<EvaluateOnCallFrameParams> params)
-{
-    if (params == nullptr) {
-        LOG_DEBUGGER(WARN) << "DispatcherImpl::EvaluateOnCallFrame: params is nullptr";
-        return ReturnsValueToString(callId, DispatchResponseToJson(DispatchResponse::Fail("wrong params")));
-    }
-    std::unique_ptr<RemoteObject> remoteObject;
-    DispatchResponse response = debugger_->EvaluateOnCallFrame(*params, &remoteObject);
-    if (remoteObject == nullptr || !response.IsOk()) {
-        LOG_DEBUGGER(WARN) << "remoteObject is nullptr or response code is not ok";
-        return ReturnsValueToString(callId, DispatchResponseToJson(response));
-    }
-
-    EvaluateOnCallFrameReturns result(std::move(remoteObject));
-    return ReturnsValueToString(callId, result.ToJson());
-}
-
-std::string DebuggerImpl::DispatcherImpl::CallFunctionOn(
-    const int32_t callId, std::unique_ptr<CallFunctionOnParams> params)
-{
-    if (params == nullptr) {
-        LOG_DEBUGGER(WARN) << "DispatcherImpl::CallFunctionOn: params is nullptr";
-        return ReturnsValueToString(callId, DispatchResponseToJson(DispatchResponse::Fail("wrong params")));
-    }
-    std::unique_ptr<RemoteObject> outRemoteObject;
-    std::optional<std::unique_ptr<ExceptionDetails>> outExceptionDetails;
-    DispatchResponse response = debugger_->CallFunctionOn(*params, &outRemoteObject, &outExceptionDetails);
-    if (outExceptionDetails) {
-        ASSERT(outExceptionDetails.value() != nullptr);
-        LOG_DEBUGGER(WARN) << "CallFunctionOn thrown an exception";
-    }
-    if (outRemoteObject == nullptr || !response.IsOk()) {
-        LOG_DEBUGGER(WARN) << "outRemoteObject is nullptr or response code is not ok";
-        return ReturnsValueToString(callId, DispatchResponseToJson(response));
-    }
-
-    CallFunctionOnReturns result(std::move(outRemoteObject), std::move(outExceptionDetails));
-    return ReturnsValueToString(callId, result.ToJson());
 }
 
 void DebuggerImpl::SavePendingBreakpoints(const SaveAllPossibleBreakpointsParams &params)

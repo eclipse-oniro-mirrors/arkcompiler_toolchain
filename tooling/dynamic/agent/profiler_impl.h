@@ -50,7 +50,7 @@ public:
             : DispatcherBase(channel), profiler_(std::move(profiler)) {}
         ~DispatcherImpl() override = default;
 
-        void Dispatch(const DispatchRequest &request) override;
+        std::optional<std::string> Dispatch(const DispatchRequest &request, bool crossLanguageDebug = false) override;
         void Enable(const DispatchRequest &request);
         void Disable(const DispatchRequest &request);
         void Start(const DispatchRequest &request);

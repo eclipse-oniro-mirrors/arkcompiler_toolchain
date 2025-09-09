@@ -355,7 +355,6 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_EvaluateOnCallFrame__004)
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
     auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
     auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
-    int32_t callId = 0;
     std::string msg = std::string() +
         R"({
             "id":0,
@@ -365,10 +364,10 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_EvaluateOnCallFrame__004)
                 "expression":"the expression"
             }
         })";
-    std::unique_ptr<EvaluateOnCallFrameParams> params =
-        EvaluateOnCallFrameParams::Create(DispatchRequest(msg).GetParams());
-    std::string result = dispatcherImpl->EvaluateOnCallFrame(callId, std::move(params));
-    EXPECT_STREQ(result.c_str(), R"({"id":0,"result":{"code":1,"message":"Invalid callFrameId."}})");
+    DispatchRequest request(msg);
+    std::unique_ptr<PtBaseReturns> resultPtr;
+    DispatchResponse response = dispatcherImpl->EvaluateOnCallFrame(request, resultPtr);
+    EXPECT_STREQ(response.GetMessage().c_str(), "Invalid callFrameId.");
     if (protocolChannel) {
         delete protocolChannel;
         protocolChannel = nullptr;
@@ -680,7 +679,6 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_RemoveBreakpointsByUrl__003)
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
     auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
     auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
-    int32_t callId = 0;
     std::string msg = std::string() +
         R"({
             "id": 0,
@@ -689,10 +687,9 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_RemoveBreakpointsByUrl__003)
                 "url": "entry|entry|1.0.0|src/main/ets/pages/Index.ts"
             }
         })";
-    std::unique_ptr<RemoveBreakpointsByUrlParams> params =
-        RemoveBreakpointsByUrlParams::Create(DispatchRequest(msg).GetParams());
-    std::string result = dispatcherImpl->RemoveBreakpointsByUrl(callId, std::move(params));
-    EXPECT_STREQ(result.c_str(), R"({"id":0,"result":{"code":1,"message":"Unknown url"}})");
+    DispatchRequest request(msg);
+    DispatchResponse response = dispatcherImpl->RemoveBreakpointsByUrl(request);
+    EXPECT_STREQ(response.GetMessage().c_str(), "Unknown url");
     if (protocolChannel) {
         delete protocolChannel;
         protocolChannel = nullptr;
@@ -705,7 +702,6 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SaveAllPossibleBreakpoints__00
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
     auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
     auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
-    int32_t callId = 0;
     std::string msg = std::string() +
         R"({
             "id": 0,
@@ -719,11 +715,9 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SaveAllPossibleBreakpoints__00
                 }
             }
         })";
-    std::unique_ptr<SaveAllPossibleBreakpointsParams> params =
-        SaveAllPossibleBreakpointsParams::Create(DispatchRequest(msg).GetParams());
-    std::string result = dispatcherImpl->SaveAllPossibleBreakpoints(callId, std::move(params));
-    EXPECT_STREQ(result.c_str(),
-        R"({"id":0,"result":{"code":1,"message":"SaveAllPossibleBreakpoints: debugger agent is not enabled"}})");
+    DispatchRequest request(msg);
+    DispatchResponse response = dispatcherImpl->SaveAllPossibleBreakpoints(request);
+    EXPECT_STREQ(response.GetMessage().c_str(), "SaveAllPossibleBreakpoints: debugger agent is not enabled");
     if (protocolChannel) {
         delete protocolChannel;
         protocolChannel = nullptr;
@@ -1424,7 +1418,6 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpointByU
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
     auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
     auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
-    int32_t callId = 0;
     std::string msg = std::string() +
         R"({
             "id": 0,
@@ -1437,11 +1430,10 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpointByU
                 }]
             }
         })";
-    std::unique_ptr<GetPossibleAndSetBreakpointParams> params =
-        GetPossibleAndSetBreakpointParams::Create(DispatchRequest(msg).GetParams());
-    std::string result = dispatcherImpl->GetPossibleAndSetBreakpointByUrl(callId, std::move(params));
-    EXPECT_STREQ(result.c_str(),
-        R"({"id":0,"result":{"code":1,"message":"GetPossibleAndSetBreakpointByUrl: debugger agent is not enabled"}})");
+    DispatchRequest request(msg);
+    std::unique_ptr<PtBaseReturns> resPtr;
+    DispatchResponse response = dispatcherImpl->GetPossibleAndSetBreakpointByUrl(request, resPtr);
+    EXPECT_STREQ(response.GetMessage().c_str(), "GetPossibleAndSetBreakpointByUrl: debugger agent is not enabled");
     if (protocolChannel) {
         delete protocolChannel;
         protocolChannel = nullptr;
@@ -1518,10 +1510,10 @@ HWTEST_F_L0(DebuggerImplTest, DispatcherImplCallFunctionOn__002)
     auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
     std::string msg = std::string() + R"({"id":0,"method":"Debugger.callFunctionOn","params":{
         "callFrameId":"0", "functionDeclaration":"test"}})";
-    std::unique_ptr<CallFunctionOnParams> params = CallFunctionOnParams::Create(DispatchRequest(msg).GetParams());
-    int32_t callId = 0;
-    std::string result = dispatcherImpl->CallFunctionOn(callId, std::move(params));
-    EXPECT_STREQ(result.c_str(), R"({"id":0,"result":{"code":1,"message":"Invalid callFrameId."}})");
+    DispatchRequest request(msg);
+    std::unique_ptr<PtBaseReturns> resultPtr;
+    auto response = dispatcherImpl->CallFunctionOn(request, resultPtr);
+    EXPECT_STREQ(response.GetMessage().c_str(), "Invalid callFrameId.");
     if (protocolChannel != nullptr) {
         delete protocolChannel;
         protocolChannel = nullptr;

@@ -34,7 +34,7 @@ public:
             : DispatcherBase(channel), page_(std::move(page)) {}
         ~DispatcherImpl() override = default;
         void GetNavigationHistory(const DispatchRequest &request);
-        void Dispatch(const DispatchRequest &request) override;
+        std::optional<std::string> Dispatch(const DispatchRequest &request, bool crossLanguageDebug = false) override;
 
         enum class Method {
             GET_NAVIGATION_HISTORY,

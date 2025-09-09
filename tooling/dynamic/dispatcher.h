@@ -131,7 +131,7 @@ public:
     {
         channel_ = nullptr;
     };
-    virtual void Dispatch(const DispatchRequest &request) = 0;
+    virtual std::optional<std::string> Dispatch(const DispatchRequest &request, bool crossLanguageDebug = false) = 0;
 
 protected:
     void SendResponse(const DispatchRequest &request, const DispatchResponse &response,
@@ -150,29 +150,11 @@ class Dispatcher {
 public:
     explicit Dispatcher(const EcmaVM *vm, ProtocolChannel *channel);
     ~Dispatcher() = default;
-    void Dispatch(const DispatchRequest &request);
+    std::optional<std::string> Dispatch(const DispatchRequest &request, bool crossLanguageDebug = false) const;
     std::string GetJsFrames() const;
     std::string OperateDebugMessage(const char* message) const;
 
-    enum class MethodType {
-        SAVE_ALL_POSSIBLE_BREAKPOINTS,
-        REMOVE_BREAKPOINTS_BY_URL,
-        GET_POSSIBLE_AND_SET_BREAKPOINT_BY_URL,
-        GET_PROPERTIES,
-        CALL_FUNCTION_ON,
-        EVALUATE_ON_CALL_FRAME,
-        UNKNOWN
-    };
-    MethodType GetMethodType(const std::string &method) const;
-
 private:
-    std::string SaveAllBreakpoints(const DispatchRequest &request, DispatcherBase *dispatcher) const;
-    std::string RemoveBreakpoint(const DispatchRequest &request, DispatcherBase *dispatcher) const;
-    std::string SetBreakpoint(const DispatchRequest &request, DispatcherBase *dispatcher) const;
-    std::string GetProperties(const DispatchRequest &request, DispatcherBase *dispatcher) const;
-    std::string CallFunctionOn(const DispatchRequest &request, DispatcherBase *dispatcher) const;
-    std::string EvaluateOnCallFrame(const DispatchRequest &request, DispatcherBase *dispatcher) const;
-
     std::unordered_map<std::string, std::unique_ptr<DispatcherBase>> dispatchers_ {};
 
     NO_COPY_SEMANTIC(Dispatcher);

@@ -65,7 +65,7 @@ public:
             : DispatcherBase(channel), heapprofiler_(std::move(heapprofiler)) {}
         ~DispatcherImpl() override = default;
 
-        void Dispatch(const DispatchRequest &request) override;
+        std::optional<std::string> Dispatch(const DispatchRequest &request, bool crossLanguageDebug = false) override;
         void AddInspectedHeapObject(const DispatchRequest &request);
         void CollectGarbage(const DispatchRequest &request);
         void Enable(const DispatchRequest &request);

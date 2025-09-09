@@ -34,7 +34,7 @@ public:
             : DispatcherBase(channel), animation_(std::move(animation)) {}
         ~DispatcherImpl() override = default;
         void Disable(const DispatchRequest &request);
-        void Dispatch(const DispatchRequest &request) override;
+        std::optional<std::string> Dispatch(const DispatchRequest &request, bool crossLanguageDebug = false) override;
 
         enum class Method {
             DISABLE,

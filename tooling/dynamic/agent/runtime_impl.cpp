@@ -26,7 +26,8 @@ void RuntimeImpl::InitializeExtendedProtocolsList()
     runtimeExtendedProtocols_ = std::move(runtimeProtocolList);
 }
 
-void RuntimeImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
+std::optional<std::string> RuntimeImpl::DispatcherImpl::Dispatch(const DispatchRequest &request,
+    [[maybe_unused]] bool crossLanguageDebug)
 {
     Method method = GetMethodEnum(request.GetMethod());
     LOG_DEBUGGER(DEBUG) << "dispatch [" << request.GetMethod() << "] to RuntimeImpl";
@@ -52,11 +53,19 @@ void RuntimeImpl::DispatcherImpl::Dispatch(const DispatchRequest &request)
             response = DispatchResponse::Fail("unknown method: " + request.GetMethod());
             break;
     }
+
+    if (crossLanguageDebug) {
+        if (result != nullptr) {
+            return ReturnsValueToString(request.GetCallId(), result->ToJson());
+        }
+        return ReturnsValueToString(request.GetCallId(), DispatchResponseToJson(response));
+    }
     if (result) {
         SendResponse(request, response, *result);
     } else {
         SendResponse(request, response);
     }
+    return std::nullopt;
 }
 
 RuntimeImpl::DispatcherImpl::Method RuntimeImpl::DispatcherImpl::GetMethodEnum(const std::string& method)
@@ -120,34 +129,6 @@ DispatchResponse RuntimeImpl::DispatcherImpl::GetProperties(const DispatchReques
         std::move(outPrivateProperties),
         std::move(outExceptionDetails));
     return response;
-}
-
-std::string RuntimeImpl::DispatcherImpl::GetProperties(
-    const int32_t callId, std::unique_ptr<GetPropertiesParams> params)
-{
-    if (params == nullptr) {
-        LOG_DEBUGGER(WARN) << "DispatcherImpl::GetProperties: params is nullptr";
-        return ReturnsValueToString(callId, DispatchResponseToJson(DispatchResponse::Fail("wrong params")));
-    }
-    std::vector<std::unique_ptr<PropertyDescriptor>> outPropertyDesc;
-    std::optional<std::vector<std::unique_ptr<InternalPropertyDescriptor>>> outInternalDescs;
-    std::optional<std::vector<std::unique_ptr<PrivatePropertyDescriptor>>> outPrivateProperties;
-    std::optional<std::unique_ptr<ExceptionDetails>> outExceptionDetails;
-    DispatchResponse response = runtime_->GetProperties(*params, &outPropertyDesc, &outInternalDescs,
-        &outPrivateProperties, &outExceptionDetails);
-    if (outExceptionDetails) {
-        ASSERT(outExceptionDetails.value() != nullptr);
-        LOG_DEBUGGER(WARN) << "GetProperties thrown an exception";
-    }
-    GetPropertiesReturns result(std::move(outPropertyDesc),
-        std::move(outInternalDescs),
-        std::move(outPrivateProperties),
-        std::move(outExceptionDetails));
-    if (!response.IsOk()) {
-        LOG_DEBUGGER(WARN) << "response code is not OK";
-        return ReturnsValueToString(callId, DispatchResponseToJson(response));
-    }
-    return ReturnsValueToString(callId, result.ToJson());
 }
 
 DispatchResponse RuntimeImpl::DispatcherImpl::GetHeapUsage(const DispatchRequest &request,
