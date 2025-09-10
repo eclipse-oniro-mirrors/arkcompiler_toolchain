@@ -608,12 +608,12 @@ std::optional<std::string> DebuggerImpl::DispatcherImpl::Dispatch(
             break;
     }
     if (crossLanguageDebug) {
-        if (result != nullptr) {
+        if (result != nullptr && response.IsOk()) {
             return ReturnsValueToString(request.GetCallId(), result->ToJson());
         }
         return ReturnsValueToString(request.GetCallId(), DispatchResponseToJson(response));
     }
-    if (result) {
+    if (result != nullptr) {
         SendResponse(request, response, *result);
     } else {
         SendResponse(request, response);
