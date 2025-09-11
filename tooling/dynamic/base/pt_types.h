@@ -900,6 +900,8 @@ public:
     PropertyDescriptor() = default;
     ~PropertyDescriptor() override = default;
 
+    static constexpr std::string_view ANONYMOUS_FUNCTION_NAME_PLACEHOLDER = "<anonymous>";
+
     static std::unique_ptr<PropertyDescriptor> FromProperty(const EcmaVM *ecmaVm, Local<JSValueRef> name,
         const PropertyAttribute &property);
     static std::unique_ptr<PropertyDescriptor> Create(const PtJson &params);
