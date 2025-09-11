@@ -784,6 +784,75 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetSymbolBreakpoints_002)
     }
 }
 
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetSymbolBreakpoints_003)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
+
+    std::string msg = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.setSymbolicBreakpoints",
+            "params":{
+                "symbolicBreakpoints":[
+                    {
+                        "functionName":"testDebug"
+                    }
+                ]
+            }
+        })";
+    DispatchRequest request(msg);
+    std::optional<std::string> result = dispatcherImpl->Dispatch(request);
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(), R"({"id":0,"result":{}})");
+    EXPECT_FALSE(result.has_value());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetSymbolBreakpoints_004)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
+
+    std::string msg = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.setSymbolicBreakpoints",
+            "params":{
+                "symbolicBreakpoints":[
+                    {
+                        "functionName":"testDebug"
+                    }
+                ]
+            }
+        })";
+    DispatchRequest request(msg);
+    std::optional<std::string> result = dispatcherImpl->Dispatch(request, true);
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(), "");
+    EXPECT_STREQ(result.value().c_str(), R"({"id":0,"result":{}})");
+    EXPECT_TRUE(result.has_value());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
 HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_Resume__001)
 {
     std::string outStrForCallbackCheck = "";
@@ -1412,9 +1481,13 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpoint__0
     }
 }
 
-HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpointByUrl__001)
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpointByUrl__003)
 {
-    ProtocolChannel *protocolChannel = new ProtocolHandler(nullptr, ecmaVm);
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
     auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
     auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
     auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
@@ -1431,9 +1504,64 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpointByU
             }
         })";
     DispatchRequest request(msg);
-    std::unique_ptr<PtBaseReturns> resPtr;
-    DispatchResponse response = dispatcherImpl->GetPossibleAndSetBreakpointByUrl(request, resPtr);
-    EXPECT_STREQ(response.GetMessage().c_str(), "GetPossibleAndSetBreakpointByUrl: debugger agent is not enabled");
+    std::optional<std::string> response =  dispatcherImpl->Dispatch(request);
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(),
+        R"({"id":0,"result":{"code":1,"message":"GetPossibleAndSetBreakpointByUrl: debugger agent is not enabled"}})");
+    EXPECT_FALSE(response.has_value());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpointByUrl__004)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+
+    EXPECT_FALSE(ecmaVm->GetJsDebuggerManager()->IsDebugMode());
+
+    std::string msg1 = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.enable",
+            "params":{
+                "maxScriptsCacheSize":1024,
+                "options":[
+                    "enableLaunchAccelerate"
+                ]
+            }
+        })";
+    DispatchRequest request1(msg1);
+    dispatcherImpl->Dispatch(request1);
+    EXPECT_TRUE(ecmaVm->GetJsDebuggerManager()->IsDebugMode());
+    
+    outStrForCallbackCheck = "";
+    std::string msg2 = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.getPossibleAndSetBreakpointByUrl",
+            "params":{
+                "locations":[
+                    {
+                        "lineNumber":3,
+                        "columnNumber":20,
+                        "url":"Index.ets"
+                    }]
+            }
+        })";
+    DispatchRequest request2(msg2);
+    std::optional<std::string> response =  dispatcherImpl->Dispatch(request2, true);
+    EXPECT_TRUE(response.has_value());
+    EXPECT_STREQ(response.value().c_str(),
+        R"({"id":0,"result":{"locations":[{"lineNumber":3,"columnNumber":20,"id":"invalid","scriptId":0}]}})");
+    EXPECT_TRUE(outStrForCallbackCheck.empty());
     if (protocolChannel) {
         delete protocolChannel;
         protocolChannel = nullptr;
