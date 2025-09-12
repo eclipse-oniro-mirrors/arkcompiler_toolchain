@@ -750,6 +750,18 @@ HWTEST_F_L0(PtTypesTest, PropertyDescriptorFromPropertyTest)
     ASSERT_TRUE(result);
 }
 
+HWTEST_F_L0(PtTypesTest, AnonymousFunctionPropertyNameTest)
+{
+    Local<FunctionRef> func = FunctionRef::New(ecmaVm, nullptr);
+    Local<JSValueRef> funcName = JSValueRef::Hole(ecmaVm);
+    PropertyAttribute property = PropertyAttribute::Default();
+    property.SetValue(func);
+    std::unique_ptr<panda::ecmascript::tooling::PropertyDescriptor> result =
+        panda::ecmascript::tooling::PropertyDescriptor::FromProperty(ecmaVm, funcName, property);
+    ASSERT_TRUE(result->GetName() ==
+        panda::ecmascript::tooling::PropertyDescriptor::ANONYMOUS_FUNCTION_NAME_PLACEHOLDER);
+}
+
 HWTEST_F_L0(PtTypesTest, PtEventsGetReasonString)
 {
     PauseReason reason = static_cast<PauseReason>(50);

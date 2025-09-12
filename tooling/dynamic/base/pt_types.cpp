@@ -1350,7 +1350,13 @@ std::unique_ptr<PropertyDescriptor> PropertyDescriptor::FromProperty(const EcmaV
 
     debuggerProperty->name_ = nameStr;
     if (property.HasValue()) {
-        debuggerProperty->value_ = RemoteObject::FromTagged(ecmaVm, property.GetValue(ecmaVm));
+        auto propValue = property.GetValue(ecmaVm);
+        if (propValue->IsFunction(ecmaVm) && nameStr.empty()) {
+            // if the value is a function and missing function name,
+            // fill the name of the debuggerProperty with <anonymous>
+            debuggerProperty->name_ = ANONYMOUS_FUNCTION_NAME_PLACEHOLDER;
+        }
+        debuggerProperty->value_ = RemoteObject::FromTagged(ecmaVm, propValue);
     }
     if (property.HasWritable()) {
         debuggerProperty->writable_ = property.IsWritable();
