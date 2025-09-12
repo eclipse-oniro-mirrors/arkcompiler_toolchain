@@ -55,10 +55,7 @@ std::optional<std::string> RuntimeImpl::DispatcherImpl::Dispatch(const DispatchR
     }
 
     if (crossLanguageDebug) {
-        if (result != nullptr) {
-            return ReturnsValueToString(request.GetCallId(), result->ToJson());
-        }
-        return ReturnsValueToString(request.GetCallId(), DispatchResponseToJson(response));
+        return ReturnsValueToString(request.GetCallId(), response, std::move(result));
     }
     if (result) {
         SendResponse(request, response, *result);

@@ -18,6 +18,7 @@
 
 #include "inspector/ws_server.h"
 
+#include <cstddef>
 #include <string>
 
 namespace panda::ecmascript {
@@ -31,6 +32,11 @@ using DebuggerPostTask = std::function<void(std::function<void()>&&)>;
 #if __cplusplus
 extern "C" {
 #endif
+
+struct DebugInput {
+    size_t size;
+    char* data;
+};
 
 bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
     int32_t instanceId, const DebuggerPostTask& debuggerPostTask, int port);
@@ -53,9 +59,9 @@ void StoreDebuggerInfo(int tid, void* vm, const DebuggerPostTask& debuggerPostTa
 
 // The returned pointer must be released using free() after it is no longer needed.
 // Failure to release the memory will result in memory leaks.
-const char* GetJsBacktrace();
+DebugInput GetJsBacktrace();
 
-const char* OperateJsDebugMessage(const char* message);
+DebugInput OperateJsDebugMessage(const char* message);
 #if __cplusplus
 }
 #endif

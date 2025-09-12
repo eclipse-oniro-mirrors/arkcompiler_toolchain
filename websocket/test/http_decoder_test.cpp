@@ -97,6 +97,36 @@ public:
         "Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n";
     std::string requestHeadersFive = std::string(REQUEST_HEADERS_FIVE);
 
+    static constexpr std::string_view REQUEST_HEADERS_SIX = "GET / HTTP/1.1\r\n"
+        "Host: 127.0.0.1:19015\r\n"
+        "Connection: Upgrade\r\n"
+        "Pragma: no-cache\r\n"
+        "Cache-Control: no-cache\r\n"
+        "User-Agent: Mozilla/5.0 (X11; Linux x86_64) Chrome/117.0.0.0 Safari/537.36\r\n"
+        "Upgrade: websocket\r\n"
+        "Origin: https://www.abc.com\r\n"
+        "Sec-WebSocket-Version: 13\r\n"
+        "Accept-Encoding: gzip, deflate, br\r\n"
+        "Accept-Language: en-US,en;q=0.9\r\n"
+        "Sec-WebSocket-Key: AyuTxzyBTJJdViDskomT0Q==\r\n"
+        "Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n";
+    std::string requestHeadersSix = std::string(REQUEST_HEADERS_SIX);
+
+    static constexpr std::string_view REQUEST_HEADERS_SEVEN = "GET / HTTP/1.1\r\n"
+        "Host: 127.0.0.1:19015\r\n"
+        "Connection: Upgrade\r\n"
+        "Pragma: no-cache\r\n"
+        "Cache-Control: no-cache\r\n"
+        "User-Agent: Mozilla/5.0 (X11; Linux x86_64) Chrome/117.0.0.0 Safari/537.36\r\n"
+        "Upgrade: websocket\r\n"
+        "Origin: https://[::1]:8000\r\n"
+        "Sec-WebSocket-Version: 13\r\n"
+        "Accept-Encoding: gzip, deflate, br\r\n"
+        "Accept-Language: en-US,en;q=0.9\r\n"
+        "Sec-WebSocket-Key: AyuTxzyBTJJdViDskomT0Q==\r\n"
+        "Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n\r\n";
+    std::string requestHeadersSeven = std::string(REQUEST_HEADERS_SEVEN);
+
     static constexpr std::string_view ERR_REQUEST_HEADERS = "GEY\r\n";
     std::string errRequestHeaders = std::string(ERR_REQUEST_HEADERS);
 
@@ -185,6 +215,32 @@ HWTEST_F(HttpDecoderTest, TestRequestDecode_5, testing::ext::TestSize.Level0)
     ASSERT_EQ(parsed.upgrade, EXPECTED_UPGRADE);
     ASSERT_EQ(parsed.secWebSocketKey, EXPECTED_SEC_WEBSOCKET_KEY);
     ASSERT_EQ(parsed.origin, "https://localhost");
+}
+
+HWTEST_F(HttpDecoderTest, TestRequestDecode_6, testing::ext::TestSize.Level0)
+{
+    HttpRequest parsed;
+    auto succeeded = HttpRequest::Decode(requestHeadersSix, parsed);
+
+    ASSERT_FALSE(succeeded);
+    ASSERT_EQ(parsed.version, EXPECTED_VERSION);
+    ASSERT_EQ(parsed.connection, EXPECTED_CONNECTION);
+    ASSERT_EQ(parsed.upgrade, EXPECTED_UPGRADE);
+    ASSERT_EQ(parsed.secWebSocketKey, EXPECTED_SEC_WEBSOCKET_KEY);
+    ASSERT_EQ(parsed.origin, "https://www.abc.com");
+}
+
+HWTEST_F(HttpDecoderTest, TestRequestDecode_7, testing::ext::TestSize.Level0)
+{
+    HttpRequest parsed;
+    auto succeeded = HttpRequest::Decode(requestHeadersSeven, parsed);
+
+    ASSERT_TRUE(succeeded);
+    ASSERT_EQ(parsed.version, EXPECTED_VERSION);
+    ASSERT_EQ(parsed.connection, EXPECTED_CONNECTION);
+    ASSERT_EQ(parsed.upgrade, EXPECTED_UPGRADE);
+    ASSERT_EQ(parsed.secWebSocketKey, EXPECTED_SEC_WEBSOCKET_KEY);
+    ASSERT_EQ(parsed.origin, "https://[::1]:8000");
 }
 
 HWTEST_F(HttpDecoderTest, TestAbnormalRequestDecode, testing::ext::TestSize.Level0)
