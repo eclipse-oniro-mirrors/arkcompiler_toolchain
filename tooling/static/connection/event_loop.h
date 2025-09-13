@@ -18,7 +18,7 @@
 
 #include <atomic>
 
-#include "os/mutex.h"
+#include "libarkbase/os/mutex.h"
 
 namespace ark::tooling::inspector {
 class EventLoop {

@@ -16,7 +16,7 @@
 #ifndef PANDA_TOOLING_INSPECTOR_TYPES_REMOTE_OBJECT_TYPE_H
 #define PANDA_TOOLING_INSPECTOR_TYPES_REMOTE_OBJECT_TYPE_H
 
-#include "utils/json_builder.h"
+#include "libarkbase/utils/json_builder.h"
 #include "types/numeric_id.h"
 #include "json_serialization/serializable.h"
 
