@@ -17,6 +17,28 @@
 #include "http.h"
 
 namespace OHOS::ArkCompiler::Toolchain {
+
+const std::regex HttpRequest::localUrlRegex(
+    R"(^(https?:\/\/)(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$)", std::regex_constants::icase
+);
+const std::regex HttpRequest::httpPrefixRegex(R"(^(https?:\/\/).*)");
+
+bool HttpRequest::ValidateHttpRequestOrigin(const std::string& httpRequestOrigin)
+{
+    // An empty Origin header is considered as safe
+    if (httpRequestOrigin.empty()) {
+        return true;
+    }
+
+    // If the Origin header does not start with "http://" or "https://", it is considered as safe
+    if (!std::regex_match(httpRequestOrigin, httpPrefixRegex)) {
+        return true;
+    }
+
+    // If it start with "http://" or "https://", it must be followed by the local IP to be considered secure
+    return std::regex_match(httpRequestOrigin, localUrlRegex);
+}
+
 /* static */
 std::string HttpBase::DecodeHeader(const std::string& headersText, std::string_view headerName)
 {
@@ -62,16 +84,14 @@ bool HttpRequest::Decode(const std::string& request, HttpRequest& parsed)
         return false;
     }
 
-    if (request.find(ORIGIN) != std::string::npos) {
-        return false;
-    }
-
     parsed.version = DecodeVersion(request, pos);
     parsed.connection = DecodeHeader(request, CONNECTION);
     parsed.upgrade = DecodeHeader(request, UPGRADE);
     parsed.secWebSocketKey = DecodeHeader(request, SEC_WEBSOCKET_KEY);
+    parsed.origin = DecodeHeader(request, ORIGIN);
 
-    return true;
+    // Validate Origin field to prevent cross-domain attacks
+    return ValidateHttpRequestOrigin(parsed.origin);
 }
 
 /* static */
