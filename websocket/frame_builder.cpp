@@ -104,13 +104,14 @@ void ServerFrameBuilder::PushPayload(std::string& message) const
     message.append(payload_);
 }
 
-ClientFrameBuilder::ClientFrameBuilder(bool final, FrameType opcode, const uint8_t maskingKey[WebSocketFrame::MASK_LEN])
+ClientFrameBuilder::ClientFrameBuilder(bool final, FrameType opcode,
+    const std::array<uint8_t, WebSocketFrame::MASK_LEN>& maskingKey)
     : ServerFrameBuilder(final, opcode)
 {
     SetMask(maskingKey);
 }
 
-ClientFrameBuilder& ClientFrameBuilder::SetMask(const uint8_t maskingKey[WebSocketFrame::MASK_LEN])
+ClientFrameBuilder& ClientFrameBuilder::SetMask(const std::array<uint8_t, WebSocketFrame::MASK_LEN>& maskingKey)
 {
     for (size_t i = 0; i < WebSocketFrame::MASK_LEN; ++i) {
         maskingKey_[i] = maskingKey[i];

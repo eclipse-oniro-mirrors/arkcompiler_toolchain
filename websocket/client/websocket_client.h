@@ -73,7 +73,7 @@ private:
                                                               "\r\n";
 
     static constexpr int NET_SUCCESS = 1;
-    static constexpr uint8_t MASK_KEY[] = {0xa, 0xb, 0xc, 0xd};
+    static constexpr std::array<uint8_t, WebSocketFrame::MASK_LEN> MASK_KEY = {0xa, 0xb, 0xc, 0xd};
     char secWebSocketKey_[KEY_LENGTH + 1] = {};
 };
 } // namespace OHOS::ArkCompiler::Toolchain
