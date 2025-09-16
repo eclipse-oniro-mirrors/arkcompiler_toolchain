@@ -1003,6 +1003,7 @@ DispatchResponse DebuggerImpl::DispatcherImpl::DropFrame(const DispatchRequest &
 // inner message, not SendResponse to outer
 void DebuggerImpl::DispatcherImpl::ClientDisconnect([[maybe_unused]] const DispatchRequest &request)
 {
+    debugger_->Disable();
     debugger_->ClientDisconnect();
 }
 
