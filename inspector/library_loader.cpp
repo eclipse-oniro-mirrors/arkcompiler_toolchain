@@ -70,7 +70,7 @@ void* Load(std::string_view libraryName)
     if (handle != nullptr) {
         return handle;
     }
-    LOGE("Failed to open %{public}s, reason:%{public}sn", libraryName.data(), dlerror());
+    LOGE("Failed to open %{public}s, reason:%{public}s", libraryName.data(), dlerror());
     return nullptr;
 }
 

@@ -17,6 +17,7 @@
 #define ARKCOMPILER_TOOLCHAIN_WEBSOCKET_HTTP_H
 
 #include <string>
+#include <regex>
 
 namespace OHOS::ArkCompiler::Toolchain {
 struct HttpBase {
@@ -37,9 +38,13 @@ struct HttpRequest : private HttpBase {
     std::string connection;
     std::string upgrade;
     std::string secWebSocketKey;
+    std::string origin;
+
+    static const std::regex localUrlRegex;
+    static const std::regex httpPrefixRegex;
 
     static bool Decode(const std::string& request, HttpRequest& parsed);
-
+    static bool ValidateHttpRequestOrigin(const std::string& httpRequestOrigin);
 private:
     static std::string DecodeVersion(const std::string& request, std::string::size_type methodStartPos);
 };
