@@ -95,46 +95,68 @@ int32_t GetDispatchStatus(const ::panda::ecmascript::EcmaVM *vm)
     return ProtocolHandler::DispatchStatus::UNKNOWN;
 }
 
-// strdup allocates memory; caller is responsible for freeing it
 // Return the dynamically allocated string (must be freed by the caller)
-const char* GetCallFrames(const ::panda::ecmascript::EcmaVM *vm)
+DebugInput GetCallFrames(const ::panda::ecmascript::EcmaVM *vm)
 {
     if (vm == nullptr || vm->GetJsDebuggerManager() == nullptr) {
         LOG_DEBUGGER(ERROR) << "VM has already been destroyed";
-        return "";
+        return {0, nullptr};
     }
     ProtocolHandler *handler = vm->GetJsDebuggerManager()->GetDebuggerHandler();
-    if (LIKELY(handler != nullptr)) {
-        auto dispatcher = handler->GetDispatcher();
-        if (LIKELY(dispatcher != nullptr)) {
-            auto mixStack = dispatcher->GetJsFrames();
-            const char* buffer = strdup(mixStack.c_str());
-            return buffer;
-        }
-        return "";
+    if (handler == nullptr) {
+        LOG_DEBUGGER(ERROR) << "GetCallFrames: Debugger handler is null";
+        return {0, nullptr};
     }
-    return "";
+    auto dispatcher = handler->GetDispatcher();
+    if (dispatcher == nullptr) {
+        LOG_DEBUGGER(ERROR) << "GetCallFrames: Dispatcher is null";
+        return {0, nullptr};
+    }
+    std::string info = dispatcher->GetJsFrames();
+    auto size = info.size();
+    char* data = new char[size + 1]();
+    int result = memcpy_s(data, size + 1, info.c_str(), size);
+    if (result != 0) {
+        LOG_DEBUGGER(ERROR) << "GetCallFrames: Memory copy failed";
+        delete[] data;
+        return {0, nullptr};
+    }
+    return {size, data};
 }
 
-const char* OperateDebugMessage(const ::panda::ecmascript::EcmaVM *vm, const char* message)
+DebugInput OperateDebugMessage(const ::panda::ecmascript::EcmaVM *vm, const char* message)
 {
+    if (message == nullptr) {
+        LOG_DEBUGGER(ERROR) << "OperateDebugMessage: message is null";
+        return {0, nullptr};
+    }
     if (vm == nullptr || vm->GetJsDebuggerManager() == nullptr) {
         LOG_DEBUGGER(ERROR) << "VM has already been destroyed";
-        return "";
+        return {0, nullptr};
     }
     ProtocolHandler *handler = vm->GetJsDebuggerManager()->GetDebuggerHandler();
-    if (LIKELY(handler != nullptr)) {
-        auto dispatcher = handler->GetDispatcher();
-        if (LIKELY(dispatcher != nullptr)) {
-            DispatchRequest request(message);
-            auto info = dispatcher->Dispatch(request, true);
-            if (info.has_value()) {
-                const char* buffer = strdup(info.value().c_str());
-                return buffer;
-            }
-        }
-        return "";
+    if (handler == nullptr) {
+        LOG_DEBUGGER(ERROR) << "OperateDebugMessage: Debugger handler is null";
+        return {0, nullptr};
     }
-    return "";
+    auto dispatcher = handler->GetDispatcher();
+    if (dispatcher == nullptr) {
+        LOG_DEBUGGER(ERROR) << "OperateDebugMessage: Dispatcher is null";
+        return {0, nullptr};
+    }
+    DispatchRequest request(message);
+    auto info = dispatcher->Dispatch(request, true);
+    if (!info.has_value()) {
+        return {0, nullptr};
+    }
+    auto size = info.value().size();
+    char* data = new char[size + 1]();
+    int result = memcpy_s(data, size + 1, info.value().c_str(), size);
+    if (result != 0) {
+        LOG_DEBUGGER(ERROR) << "OperateDebugMessage: Memory copy failed";
+        delete[] data;
+        return {0, nullptr};
+    }
+    return {size, data};
 }
 }  // namespace panda::ecmascript::tooling

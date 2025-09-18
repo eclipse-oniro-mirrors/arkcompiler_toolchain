@@ -53,8 +53,8 @@ using WaitForDebugger = void(*)(void*);
 using OnMessage = void(*)(void*, std::string&&);
 using ProcessMessage = void(*)(void*);
 using GetDispatchStatus = int32_t(*)(void*);
-using GetCallFrames = char*(*)(void*);
-using OperateDebugMessage = char*(*)(void*, const char*);
+using GetCallFrames = DebugInput(*)(void*);
+using OperateDebugMessage = DebugInput(*)(void*, const char*);
 
 OnMessage g_onMessage = nullptr;
 InitializeDebugger g_initializeDebugger = nullptr;
@@ -557,31 +557,35 @@ void StoreDebuggerInfo(int tid, void* vm, const DebuggerPostTask& debuggerPostTa
 
 // The returned pointer must be released using free() after it is no longer needed.
 // Failure to release the memory will result in memory leaks.
-const char* GetJsBacktrace()
+DebugInput GetJsBacktrace()
 {
 #if defined(OHOS_PLATFORM)
     void* vm = GetEcmaVM(Inspector::GetThreadOrTaskId());
     if (g_getCallFrames == nullptr) {
         LOGE("GetCallFrames symbol resolve failed");
-        return "";
+        return {0, nullptr};
     }
     return g_getCallFrames(vm);
 #else
-    return "";
+    return {0, nullptr};
 #endif
 }
 
-const char* OperateJsDebugMessage([[maybe_unused]] const char* message)
+DebugInput OperateJsDebugMessage([[maybe_unused]] const char* message)
 {
 #if defined(OHOS_PLATFORM)
     void* vm = GetEcmaVM(Inspector::GetThreadOrTaskId());
     if (g_operateDebugMessage == nullptr) {
         LOGE("OperateDebugMessage symbol resolve failed");
-        return "";
+        return {0, nullptr};
+    }
+    if (message == nullptr) {
+        LOGE("OperateDebugMessage message is nullptr");
+        return {0, nullptr};
     }
     return g_operateDebugMessage(vm, message);
 #else
-    return "";
+    return {0, nullptr};
 #endif
 }
 } // namespace OHOS::ArkCompiler::Toolchain

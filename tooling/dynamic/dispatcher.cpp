@@ -130,9 +130,16 @@ void DispatcherBase::SendResponse(const DispatchRequest &request, const Dispatch
     }
 }
 
-std::string DispatcherBase::ReturnsValueToString(const int32_t callId, const std::unique_ptr<PtJson> resultObj)
+std::string DispatcherBase::ReturnsValueToString(const int32_t callId, const DispatchResponse& response,
+    std::unique_ptr<PtBaseReturns> result)
 {
     std::unique_ptr<PtJson> ptJson = PtJson::CreateObject();
+    std::unique_ptr<PtJson> resultObj;
+    if (result != nullptr && response.IsOk()) {
+        resultObj = result->ToJson();
+    } else {
+        resultObj = DispatchResponseToJson(response);
+    }
     ptJson->Add("id", callId);
     ptJson->Add("result", resultObj);
     std::string str = ptJson->Stringify();

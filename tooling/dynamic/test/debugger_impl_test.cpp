@@ -1416,7 +1416,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_SetSkipAllPauses__002)
     }
 }
 
-HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpoint__001)
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpointByUrl__001)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
@@ -1445,7 +1445,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpoint__0
     }
 }
 
-HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpoint__002)
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpointByUrl__002)
 {
     std::string outStrForCallbackCheck = "";
     std::function<void(const void*, const std::string &)> callback =
@@ -1561,6 +1561,40 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpointByU
     EXPECT_TRUE(response.has_value());
     EXPECT_STREQ(response.value().c_str(),
         R"({"id":0,"result":{"locations":[{"lineNumber":3,"columnNumber":20,"id":"invalid","scriptId":0}]}})");
+    EXPECT_TRUE(outStrForCallbackCheck.empty());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_GetPossibleAndSetBreakpointByUrl__005)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+    std::string msg = std::string() +
+        R"({
+            "id": 0,
+            "method": "Debugger.getPossibleAndSetBreakpointByUrl",
+            "params": {
+                "locations": [{
+                    "url": "entry|entry|1.0.0|src/main/ets/pages/Index.ts",
+                    "lineNumber": 59,
+                    "columnNumber": 16
+                }]
+            }
+        })";
+    DispatchRequest request(msg);
+    std::optional<std::string> response =  dispatcherImpl->Dispatch(request, true);
+    EXPECT_TRUE(response.has_value());
+    EXPECT_STREQ(response.value().c_str(),
+        R"({"id":0,"result":{"code":1,"message":"GetPossibleAndSetBreakpointByUrl: debugger agent is not enabled"}})");
     EXPECT_TRUE(outStrForCallbackCheck.empty());
     if (protocolChannel) {
         delete protocolChannel;

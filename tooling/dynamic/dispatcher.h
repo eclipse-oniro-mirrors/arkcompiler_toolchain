@@ -136,7 +136,8 @@ public:
 protected:
     void SendResponse(const DispatchRequest &request, const DispatchResponse &response,
                       const PtBaseReturns &result = PtBaseReturns());
-    std::string ReturnsValueToString(const int32_t callId, const std::unique_ptr<PtJson> resultObj);
+    std::string ReturnsValueToString(const int32_t callId, const DispatchResponse& response,
+        std::unique_ptr<PtBaseReturns> result);
     std::unique_ptr<PtJson> DispatchResponseToJson(const DispatchResponse &response) const;
 
 private:

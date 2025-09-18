@@ -17,6 +17,7 @@
 #define ECMASCRIPT_TOOLING_DEBUGGER_SERVICE_H
 
 #include <functional>
+#include <memory>
 #include <string>
 
 #include "common/macros.h"
@@ -24,6 +25,11 @@
 namespace panda::ecmascript {
 class EcmaVM;
 }  // namespace panda::ecmascript
+
+struct DebugInput {
+    size_t size;
+    char* data;
+};
 
 namespace panda::ecmascript::tooling {
 #ifdef __cplusplus
@@ -45,9 +51,9 @@ TOOLCHAIN_EXPORT void ProcessMessage(const ::panda::ecmascript::EcmaVM *vm);
 
 TOOLCHAIN_EXPORT int32_t GetDispatchStatus(const ::panda::ecmascript::EcmaVM *vm);
 
-TOOLCHAIN_EXPORT const char* GetCallFrames(const ::panda::ecmascript::EcmaVM *vm);
+TOOLCHAIN_EXPORT DebugInput GetCallFrames(const ::panda::ecmascript::EcmaVM *vm);
 
-TOOLCHAIN_EXPORT const char* OperateDebugMessage(const ::panda::ecmascript::EcmaVM *vm, const char* message);
+TOOLCHAIN_EXPORT DebugInput OperateDebugMessage(const ::panda::ecmascript::EcmaVM *vm, const char* message);
 #ifdef __cplusplus
 #if __cplusplus
 }
