@@ -24,7 +24,7 @@ public:
     // final message, ping-frame opcode
     static constexpr char PING_EXPECTED_FIRST_BYTE = 0x89;
 
-    static constexpr uint8_t MASKING_KEY[WebSocketFrame::MASK_LEN] = {0xab};
+    static constexpr std::array<uint8_t, WebSocketFrame::MASK_LEN> MASKING_KEY = {0xab};
 
     static constexpr size_t SHORT_MSG_SIZE = 10;
     static constexpr size_t LONG_MSG_SIZE = 1000;

@@ -19,6 +19,7 @@
 #include "web_socket_frame.h"
 
 #include <string>
+#include <array>
 
 namespace OHOS::ArkCompiler::Toolchain {
 template <typename T, typename = std::enable_if_t<std::is_unsigned_v<T>>>
@@ -63,9 +64,9 @@ protected:
 
 class ClientFrameBuilder final : public ServerFrameBuilder {
 public:
-    ClientFrameBuilder(bool final, FrameType opcode, const uint8_t maskingKey[WebSocketFrame::MASK_LEN]);
+    ClientFrameBuilder(bool final, FrameType opcode, const std::array<uint8_t, WebSocketFrame::MASK_LEN>& maskingKey);
 
-    ClientFrameBuilder& SetMask(const uint8_t maskingKey[WebSocketFrame::MASK_LEN]);
+    ClientFrameBuilder& SetMask(const std::array<uint8_t, WebSocketFrame::MASK_LEN>& maskingKey);
 
 private:
     void PushMask(std::string& message) const;
