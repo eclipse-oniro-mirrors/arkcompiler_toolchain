@@ -574,13 +574,13 @@ DebugInput GetJsBacktrace()
 DebugInput OperateJsDebugMessage([[maybe_unused]] const char* message)
 {
 #if defined(OHOS_PLATFORM)
+    if (message == nullptr) {
+        LOGE("OperateDebugMessage message is nullptr");
+        return {0, nullptr};
+    }
     void* vm = GetEcmaVM(Inspector::GetThreadOrTaskId());
     if (g_operateDebugMessage == nullptr) {
         LOGE("OperateDebugMessage symbol resolve failed");
-        return {0, nullptr};
-    }
-    if (message == nullptr) {
-        LOGE("OperateDebugMessage message is nullptr");
         return {0, nullptr};
     }
     return g_operateDebugMessage(vm, message);

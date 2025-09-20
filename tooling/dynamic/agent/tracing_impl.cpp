@@ -184,7 +184,7 @@ DispatchResponse TracingImpl::RequestMemoryDump([[maybe_unused]] std::unique_ptr
 
 DispatchResponse TracingImpl::Start(std::unique_ptr<StartParams> params)
 {
-    std::string categories = params->GetCategories();
+    std::string categories = GetCategoriesFromStartParams(params);
     if (!panda::DFXJSNApi::StartTracing(vm_, categories)) {
         return DispatchResponse::Fail("Start tracing failed");
     }
@@ -215,6 +215,37 @@ DispatchResponse TracingImpl::Start(std::unique_ptr<StartParams> params)
     }
 #endif
     return DispatchResponse::Ok();
+}
+
+std::string TracingImpl::GetCategoriesFromStartParams(const std::unique_ptr<StartParams>& params)
+{
+    if (!params) {
+        return {};
+    }
+
+    std::string categories = params->GetCategories();
+    if (!categories.empty()) {
+        return categories;
+    }
+
+    const TraceConfig* traceConfig = params->GetTraceConfig();
+    if (!traceConfig) {
+        return {};
+    }
+
+    const auto* includeCategories = traceConfig->GetIncludedCategories();
+    if (!includeCategories || includeCategories->empty()) {
+        return {};
+    }
+
+    std::ostringstream oss;
+    for (size_t i = 0; i < includeCategories->size(); ++i) {
+        if (i > 0) {
+            oss << ",";
+        }
+        oss << (*includeCategories)[i];
+    }
+    return oss.str();
 }
 
 TracingImpl::~TracingImpl()
