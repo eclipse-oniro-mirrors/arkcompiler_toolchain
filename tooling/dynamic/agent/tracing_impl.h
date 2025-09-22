@@ -43,6 +43,7 @@ public:
 #if defined(ECMASCRIPT_SUPPORT_TRACING)
     static void TracingBufferUsageReport(uv_timer_t* handle);
 #endif
+    static std::string GetCategoriesFromStartParams(const std::unique_ptr<StartParams>& params);
 
     class DispatcherImpl final : public DispatcherBase {
     public:

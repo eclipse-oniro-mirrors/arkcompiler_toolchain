@@ -563,7 +563,7 @@ public:
 
     uint32_t GetDroppedDepth() const
     {
-        return droppedDepth_.value();
+        return droppedDepth_.value_or(0);
     }
 
     bool HasDroppedDepth() const
@@ -1136,7 +1136,7 @@ public:
 
     bool GetDeterministic() const
     {
-        return deterministic_.value();
+        return deterministic_.value_or(false);
     }
 
     RequestMemoryDumpParams &SetDeterministic(bool deterministic)
@@ -1152,7 +1152,7 @@ public:
 
     MemoryDumpLevelOfDetail GetLevelOfDetail() const
     {
-        return levelOfDetail_.value();
+        return levelOfDetail_.value_or("");
     }
 
     RequestMemoryDumpParams &SetLevelOfDetail(const MemoryDumpLevelOfDetail &levelOfDetail)
@@ -1183,7 +1183,7 @@ public:
 
     std::string GetCategories() const
     {
-        return categories_.value();
+        return categories_.value_or("");
     }
 
     StartParams &SetCategories(std::string categories)
@@ -1199,7 +1199,7 @@ public:
 
     std::string GetOptions() const
     {
-        return options_.value();
+        return options_.value_or("");
     }
 
     StartParams &SetOptions(std::string options)
@@ -1215,7 +1215,7 @@ public:
 
     int32_t GetBufferUsageReportingInterval() const
     {
-        return bufferUsageReportingInterval_.value();
+        return bufferUsageReportingInterval_.value_or(0);
     }
 
     StartParams &SetBufferUsageReportingInterval(int32_t bufferUsageReportingInterval)
@@ -1231,7 +1231,7 @@ public:
 
     std::string GetTransferMode() const
     {
-        return transferMode_.value();
+        return transferMode_.value_or("");
     }
 
     StartParams &SetTransferMode(std::string transferMode)
@@ -1262,7 +1262,7 @@ public:
 
     StreamFormat GetStreamFormat() const
     {
-        return streamFormat_.value();
+        return streamFormat_.value_or("");
     }
 
     StartParams &SetStreamFormat(const StreamFormat &streamFormat)
@@ -1278,7 +1278,7 @@ public:
 
     StreamCompression GetStreamCompression() const
     {
-        return streamCompression_.value();
+        return streamCompression_.value_or("");
     }
 
     StartParams &SetStreamCompression(const StreamCompression &streamCompression)
@@ -1313,7 +1313,7 @@ public:
 
     std::string GetPerfettoConfig() const
     {
-        return perfettoConfig_.value();
+        return perfettoConfig_.value_or("");
     }
 
     StartParams &SetPerfettoConfig(std::string perfettoConfig)
@@ -1329,7 +1329,7 @@ public:
 
     TracingBackend GetTracingBackend() const
     {
-        return tracingBackend_.value();
+        return tracingBackend_.value_or("");
     }
 
     StartParams &SetTracingBackend(const TracingBackend &tracingBackend)
