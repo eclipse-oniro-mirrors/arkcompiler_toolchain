@@ -37,12 +37,7 @@ protected:
 private:
     void SendMessage(const std::string &message) override
     {
-        auto wasSent = false;
-        if (endpoint_ != nullptr) {
-            if (endpoint_->IsConnected()) {
-                wasSent = endpoint_->SendReply(message);
-            }
-        }
+        auto wasSent = endpoint_->SendReply(message);
         if (!wasSent) {
             LOG(INFO, DEBUGGER) << "Did not send message: " << message;
         }

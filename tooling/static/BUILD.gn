@@ -16,7 +16,6 @@ import("../../toolchain.gni")
 libarkinspector_sources = [
   "init.cpp",
   "connection/endpoint_base.cpp",
-  "connection/event_loop.cpp",
   "connection/ohos_ws/ohos_ws_server.cpp",
   "connection/ohos_ws/ohos_ws_server_endpoint.cpp",
   "connection/server_endpoint_base.cpp",

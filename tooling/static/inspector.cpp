@@ -208,7 +208,9 @@ void Inspector::ThreadStart(PtThread thread)
     os::memory::ReadLockHolder lock(debuggerEventsLock_);
 
     if (thread != PtThread::NONE) {
-        inspectorServer_.CallTargetAttachedToTarget(thread);
+        if (inspectorServer_.CallTargetAttachedToTarget(thread)) {
+            WaitForDebugger();
+        }
     }
 
     // NOLINTBEGIN(modernize-avoid-bind)
@@ -241,6 +243,17 @@ void Inspector::ThreadEnd(PtThread thread)
 
     [[maybe_unused]] auto erased = threads_.erase(thread);
     ASSERT(erased == 1);
+}
+
+void Inspector::PauseOtherThreads(PtThread thread)
+{
+    auto threadId = thread.GetId();
+    for (auto &[threadTmp, dbgThread] : threads_) {
+        if (threadTmp.GetId() == threadId) {
+            continue;
+        }
+        dbgThread.Pause();
+    }
 }
 
 void Inspector::VmDeath()
@@ -293,9 +306,10 @@ void Inspector::Pause(PtThread thread)
         return;
     }
 
-    auto *debuggableThread = GetDebuggableThread(thread);
-    if (debuggableThread != nullptr) {
-        debuggableThread->Pause();
+    (void)thread;
+
+    for (auto &[_, dbgThread] : threads_) {
+        dbgThread.Pause();
     }
 }
 
@@ -307,8 +321,13 @@ void Inspector::Continue(PtThread thread)
     }
 
     auto *debuggableThread = GetDebuggableThread(thread);
-    if (debuggableThread != nullptr) {
+    if ((debuggableThread != nullptr) && debuggableThread->IsPausedByBreakOnStart()) {
         debuggableThread->Continue();
+        return;
+    }
+
+    for (auto &[_, dbgThread] : threads_) {
+        dbgThread.Continue();
     }
 }
 
@@ -605,6 +624,10 @@ void Inspector::DebuggableThreadPostSuspend(PtThread thread, ObjectRepository &o
                 return true;
             }));
         });
+
+    if (!hitBreakpoints.empty()) {
+        PauseOtherThreads(thread);
+    }
 }
 
 void Inspector::NotifyExecutionEnded()

@@ -84,6 +84,9 @@ std::unordered_set<PtLocation, HashLocation> DebugInfoCache::GetCurrentLineLocat
     auto method = frame.GetMethod();
     auto pandaFile = method->GetPandaFile();
     auto methodId = method->GetFileId();
+    if (GetDebugInfo(pandaFile) == nullptr) {
+        return locations;
+    }
     auto &table = GetDebugInfo(pandaFile)->GetLineNumberTable(methodId);
     auto it = std::upper_bound(table.begin(), table.end(), frame.GetBytecodeOffset(),
                                [](auto offset, auto entry) { return offset < entry.offset; });
