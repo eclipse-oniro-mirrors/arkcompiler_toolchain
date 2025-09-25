@@ -264,6 +264,9 @@ group("ark_toolchain_packages") {
     "./tooling/dynamic/client/ark_cli:arkdb",
     "./tooling/dynamic/client/ark_multi:ark_multi",
   ]
+  if(defined(ohos_indep_compiler_enable) && ohos_indep_compiler_enable) {
+    deps -= [ "./tooling:libarkinspector_plus" ]
+  }
 }
 
 group("ark_toolchain_unittest") {
