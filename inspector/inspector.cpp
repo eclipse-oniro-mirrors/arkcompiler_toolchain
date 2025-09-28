@@ -47,6 +47,7 @@ enum DispatchStatus : int32_t {
     DISPATCHED
 };
 
+using SetDebugApp = void(*)(void*);
 using InitializeDebugger = void(*)(void*, const std::function<void(const void*, const std::string&)>&);
 using UninitializeDebugger = void(*)(void*);
 using WaitForDebugger = void(*)(void*);
@@ -56,6 +57,7 @@ using GetDispatchStatus = int32_t(*)(void*);
 using GetCallFrames = DebugInput(*)(void*);
 using OperateDebugMessage = DebugInput(*)(void*, const char*);
 
+SetDebugApp g_setDebugApp = nullptr;
 OnMessage g_onMessage = nullptr;
 InitializeDebugger g_initializeDebugger = nullptr;
 UninitializeDebugger g_uninitializeDebugger = nullptr;
@@ -272,12 +274,19 @@ bool InitializeArkFunctionsOthers()
         ResetServiceLocked(g_vm, true);
         return false;
     }
+    g_setDebugApp = reinterpret_cast<SetDebugApp>(
+        GetArkDynFunction("SetDebugApp"));
+    if (g_setDebugApp == nullptr) {
+        ResetServiceLocked(g_vm, true);
+        return false;
+    }
     return true;
 }
 #else
 bool InitializeArkFunctionsIOS()
 {
     using namespace panda::ecmascript;
+    g_setDebugApp = reinterpret_cast<SetDebugApp>(&tooling::SetDebugApp);
     g_initializeDebugger = reinterpret_cast<InitializeDebugger>(&tooling::InitializeDebugger);
     g_uninitializeDebugger = reinterpret_cast<UninitializeDebugger>(&tooling::UninitializeDebugger);
     g_waitForDebugger = reinterpret_cast<WaitForDebugger>(&tooling::WaitForDebugger);
@@ -417,6 +426,7 @@ bool InitializeDebuggerForSocketpair(void* vm, bool isHybrid)
             LOGE("Initialize ark functions failed");
             return false;
         };
+        g_setDebugApp(vm);
     }
     g_initializeDebugger(vm, std::bind(&SendReply, vm, std::placeholders::_2));
     return true;
