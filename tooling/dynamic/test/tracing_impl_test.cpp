@@ -249,6 +249,45 @@ HWTEST_F_L0(TracingImplTest, DispatcherImplStartDumpTest)
     ASSERT_TRUE(result.find("\"id\":0,") != std::string::npos);
 }
 
+HWTEST_F_L0(TracingImplTest, GetCategoriesFromStartParamsTest)
+{
+    auto params = std::make_unique<StartParams>();
+    params->SetCategories("cpu_profiler");
+    std::string categories = TracingImpl::GetCategoriesFromStartParams(params);
+    ASSERT_TRUE(categories == "cpu_profiler");
+
+    auto params1 = std::make_unique<StartParams>();
+    std::unique_ptr<TraceConfig> traceConfig = std::make_unique<TraceConfig>();
+    std::vector<std::string> includeCategories = {"cpu_profiler", "blink"};
+    traceConfig->SetIncludedCategories(includeCategories);
+    params1->SetTraceConfig(traceConfig);
+    std::string categories1 = TracingImpl::GetCategoriesFromStartParams(params1);
+    ASSERT_TRUE(categories1 == "cpu_profiler,blink");
+
+    auto params2 = std::make_unique<StartParams>();
+    std::unique_ptr<TraceConfig> traceConfig2 = std::make_unique<TraceConfig>();
+    params2->SetTraceConfig(traceConfig2);
+    std::string categories2 = TracingImpl::GetCategoriesFromStartParams(params2);
+    ASSERT_TRUE(categories2 == "");
+
+    auto params3 = std::make_unique<StartParams>();
+    std::unique_ptr<TraceConfig> traceConfig3 = nullptr;
+    params3->SetTraceConfig(traceConfig3);
+    std::string categories3 = TracingImpl::GetCategoriesFromStartParams(params3);
+    ASSERT_TRUE(categories3 == "");
+
+    auto params4 = std::make_unique<StartParams>();
+    std::unique_ptr<TraceConfig> traceConfig4 = std::make_unique<TraceConfig>();
+    std::vector<std::string> includeCategories1 = {};
+    traceConfig4->SetIncludedCategories(includeCategories1);
+    params4->SetTraceConfig(traceConfig4);
+    std::string categories4 = TracingImpl::GetCategoriesFromStartParams(params4);
+    ASSERT_TRUE(categories4 == "");
+
+    std::string categories5 = TracingImpl::GetCategoriesFromStartParams(nullptr);
+    ASSERT_TRUE(categories5 == "");
+}
+
 HWTEST_F_L0(TracingImplTest, FrontendBufferUsageTest)
 {
     std::string result = "";
