@@ -50,6 +50,6 @@ $ ./build.sh --product-name rk3568 --build-target libark_ecma_debugger
 
 ## 相关仓<a name="section0005"></a>
 
-**[arkcompiler\_toolchain](https://gitee.com/openharmony/arkcompiler_toolchain)**
+**[arkcompiler\_toolchain](https://gitcode.com/openharmony/arkcompiler_toolchain)**
 
-[arkcompiler\_ets\_runtime](https://gitee.com/openharmony/arkcompiler_ets_runtime)
+[arkcompiler\_ets\_runtime](https://gitcode.com/openharmony/arkcompiler_ets_runtime)
