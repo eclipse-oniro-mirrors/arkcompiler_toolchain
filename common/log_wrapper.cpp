@@ -63,6 +63,7 @@ void StdLog::PrintLog(LogLevel level, const char* fmt, ...)
 
     char buf[MAX_BUFFER_SIZE];
     if (vsnprintf_s(buf, sizeof(buf), sizeof(buf) - 1, formatted.c_str(), args) < 0 && errno == EINVAL) {
+        va_end(args);
         return;
     }
     va_end(args);
