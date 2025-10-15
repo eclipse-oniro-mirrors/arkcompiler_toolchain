@@ -141,15 +141,15 @@ HWTEST_F_L0(DebuggerServiceTest, SaveAllBreakpointsTest)
     const char *message = "{\"id\":0,\"method\":\"Debugger.saveAllPossibleBreakpoints\","
         "\"params\":{\"locations\":{\"entry|entry|1.0.0|src/main/ets/pages/Index.ts\":"
         "[{\"lineNumber\":59,\"columnNumber\":16}]}}}";
-    DebugInput debugMessage = OperateDebugMessage(nullptr, message);
-    ASSERT_TRUE(debugMessage.data == nullptr && debugMessage.size == 0);
+    DebugResponse debugMessage = OperateDebugMessage(nullptr, message);
+    ASSERT_TRUE(debugMessage.response == nullptr && debugMessage.size == 0);
 
     debugMessage = OperateDebugMessage(ecmaVm, message);
-    ASSERT_TRUE(debugMessage.data == nullptr && debugMessage.size == 0);
+    ASSERT_TRUE(debugMessage.response == nullptr && debugMessage.size == 0);
 
     InitializeDebugger(ecmaVm, nullptr);
     debugMessage = OperateDebugMessage(ecmaVm, message);
-    ASSERT_TRUE(debugMessage.data != nullptr && debugMessage.size != 0);
+    ASSERT_TRUE(debugMessage.response != nullptr && debugMessage.size != 0);
     UninitializeDebugger(ecmaVm);
 }
 
@@ -157,15 +157,15 @@ HWTEST_F_L0(DebuggerServiceTest, RemoveBreakpointTest)
 {
     const char *message = "{\"id\":0,\"method\":\"Debugger.removeBreakpointsByUrl\","
         "\"params\":{\"url\":\"entry|entry|1.0.0|src/main/ets/pages/Index.ts\"}}";
-    DebugInput debugMessage = OperateDebugMessage(nullptr, message);
-    ASSERT_TRUE(debugMessage.data == nullptr && debugMessage.size == 0);
+    DebugResponse debugMessage = OperateDebugMessage(nullptr, message);
+    ASSERT_TRUE(debugMessage.response == nullptr && debugMessage.size == 0);
 
     debugMessage = OperateDebugMessage(ecmaVm, message);
-    ASSERT_TRUE(debugMessage.data == nullptr && debugMessage.size == 0);
+    ASSERT_TRUE(debugMessage.response == nullptr && debugMessage.size == 0);
 
     InitializeDebugger(ecmaVm, nullptr);
     debugMessage = OperateDebugMessage(ecmaVm, message);
-    ASSERT_TRUE(debugMessage.data != nullptr && debugMessage.size != 0);
+    ASSERT_TRUE(debugMessage.response != nullptr && debugMessage.size != 0);
     UninitializeDebugger(ecmaVm);
 }
 
@@ -174,39 +174,39 @@ HWTEST_F_L0(DebuggerServiceTest, SetBreakpointTest)
     const char *message = "{\"id\":0,\"method\":\"Debugger.getPossibleAndSetBreakpointByUrl\","
         "\"params\":{\"locations\":[{\"url\":\"entry|entry|1.0.0|src/main/ets/pages/Index.ts\","
         "\"lineNumber\":59,\"columnNumber\":16}]}}";
-    DebugInput debugMessage = OperateDebugMessage(nullptr, message);
-    ASSERT_TRUE(debugMessage.data == nullptr && debugMessage.size == 0);
+    DebugResponse debugMessage = OperateDebugMessage(nullptr, message);
+    ASSERT_TRUE(debugMessage.response == nullptr && debugMessage.size == 0);
 
     debugMessage = OperateDebugMessage(ecmaVm, message);
-    ASSERT_TRUE(debugMessage.data == nullptr && debugMessage.size == 0);
+    ASSERT_TRUE(debugMessage.response == nullptr && debugMessage.size == 0);
 
     InitializeDebugger(ecmaVm, nullptr);
     debugMessage = OperateDebugMessage(ecmaVm, message);
-    ASSERT_TRUE(debugMessage.data != nullptr && debugMessage.size != 0);
+    ASSERT_TRUE(debugMessage.response != nullptr && debugMessage.size != 0);
     UninitializeDebugger(ecmaVm);
 }
 
 HWTEST_F_L0(DebuggerServiceTest, GetCallFramesTest)
 {
-    DebugInput debugMessage = GetCallFrames(nullptr);
-    ASSERT_TRUE(debugMessage.data == nullptr && debugMessage.size == 0);
+    DebugResponse debugMessage = GetCallFrames(nullptr);
+    ASSERT_TRUE(debugMessage.response == nullptr && debugMessage.size == 0);
 
     debugMessage = GetCallFrames(ecmaVm);
-    ASSERT_TRUE(debugMessage.data == nullptr && debugMessage.size == 0);
+    ASSERT_TRUE(debugMessage.response == nullptr && debugMessage.size == 0);
 
     InitializeDebugger(ecmaVm, nullptr);
     debugMessage = GetCallFrames(ecmaVm);
-    ASSERT_FALSE(debugMessage.data != nullptr && debugMessage.size != 0);
+    ASSERT_FALSE(debugMessage.response != nullptr && debugMessage.size != 0);
     UninitializeDebugger(ecmaVm);
 }
 
 HWTEST_F_L0(DebuggerServiceTest, OperateDebugMessageTest_0)
 {
-    DebugInput debugMessage = OperateDebugMessage(nullptr, nullptr);
-    ASSERT_TRUE(debugMessage.data == nullptr && debugMessage.size == 0);
+    DebugResponse debugMessage = OperateDebugMessage(nullptr, nullptr);
+    ASSERT_TRUE(debugMessage.response == nullptr && debugMessage.size == 0);
 
     debugMessage = OperateDebugMessage(ecmaVm, nullptr);
-    ASSERT_TRUE(debugMessage.data == nullptr && debugMessage.size == 0);
+    ASSERT_TRUE(debugMessage.response == nullptr && debugMessage.size == 0);
 
     std::string msg = std::string() +
         R"({
@@ -217,28 +217,28 @@ HWTEST_F_L0(DebuggerServiceTest, OperateDebugMessageTest_0)
     const char *message1 = msg.c_str();
     InitializeDebugger(ecmaVm, nullptr);
     debugMessage = OperateDebugMessage(ecmaVm, message1);
-    ASSERT_TRUE(debugMessage.data == nullptr && debugMessage.size == 0);
+    ASSERT_TRUE(debugMessage.response == nullptr && debugMessage.size == 0);
 
     const char *message2 = "{\"id\":0,\"method\":\"Debugger.getPossibleAndSetBreakpointByUrl\","
         "\"params\":{\"locations\":[{\"url\":\"entry|entry|1.0.0|src/main/ets/pages/Index.ts\","
         "\"lineNumber\":59,\"columnNumber\":16}]}}";
     debugMessage = OperateDebugMessage(ecmaVm, message2);
-    ASSERT_TRUE(debugMessage.data != nullptr && debugMessage.size != 0);
+    ASSERT_TRUE(debugMessage.response != nullptr && debugMessage.size != 0);
     UninitializeDebugger(ecmaVm);
 }
 
 HWTEST_F_L0(DebuggerServiceTest, OperateDebugMessageTest_1)
 {
     const char *message = "{\"id\":0,\"method\":\"Runtime.getProperties\",\"params\":{\"objectId\":\"1\"}}";
-    DebugInput debugMessage = OperateDebugMessage(nullptr, message);
-    ASSERT_TRUE(debugMessage.data == nullptr && debugMessage.size == 0);
+    DebugResponse debugMessage = OperateDebugMessage(nullptr, message);
+    ASSERT_TRUE(debugMessage.response == nullptr && debugMessage.size == 0);
 
     debugMessage = OperateDebugMessage(ecmaVm, message);
-    ASSERT_TRUE(debugMessage.data == nullptr && debugMessage.size == 0);
+    ASSERT_TRUE(debugMessage.response == nullptr && debugMessage.size == 0);
 
     InitializeDebugger(ecmaVm, nullptr);
     debugMessage = OperateDebugMessage(ecmaVm, message);
-    ASSERT_TRUE(debugMessage.data != nullptr && debugMessage.size != 0);
+    ASSERT_TRUE(debugMessage.response != nullptr && debugMessage.size != 0);
     UninitializeDebugger(ecmaVm);
 }
 }  // namespace panda::test

@@ -54,8 +54,8 @@ using WaitForDebugger = void(*)(void*);
 using OnMessage = void(*)(void*, std::string&&);
 using ProcessMessage = void(*)(void*);
 using GetDispatchStatus = int32_t(*)(void*);
-using GetCallFrames = DebugInput(*)(void*);
-using OperateDebugMessage = DebugInput(*)(void*, const char*);
+using GetCallFrames = DebugResponse(*)(void*);
+using OperateDebugMessage = DebugResponse(*)(void*, const char*);
 
 SetDebugApp g_setDebugApp = nullptr;
 OnMessage g_onMessage = nullptr;
@@ -567,7 +567,7 @@ void StoreDebuggerInfo(int tid, void* vm, const DebuggerPostTask& debuggerPostTa
 
 // The returned pointer must be released using free() after it is no longer needed.
 // Failure to release the memory will result in memory leaks.
-DebugInput GetJsBacktrace()
+DebugResponse GetJsBacktrace()
 {
 #if defined(OHOS_PLATFORM)
     void* vm = GetEcmaVM(Inspector::GetThreadOrTaskId());
@@ -581,7 +581,7 @@ DebugInput GetJsBacktrace()
 #endif
 }
 
-DebugInput OperateJsDebugMessage([[maybe_unused]] const char* message)
+DebugResponse OperateJsDebugMessage([[maybe_unused]] const char* message)
 {
 #if defined(OHOS_PLATFORM)
     if (message == nullptr) {

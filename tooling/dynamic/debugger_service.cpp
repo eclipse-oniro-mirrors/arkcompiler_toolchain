@@ -104,8 +104,7 @@ int32_t GetDispatchStatus(const ::panda::ecmascript::EcmaVM *vm)
     return ProtocolHandler::DispatchStatus::UNKNOWN;
 }
 
-// Return the dynamically allocated string (must be freed by the caller)
-DebugInput GetCallFrames(const ::panda::ecmascript::EcmaVM *vm)
+DebugResponse GetCallFrames(const ::panda::ecmascript::EcmaVM *vm)
 {
     if (vm == nullptr || vm->GetJsDebuggerManager() == nullptr) {
         LOG_DEBUGGER(ERROR) << "VM has already been destroyed";
@@ -123,17 +122,17 @@ DebugInput GetCallFrames(const ::panda::ecmascript::EcmaVM *vm)
     }
     std::string info = dispatcher->GetJsFrames();
     auto size = info.size();
-    char* data = new char[size + 1]();
-    int result = memcpy_s(data, size + 1, info.c_str(), size);
+    char* response = new char[size + 1]();
+    int result = memcpy_s(response, size + 1, info.c_str(), size);
     if (result != 0) {
         LOG_DEBUGGER(ERROR) << "GetCallFrames: Memory copy failed";
-        delete[] data;
+        delete[] response;
         return {0, nullptr};
     }
-    return {size, data};
+    return {size, response};
 }
 
-DebugInput OperateDebugMessage(const ::panda::ecmascript::EcmaVM *vm, const char* message)
+DebugResponse OperateDebugMessage(const ::panda::ecmascript::EcmaVM *vm, const char* message)
 {
     if (message == nullptr) {
         LOG_DEBUGGER(ERROR) << "OperateDebugMessage: message is null";
@@ -159,13 +158,13 @@ DebugInput OperateDebugMessage(const ::panda::ecmascript::EcmaVM *vm, const char
         return {0, nullptr};
     }
     auto size = info.value().size();
-    char* data = new char[size + 1]();
-    int result = memcpy_s(data, size + 1, info.value().c_str(), size);
+    char* response = new char[size + 1]();
+    int result = memcpy_s(response, size + 1, info.value().c_str(), size);
     if (result != 0) {
         LOG_DEBUGGER(ERROR) << "OperateDebugMessage: Memory copy failed";
-        delete[] data;
+        delete[] response;
         return {0, nullptr};
     }
-    return {size, data};
+    return {size, response};
 }
 }  // namespace panda::ecmascript::tooling
