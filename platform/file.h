@@ -47,5 +47,4 @@ using fd_t = int;
 void FdsanExchangeOwnerTag(fd_t fd);
 void FdsanClose(fd_t fd);
 } // namespace OHOS::ArkCompiler::Toolchain
-
 #endif // ARKCOMPILER_TOOLCHAIN_PLATFORM_FILE_H
