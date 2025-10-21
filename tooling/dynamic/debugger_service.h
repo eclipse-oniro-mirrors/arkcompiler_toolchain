@@ -26,9 +26,9 @@ namespace panda::ecmascript {
 class EcmaVM;
 }  // namespace panda::ecmascript
 
-struct DebugInput {
+struct DebugResponse {
     size_t size;
-    char* data;
+    char* response;
 };
 
 namespace panda::ecmascript::tooling {
@@ -51,9 +51,11 @@ TOOLCHAIN_EXPORT void ProcessMessage(const ::panda::ecmascript::EcmaVM *vm);
 
 TOOLCHAIN_EXPORT int32_t GetDispatchStatus(const ::panda::ecmascript::EcmaVM *vm);
 
-TOOLCHAIN_EXPORT DebugInput GetCallFrames(const ::panda::ecmascript::EcmaVM *vm);
+// Return the dynamically allocated string (must be freed by the caller)
+TOOLCHAIN_EXPORT DebugResponse GetCallFrames(const ::panda::ecmascript::EcmaVM *vm);
 
-TOOLCHAIN_EXPORT DebugInput OperateDebugMessage(const ::panda::ecmascript::EcmaVM *vm, const char* message);
+// Return the dynamically allocated string (must be freed by the caller)
+TOOLCHAIN_EXPORT DebugResponse OperateDebugMessage(const ::panda::ecmascript::EcmaVM *vm, const char* message);
 
 TOOLCHAIN_EXPORT void SetDebugApp(::panda::ecmascript::EcmaVM *vm);
 
