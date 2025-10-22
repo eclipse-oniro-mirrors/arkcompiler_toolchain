@@ -132,7 +132,7 @@ bool DebuggerImpl::CheckScriptParsed([[maybe_unused]] const std::string &fileNam
 #if !defined(PANDA_TARGET_WINDOWS) && !defined(PANDA_TARGET_MACOS) \
     && !defined(PANDA_TARGET_ANDROID) && !defined(PANDA_TARGET_IOS) \
     && !defined(PANDA_TARGET_LINUX)
-    if (fileName.substr(0, DATA_APP_PATH.length()) != DATA_APP_PATH) {
+    if (!IsApplicationFile(fileName)) {
         LOG_DEBUGGER(DEBUG) << "CheckScriptParsed: unsupport file: " << fileName;
         return false;
     }
@@ -143,6 +143,14 @@ bool DebuggerImpl::CheckScriptParsed([[maybe_unused]] const std::string &fileNam
         return false;
     }
 
+    return true;
+}
+
+bool DebuggerImpl::IsApplicationFile(const std::string &fileName)
+{
+    if (fileName.empty() || fileName.substr(0, DATA_APP_PATH.length()) != DATA_APP_PATH) {
+        return false;
+    }
     return true;
 }
 
