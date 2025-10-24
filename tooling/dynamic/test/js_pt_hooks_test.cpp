@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -95,6 +95,7 @@ HWTEST_F_L0(JSPtHooksTest, SingleStepTest)
     EntityId methodId(0);
     uint32_t bytecodeOffset = 0;
     JSPtLocation ptLocation4(nullptr, methodId, bytecodeOffset);
+    jspthooks->SingleStep(ptLocation4);
     ASSERT_NE(jspthooks, nullptr);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -132,7 +132,7 @@ bool DebuggerImpl::CheckScriptParsed([[maybe_unused]] const std::string &fileNam
 #if !defined(PANDA_TARGET_WINDOWS) && !defined(PANDA_TARGET_MACOS) \
     && !defined(PANDA_TARGET_ANDROID) && !defined(PANDA_TARGET_IOS) \
     && !defined(PANDA_TARGET_LINUX)
-    if (fileName.substr(0, DATA_APP_PATH.length()) != DATA_APP_PATH) {
+    if (!IsApplicationFile(fileName)) {
         LOG_DEBUGGER(DEBUG) << "CheckScriptParsed: unsupport file: " << fileName;
         return false;
     }
@@ -144,6 +144,14 @@ bool DebuggerImpl::CheckScriptParsed([[maybe_unused]] const std::string &fileNam
         return false;
     }
 
+    return true;
+}
+
+bool DebuggerImpl::IsApplicationFile(const std::string &fileName)
+{
+    if (fileName.empty() || fileName.substr(0, DATA_APP_PATH.length()) != DATA_APP_PATH) {
+        return false;
+    }
     return true;
 }
 

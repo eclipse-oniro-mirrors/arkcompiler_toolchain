@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -119,6 +119,74 @@ HWTEST_F_L0(DebuggerImplTest, NotifyScriptParsed__002)
     // DebuggerImpl::NotifyScriptParsed -- fileName.substr(0, DATA_APP_PATH.length()) != DATA_APP_PATH
     std::string strFilename = "";
     EXPECT_FALSE(debuggerImpl->NotifyScriptParsed(strFilename, ""));
+    ecmaVm->GetJsDebuggerManager()->SetIsDebugApp(false);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(false);
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, IsApplicationFile__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    ecmaVm->GetJsDebuggerManager()->SetIsDebugApp(true);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
+    // DebuggerImpl::IsApplicationFile -- Empty fileName passed in
+    std::string strFilename = "";
+    EXPECT_FALSE(debuggerImpl->IsApplicationFile(strFilename));
+    ecmaVm->GetJsDebuggerManager()->SetIsDebugApp(false);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(false);
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, IsApplicationFile__002)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    ecmaVm->GetJsDebuggerManager()->SetIsDebugApp(true);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
+    // DebuggerImpl::IsApplicationFile -- non-application fileName passed in
+    std::string strFilename = "fileName/someFile";
+    EXPECT_FALSE(debuggerImpl->IsApplicationFile(strFilename));
+    strFilename = "/fileName/someFile";
+    EXPECT_FALSE(debuggerImpl->IsApplicationFile(strFilename));
+    ecmaVm->GetJsDebuggerManager()->SetIsDebugApp(false);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(false);
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, IsApplicationFile__003)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    ecmaVm->GetJsDebuggerManager()->SetIsDebugApp(true);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
+    // DebuggerImpl::IsApplicationFile -- legit fileName passed in
+    std::string strFilename = "/data/someDir/someFile";
+    EXPECT_TRUE(debuggerImpl->IsApplicationFile(strFilename));
     ecmaVm->GetJsDebuggerManager()->SetIsDebugApp(false);
     ecmaVm->GetJsDebuggerManager()->SetDebugMode(false);
     if (protocolChannel) {
