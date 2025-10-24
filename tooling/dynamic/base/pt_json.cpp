@@ -36,7 +36,7 @@ void PtJson::ReleaseRoot()
 
 std::unique_ptr<PtJson> PtJson::Parse(const std::string &data)
 {
-    cJSON *value = cJSON_ParseWithOpts(data.c_str(), nullptr, true);
+    cJSON *value = cJSON_ParseWithLength(data.c_str(), data.size());
     return std::make_unique<PtJson>(value);
 }
 
