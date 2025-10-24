@@ -178,13 +178,6 @@ bool ThreadState::OnMethodEntry()
 void ThreadState::OnSingleStep(const PtLocation &location, const char *sourceFile)
 {
     ASSERT(!paused_);
-    DebugStepFlags::Get().SetStat2DynInto(true);
-    if (DebugStepFlags::Get().GetDyn2StatInto()) {
-        LOG(DEBUG, DEBUGGER) << "SingleStep from Dynamic";
-        paused_ = true;
-        DebugStepFlags::Get().SetDyn2StatInto(false);
-        return;
-    }
 
     if (breakOnStart_) {
         std::string_view file = sourceFile;
@@ -195,6 +188,14 @@ void ThreadState::OnSingleStep(const PtLocation &location, const char *sourceFil
             pauseReason_ = PauseReason::BREAK_ON_START;
             return;
         }
+    }
+
+    DebugStepFlags::Get().SetStat2DynInto(true);
+    if (DebugStepFlags::Get().GetDyn2StatInto()) {
+        LOG(DEBUG, DEBUGGER) << "ThreadState::OnSingleStep SingleStep from Dynamic";
+        paused_ = true;
+        DebugStepFlags::Get().SetDyn2StatInto(false);
+        return;
     }
 
     if (ShouldStopAtBreakpoint(location)) {

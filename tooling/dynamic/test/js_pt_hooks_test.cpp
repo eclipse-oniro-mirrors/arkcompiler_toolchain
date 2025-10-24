@@ -95,6 +95,7 @@ HWTEST_F_L0(JSPtHooksTest, SingleStepTest)
     EntityId methodId(0);
     uint32_t bytecodeOffset = 0;
     JSPtLocation ptLocation4(nullptr, methodId, bytecodeOffset);
+    jspthooks->SingleStep(ptLocation4);
     ASSERT_NE(jspthooks, nullptr);
 }
 
