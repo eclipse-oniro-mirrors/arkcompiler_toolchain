@@ -70,7 +70,7 @@ python pytest库的配置文件
 
 - 下载自动化测试项目
 
-  代码仓：https://gitee.com/openharmony/arkcompiler_toolchain
+  代码仓：https://gitcode.com/openharmony/arkcompiler_toolchain
 
   项目目录：`.\arkcompiler_toolchain\test\autotest`
 
