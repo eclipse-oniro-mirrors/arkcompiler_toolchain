@@ -96,6 +96,16 @@ HWTEST_F_L0(DebuggerServiceTest, OnMessageTest)
     ASSERT_TRUE(result.find("Unknown method: Test") != std::string::npos);
 }
 
+HWTEST_F_L0(DebuggerServiceTest, SetDebugAppDebuggerTest)
+{
+    ProtocolHandler *handler = ecmaVm->GetJsDebuggerManager()->GetDebuggerHandler();
+    ASSERT_TRUE(handler != nullptr);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(false);
+    ASSERT_FALSE(ecmaVm->GetJsDebuggerManager()->IsDebugMode());
+    SetDebugApp(ecmaVm);
+    ASSERT_TRUE(ecmaVm->GetJsDebuggerManager()->IsDebugMode());
+}
+
 HWTEST_F_L0(DebuggerServiceTest, WaitForDebuggerTest)
 {
     ProtocolHandler *handler = ecmaVm->GetJsDebuggerManager()->GetDebuggerHandler();

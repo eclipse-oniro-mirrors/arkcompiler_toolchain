@@ -26,8 +26,8 @@ bool Breakpoint::SetLocations(std::set<std::string_view> &sourceFiles, const Deb
 {
     locations_ = debugCache.GetBreakpointLocations(sourceFileFilter_, lineNumber_, sourceFiles);
     if (locations_.empty()) {
-        LOG(WARNING, DEBUGGER) << "Pending breakpoint, 0 locations resolved currently, id = " << GetId();
-        return true;
+        LOG(ERROR, DEBUGGER) << "Pending breakpoint, 0 locations resolved currently, id = " << GetId();
+        return false;
     }
 
     for (auto &location : locations_) {

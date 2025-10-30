@@ -1761,6 +1761,7 @@ private:
     std::vector<std::unique_ptr<Scope>> scopeChain_ {};
     std::unique_ptr<RemoteObject> this_ {nullptr};
     std::optional<std::unique_ptr<RemoteObject>> returnValue_ {};
+    std::string arktsVersion_ = "Dynamic";
 };
 
 // ========== Heapprofiler types begin

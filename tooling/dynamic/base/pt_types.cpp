@@ -2101,6 +2101,7 @@ std::unique_ptr<PtJson> CallFrame::ToJson() const
         ASSERT(returnValue_.value() != nullptr);
         result->Add("returnValue", returnValue_.value()->ToJson());
     }
+    result->Add("arktsVersion", arktsVersion_.c_str());
 
     return result;
 }
