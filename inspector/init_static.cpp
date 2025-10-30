@@ -93,7 +93,7 @@ bool InitializeArkFunctionsForStatic()
     return true;
 }
 
-void HandleMessage(std::string&& message)
+void OnMessageStatic(std::string&& message)
 {
     g_handleMessageForStatic(std::move(message));
 }

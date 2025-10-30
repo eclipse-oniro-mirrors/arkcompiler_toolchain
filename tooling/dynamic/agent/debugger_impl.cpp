@@ -140,6 +140,7 @@ bool DebuggerImpl::CheckScriptParsed([[maybe_unused]] const std::string &fileNam
 
     // check if Debugable flag is true in module.json
     if (!vm_->GetJsDebuggerManager()->IsDebugApp()) {
+        LOG_DEBUGGER(WARN) << "DebugApp is false";
         return false;
     }
 

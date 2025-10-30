@@ -23,7 +23,7 @@
 namespace OHOS::ArkCompiler::Toolchain {
 bool InitializeArkFunctionsForStatic();
 
-void HandleMessage(std::string &&message);
+void OnMessageStatic(std::string &&message);
 
 int StopDebuggerForStatic();
 

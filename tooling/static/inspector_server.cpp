@@ -126,6 +126,7 @@ void InspectorServer::CallDebuggerPaused(PtThread thread, const std::vector<Brea
         }
 
         params.AddProperty("reason", GetPauseReasonString(pauseReason));
+        params.AddProperty("sessionId", sessionId);
     });
 }
 
@@ -1083,6 +1084,7 @@ void InspectorServer::AddCallFrameInfo(JsonArrayBuilder &callFrames, const CallF
 
         callFrame.AddProperty("this", objThis.value_or(RemoteObject::Undefined()));
         callFrame.AddProperty("canBeRestarted", true);
+        callFrame.AddProperty("arktsVersion", "Static");
     });
 }
 
