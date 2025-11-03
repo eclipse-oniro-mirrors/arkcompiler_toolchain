@@ -98,12 +98,13 @@ HWTEST_F_L0(DebuggerServiceTest, OnMessageTest)
 
 HWTEST_F_L0(DebuggerServiceTest, SetDebugAppDebuggerTest)
 {
+    InitializeDebugger(ecmaVm, nullptr);
     ProtocolHandler *handler = ecmaVm->GetJsDebuggerManager()->GetDebuggerHandler();
     ASSERT_TRUE(handler != nullptr);
-    ecmaVm->GetJsDebuggerManager()->SetDebugMode(false);
-    ASSERT_FALSE(ecmaVm->GetJsDebuggerManager()->IsDebugMode());
+    ecmaVm->GetJsDebuggerManager()->SetIsDebugApp(false);
+    ASSERT_FALSE(ecmaVm->GetJsDebuggerManager()->IsDebugApp());
     SetDebugApp(ecmaVm);
-    ASSERT_TRUE(ecmaVm->GetJsDebuggerManager()->IsDebugMode());
+    ASSERT_TRUE(ecmaVm->GetJsDebuggerManager()->IsDebugApp());
 }
 
 HWTEST_F_L0(DebuggerServiceTest, WaitForDebuggerTest)
