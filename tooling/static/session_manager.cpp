@@ -63,4 +63,12 @@ void SessionManager::EnumerateSessions(const std::function<void(const std::strin
         handler(id, thread);
     }
 }
+
+void SessionManager::GetAllSessions(JsonArrayBuilder& sessionsBuilder) const
+{
+    os::memory::LockHolder lock(mutex_);
+    for (auto &[id, _] : sessions_) {
+        sessionsBuilder.Add(id);
+    }
+}
 }  // namespace ark::tooling::inspector

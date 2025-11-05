@@ -320,6 +320,12 @@ void Inspector::Continue(PtThread thread)
 
     auto *debuggableThread = GetDebuggableThread(thread);
     if ((debuggableThread != nullptr) && debuggableThread->IsPausedByBreakOnStart()) {
+        for (auto &[ptThread, dbgThread] : threads_) {
+            if (&dbgThread != debuggableThread && dbgThread.IsPausedByBreakPoint()) {
+                LOG(INFO, DEBUGGER) << "other debuggableThread is paused by breakpoint";
+                return;
+            }
+        }
         debuggableThread->Continue();
         return;
     }

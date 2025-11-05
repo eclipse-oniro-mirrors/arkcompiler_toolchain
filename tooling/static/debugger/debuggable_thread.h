@@ -128,6 +128,9 @@ public:
     // Checks if the thread was paused by BreakOnStart
     bool IsPausedByBreakOnStart();
 
+    // Checks if the thread was paused by BreakPoint
+    bool IsPausedByBreakPoint();
+
 private:
     using PtThreadEvaluationEngine::EvaluateExpression;
 
