@@ -17,6 +17,7 @@
 #define PANDA_TOOLING_INSPECTOR_SESSION_MANAGER_H
 
 #include "include/tooling/pt_thread.h"
+#include "utils/json_builder.h"
 
 namespace ark::tooling::inspector {
 class SessionManager {
@@ -34,6 +35,7 @@ public:
     [[nodiscard]] PtThread GetThreadBySessionId(const std::string &id) const;
 
     void EnumerateSessions(const std::function<void(const std::string &, PtThread)> &handler) const;
+    void GetAllSessions(JsonArrayBuilder& sessionBuilder) const;
 
 private:
     mutable os::memory::Mutex mutex_;
