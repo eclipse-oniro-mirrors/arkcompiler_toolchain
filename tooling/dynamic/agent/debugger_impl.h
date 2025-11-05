@@ -100,7 +100,6 @@ public:
     DispatchResponse SetMixedDebugEnabled(const SetMixedDebugParams &params);
     DispatchResponse ReplyNativeCalling(const ReplyNativeCallingParams &params);
     DispatchResponse DropFrame(const DropFrameParams &params);
-    DispatchResponse ClientDisconnect();
     DispatchResponse CallFunctionOn(
             const CallFunctionOnParams &params,
             std::unique_ptr<RemoteObject> *outRemoteObject,

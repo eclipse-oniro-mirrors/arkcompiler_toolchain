@@ -15,12 +15,15 @@
 
 #include "agent/debugger_impl.h"
 
-#include "tooling/dynamic/base/pt_base64.h"
 #include "backend/debugger_executor.h"
-#include "protocol_handler.h"
 
 #include "ecmascript/jspandafile/js_pandafile_manager.h"
 #include "ecmascript/napi/jsnapi_helper.h"
+
+#include "platform/process.h"
+#include "protocol_handler.h"
+
+#include "tooling/dynamic/base/pt_base64.h"
 
 namespace panda::ecmascript::tooling {
 using namespace std::placeholders;
@@ -1009,8 +1012,7 @@ DispatchResponse DebuggerImpl::DispatcherImpl::DropFrame(const DispatchRequest &
 // inner message, not SendResponse to outer
 void DebuggerImpl::DispatcherImpl::ClientDisconnect([[maybe_unused]] const DispatchRequest &request)
 {
-    debugger_->Disable();
-    debugger_->ClientDisconnect();
+    ExitProcess();
 }
 
 DispatchResponse DebuggerImpl::DispatcherImpl::CallFunctionOn(const DispatchRequest &request,
@@ -1759,17 +1761,6 @@ DispatchResponse DebuggerImpl::DropFrame(const DropFrameParams &params)
     pauseOnNextByteCode_ = true;
     frontend_.RunIfWaitingForDebugger(vm_);
     debuggerState_ = DebuggerState::ENABLED;
-    return DispatchResponse::Ok();
-}
-
-DispatchResponse DebuggerImpl::ClientDisconnect()
-{
-    DeviceDisconnectCallback cb = vm_->GetDeviceDisconnectCallback();
-    if (cb == nullptr) {
-        LOG_DEBUGGER(DEBUG) << "DebuggerImpl::ClientDisconnect callback is nullptr";
-    } else {
-        cb();
-    }
     return DispatchResponse::Ok();
 }
 
