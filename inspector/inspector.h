@@ -59,9 +59,16 @@ void StoreDebuggerInfo(int tid, void* vm, const DebuggerPostTask& debuggerPostTa
 
 // The returned pointer must be released using free() after it is no longer needed.
 // Failure to release the memory will result in memory leaks.
-DebugResponse GetJsBacktrace();
+const char* GetJsBacktrace();
 
-DebugResponse OperateJsDebugMessage(const char* message);
+const char* OperateJsDebugMessage(const char* message);
+
+// To enhance performance and maintain compatibility with older SDK versions,
+// new interfaces have been introduced alongside existing ones for lldb invocation.
+// These interfaces offer identical functionality, differing only in their return values.
+DebugResponse GetJsBacktraceV1();
+
+DebugResponse OperateJsDebugMessageV1(const char* message);
 #if __cplusplus
 }
 #endif
