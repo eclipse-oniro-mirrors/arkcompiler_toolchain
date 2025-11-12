@@ -185,6 +185,7 @@ host_unittest_action("DebuggerEntryTest") {
   external_deps += [
     "cJSON:cjson_static",
     "ets_runtime:libark_jsruntime",
+    "bounds_checking_function:libsec_shared",
     "icu:shared_icui18n",
     "icu:shared_icuuc",
     "libuv:uv",
@@ -270,6 +271,7 @@ host_unittest_action("DebuggerCInterpTest") {
   external_deps += [
     "cJSON:cjson_static",
     "ets_runtime:libark_jsruntime",
+    "bounds_checking_function:libsec_shared",
     "icu:shared_icui18n",
     "icu:shared_icuuc",
     "libuv:uv",
