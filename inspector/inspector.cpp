@@ -573,7 +573,37 @@ void StoreDebuggerInfo(int tid, void* vm, const DebuggerPostTask& debuggerPostTa
 
 // The returned pointer must be released using free() after it is no longer needed.
 // Failure to release the memory will result in memory leaks.
-DebugResponse GetJsBacktrace()
+const char* GetJsBacktrace()
+{
+#if defined(OHOS_PLATFORM)
+    const char* result = GetJsBacktraceV1().response;
+    if (result != nullptr) {
+        return result;
+    } else {
+        return "";
+    }
+#else
+    return "";
+#endif
+}
+
+const char* OperateJsDebugMessage([[maybe_unused]] const char* message)
+{
+#if defined(OHOS_PLATFORM)
+    const char* result = OperateJsDebugMessageV1(message).response;
+    if (result != nullptr) {
+        return result;
+    } else {
+        return "";
+    }
+#else
+    return "";
+#endif
+}
+
+// The returned pointer must be released using free() after it is no longer needed.
+// Failure to release the memory will result in memory leaks.
+DebugResponse GetJsBacktraceV1()
 {
 #if defined(OHOS_PLATFORM)
     void* vm = GetEcmaVM(Inspector::GetThreadOrTaskId());
@@ -587,7 +617,7 @@ DebugResponse GetJsBacktrace()
 #endif
 }
 
-DebugResponse OperateJsDebugMessage([[maybe_unused]] const char* message)
+DebugResponse OperateJsDebugMessageV1([[maybe_unused]] const char* message)
 {
 #if defined(OHOS_PLATFORM)
     if (message == nullptr) {
