@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -55,13 +55,15 @@ public:
                     return RecvHitBreakInfo(recv, 25);
                 }
             },
+            {SocketAction::SEND, "watch allTest"},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE,
+                [this](auto recv, auto, auto) -> bool { return RecvWatchVariableInfo(recv, "Object"); }},
             {SocketAction::SEND, "p o 1"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE,
                 [this] (auto recv, auto, auto) -> bool {
                     return GetPropertiesInfo(recv);
                 }
             },
-            // reply success and run
             {SocketAction::SEND, "success"},
             {SocketAction::SEND, "resume"},
             {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
@@ -73,7 +75,7 @@ public:
         std::unique_ptr<PtJson> json = PtJson::Parse(recv);
         
         std::unique_ptr<PtJson> result;
-        GTEST_LOG_(ERROR) << "JsWatchModuleTestChannel: SendNotification 3:\n" << json->Stringify();
+        GTEST_LOG_(INFO) << "JsWatchModuleTestChannel: SendNotification 3:\n" << json->Stringify();
         int id;
         Result ret = json->GetInt("id", &id);
         if (ret != Result::SUCCESS) {
@@ -91,7 +93,7 @@ public:
             return false;
         }
         std::unique_ptr<PtJson> value;
-        GTEST_LOG_(ERROR) << "JsWatchModuleTestChannel: object:\n" << innerResult->Get(1)->Stringify();
+        GTEST_LOG_(INFO) << "JsWatchModuleTestChannel: object:\n" << innerResult->Get(1)->Stringify();
         ret = innerResult->Get(1)->GetObject("value", &value);
         if (ret != Result::SUCCESS) {
             return false;
@@ -101,7 +103,7 @@ public:
         if (ret != Result::SUCCESS) {
             return false;
         }
-        GTEST_LOG_(ERROR) << "JsWatchModuleTestChannel: type:\n" << type.c_str();
+        GTEST_LOG_(INFO) << "JsWatchModuleTestChannel: type:\n" << type.c_str();
         if (type == "undefined") {
             return false;
         }
@@ -137,9 +139,46 @@ public:
             breakpoint.find(std::to_string(line)) == std::string::npos) {
             return false;
         }
+        DebuggerClient debuggerClient(0);
+        debuggerClient.PausedReply(std::move(json));
         return true;
     }
+    bool RecvWatchVariableInfo(std::string recv, std::string var_value)
+    {
+        std::unique_ptr<PtJson> json = PtJson::Parse(recv);
+        GTEST_LOG_(INFO) << "JsWatchModuleTestChannel: SendNotification 4:\n" << json->Stringify();
+        Result ret;
+        int id = 0;
+        ret = json->GetInt("id", &id);
+        if (ret != Result::SUCCESS) {
+            return false;
+        }
 
+        std::unique_ptr<PtJson> result = nullptr;
+        ret = json->GetObject("result", &result);
+        if (ret != Result::SUCCESS) {
+            return false;
+        }
+ 
+        std::unique_ptr<PtJson> watchResult = nullptr;
+        ret = result->GetObject("result", &watchResult);
+        if (ret != Result::SUCCESS) {
+            return false;
+        }
+
+        std::string type = "";
+        ret = watchResult->GetString("type", &type);
+        if (ret != Result::SUCCESS || type != "object") {
+            return false;
+        }
+
+        std::string value = "";
+        ret = watchResult->GetString("unserializableValue", &value);
+        if (ret != Result::SUCCESS || value != var_value) {
+            return false;
+        }
+        return true;
+    }
     std::pair<std::string, std::string> GetEntryPoint() override
     {
         return {pandaFile_, entryPoint_};
