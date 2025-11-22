@@ -64,6 +64,12 @@ public:
                     return GetPropertiesInfo(recv);
                 }
             },
+            {SocketAction::SEND, "p allTest"},
+            {SocketAction::RECV, "", ActionRule::CUSTOM_RULE,
+                [this] (auto recv, auto, auto) -> bool {
+                    return GetPropertiesInfo(recv);  //check elements in allTest
+                }
+            },
             {SocketAction::SEND, "success"},
             {SocketAction::SEND, "resume"},
             {SocketAction::RECV, "Debugger.resumed", ActionRule::STRING_CONTAIN},
