@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +20,6 @@
 #include "ecmascript/jspandafile/js_pandafile_manager.h"
 #include "ecmascript/napi/jsnapi_helper.h"
 
-#include "platform/process.h"
 #include "protocol_handler.h"
 
 #include "tooling/dynamic/base/pt_base64.h"
@@ -1012,7 +1011,7 @@ DispatchResponse DebuggerImpl::DispatcherImpl::DropFrame(const DispatchRequest &
 // inner message, not SendResponse to outer
 void DebuggerImpl::DispatcherImpl::ClientDisconnect([[maybe_unused]] const DispatchRequest &request)
 {
-    ExitProcess();
+    debugger_->Disable();
 }
 
 DispatchResponse DebuggerImpl::DispatcherImpl::CallFunctionOn(const DispatchRequest &request,

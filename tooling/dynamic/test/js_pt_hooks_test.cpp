@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,7 @@
 #include "ecmascript/js_tagged_value-inl.h"
 #include "ecmascript/object_factory.h"
 #include "ecmascript/tests/test_helper.h"
+#include "protocol_handler.h"
 
 using namespace panda::ecmascript;
 using namespace panda::ecmascript::tooling;
@@ -90,13 +91,25 @@ HWTEST_F_L0(JSPtHooksTest, ExceptionTest)
 
 HWTEST_F_L0(JSPtHooksTest, SingleStepTest)
 {
-    auto debugger = std::make_unique<DebuggerImpl>(ecmaVm, nullptr, nullptr);
-    std::unique_ptr<JSPtHooks> jspthooks = std::make_unique<JSPtHooks>(debugger.get());
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+
+    std::unique_ptr<JSPtHooks> jspthooks = std::make_unique<JSPtHooks>(debuggerImpl.get());
     EntityId methodId(0);
     uint32_t bytecodeOffset = 0;
     JSPtLocation ptLocation4(nullptr, methodId, bytecodeOffset);
     jspthooks->SingleStep(ptLocation4);
     ASSERT_NE(jspthooks, nullptr);
+
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
 }
 
 HWTEST_F_L0(JSPtHooksTest, VmStartTest)
