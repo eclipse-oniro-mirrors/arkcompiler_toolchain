@@ -205,7 +205,7 @@ void Inspector::SingleStep(PtThread thread, Method *method, const PtLocation &lo
 
 void Inspector::ThreadStart(PtThread thread)
 {
-    os::memory::ReadLockHolder lock(debuggerEventsLock_);
+    os::memory::WriteLockHolder lock(debuggerEventsLock_);
 
     if (thread != PtThread::NONE) {
         inspectorServer_.CallTargetAttachedToTarget(thread);
@@ -233,7 +233,7 @@ void Inspector::ThreadStart(PtThread thread)
 
 void Inspector::ThreadEnd(PtThread thread)
 {
-    os::memory::ReadLockHolder lock(debuggerEventsLock_);
+    os::memory::WriteLockHolder lock(debuggerEventsLock_);
 
     if (thread != PtThread::NONE) {
         inspectorServer_.CallTargetDetachedFromTarget(thread);
@@ -320,6 +320,12 @@ void Inspector::Continue(PtThread thread)
 
     auto *debuggableThread = GetDebuggableThread(thread);
     if ((debuggableThread != nullptr) && debuggableThread->IsPausedByBreakOnStart()) {
+        for (auto &[ptThread, dbgThread] : threads_) {
+            if (&dbgThread != debuggableThread && dbgThread.IsPausedByBreakPoint()) {
+                LOG(INFO, DEBUGGER) << "other debuggableThread is paused by breakpoint";
+                return;
+            }
+        }
         debuggableThread->Continue();
         return;
     }

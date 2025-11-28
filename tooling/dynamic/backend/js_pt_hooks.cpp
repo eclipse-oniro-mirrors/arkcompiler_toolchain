@@ -48,17 +48,25 @@ bool JSPtHooks::SingleStep(const JSPtLocation &location)
 
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
 
-    DebugStepFlags::Get().SetDyn2StatInto(true);
-    if (DebugStepFlags::Get().GetStat2DynInto()) {
-        LOG_DEBUGGER(DEBUG) << "SingleStep from Static";
-        debugger_->NotifyPaused({}, OTHER);
-        DebugStepFlags::Get().SetStat2DynInto(false);
-        return false;
-    }
+    // Break_on_start event will be the very first one
+    // to be verified or notified
     if (UNLIKELY(firstTime_)) {
         firstTime_ = false;
 
         debugger_->NotifyPaused({}, BREAK_ON_START);
+        return false;
+    }
+
+    // Do not set hybrid step flag when executing non-application pandafiles
+    auto jsPandaFile = location.GetJsPandaFile();
+    if (jsPandaFile != nullptr && debugger_->IsApplicationFile(jsPandaFile->GetJSPandaFileDesc().data())) {
+        DebugStepFlags::Get().SetDyn2StatInto(true);
+    }
+
+    if (DebugStepFlags::Get().GetStat2DynInto()) {
+        LOG_DEBUGGER(DEBUG) << "JSPtHooks::SingleStep SingleStep from Static";
+        debugger_->NotifyPaused({}, OTHER);
+        DebugStepFlags::Get().SetStat2DynInto(false);
         return false;
     }
 

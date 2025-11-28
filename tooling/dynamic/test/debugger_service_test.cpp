@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -94,6 +94,17 @@ HWTEST_F_L0(DebuggerServiceTest, OnMessageTest)
     EcmaVM *vm = nullptr;
     OnMessage(vm, "");
     ASSERT_TRUE(result.find("Unknown method: Test") != std::string::npos);
+}
+
+HWTEST_F_L0(DebuggerServiceTest, SetDebugAppDebuggerTest)
+{
+    InitializeDebugger(ecmaVm, nullptr);
+    ProtocolHandler *handler = ecmaVm->GetJsDebuggerManager()->GetDebuggerHandler();
+    ASSERT_TRUE(handler != nullptr);
+    ecmaVm->GetJsDebuggerManager()->SetIsDebugApp(false);
+    ASSERT_FALSE(ecmaVm->GetJsDebuggerManager()->IsDebugApp());
+    SetDebugApp(ecmaVm);
+    ASSERT_TRUE(ecmaVm->GetJsDebuggerManager()->IsDebugApp());
 }
 
 HWTEST_F_L0(DebuggerServiceTest, WaitForDebuggerTest)

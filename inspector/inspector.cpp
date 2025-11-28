@@ -318,18 +318,25 @@ bool InitializeArkFunctions()
 void Inspector::OnMessage(std::string&& msg, bool isHybrid)
 {
     if (isHybrid) {
-        std::regex pattern("\"sessionId\":\\s*(\\d)");
-        std::smatch matches;
-        if (std::regex_search(msg, matches, pattern)) {
-            HandleMessage(std::move(msg));
+        static const std::regex hasKey("\"sessionId\"\\s*:\\s*\"");
+        auto pos = std::regex_search(msg, hasKey);
+        if (!pos) {
+            g_onMessage(vm_, std::move(msg)); //没有sessionId走1.1
         } else {
-            HandleMessage(std::move(msg)); // IDE not adjusted
-            g_onMessage(vm_, std::move(msg));
+            static const std::regex valPattern("\"sessionId\"\\s*:\\s*\"(\\d*)\"");
+            std::smatch m;
+            if (std::regex_search(msg, m, valPattern) &&
+                (m[1].str().empty() || std::all_of(m[1].first, m[1].second, ::isdigit))) {
+                OnMessageStatic(std::move(msg));
+                return;
+            } else {
+                LOGE("sessionId value must be empty or numeric string");
+                return;
+            }
         }
     } else {
         g_onMessage(vm_, std::move(msg));
     }
-
     // message will be processed soon if the debugger thread is in running or waiting status
     if (g_getDispatchStatus(vm_) != DispatchStatus::UNKNOWN) {
         return;
@@ -338,7 +345,6 @@ void Inspector::OnMessage(std::string&& msg, bool isHybrid)
     if (g_getDispatchStatus(vm_) != DispatchStatus::UNKNOWN) {
         return;
     }
-
     // the debugger thread maybe in idle status, so try to post a task to wake it up
     if (debuggerPostTask_ != nullptr) {
         if (tidForSocketPair_ == 0) {

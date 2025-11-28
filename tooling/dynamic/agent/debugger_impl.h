@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,23 +38,26 @@ public:
     DebuggerImpl(const EcmaVM *vm, ProtocolChannel *channel, RuntimeImpl *runtime);
     ~DebuggerImpl();
 
-    // event
+    // Debugger events
     bool NotifyScriptParsed(const std::string &fileName,
                             std::string_view entryPoint = "func_main_0");
-    bool CheckScriptParsed(const std::string &fileName);
     bool NotifyScriptParsedBySendable(JSHandle<Method> method);
-    bool MatchUrlAndFileName(const std::string &url, const std::string &fileName);
     bool NotifySingleStep(const JSPtLocation &location);
     void NotifyPaused(std::optional<JSPtLocation> location, PauseReason reason);
-    void GeneratePausedInfo(PauseReason reason,
-                           std::vector<std::string> &hitBreakpoints,
-                           const Local<JSValueRef> &exception);
     bool NotifyNativeOut();
     void NotifyHandleProtocolCommand();
-    std::vector<void *> GetNativeAddr();
     void NotifyNativeCalling(const void *nativeAddress);
     void NotifyNativeReturn(const void *nativeAddress);
     void NotifyReturnNative();
+
+    // Debugger helper functions
+    bool CheckScriptParsed(const std::string &fileName);
+    bool MatchUrlAndFileName(const std::string &url, const std::string &fileName);
+    void GeneratePausedInfo(PauseReason reason,
+                           std::vector<std::string> &hitBreakpoints,
+                           const Local<JSValueRef> &exception);
+    
+    std::vector<void *> GetNativeAddr();
     bool IsUserCode(const void *nativeAddress);
     void SetDebuggerState(DebuggerState debuggerState);
     void SetNativeOutPause(bool nativeOutPause);
@@ -63,6 +66,7 @@ public:
     bool GenerateAsyncFrames(std::shared_ptr<AsyncStack> asyncStack, bool skipTopFrame);
     bool GenerateAsyncFrame(StackFrame *stackFrame, const FrameHandler *frameHandler);
     void SetPauseOnNextByteCode(bool pauseOnNextByteCode);
+    bool IsApplicationFile(const std::string &fileName);
 
     DispatchResponse ContinueToLocation(const ContinueToLocationParams &params);
     DispatchResponse Enable(const EnableParams &params, UniqueDebuggerId *id);

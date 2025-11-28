@@ -293,4 +293,9 @@ bool DebuggableThread::IsPausedByBreakOnStart()
     return state_.IsPaused() && (state_.GetPauseReason() == PauseReason::BREAK_ON_START);
 }
 
+bool DebuggableThread::IsPausedByBreakPoint()
+{
+    os::memory::LockHolder lock(mutex_);
+    return state_.IsPaused() && (state_.GetPauseReason() == PauseReason::OTHER);
+}
 }  // namespace ark::tooling::inspector

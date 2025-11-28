@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 #define PANDA_TOOLING_INSPECTOR_SESSION_MANAGER_H
 
 #include "include/tooling/pt_thread.h"
+#include "libarkbase/utils/json_builder.h"
 
 namespace ark::tooling::inspector {
 class SessionManager {
@@ -34,6 +35,7 @@ public:
     [[nodiscard]] PtThread GetThreadBySessionId(const std::string &id) const;
 
     void EnumerateSessions(const std::function<void(const std::string &, PtThread)> &handler) const;
+    void GetAllSessions(JsonArrayBuilder& sessionBuilder) const;
 
 private:
     mutable os::memory::Mutex mutex_;
