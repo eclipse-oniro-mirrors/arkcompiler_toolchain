@@ -44,8 +44,6 @@ void JSPtHooks::Exception([[maybe_unused]] const JSPtLocation &location)
 
 bool JSPtHooks::SingleStep(const JSPtLocation &location)
 {
-    LOG_DEBUGGER(DEBUG) << "JSPtHooks: SingleStep => " << location.GetBytecodeOffset();
-
     [[maybe_unused]] LocalScope scope(debugger_->vm_);
 
     // Break_on_start event will be the very first one
