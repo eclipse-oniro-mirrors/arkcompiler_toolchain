@@ -52,12 +52,6 @@ if (!is_mingw && !is_mac && target_os != "ios") {
   ]
 }
 
-if (is_mingw) {
-  debugger_sources += [ "$toolchain_root/platform/windows/process.cpp" ]
-} else {
-  debugger_sources += [ "$toolchain_root/platform/unix/process.cpp" ]
-}
-
 ohos_source_set("libark_ecma_debugger_set") {
   stack_protector_ret = true
   sources = debugger_sources
