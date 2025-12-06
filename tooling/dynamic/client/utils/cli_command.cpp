@@ -235,6 +235,10 @@ void CliCommand::CreateOtherCommandMap()
 ErrCode CliCommand::HeapProfilerCommand(const std::string &cmd)
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return ErrCode::ERR_FAIL;
+    }
     DomainManager &domainManager = session->GetDomainManager();
     HeapProfilerClient &heapProfilerClient = domainManager.GetHeapProfilerClient();
     VecStr argList = GetArgList();
@@ -272,6 +276,10 @@ ErrCode CliCommand::HeapProfilerCommand(const std::string &cmd)
 ErrCode CliCommand::CpuProfileCommand(const std::string &cmd)
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return ErrCode::ERR_FAIL;
+    }
     DomainManager &domainManager = session->GetDomainManager();
     ProfilerClient &profilerClient = domainManager.GetProfilerClient();
     ProfilerSingleton &pro = session->GetProfilerSingleton();
@@ -322,6 +330,10 @@ ErrCode CliCommand::DebuggerCommand(const std::string &cmd)
 
     bool result = false;
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return ErrCode::ERR_FAIL;
+    }
     DebuggerClient &debuggerCli = session->GetDomainManager().GetDebuggerClient();
     
     result = debuggerCli.DispatcherCmd(cmd);
@@ -337,6 +349,10 @@ ErrCode CliCommand::RuntimeCommand(const std::string &cmd)
     }
     bool result = false;
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return ErrCode::ERR_FAIL;
+    }
     RuntimeClient &runtimeClient = session->GetDomainManager().GetRuntimeClient();
     
     result = runtimeClient.DispatcherCmd(cmd);
@@ -353,6 +369,10 @@ ErrCode CliCommand::BreakCommand(const std::string &cmd)
 {
     bool result = false;
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return ErrCode::ERR_FAIL;
+    }
     DebuggerClient &debuggerCli = session->GetDomainManager().GetDebuggerClient();
     BreakPointManager &breakpointManager = session->GetBreakPointManager();
     std::vector<Breaklocation> breaklist_ = breakpointManager.Getbreaklist();
@@ -383,6 +403,10 @@ ErrCode CliCommand::SetSymbolicBreakpointsCommand(const std::string &cmd)
 {
     bool result = false;
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return ErrCode::ERR_FAIL;
+    }
     DebuggerClient &debuggerCli = session->GetDomainManager().GetDebuggerClient();
     BreakPointManager &breakpointManager = session->GetBreakPointManager();
     std::vector<Breaklocation> breaklist_ = breakpointManager.Getbreaklist();
@@ -406,6 +430,10 @@ ErrCode CliCommand::RemoveSymbolicBreakpointsCommand(const std::string &cmd)
 {
     bool result = false;
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return ErrCode::ERR_FAIL;
+    }
     DebuggerClient &debuggerCli = session->GetDomainManager().GetDebuggerClient();
     BreakPointManager &breakpointManager = session->GetBreakPointManager();
     std::vector<Breaklocation> breaklist_ = breakpointManager.Getbreaklist();
@@ -429,6 +457,10 @@ ErrCode CliCommand::RemoveBreakpointsByUrlCommand(const std::string &cmd)
 {
     bool result = false;
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return ErrCode::ERR_FAIL;
+    }
     DebuggerClient &debuggerCli = session->GetDomainManager().GetDebuggerClient();
     if (GetArgList().size() == 1) { //1: one arguments
         if (Utils::IsNumber(GetArgList()[0])) {
@@ -450,6 +482,10 @@ ErrCode CliCommand::DeleteCommand(const std::string &cmd)
 {
     bool result = false;
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return ErrCode::ERR_FAIL;
+    }
     DebuggerClient &debuggerCli = session->GetDomainManager().GetDebuggerClient();
     BreakPointManager &breakpoint = session->GetBreakPointManager();
     if (GetArgList().size() == 1) {
@@ -482,6 +518,10 @@ ErrCode CliCommand::DisplayCommand(const std::string &cmd)
         return ErrCode::ERR_FAIL;
     }
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return ErrCode::ERR_FAIL;
+    }
     BreakPointManager &breakpointManager = session->GetBreakPointManager();
     breakpointManager.Show();
     OutputCommand(cmd, true);
@@ -491,6 +531,10 @@ ErrCode CliCommand::DisplayCommand(const std::string &cmd)
 ErrCode CliCommand::InfosourceCommand(const std::string &cmd)
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return ErrCode::ERR_FAIL;
+    }
     SourceManager &sourceManager = session->GetSourceManager();
     if (GetArgList().size() > 1) {
         OutputCommand(cmd, false);
@@ -511,6 +555,10 @@ ErrCode CliCommand::InfosourceCommand(const std::string &cmd)
 ErrCode CliCommand::ListCommand(const std::string &cmd)
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return ErrCode::ERR_FAIL;
+    }
     SourceManager &sourceManager = session->GetSourceManager();
     WatchManager &watchManager = session->GetWatchManager();
     if (!watchManager.GetDebugState()) {
@@ -549,6 +597,10 @@ ErrCode CliCommand::StepCommand(const std::string &cmd)
     }
     bool result = false;
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return ErrCode::ERR_FAIL;
+    }
     DebuggerClient &debuggerCli = session->GetDomainManager().GetDebuggerClient();
     RuntimeClient &runtimeClient = session->GetDomainManager().GetRuntimeClient();
     runtimeClient.SetIsInitializeTree(true);
@@ -564,6 +616,10 @@ ErrCode CliCommand::ShowstackCommand(const std::string &cmd)
         return ErrCode::ERR_FAIL;
     }
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return ErrCode::ERR_FAIL;
+    }
     StackManager &stackManager = session->GetStackManager();
     stackManager.ShowCallFrames();
     OutputCommand(cmd, true);
@@ -579,6 +635,10 @@ ErrCode CliCommand::PrintCommand(const std::string &cmd)
     }
     bool result = false;
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return ErrCode::ERR_FAIL;
+    }
     RuntimeClient &runtimeClient = session->GetDomainManager().GetRuntimeClient();
     if (GetArgList().size() == 1) {
         if (!Utils::IsNumber(GetArgList()[0])) {
@@ -627,6 +687,10 @@ ErrCode CliCommand::WatchCommand(const std::string &cmd)
         return ErrCode::ERR_FAIL;
     }
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return ErrCode::ERR_FAIL;
+    }
     WatchManager &watchManager = session->GetWatchManager();
     watchManager.AddWatchInfo(GetArgList()[0]);
     if (watchManager.GetDebugState()) {
@@ -714,6 +778,10 @@ ErrCode CliCommand::TestCommand(const std::string &cmd)
 {
     if (cmd == "success" || cmd == "fail") {
         Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+        if (session == nullptr) {
+            LOGE("get session by id %{public}u failed", sessionId_);
+            return ErrCode::ERR_FAIL;
+        }
         TestClient &testClient = session->GetDomainManager().GetTestClient();
         testClient.DispatcherCmd(cmd);
     } else {

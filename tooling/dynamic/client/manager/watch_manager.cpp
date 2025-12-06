@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,6 +28,10 @@ WatchManager::WatchManager(uint32_t sessionId)
 void WatchManager::SendRequestWatch(const int32_t &watchInfoIndex, const std::string &callFrameId)
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return;
+    }
     uint32_t id = session->GetMessageId();
     watchInfoMap_.emplace(id, watchInfoIndex);
 
@@ -57,6 +61,10 @@ void WatchManager::SendRequestWatch(const int32_t &watchInfoIndex, const std::st
 void WatchManager::GetPropertiesCommand(const int32_t &watchInfoIndex, const std::string &objectId)
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return;
+    }
     uint32_t id = session->GetMessageId();
     watchInfoMap_.emplace(id, watchInfoIndex);
 

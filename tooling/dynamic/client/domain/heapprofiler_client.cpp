@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -48,6 +48,10 @@ bool HeapProfilerClient::DispatcherCmd(const std::string &cmd, const std::string
 int HeapProfilerClient::HeapDumpCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idEventMap_.emplace(id, HEAPDUMP);
@@ -71,6 +75,10 @@ int HeapProfilerClient::HeapDumpCommand()
 int HeapProfilerClient::AllocationTrackCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idEventMap_.emplace(id, ALLOCATION);
@@ -92,6 +100,10 @@ int HeapProfilerClient::AllocationTrackCommand()
 int HeapProfilerClient::AllocationTrackStopCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idEventMap_.emplace(id, ALLOCATION_STOP);
@@ -113,6 +125,10 @@ int HeapProfilerClient::AllocationTrackStopCommand()
 int HeapProfilerClient::Enable()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idEventMap_.emplace(id, ENABLE);
@@ -133,6 +149,10 @@ int HeapProfilerClient::Enable()
 int HeapProfilerClient::Disable()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idEventMap_.emplace(id, DISABLE);
@@ -153,6 +173,10 @@ int HeapProfilerClient::Disable()
 int HeapProfilerClient::Samping()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idEventMap_.emplace(id, SAMPLING);
@@ -174,6 +198,10 @@ int HeapProfilerClient::Samping()
 int HeapProfilerClient::SampingStop()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idEventMap_.emplace(id, SAMPLING_STOP);
@@ -194,6 +222,10 @@ int HeapProfilerClient::SampingStop()
 int HeapProfilerClient::CollectGarbage()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idEventMap_.emplace(id, COLLECT_GARBAGE);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,6 +42,10 @@ bool ProfilerClient::DispatcherCmd(const std::string &cmd)
 int ProfilerClient::CpuprofileEnableCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idEventMap_.emplace(id, "cpuprofileenable");
@@ -62,6 +66,10 @@ int ProfilerClient::CpuprofileEnableCommand()
 int ProfilerClient::CpuprofileDisableCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idEventMap_.emplace(id, "cpuprofiledisable");
@@ -82,6 +90,10 @@ int ProfilerClient::CpuprofileDisableCommand()
 int ProfilerClient::CpuprofileCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idEventMap_.emplace(id, "cpuprofile");
@@ -102,6 +114,10 @@ int ProfilerClient::CpuprofileCommand()
 int ProfilerClient::CpuprofileStopCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idEventMap_.emplace(id, "cpuprofilestop");
@@ -122,6 +138,10 @@ int ProfilerClient::CpuprofileStopCommand()
 int ProfilerClient::SetSamplingIntervalCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idEventMap_.emplace(id, "setsamplinginterval");
@@ -176,6 +196,10 @@ void ProfilerClient::RecvProfilerResult(std::unique_ptr<PtJson> json)
     }
 
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return;
+    }
     ProfilerSingleton &pro = session->GetProfilerSingleton();
     std::string fileName = "CPU-" + std::to_string(sessionId_) + "-" + std::string(date) + "T" +
                            std::string(time) + ".cpuprofile";
@@ -206,6 +230,10 @@ bool ProfilerClient::WriteCpuProfileForFile(const std::string &fileName, const s
     ofs.close();
     ofs.clear();
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return false;
+    }
     ProfilerSingleton &pro = session->GetProfilerSingleton();
     pro.SetAddress("/data/");
     return true;

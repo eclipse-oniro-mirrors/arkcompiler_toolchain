@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,10 @@ void SocketMessageThread(void *arg)
 {
     int sessionId = *(uint32_t *)arg;
     Session *session = SessionManager::getInstance().GetSessionById(sessionId);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId);
+        return;
+    }
 
     session->SocketMessageLoop();
 }
@@ -142,6 +146,7 @@ int SessionManager::DelSessionById(uint32_t sessionId)
 {
     Session *session = GetSessionById(sessionId);
     if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId);
         return -1;
     }
     session->Stop();
@@ -173,6 +178,7 @@ int SessionManager::SessionSwitch(uint32_t sessionId)
 {
     Session *session = GetSessionById(sessionId);
     if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId);
         return -1;
     }
     currentSessionId_ = sessionId;
