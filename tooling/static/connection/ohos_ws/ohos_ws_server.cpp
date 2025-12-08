@@ -17,8 +17,8 @@
 
 #include <string_view>
 
-#include "os/thread.h"
-#include "utils/logger.h"
+#include "libarkbase/os/thread.h"
+#include "libarkbase/utils/logger.h"
 
 #include "inspector.h"
 namespace ark::tooling::inspector {

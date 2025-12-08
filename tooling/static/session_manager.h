@@ -17,7 +17,7 @@
 #define PANDA_TOOLING_INSPECTOR_SESSION_MANAGER_H
 
 #include "include/tooling/pt_thread.h"
-#include "utils/json_builder.h"
+#include "libarkbase/utils/json_builder.h"
 
 namespace ark::tooling::inspector {
 class SessionManager {

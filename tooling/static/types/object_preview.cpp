@@ -16,7 +16,7 @@
 #include "types/object_preview.h"
 #include "types/property_descriptor.h"
 
-#include "utils/string_helpers.h"
+#include "libarkbase/utils/string_helpers.h"
 
 namespace ark::tooling::inspector {
 
