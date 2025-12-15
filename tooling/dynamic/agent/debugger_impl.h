@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -162,6 +162,10 @@ public:
 
         DispatchResponse ContinueToLocation(const DispatchRequest &request);
         std::string GetJsFrames();
+        JsDebuggerManager* GetJsDebuggerManager()
+        {
+            return debugger_->vm_->GetJsDebuggerManager();
+        }
         std::optional<std::string> Dispatch(const DispatchRequest &request, bool crossLanguageDebug = false) override;
         DispatchResponse Enable(const DispatchRequest &request, std::unique_ptr<PtBaseReturns> &result);
         DispatchResponse Disable(const DispatchRequest &request);
