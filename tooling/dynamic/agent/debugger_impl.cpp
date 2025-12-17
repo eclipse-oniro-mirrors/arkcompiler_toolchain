@@ -1011,7 +1011,9 @@ DispatchResponse DebuggerImpl::DispatcherImpl::DropFrame(const DispatchRequest &
 // inner message, not SendResponse to outer
 void DebuggerImpl::DispatcherImpl::ClientDisconnect([[maybe_unused]] const DispatchRequest &request)
 {
-    debugger_->Disable();
+    if (GetJsDebuggerManager()->IsDebugMode() && GetJsDebuggerManager()->IsDebugApp()) {
+        debugger_->Disable();
+    }
 }
 
 DispatchResponse DebuggerImpl::DispatcherImpl::CallFunctionOn(const DispatchRequest &request,

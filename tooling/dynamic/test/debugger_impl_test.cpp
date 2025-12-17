@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2005,6 +2005,7 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_ClientDisconnect_02)
     auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
     auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
     ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
+    ecmaVm->GetJsDebuggerManager()->SetIsDebugApp(true);
     std::string msg = std::string() +
         R"({
             "id":0,
@@ -2015,6 +2016,34 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_ClientDisconnect_02)
 
     dispatcherImpl->Dispatch(request);
     EXPECT_FALSE(ecmaVm->GetJsDebuggerManager()->IsDebugMode());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_ClientDisconnect_03)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
+    ecmaVm->GetJsDebuggerManager()->SetIsDebugApp(false);
+    std::string msg = std::string() +
+        R"({
+            "id":0,
+            "method":"Debugger.clientDisconnect",
+            "params":{}
+        })";
+    DispatchRequest request(msg);
+
+    dispatcherImpl->Dispatch(request);
+    EXPECT_TRUE(ecmaVm->GetJsDebuggerManager()->IsDebugMode());
     if (protocolChannel) {
         delete protocolChannel;
         protocolChannel = nullptr;
