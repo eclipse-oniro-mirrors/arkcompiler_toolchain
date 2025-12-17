@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -369,6 +369,25 @@ HWTEST_F_L0(ProfilerImplTest, DispatcherImplStartPreciseCoverage)
         channel = nullptr;
     }
     ASSERT_TRUE(result.find("StartPreciseCoverage not support now") != std::string::npos);
+}
+
+HWTEST_F_L0(ProfilerImplTest, DispatcherImplStartPreciseCoverage_WrongParams)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) { result = temp; };
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto tracing = std::make_unique<ProfilerImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<ProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
+    std::string msg = "";
+    msg += R"({"id":0,"method":"Profiler.startPreciseCoverage","params":{"callCount":"not_a_boolean"}})";
+    DispatchRequest request(msg);
+    dispatcherImpl->Dispatch(request);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+    ASSERT_TRUE(result.find("wrong params") != std::string::npos);
 }
 
 HWTEST_F_L0(ProfilerImplTest, DispatcherImplStartTypeProfile)

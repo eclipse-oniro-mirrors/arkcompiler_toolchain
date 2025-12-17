@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -198,4 +198,60 @@ HWTEST_F_L0(RuntimeImplTest, DispatcherImplGetHeapUsage)
         channel = nullptr;
     }
 }
+
+HWTEST_F_L0(RuntimeImplTest, DispatcherImplDispatchDisable)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<RuntimeImpl::DispatcherImpl>(channel, std::move(runtimeImpl));
+    std::string msg = std::string() + R"({"id":0,"method":"Rumtime.disable","params":{}})";
+    DispatchRequest request1(msg);
+    dispatcherImpl->Dispatch(request1);
+    ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
+    if (channel != nullptr) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(RuntimeImplTest, DispatcherImplDispatchRunIfWaitingForDebugger)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<RuntimeImpl::DispatcherImpl>(channel, std::move(runtimeImpl));
+    std::string msg = std::string() + R"({"id":0,"method":"Rumtime.runIfWaitingForDebugger","params":{}})";
+    DispatchRequest request1(msg);
+    dispatcherImpl->Dispatch(request1);
+    ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
+    if (channel != nullptr) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(RuntimeImplTest, DispatcherImplDispatchGetHeapUsage)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<RuntimeImpl::DispatcherImpl>(channel, std::move(runtimeImpl));
+    std::string msg = std::string() + R"({"id":0,"method":"Rumtime.getHeapUsage","params":{}})";
+    DispatchRequest request1(msg);
+    dispatcherImpl->Dispatch(request1);
+    ASSERT_FALSE(result.empty());
+    ASSERT_TRUE(result.find("usedSize") != std::string::npos);
+    if (channel != nullptr) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
 }  // namespace panda::test
