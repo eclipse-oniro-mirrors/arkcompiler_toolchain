@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -572,8 +572,8 @@ ErrCode CliCommand::ShowstackCommand(const std::string &cmd)
 
 ErrCode CliCommand::PrintCommand(const std::string &cmd)
 {
-    int TWO_ARGS = 2;
-    if (GetArgList().size() > TWO_ARGS) {
+    size_t maxArgs = 3;
+    if (GetArgList().size() > maxArgs) {
         OutputCommand(cmd, false);
         return ErrCode::ERR_FAIL;
     }
@@ -588,8 +588,7 @@ ErrCode CliCommand::PrintCommand(const std::string &cmd)
         VariableManager &variableManager = session->GetVariableManager();
         int32_t objectId = variableManager.FindObjectIdWithIndex(std::stoi(GetArgList()[0]));
         runtimeClient.SetObjectId(std::to_string(objectId));
-    }
-    if (GetArgList().size() == TWO_ARGS) {
+    } else if (GetArgList().size() == maxArgs - 1) {
         if (!Utils::IsNumber(GetArgList()[1])) {
             return ErrCode::ERR_FAIL;
         }
@@ -597,6 +596,19 @@ ErrCode CliCommand::PrintCommand(const std::string &cmd)
         VariableManager &variableManager = session->GetVariableManager();
         int32_t objectId = std::stoi(GetArgList()[1]);
         runtimeClient.SetObjectId(std::to_string(objectId));
+    } else if (GetArgList().size() == maxArgs) {
+        if (!Utils::IsNumber(GetArgList()[0]) || !Utils::IsNumber(GetArgList()[1]) ||
+            !Utils::IsNumber(GetArgList()[maxArgs - 1])) {
+            return ErrCode::ERR_FAIL;
+        }
+        runtimeClient.SetIsInitializeTree(false);
+        VariableManager &variableManager = session->GetVariableManager();
+        int32_t objectId = std::stoi(GetArgList()[0]);
+        int32_t startIndex = std::stoi(GetArgList()[1]);
+        int32_t groupCount = std::stoi(GetArgList()[2]);
+        runtimeClient.SetObjectId(std::to_string(objectId));
+        runtimeClient.SetStartIndex(startIndex);
+        runtimeClient.SetGroupCount(groupCount);
     }
     result = runtimeClient.DispatcherCmd(cmd);
     if (result) {

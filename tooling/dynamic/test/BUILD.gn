@@ -60,6 +60,7 @@ test_js_files = [
   "watch_variable",
   "smart_stepInto",
   "promise",
+  "variable_properties_with_range",
 ]
 
 foreach(file, test_js_files) {

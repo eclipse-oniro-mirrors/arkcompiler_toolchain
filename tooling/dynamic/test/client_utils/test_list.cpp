@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -74,6 +74,7 @@
 #include "tooling/dynamic/test/testcases/js_watch_module_test.h"
 #include "tooling/dynamic/test/testcases/js_watch_variable_test.h"
 #include "tooling/dynamic/test/testcases/js_symbolbreakpoint_test.h"
+#include "tooling/dynamic/test/testcases/js_variable_property_with_range_test.h"
 
 namespace panda::ecmascript::tooling::test {
 static std::string g_currentTestName = "";
@@ -143,6 +144,7 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsSmartStepoutTest", GetJsSmartStepoutTest());
     TestUtil::RegisterTest("JsAccelerateLaunchTest", GetJsAccelerateLaunchTest());
     TestUtil::RegisterTest("JsSymbolicBreakpointTest", GetJsSymbolicBreakpointTest());
+    TestUtil::RegisterTest("JsVariablePropertyWithRangeTest", GetJsVariablePropertyWithRangeTest());
 }
 
 std::vector<const char *> GetTestList()

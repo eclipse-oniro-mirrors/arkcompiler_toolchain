@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -350,7 +350,8 @@ GeneratorFunctionRemoteObject::GeneratorFunctionRemoteObject(const EcmaVM *ecmaV
 ObjectRemoteObject::ObjectRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged,
                                        const std::string &classname)
 {
-    std::string description = DescriptionForObject(ecmaVm, tagged);
+    bool arrayOrContainer = false;
+    std::string description = DescriptionForObject(ecmaVm, tagged, arrayOrContainer);
     SetPreviewValue(description);
     AppendingHashToDescription(ecmaVm, tagged, description);
     AppendingSendableDescription(tagged, description);
@@ -358,13 +359,15 @@ ObjectRemoteObject::ObjectRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> t
         .SetClassName(classname)
         .SetValue(tagged)
         .SetUnserializableValue(description)
-        .SetDescription(description);
+        .SetDescription(description)
+        .SetArrayOrContainer(arrayOrContainer);
 }
 
 ObjectRemoteObject::ObjectRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged,
                                        const std::string &classname, const std::string &subtype)
 {
-    std::string description = DescriptionForObject(ecmaVm, tagged);
+    bool arrayOrContainer = false;
+    std::string description = DescriptionForObject(ecmaVm, tagged, arrayOrContainer);
     SetPreviewValue(description);
     AppendingHashToDescription(ecmaVm, tagged, description);
     AppendingSendableDescription(tagged, description);
@@ -373,16 +376,19 @@ ObjectRemoteObject::ObjectRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> t
         .SetClassName(classname)
         .SetValue(tagged)
         .SetUnserializableValue(description)
-        .SetDescription(description);
+        .SetDescription(description)
+        .SetArrayOrContainer(arrayOrContainer);
 }
 
-std::string ObjectRemoteObject::DescriptionForObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged)
+std::string ObjectRemoteObject::DescriptionForObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged,
+    bool &arrayOrContainer)
 {
     // proxy must be placed in front of all object types
     if (tagged->IsProxy(ecmaVm)) {
         return RemoteObject::ProxyDescription;
     }
     if (tagged->IsArray(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForArray(ecmaVm, Local<ArrayRef>(tagged));
     }
     if (tagged->IsRegExp(ecmaVm)) {
@@ -392,15 +398,19 @@ std::string ObjectRemoteObject::DescriptionForObject(const EcmaVM *ecmaVm, Local
         return DescriptionForDate(ecmaVm, Local<DateRef>(tagged));
     }
     if (tagged->IsMap(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForMap(ecmaVm, Local<MapRef>(tagged));
     }
     if (tagged->IsWeakMap(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForWeakMap(ecmaVm, Local<WeakMapRef>(tagged));
     }
     if (tagged->IsSet(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForSet(ecmaVm, Local<SetRef>(tagged));
     }
     if (tagged->IsWeakSet(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForWeakSet(ecmaVm, Local<WeakSetRef>(tagged));
     }
     if (tagged->IsDataView(ecmaVm)) {
@@ -431,16 +441,48 @@ std::string ObjectRemoteObject::DescriptionForObject(const EcmaVM *ecmaVm, Local
         return DescriptionForSharedArrayBuffer(ecmaVm, Local<ArrayBufferRef>(tagged));
     }
     if (tagged->IsUint8Array(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForUint8Array(ecmaVm, Local<TypedArrayRef>(tagged));
     }
+    if (tagged->IsUint8ClampedArray(ecmaVm)) {
+        arrayOrContainer = true;
+        return DescriptionForUint8ClampedArray(ecmaVm, Local<TypedArrayRef>(tagged));
+    }
     if (tagged->IsInt8Array(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForInt8Array(ecmaVm, Local<TypedArrayRef>(tagged));
     }
+    if (tagged->IsUint16Array(ecmaVm)) {
+        arrayOrContainer = true;
+        return DescriptionForUint16Array(ecmaVm, Local<TypedArrayRef>(tagged));
+    }
     if (tagged->IsInt16Array(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForInt16Array(ecmaVm, Local<TypedArrayRef>(tagged));
     }
+    if (tagged->IsUint32Array(ecmaVm)) {
+        arrayOrContainer = true;
+        return DescriptionForUint32Array(ecmaVm, Local<TypedArrayRef>(tagged));
+    }
     if (tagged->IsInt32Array(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForInt32Array(ecmaVm, Local<TypedArrayRef>(tagged));
+    }
+    if (tagged->IsFloat32Array(ecmaVm)) {
+        arrayOrContainer = true;
+        return DescriptionForFloat32Array(ecmaVm, Local<TypedArrayRef>(tagged));
+    }
+    if (tagged->IsBigInt64Array(ecmaVm)) {
+        arrayOrContainer = true;
+        return DescriptionForBigInt64Array(ecmaVm, Local<TypedArrayRef>(tagged));
+    }
+    if (tagged->IsBigUint64Array(ecmaVm)) {
+        arrayOrContainer = true;
+        return DescriptionForBigUint64Array(ecmaVm, Local<TypedArrayRef>(tagged));
+    }
+    if (tagged->IsFloat64Array(ecmaVm)) {
+        arrayOrContainer = true;
+        return DescriptionForFloat64Array(ecmaVm, Local<TypedArrayRef>(tagged));
     }
     if (tagged->IsJSPrimitiveRef(ecmaVm) && tagged->IsJSPrimitiveNumber(ecmaVm)) {
         return DescriptionForPrimitiveNumber(ecmaVm, tagged);
@@ -482,45 +524,59 @@ std::string ObjectRemoteObject::DescriptionForObject(const EcmaVM *ecmaVm, Local
         return DescriptionForJSListFormat();
     }
     if (tagged->IsArrayList(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForArrayList();
     }
     if (tagged->IsDeque(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForDeque();
     }
     if (tagged->IsHashMap(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForHashMap();
     }
     if (tagged->IsHashSet(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForHashSet();
     }
     if (tagged->IsLightWeightMap(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForLightWeightMap();
     }
     if (tagged->IsLightWeightSet(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForLightWeightSet();
     }
     if (tagged->IsLinkedList(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForLinkedList();
     }
     if (tagged->IsList(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForList();
     }
     if (tagged->IsPlainArray(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForPlainArray();
     }
     if (tagged->IsQueue(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForQueue();
     }
     if (tagged->IsStack(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForStack();
     }
     if (tagged->IsTreeMap(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForTreeMap();
     }
     if (tagged->IsTreeSet(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForTreeSet();
     }
     if (tagged->IsVector(ecmaVm)) {
+        arrayOrContainer = true;
         return DescriptionForVector();
     }
     if (tagged->IsNativePointer(ecmaVm)) {
@@ -774,10 +830,24 @@ std::string ObjectRemoteObject::DescriptionForUint8Array(const EcmaVM *ecmaVm, L
     return description;
 }
 
+std::string ObjectRemoteObject::DescriptionForUint8ClampedArray(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged)
+{
+    uint32_t len = tagged->ByteLength(ecmaVm);
+    std::string description = ("Uint8ClampedArray(" + std::to_string(len) + ")");
+    return description;
+}
+
 std::string ObjectRemoteObject::DescriptionForInt8Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged)
 {
     uint32_t len = tagged->ByteLength(ecmaVm);
     std::string description = ("Int8Array(" + std::to_string(len) + ")");
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForUint16Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged)
+{
+    uint32_t len = tagged->ByteLength(ecmaVm) / NumberSize::BYTES_OF_16BITS;
+    std::string description = ("Uint16Array(" + std::to_string(len) + ")");
     return description;
 }
 
@@ -792,6 +862,41 @@ std::string ObjectRemoteObject::DescriptionForInt32Array(const EcmaVM *ecmaVm, L
 {
     uint32_t len = tagged->ByteLength(ecmaVm) / NumberSize::BYTES_OF_32BITS;
     std::string description = ("Int32Array(" + std::to_string(len) + ")");
+    return description;
+}
+
+std::string ObjectRemoteObject::DescriptionForUint32Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged)
+{
+    uint32_t len = tagged->ByteLength(ecmaVm) / NumberSize::BYTES_OF_32BITS;
+    std::string description = ("Uint32Array(" + std::to_string(len) + ")");
+    return description;
+}
+ 
+std::string ObjectRemoteObject::DescriptionForFloat32Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged)
+{
+    uint32_t len = tagged->ByteLength(ecmaVm) / NumberSize::BYTES_OF_32BITS;
+    std::string description = ("Float32Array(" + std::to_string(len) + ")");
+    return description;
+}
+ 
+std::string ObjectRemoteObject::DescriptionForBigInt64Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged)
+{
+    uint32_t len = tagged->ByteLength(ecmaVm) / NumberSize::BYTES_OF_64BITS;
+    std::string description = ("BigInt64Array(" + std::to_string(len) + ")");
+    return description;
+}
+ 
+std::string ObjectRemoteObject::DescriptionForBigUint64Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged)
+{
+    uint32_t len = tagged->ByteLength(ecmaVm) / NumberSize::BYTES_OF_64BITS;
+    std::string description = ("BigUint64Array(" + std::to_string(len) + ")");
+    return description;
+}
+ 
+std::string ObjectRemoteObject::DescriptionForFloat64Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged)
+{
+    uint32_t len = tagged->ByteLength(ecmaVm) / NumberSize::BYTES_OF_64BITS;
+    std::string description = ("Float64Array(" + std::to_string(len) + ")");
     return description;
 }
 
@@ -1087,6 +1192,9 @@ std::unique_ptr<PtJson> RemoteObject::ToJson() const
     }
     if (objectId_) {
         result->Add("objectId", std::to_string(objectId_.value()).c_str());
+    }
+    if (arrayOrContainer_ && arrayOrContainer_.value()) {
+        result->Add("arrayOrContainer", arrayOrContainer_.value());
     }
 
     return result;

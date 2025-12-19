@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,6 +47,26 @@ public:
         objectId_ = objectId;
     }
 
+    bool HasStartIndex()
+    {
+        return start_.has_value();
+    }
+ 
+    void SetStartIndex(const int32_t start)
+    {
+        start_ = start;
+    }
+ 
+    bool HasGroupCount()
+    {
+        return count_.has_value();
+    }
+ 
+    void SetGroupCount(const int32_t count)
+    {
+        count_ = count;
+    }
+
     void SetIsInitializeTree(const bool &isInitializeTree)
     {
         isInitializeTree_ = isInitializeTree;
@@ -62,6 +82,8 @@ private:
     std::string objectId_ {"0"};
     bool isInitializeTree_ {true};
     int32_t sessionId_;
+    std::optional<int32_t> start_ {};
+    std::optional<int32_t> count_ {};
 };
 } // OHOS::ArkCompiler::Toolchain
 #endif

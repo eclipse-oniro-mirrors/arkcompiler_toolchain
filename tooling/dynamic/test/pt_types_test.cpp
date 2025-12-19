@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -425,7 +425,9 @@ HWTEST_F_L0(PtTypesTest, DescriptionForObjectForDate)
 {
     double input = 123456789.0;
     Local<DateRef> date = DateRef::New(ecmaVm, input);
-    std::string description = ObjectRemoteObject::DescriptionForObject(ecmaVm, date);
+    bool arrayOrContainer = false;
+    std::string description = ObjectRemoteObject::DescriptionForObject(ecmaVm, date, arrayOrContainer);
+    ASSERT_TRUE(!arrayOrContainer);
     ASSERT_TRUE(description.find("GMT") != std::string::npos);
 }
 
@@ -433,7 +435,9 @@ HWTEST_F_L0(PtTypesTest, DescriptionForObjectForPromise)
 {
     Local<PromiseCapabilityRef> capability = PromiseCapabilityRef::New(ecmaVm);
     Local<PromiseRef> promise = capability->GetPromise(ecmaVm);
-    std::string description = ObjectRemoteObject::DescriptionForObject(ecmaVm, promise);
+    bool arrayOrContainer = false;
+    std::string description = ObjectRemoteObject::DescriptionForObject(ecmaVm, promise, arrayOrContainer);
+    ASSERT_TRUE(!arrayOrContainer);
     ASSERT_TRUE(description == "Promise");
 }
 
@@ -937,22 +941,24 @@ HWTEST_F_L0(PtTypesTest, SamplingHeapProfileTransferHead)
 HWTEST_F_L0(PtTypesTest, DescriptionForObjectTest)
 {
     Local<WeakMapRef> weakmap = WeakMapRef::New(ecmaVm);
-    std::string description = ObjectRemoteObject::DescriptionForObject(ecmaVm, weakmap);
+    bool arrayOrContainer = false;
+    std::string description = ObjectRemoteObject::DescriptionForObject(ecmaVm, weakmap, arrayOrContainer);
+    ASSERT_TRUE(arrayOrContainer);
     ASSERT_TRUE(description.find("WeakMap") != std::string::npos);
 
     Local<MapRef> map = MapRef::New(ecmaVm);
     Local<MapIteratorRef> mapiterator = MapIteratorRef::New(ecmaVm, map);
-    description = ObjectRemoteObject::DescriptionForObject(ecmaVm, mapiterator);
+    description = ObjectRemoteObject::DescriptionForObject(ecmaVm, mapiterator, arrayOrContainer);
     ASSERT_TRUE(description.find("MapIterator") != std::string::npos);
 
     Local<SetRef> set = SetRef::New(ecmaVm);
     Local<SetIteratorRef> setiterator = SetIteratorRef::New(ecmaVm, set);
-    description = ObjectRemoteObject::DescriptionForObject(ecmaVm, setiterator);
+    description = ObjectRemoteObject::DescriptionForObject(ecmaVm, setiterator, arrayOrContainer);
     ASSERT_TRUE(description.find("SetIterator") != std::string::npos);
 
     size_t size = 10;
     Local<NativePointerRef> nativepointer = NativePointerRef::New(ecmaVm, ecmaVm, size);
-    description = ObjectRemoteObject::DescriptionForObject(ecmaVm, nativepointer);
+    description = ObjectRemoteObject::DescriptionForObject(ecmaVm, nativepointer, arrayOrContainer);
     std::cout << description << std::endl;
     ASSERT_TRUE(description.find("External") != std::string::npos);
 }
@@ -1093,8 +1099,10 @@ HWTEST_F_L0(PtTypesTest, InvalidUtf16DescriptionTest)
     JSHandle<JSTaggedValue> primitiveStrHandle =
         JSHandle<JSTaggedValue>::Cast(factory->NewJSPrimitiveRef(PrimitiveType::PRIMITIVE_STRING, invalidStrHandle));
     Local<JSValueRef> primitiveStr = JSNApiHelper::ToLocal<JSValueRef>(primitiveStrHandle);
-    std::string primitiveStrDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, primitiveStr);
+    bool arrayOrContainer = false;
+    std::string primitiveStrDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, primitiveStr, arrayOrContainer);
     ASSERT_TRUE(primitiveStrDesc.find(invalidStrInDebugger) != std::string::npos);
+    ASSERT_TRUE(!arrayOrContainer);
 
     // RegExp
     JSHandle<JSHClass> jsRegExpClass = factory->NewEcmaHClass(JSRegExp::SIZE, JSType::JS_REG_EXP);
@@ -1102,36 +1110,40 @@ HWTEST_F_L0(PtTypesTest, InvalidUtf16DescriptionTest)
     jsRegExp->SetOriginalSource(thread, invalidStrHandle.GetTaggedValue());
     JSHandle<JSTaggedValue> jsRegExpHandle = JSHandle<JSTaggedValue>::Cast(jsRegExp);
     Local<RegExpRef> regExpRef = JSNApiHelper::ToLocal<RegExpRef>(jsRegExpHandle);
-    std::string regExpDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, regExpRef);
+    std::string regExpDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, regExpRef, arrayOrContainer);
     ASSERT_TRUE(regExpDesc.find(invalidStrInDebugger) != std::string::npos);
 
     // Map
     Local<MapRef> mapRef = MapRef::New(ecmaVm);
     mapRef->Set(ecmaVm, invalidStrRef, invalidStrRef);
-    std::string mapDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, mapRef);
+    std::string mapDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, mapRef, arrayOrContainer);
+    ASSERT_TRUE(arrayOrContainer);
     ASSERT_TRUE(mapDesc.find(invalidStrInDebugger) != std::string::npos);
 
     // WeakMap
     Local<WeakMapRef> weakMapRef = WeakMapRef::New(ecmaVm);
     weakMapRef->Set(ecmaVm, primitiveStr, invalidStrRef);
-    std::string weakMapDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, weakMapRef);
+    std::string weakMapDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, weakMapRef, arrayOrContainer);
+    ASSERT_TRUE(arrayOrContainer);
     ASSERT_TRUE(weakMapDesc.find(invalidStrInDebugger) != std::string::npos);
 
     // Set
     Local<SetRef> setRef = SetRef::New(ecmaVm);
     setRef->Add(ecmaVm, invalidStrRef);
-    std::string setDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, setRef);
+    std::string setDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, setRef, arrayOrContainer);
+    ASSERT_TRUE(arrayOrContainer);
     ASSERT_TRUE(setDesc.find(invalidStrInDebugger) != std::string::npos);
 
     // WeakSet
     Local<WeakSetRef> weakSetRef = WeakSetRef::New(ecmaVm);
     weakSetRef->Add(ecmaVm, invalidStrRef);
-    std::string weakSetDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, weakSetRef);
+    std::string weakSetDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, weakSetRef, arrayOrContainer);
+    ASSERT_TRUE(arrayOrContainer);
     ASSERT_TRUE(weakSetDesc.find(invalidStrInDebugger) != std::string::npos);
 
     // Error
     Local<JSValueRef> error = Exception::Error(ecmaVm, invalidStrRef);
-    std::string errorDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, error);
+    std::string errorDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, error, arrayOrContainer);
     ASSERT_TRUE(errorDesc.find(invalidStrInDebugger) != std::string::npos);
 
     // Symbol
