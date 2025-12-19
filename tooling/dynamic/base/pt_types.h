@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -409,6 +409,23 @@ public:
         return *this;
     }
 
+    bool HasArrayOrContainer() const
+    {
+        return arrayOrContainer_.has_value();
+    }
+ 
+    const bool &GetArrayOrContainer() const
+    {
+        ASSERT(HasArrayOrContainer());
+        return arrayOrContainer_.value();
+    }
+ 
+    RemoteObject &SetArrayOrContainer(const bool &value)
+    {
+        arrayOrContainer_ = value;
+        return *this;
+    }
+
     struct TypeName {
         static const std::string Object;     // NOLINT (readability-identifier-naming)
         static const std::string Function;   // NOLINT (readability-identifier-naming)
@@ -527,6 +544,7 @@ private:
     std::optional<std::string> description_ {};
     std::optional<RemoteObjectId> objectId_ {};
     std::optional<std::string> previewValue_ {};
+    std::optional<bool> arrayOrContainer_ { false };
 };
 
 class PrimitiveRemoteObject final : public RemoteObject {
@@ -574,7 +592,7 @@ public:
     ObjectRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged, const std::string &classname,
         const std::string &subtype);
     ~ObjectRemoteObject() override = default;
-    static std::string DescriptionForObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged);
+    static std::string DescriptionForObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged, bool &arrayOrContainer);
 
 private:
     enum NumberSize : uint8_t { BYTES_OF_16BITS = 2, BYTES_OF_32BITS = 4, BYTES_OF_64BITS = 8 };
@@ -593,9 +611,16 @@ private:
     static std::string DescriptionForArrayBuffer(const EcmaVM *ecmaVm, Local<ArrayBufferRef> tagged);
     static std::string DescriptionForSharedArrayBuffer(const EcmaVM *ecmaVm, Local<ArrayBufferRef> tagged);
     static std::string DescriptionForUint8Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged);
+    static std::string DescriptionForUint8ClampedArray(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged);
     static std::string DescriptionForInt8Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged);
+    static std::string DescriptionForUint16Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged);
     static std::string DescriptionForInt16Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged);
     static std::string DescriptionForInt32Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged);
+    static std::string DescriptionForUint32Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged);
+    static std::string DescriptionForFloat32Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged);
+    static std::string DescriptionForBigInt64Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged);
+    static std::string DescriptionForBigUint64Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged);
+    static std::string DescriptionForFloat64Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged);
     static std::string DescriptionForPrimitiveNumber(const EcmaVM *ecmaVm, const Local<JSValueRef> &tagged);
     static std::string DescriptionForPrimitiveString(const EcmaVM *ecmaVm, const Local<JSValueRef> &tagged);
     static std::string DescriptionForPrimitiveBoolean(const EcmaVM *ecmaVm, const Local<JSValueRef> &tagged);

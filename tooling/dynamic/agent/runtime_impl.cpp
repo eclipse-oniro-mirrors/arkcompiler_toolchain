@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -297,10 +297,12 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
         GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
         return DispatchResponse::Ok();
     }
+    int32_t start = 0;
     Local<ArrayRef> keys = Local<ObjectRef>(value)->GetOwnPropertyNames(vm_);
-    int32_t length = static_cast<int32_t>(keys->Length(vm_));
+    int32_t end = static_cast<int32_t>(keys->Length(vm_));
+    AdjustStartAndLength(params, start, end);
     Local<JSValueRef> name = JSValueRef::Undefined(vm_);
-    for (int32_t i = 0; i < length; ++i) {
+    for (int32_t i = start; i < end; ++i) {
         name = keys->Get(vm_, i);
         PropertyAttribute jsProperty = PropertyAttribute::Default();
         if (!Local<ObjectRef>(value)->GetOwnProperty(vm_, name, jsProperty)) {
@@ -337,6 +339,29 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
     }
 
     return DispatchResponse::Ok();
+}
+
+void RuntimeImpl::AdjustStartAndLength(const GetPropertiesParams &params, int32_t &start, int32_t &end)
+{
+    if (!params.IsValidRequestUsingRange()) {
+        LOG_DEBUGGER(ERROR) << "RuntimeImpl::AdjustStartAndLength Invalid 'start' or 'count' from request, start = "
+            << params.GetStartIndex() << ", count = " << params.GetGroupCount();
+        return;
+    }
+    int32_t startIndex = params.GetStartIndex();
+    int32_t groupCount = params.GetGroupCount();
+    // invalid startIndex if startIndex >= length
+    if (startIndex >= end) {
+        LOG_DEBUGGER(ERROR) << "RuntimeImpl::AdjustStartAndLength Invalid 'start' from request, "
+            << "start = " << startIndex << ", but end = " << end;
+        return;
+    }
+    // let start to be startIndex from the request
+    start = startIndex;
+    // if start + count < length, the right margin will just be start + count,
+    // else it will just be length
+    end = (start + groupCount <= end) ? (start + groupCount) : end;
+    LOG_DEBUGGER(INFO) << "RuntimeImpl::AdjustStartAndLength after adjustment, start = " << start << ", end = " << end;
 }
 
 void RuntimeImpl::AddTypedArrayRefs(Local<ArrayBufferRef> arrayBufferRef,
@@ -507,6 +532,72 @@ void RuntimeImpl::SetKeyValue(Local<JSValueRef> &jsValueRef,
     outPropertyDesc->emplace_back(std::move(debuggerProperty));
 }
 
+template <typename MapType>
+void RuntimeImpl::GetMapValueCommon(MapType mapRef,
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+{
+    uint32_t size = mapRef->GetSize(vm_);
+    uint32_t len = mapRef->GetTotalElements(vm_);
+    uint32_t index = 0;
+    Local<JSValueRef> jsValueRef = NumberRef::New(vm_, size);
+    SetKeyValue(jsValueRef, outPropertyDesc, "size");
+    jsValueRef = ArrayRef::New(vm_, size);
+    for (uint32_t i = 0; i < len; ++i) {
+        Local<JSValueRef> key = mapRef->GetKey(vm_, i);
+        if (key->IsHole()) {
+            continue;
+        }
+        Local<JSValueRef> value = mapRef->GetValue(vm_, i);
+        Local<ObjectRef> objRef = ObjectRef::New(vm_);
+        objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "key"), key);
+        objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), value);
+        DebuggerApi::AddInternalProperties(vm_, objRef, ArkInternalValueType::Entry, internalObjects_);
+        ArrayRef::SetValueAt(vm_, jsValueRef, index++, objRef);
+    }
+    DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
+    SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");
+}
+ 
+template <typename SetType>
+void RuntimeImpl::GetSetValueCommon(SetType setRef,
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+{
+    uint32_t size = setRef->GetSize(vm_);
+    uint32_t len = setRef->GetTotalElements(vm_);
+    int32_t index = 0;
+    Local<JSValueRef> jsValueRef = NumberRef::New(vm_, size);
+    SetKeyValue(jsValueRef, outPropertyDesc, "size");
+    jsValueRef = ArrayRef::New(vm_, size);
+    for (uint32_t i = 0; i < len; ++i) {
+        Local<JSValueRef> elementRef = setRef->GetValue(vm_, i);
+        if (elementRef->IsHole()) {
+            continue;
+        } else if (elementRef->IsObject(vm_)) {
+            Local<ObjectRef> objRef = ObjectRef::New(vm_);
+            objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), elementRef);
+            DebuggerApi::AddInternalProperties(vm_, objRef, ArkInternalValueType::Entry, internalObjects_);
+            ArrayRef::SetValueAt(vm_, jsValueRef, index++, objRef);
+        } else {
+            ArrayRef::SetValueAt(vm_, jsValueRef, index++, elementRef);
+        }
+    }
+    DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
+    SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");
+}
+ 
+template <typename IterType>
+void RuntimeImpl::GetIteratorValueCommon(IterType iterRef,
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+{
+    Local<JSValueRef> jsValueRef;
+    if (!iterRef.IsEmpty()) {
+        jsValueRef = NumberRef::New(vm_, iterRef->GetIndex());
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[IteratorIndex]]");
+        jsValueRef = iterRef->GetKind(vm_);
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[IteratorKind]]");
+    }
+}
+
 void RuntimeImpl::GetPrimitiveNumberValue(Local<JSValueRef> value,
     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
@@ -535,27 +626,15 @@ void RuntimeImpl::GetPrimitiveBooleanValue(Local<JSValueRef> value,
 void RuntimeImpl::GetMapIteratorValue(Local<JSValueRef> value,
     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
-    Local<JSValueRef> jsValueRef;
     Local<MapIteratorRef> iterRef = value->ToObject(vm_);
-    if (!iterRef.IsEmpty()) {
-        jsValueRef = NumberRef::New(vm_, iterRef->GetIndex());
-        SetKeyValue(jsValueRef, outPropertyDesc, "[[IteratorIndex]]");
-        jsValueRef = iterRef->GetKind(vm_);
-        SetKeyValue(jsValueRef, outPropertyDesc, "[[IteratorKind]]");
-    }
+    GetIteratorValueCommon(iterRef, outPropertyDesc);
 }
 
 void RuntimeImpl::GetSetIteratorValue(Local<JSValueRef> value,
     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
-    Local<JSValueRef> jsValueRef;
     Local<SetIteratorRef> iterRef = value->ToObject(vm_);
-    if (!iterRef.IsEmpty()) {
-        jsValueRef = NumberRef::New(vm_, iterRef->GetIndex());
-        SetKeyValue(jsValueRef, outPropertyDesc, "[[IteratorIndex]]");
-        jsValueRef = iterRef->GetKind(vm_);
-        SetKeyValue(jsValueRef, outPropertyDesc, "[[IteratorKind]]");
-    }
+    GetIteratorValueCommon(iterRef, outPropertyDesc);
 }
 
 void RuntimeImpl::GetGeneratorFunctionValue(Local<JSValueRef> value,
@@ -612,151 +691,42 @@ void RuntimeImpl::GetSharedMapValue(Local<JSValueRef> value,
                                     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
     Local<SendableMapRef> sendableMapRef(value);
-    uint32_t size = sendableMapRef->GetSize(vm_);
-    uint32_t len = sendableMapRef->GetTotalElements(vm_);
-    uint32_t index = 0;
-    Local<JSValueRef> jsValueRef = NumberRef::New(vm_, size);
-    SetKeyValue(jsValueRef, outPropertyDesc, "size");
-    jsValueRef = ArrayRef::New(vm_, size);
-    for (uint32_t i = 0; i < len; ++i) {
-        Local<JSValueRef> jsKey = sendableMapRef->GetKey(vm_, i);
-        if (jsKey->IsHole()) {
-            continue;
-        }
-        Local<JSValueRef> jsValue = sendableMapRef->GetValue(vm_, i);
-        Local<ObjectRef> objRef = ObjectRef::New(vm_);
-        objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "key"), jsKey);
-        objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), jsValue);
-        DebuggerApi::AddInternalProperties(vm_, objRef, ArkInternalValueType::Entry, internalObjects_);
-        ArrayRef::SetValueAt(vm_, jsValueRef, index++, objRef);
-    }
-    DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");
+    GetMapValueCommon(sendableMapRef, outPropertyDesc);
 }
+
 void RuntimeImpl::GetMapValue(Local<JSValueRef> value,
     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
     Local<MapRef> mapRef = value->ToObject(vm_);
-    int32_t size = mapRef->GetSize(vm_);
-    int32_t len = mapRef->GetTotalElements(vm_);
-    int32_t index = 0;
-    Local<JSValueRef> jsValueRef = NumberRef::New(vm_, size);
-    SetKeyValue(jsValueRef, outPropertyDesc, "size");
-    jsValueRef = ArrayRef::New(vm_, size);
-    for (int32_t i = 0; i < len; ++i) {
-        Local<JSValueRef> jsKey = mapRef->GetKey(vm_, i);
-        if (jsKey->IsHole()) {
-            continue;
-        }
-        Local<JSValueRef> jsValue = mapRef->GetValue(vm_, i);
-        Local<ObjectRef> objRef = ObjectRef::New(vm_);
-        objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "key"), jsKey);
-        objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), jsValue);
-        DebuggerApi::AddInternalProperties(vm_, objRef, ArkInternalValueType::Entry, internalObjects_);
-        ArrayRef::SetValueAt(vm_, jsValueRef, index++, objRef);
-    }
-    DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");
+    GetMapValueCommon(mapRef, outPropertyDesc);
 }
 
 void RuntimeImpl::GetWeakMapValue(Local<JSValueRef> value,
     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
     Local<WeakMapRef> weakMapRef = value->ToObject(vm_);
-    int32_t size = weakMapRef->GetSize(vm_);
-    int32_t len = weakMapRef->GetTotalElements(vm_);
-    int32_t index = 0;
-    Local<JSValueRef> jsValueRef = ArrayRef::New(vm_, size);
-    for (int32_t i = 0; i < len; i++) {
-        Local<JSValueRef> jsKey = weakMapRef->GetKey(vm_, i);
-        if (jsKey->IsHole() || !jsKey->IsObject(vm_)) {
-            continue;
-        }
-        Local<JSValueRef> jsValue = weakMapRef->GetValue(vm_, i);
-        Local<ObjectRef> objRef = ObjectRef::New(vm_);
-        objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "key"), jsKey);
-        objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), jsValue);
-        DebuggerApi::AddInternalProperties(vm_, objRef, ArkInternalValueType::Entry, internalObjects_);
-        ArrayRef::SetValueAt(vm_, jsValueRef, index++, objRef);
-    }
-    DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");
+    GetMapValueCommon(weakMapRef, outPropertyDesc);
 }
 
 void RuntimeImpl::GetSendableSetValue(Local<JSValueRef> value,
                                       std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
     Local<SendableSetRef> setRef = value->ToObject(vm_);
-    uint32_t size = setRef->GetSize(vm_);
-    uint32_t len = setRef->GetTotalElements(vm_);
-    int32_t index = 0;
-    Local<JSValueRef> jsValueRef = NumberRef::New(vm_, size);
-    SetKeyValue(jsValueRef, outPropertyDesc, "size");
-    jsValueRef = ArrayRef::New(vm_, size);
-    for (uint32_t i = 0; i < len; ++i) {
-        Local<JSValueRef> elementRef = setRef->GetValue(vm_, i);
-        if (elementRef->IsHole()) {
-            continue;
-        } else if (elementRef->IsObject(vm_)) {
-            Local<ObjectRef> objRef = ObjectRef::New(vm_);
-            objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), elementRef);
-            DebuggerApi::AddInternalProperties(vm_, objRef, ArkInternalValueType::Entry, internalObjects_);
-            ArrayRef::SetValueAt(vm_, jsValueRef, index++, objRef);
-        } else {
-            ArrayRef::SetValueAt(vm_, jsValueRef, index++, elementRef);
-        }
-    }
-    DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");
+    GetSetValueCommon(setRef, outPropertyDesc);
 }
 
 void RuntimeImpl::GetSetValue(Local<JSValueRef> value,
     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
     Local<SetRef> setRef = value->ToObject(vm_);
-    int32_t size = setRef->GetSize(vm_);
-    int32_t len = setRef->GetTotalElements(vm_);
-    int32_t index = 0;
-    Local<JSValueRef> jsValueRef = NumberRef::New(vm_, size);
-    SetKeyValue(jsValueRef, outPropertyDesc, "size");
-    jsValueRef = ArrayRef::New(vm_, size);
-    for (int32_t i = 0; i < len; ++i) {
-        Local<JSValueRef> elementRef = setRef->GetValue(vm_, i);
-        if (elementRef->IsHole()) {
-            continue;
-        } else if (elementRef->IsObject(vm_)) {
-            Local<ObjectRef> objRef = ObjectRef::New(vm_);
-            objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), elementRef);
-            DebuggerApi::AddInternalProperties(vm_, objRef, ArkInternalValueType::Entry, internalObjects_);
-            ArrayRef::SetValueAt(vm_, jsValueRef, index++, objRef);
-        } else {
-            ArrayRef::SetValueAt(vm_, jsValueRef, index++, elementRef);
-        }
-    }
-    DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");
+    GetSetValueCommon(setRef, outPropertyDesc);
 }
 
 void RuntimeImpl::GetWeakSetValue(Local<JSValueRef> value,
     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
 {
     Local<WeakSetRef> weakSetRef = value->ToObject(vm_);
-    int32_t size = weakSetRef->GetSize(vm_);
-    int32_t len = weakSetRef->GetTotalElements(vm_);
-    int32_t index = 0;
-    Local<JSValueRef> jsValueRef = ArrayRef::New(vm_, size);
-    for (int32_t i = 0; i < len; ++i) {
-        Local<JSValueRef> elementRef = weakSetRef->GetValue(vm_, i);
-        if (elementRef->IsHole()) {
-            continue;
-        }
-        Local<ObjectRef> objRef = ObjectRef::New(vm_);
-        objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), elementRef);
-        DebuggerApi::AddInternalProperties(vm_, objRef, ArkInternalValueType::Entry, internalObjects_);
-        ArrayRef::SetValueAt(vm_, jsValueRef, index++, objRef);
-    }
-    DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");
+    GetSetValueCommon(weakSetRef, outPropertyDesc);
 }
 
 void RuntimeImpl::GetDataViewValue(Local<JSValueRef> value,

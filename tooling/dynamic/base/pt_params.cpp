@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -777,6 +777,21 @@ std::unique_ptr<GetPropertiesParams> GetPropertiesParams::Create(const PtJson &p
         paramsObject->generatePreview_ = generatePreview;
     } else if (ret == Result::TYPE_ERROR) {
         error += "Wrong type of 'generatePreview';";
+    }
+    // Try to get "start" and "count" from request parameter
+    int32_t startIndex = INVALID_START_OR_COUNT;
+    ret = params.GetInt("start", &startIndex);
+    if (ret == Result::SUCCESS) {
+        paramsObject->startIndex_ = startIndex;
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'start';";
+    }
+    int32_t groupCount = INVALID_START_OR_COUNT;
+    ret = params.GetInt("count", &groupCount);
+    if (ret == Result::SUCCESS) {
+        paramsObject->groupCount_ = groupCount;
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'count';";
     }
     if (!error.empty()) {
         LOG_DEBUGGER(ERROR) << "GetPropertiesParams::Create " << error;

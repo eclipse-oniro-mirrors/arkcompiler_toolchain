@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -712,6 +712,32 @@ public:
         return generatePreview_.has_value();
     }
 
+    bool HasStartIndex() const
+    {
+        return startIndex_.has_value();
+    }
+ 
+    int32_t GetStartIndex() const
+    {
+        return startIndex_.value_or(INVALID_START_OR_COUNT);
+    }
+ 
+    bool HasGroupCount() const
+    {
+        return groupCount_.has_value();
+    }
+ 
+    int32_t GetGroupCount() const
+    {
+        return groupCount_.value_or(INVALID_START_OR_COUNT);
+    }
+ 
+    bool IsValidRequestUsingRange() const
+    {
+        return HasStartIndex() && HasGroupCount() &&
+            GetStartIndex() >= 0 && GetGroupCount() > 0;
+    }
+
 private:
     NO_COPY_SEMANTIC(GetPropertiesParams);
     NO_MOVE_SEMANTIC(GetPropertiesParams);
@@ -720,6 +746,12 @@ private:
     std::optional<bool> ownProperties_ {};
     std::optional<bool> accessorPropertiesOnly_ {};
     std::optional<bool> generatePreview_ {};
+
+    // Params for Arrays and containers
+    // retrieving properties with certain range
+    std::optional<int32_t> startIndex_ {};
+    std::optional<int32_t> groupCount_ {};
+    static constexpr int32_t INVALID_START_OR_COUNT = -1;
 };
 
 class CallFunctionOnParams : public PtBaseParams {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -313,7 +313,14 @@ private:
     bool CompareExpected(std::string recv, const std::string &expect)
     {
         expectDesIndex++;
-        return recv == expect;
+        bool result = (recv == expect);
+        if (!result) {
+            std::cout << "recv: " << std::endl;
+            std::cout << recv << std::endl;
+            std::cout << "expect: " << std::endl;
+            std::cout << expect << std::endl;
+        }
+        return result;
     }
 
     const std::map<std::string, std::vector<std::string>> moduleVariableMap_ = {
@@ -496,39 +503,47 @@ private:
         "\"configurable\":false,\"enumerable\":false,\"isOwn\":true}]}}",
 
         "{\"id\":12,\"result\":{\"result\":[{\"name\":\"[[Int8Array]]\",\"value\":{\"type\":\"object\",\"className\":"
-        "\"Object\",\"unserializableValue\":\"Int8Array(24)\",\"description\":\"Int8Array(24)\",\"objectId\":\"101\"},"
+        "\"Object\",\"unserializableValue\":\"Int8Array(24)\",\"description\":\"Int8Array(24)\",\"objectId\":\"101\","
+        "\"arrayOrContainer\":true},"
         "\"writable\":true,\"configurable\":true,\"enumerable\":false,\"isOwn\":true},{\"name\":\"[[Uint8Array]]\","
         "\"value\":{\"type\":\"object\",\"className\":\"Object\",\"unserializableValue\":\"Uint8Array(24)\","
-        "\"description\":\"Uint8Array(24)\",\"objectId\":\"102\"},\"writable\":true,\"configurable\":true,"
+        "\"description\":\"Uint8Array(24)\",\"objectId\":\"102\",\"arrayOrContainer\":true},"
+        "\"writable\":true,\"configurable\":true,"
         "\"enumerable\":false,\"isOwn\":true},{\"name\":\"[[Uint8ClampedArray]]\",\"value\":{\"type\":\"object\","
         "\"className\":\"Object\",\"unserializableValue\":"
-        "\"Uint8ClampedArray\",\"description\":\"Uint8ClampedArray\",\"objectId\":\"103\"},"
+        "\"Uint8ClampedArray(24)\",\"description\":\"Uint8ClampedArray(24)\",\"objectId\":\"103\","
+        "\"arrayOrContainer\":true},"
         "\"writable\":true,\"configurable\":true,\"enumerable\":false,\"isOwn\":true},{\"name\":\"[[Int16Array]]\","
         "\"value\":{\"type\":\"object\",\"className\":\"Object\",\"unserializableValue\":\"Int16Array(12)\","
-        "\"description\":\"Int16Array(12)\",\"objectId\":\"104\"},\"writable\":true,\"configurable\":true,"
+        "\"description\":\"Int16Array(12)\",\"objectId\":\"104\","
+        "\"arrayOrContainer\":true},"
+        "\"writable\":true,\"configurable\":true,"
         "\"enumerable\":false,\"isOwn\":true},{\"name\":\"[[Uint16Array]]\",\"value\":{\"type\":\"object\","
-        "\"className\":\"Object\",\"unserializableValue\":\"Uint16Array\",\"description\":\"Uint16Array\",\"objectId\":"
-        "\"105\"},\"writable\":true,\"configurable\":true,\"enumerable\":false,\"isOwn\":true},{\"name\":"
+        "\"className\":\"Object\",\"unserializableValue\":\"Uint16Array(12)\",\"description\":\"Uint16Array(12)\","
+        "\"objectId\":\"105\",\"arrayOrContainer\":true},"
+        "\"writable\":true,\"configurable\":true,\"enumerable\":false,\"isOwn\":true},{\"name\":"
         "\"[[Int32Array]]\",\"value\":{\"type\":\"object\",\"className\":\"Object\",\"unserializableValue\":"
-        "\"Int32Array(6)\",\"description\":\"Int32Array(6)\",\"objectId\":\"106\"},\"writable\":true,\"configurable\":"
+        "\"Int32Array(6)\",\"description\":\"Int32Array(6)\",\"objectId\":\"106\",\"arrayOrContainer\":true},"
+        "\"writable\":true,\"configurable\":"
         "true,\"enumerable\":false,\"isOwn\":true},{\"name\":\"[[Uint32Array]]\",\"value\":{\"type\":\"object\","
-        "\"className\":\"Object\",\"unserializableValue\":\"Uint32Array\","
-        "\"description\":\"Uint32Array\",\"objectId\":\"107\"},"
+        "\"className\":\"Object\",\"unserializableValue\":\"Uint32Array(6)\","
+        "\"description\":\"Uint32Array(6)\",\"objectId\":\"107\",\"arrayOrContainer\":true},"
         "\"writable\":true,\"configurable\":true,\"enumerable\":false,\"isOwn\":true},{\"name\":\"[[Float32Array]]\","
         "\"value\":{\"type\":\"object\",\"className\":\"Object\","
-        "\"unserializableValue\":\"Float32Array\",\"description\":"
-        "\"Float32Array\",\"objectId\":\"108\"},\"writable\":"
+        "\"unserializableValue\":\"Float32Array(6)\",\"description\":"
+        "\"Float32Array(6)\",\"objectId\":\"108\",\"arrayOrContainer\":true},\"writable\":"
         "true,\"configurable\":true,\"enumerable\":false,\"isOwn\":true},"
         "{\"name\":\"[[Float64Array]]\",\"value\":{\"type\":\"object\",\"className\":\"Object\","
-        "\"unserializableValue\":\"Float64Array\",\"description\":"
-        "\"Float64Array\",\"objectId\":\"109\"},\"writable\":true,"
+        "\"unserializableValue\":\"Float64Array(3)\",\"description\":"
+        "\"Float64Array(3)\",\"objectId\":\"109\",\"arrayOrContainer\":true},\"writable\":true,"
         "\"configurable\":true,\"enumerable\":false,\"isOwn\":true},{\"name\":\"[[BigInt64Array]]\",\"value\":"
         "{\"type\":\"object\",\"className\":\"Object\",\"unserializableValue\":"
-        "\"BigInt64Array\",\"description\":\"BigInt64Array\","
-        "\"objectId\":\"110\"},\"writable\":true,\"configurable\":true,\"enumerable\":false,\"isOwn\":true},{\"name\":"
+        "\"BigInt64Array(3)\",\"description\":\"BigInt64Array(3)\","
+        "\"objectId\":\"110\",\"arrayOrContainer\":true},"
+        "\"writable\":true,\"configurable\":true,\"enumerable\":false,\"isOwn\":true},{\"name\":"
         "\"[[BigUint64Array]]\",\"value\":{\"type\":\"object\",\"className\":\"Object\",\"unserializableValue\":"
-        "\"BigUint64Array\",\"description\":\"BigUint64Array\","
-        "\"objectId\":\"111\"},\"writable\":true,\"configurable\":true,"
+        "\"BigUint64Array(3)\",\"description\":\"BigUint64Array(3)\","
+        "\"objectId\":\"111\",\"arrayOrContainer\":true},\"writable\":true,\"configurable\":true,"
         "\"enumerable\":false,\"isOwn\":true}]}}",
 
         "{\"id\":13,\"result\":{\"result\":[{\"name\":\"[[PrimitiveValue]]\",\"value\":{\"type\":\"boolean\","
@@ -580,7 +595,8 @@ private:
         "\"0\",\"description\":\"0\",\"objectId\":\"120\"},\"writable\":false,\"configurable\":false,\"enumerable\":"
         "false,\"isOwn\":false},{\"name\":\"[[Entries]]\",\"value\":{\"type\":\"object\",\"subtype\":\"array\","
         "\"className\":\"Array\",\"unserializableValue\":\"Array(0)\",\"description\":\"Array(0)\",\"objectId\":"
-        "\"121\"},\"writable\":false,\"configurable\":false,\"enumerable\":false,\"isOwn\":false}]}}",
+        "\"121\",\"arrayOrContainer\":true},"
+        "\"writable\":false,\"configurable\":false,\"enumerable\":false,\"isOwn\":false}]}}",
 
         "{\"id\":20,\"result\":{\"result\":[{\"name\":\"key0\",\"value\":{\"type\":\"string\",\"unserializableValue\":"
         "\"value0\",\"description\":\"value0\"},\"writable\":true,\"configurable\":true,\"enumerable\":true,\"isOwn\":"
@@ -614,18 +630,23 @@ private:
         "\"0\",\"description\":\"0\",\"objectId\":\"131\"},\"writable\":false,\"configurable\":false,\"enumerable\":"
         "false,\"isOwn\":false},{\"name\":\"[[Entries]]\",\"value\":{\"type\":\"object\",\"subtype\":\"array\","
         "\"className\":\"Array\",\"unserializableValue\":\"Array(0)\",\"description\":\"Array(0)\",\"objectId\":"
-        "\"132\"},\"writable\":false,\"configurable\":false,\"enumerable\":false,\"isOwn\":false}]}}",
+        "\"132\",\"arrayOrContainer\":true},"
+        "\"writable\":false,\"configurable\":false,\"enumerable\":false,\"isOwn\":false}]}}",
 
         "{\"id\":23,\"result\":{\"result\":[{\"name\":\"[[Int8Array]]\",\"value\":{\"type\":\"object\",\"className\":"
-        "\"Object\",\"unserializableValue\":\"Int8Array(32)\",\"description\":\"Int8Array(32)\",\"objectId\":\"133\"},"
+        "\"Object\",\"unserializableValue\":\"Int8Array(32)\",\"description\":\"Int8Array(32)\",\"objectId\":\"133\","
+        "\"arrayOrContainer\":true},"
         "\"writable\":true,\"configurable\":true,\"enumerable\":false,\"isOwn\":true},{\"name\":\"[[Uint8Array]]\","
         "\"value\":{\"type\":\"object\",\"className\":\"Object\",\"unserializableValue\":\"Uint8Array(32)\","
-        "\"description\":\"Uint8Array(32)\",\"objectId\":\"134\"},\"writable\":true,\"configurable\":true,"
+        "\"description\":\"Uint8Array(32)\",\"objectId\":\"134\",\"arrayOrContainer\":true},"
+        "\"writable\":true,\"configurable\":true,"
         "\"enumerable\":false,\"isOwn\":true},{\"name\":\"[[Int16Array]]\",\"value\":{\"type\":\"object\","
         "\"className\":\"Object\",\"unserializableValue\":\"Int16Array(16)\",\"description\":\"Int16Array(16)\","
-        "\"objectId\":\"135\"},\"writable\":true,\"configurable\":true,\"enumerable\":false,\"isOwn\":true},{\"name\":"
+        "\"objectId\":\"135\",\"arrayOrContainer\":true},"
+        "\"writable\":true,\"configurable\":true,\"enumerable\":false,\"isOwn\":true},{\"name\":"
         "\"[[Int32Array]]\",\"value\":{\"type\":\"object\",\"className\":\"Object\",\"unserializableValue\":"
-        "\"Int32Array(8)\",\"description\":\"Int32Array(8)\",\"objectId\":\"136\"},\"writable\":true,\"configurable\":"
+        "\"Int32Array(8)\",\"description\":\"Int32Array(8)\",\"objectId\":\"136\",\"arrayOrContainer\":true},"
+        "\"writable\":true,\"configurable\":"
         "true,\"enumerable\":false,\"isOwn\":true},{\"name\":\"[[ArrayBufferByteLength]]\",\"value\":{\"type\":"
         "\"number\",\"unserializableValue\":\"32\",\"description\":\"32\",\"objectId\":\"137\"},\"writable\":false,"
         "\"configurable\":false,\"enumerable\":false,\"isOwn\":false},{\"name\":\"byteLength\",\"value\":{\"type\":"

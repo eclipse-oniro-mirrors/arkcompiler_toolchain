@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -137,8 +137,11 @@ int RuntimeClient::GetPropertiesCommand()
     params->Add("generatePreview", true);
     params->Add("objectId", objectId_.c_str());
     params->Add("ownProperties", true);
+    if (HasStartIndex() && HasGroupCount()) {
+        params->Add("start", start_.value());
+        params->Add("count", count_.value());
+    }
     request->Add("params", params);
-
     std::string message = request->Stringify();
     if (session->ClientSendReq(message)) {
         session->GetDomainManager().SetDomainById(id, "Runtime");

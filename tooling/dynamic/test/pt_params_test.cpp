@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -267,5 +267,34 @@ HWTEST_F_L0(PtParamsTest, SeriliazationTimeoutCheckEnableParamsCreateTest)
     msg = std::string() + R"({"id":0,"method":"PtParams.Test","params":{"threshold":2}})";
     seriliazationParams = SeriliazationTimeoutCheckEnableParams::Create(DispatchRequest(msg).GetParams());
     ASSERT_TRUE(seriliazationParams != nullptr);
+}
+
+HWTEST_F_L0(PtParamsTest, RuntimeGetPropertiesParamTest)
+{
+    std::unique_ptr<PtJson> requestWithStartAndCount = PtJson::CreateObject();
+    std::unique_ptr<PtJson> requestWithoutStartAndCount = PtJson::CreateObject();
+    requestWithStartAndCount->Add("objectId", "0");
+    requestWithStartAndCount->Add("accessorPropertiesOnly", false);
+    requestWithStartAndCount->Add("generatePreview", true);
+    requestWithStartAndCount->Add("ownProperties", true);
+    requestWithStartAndCount->Add("start", 0);
+    requestWithStartAndCount->Add("count", 100);
+    
+    std::unique_ptr<GetPropertiesParams> result = GetPropertiesParams::Create(*requestWithStartAndCount);
+    // Assert creating request paramater success
+    ASSERT_TRUE(result != nullptr);
+    // Asset this parameter is valid for requesting with range
+    ASSERT_TRUE(result->IsValidRequestUsingRange());
+ 
+    requestWithoutStartAndCount->Add("objectId", "0");
+    requestWithoutStartAndCount->Add("accessorPropertiesOnly", true);
+    requestWithoutStartAndCount->Add("generatePreview", true);
+    requestWithoutStartAndCount->Add("ownProperties", false);
+ 
+    result = GetPropertiesParams::Create(*requestWithoutStartAndCount);
+    // Assert creating request paramater success
+    ASSERT_TRUE(result != nullptr);
+    // Asset this parameter is NOT valid for requesting with range
+    ASSERT_TRUE(!result->IsValidRequestUsingRange());
 }
 }  // namespace panda::test
