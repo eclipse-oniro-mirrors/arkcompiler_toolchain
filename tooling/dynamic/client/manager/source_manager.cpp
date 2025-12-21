@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,10 @@ namespace OHOS::ArkCompiler::Toolchain {
 void SourceManager::SendRequeSource(int scriptId)
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return;
+    }
     uint32_t id = session->GetMessageId();
     scriptIdMap_.emplace(std::make_pair(id, scriptId));
 

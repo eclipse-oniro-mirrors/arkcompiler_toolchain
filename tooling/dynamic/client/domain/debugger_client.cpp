@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -69,6 +69,10 @@ bool DebuggerClient::DispatcherCmd(const std::string &cmd)
 int DebuggerClient::BreakCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
@@ -96,6 +100,10 @@ int DebuggerClient::BacktrackCommand()
 int DebuggerClient::DeleteCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
@@ -117,6 +125,10 @@ int DebuggerClient::DeleteCommand()
 int DebuggerClient::DisableCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
@@ -141,6 +153,10 @@ int DebuggerClient::DisplayCommand()
 int DebuggerClient::EnableCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
@@ -230,6 +246,10 @@ int DebuggerClient::WatchCommand()
 int DebuggerClient::AsyncStackDepthCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
@@ -251,6 +271,10 @@ int DebuggerClient::AsyncStackDepthCommand()
 int DebuggerClient::ResumeCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
@@ -270,6 +294,10 @@ int DebuggerClient::ResumeCommand()
 int DebuggerClient::StepIntoCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
@@ -289,6 +317,10 @@ int DebuggerClient::StepIntoCommand()
 int DebuggerClient::StepOutCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
@@ -308,6 +340,10 @@ int DebuggerClient::StepOutCommand()
 int DebuggerClient::StepOverCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
@@ -366,6 +402,10 @@ void DebuggerClient::RecvReply(std::unique_ptr<PtJson> json)
     }
 
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return;
+    }
     SourceManager &sourceManager = session->GetSourceManager();
     WatchManager &watchManager = session->GetWatchManager();
 
@@ -385,7 +425,7 @@ void DebuggerClient::RecvReply(std::unique_ptr<PtJson> json)
     } else {
         LOGI("arkdb: Debugger reply is: %{public}s", json->Stringify().c_str());
     }
-    handleResponse(std::move(json));
+    HandleResponse(std::move(json));
 }
 
 void DebuggerClient::PausedReply(const std::unique_ptr<PtJson> json)
@@ -426,6 +466,10 @@ void DebuggerClient::PausedReply(const std::unique_ptr<PtJson> json)
     }
 
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return;
+    }
     StackManager& stackManager = session->GetStackManager();
     SourceManager &sourceManager = session->GetSourceManager();
     WatchManager &watchManager = session->GetWatchManager();
@@ -436,9 +480,13 @@ void DebuggerClient::PausedReply(const std::unique_ptr<PtJson> json)
     watchManager.DebugTrueState();
 }
 
-void DebuggerClient::handleResponse(std::unique_ptr<PtJson> json)
+void DebuggerClient::HandleResponse(std::unique_ptr<PtJson> json)
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return;
+    }
     SourceManager &sourceManager = session->GetSourceManager();
     WatchManager &watchManager = session->GetWatchManager();
     BreakPointManager& breakpoint = session->GetBreakPointManager();
@@ -473,6 +521,10 @@ void DebuggerClient::handleResponse(std::unique_ptr<PtJson> json)
 int DebuggerClient::SaveAllPossibleBreakpointsCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
@@ -502,6 +554,10 @@ int DebuggerClient::SaveAllPossibleBreakpointsCommand()
 int DebuggerClient::SetSymbolicBreakpointsCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
@@ -528,6 +584,10 @@ int DebuggerClient::SetSymbolicBreakpointsCommand()
 int DebuggerClient::RemoveSymbolicBreakpointsCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
@@ -554,6 +614,10 @@ int DebuggerClient::RemoveSymbolicBreakpointsCommand()
 int DebuggerClient::RemoveBreakpointsByUrlCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     std::unique_ptr<PtJson> request = PtJson::CreateObject();
@@ -575,6 +639,10 @@ int DebuggerClient::RemoveBreakpointsByUrlCommand()
 int DebuggerClient::EnableLaunchAccelerateCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     std::unique_ptr<PtJson> request = PtJson::CreateObject();

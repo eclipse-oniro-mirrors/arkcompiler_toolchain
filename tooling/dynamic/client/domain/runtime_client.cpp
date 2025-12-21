@@ -43,6 +43,10 @@ bool RuntimeClient::DispatcherCmd(const std::string &cmd)
 int RuntimeClient::HeapusageCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idMethodMap_[id] = std::make_tuple("getHeapUsage", "");
@@ -63,6 +67,10 @@ int RuntimeClient::HeapusageCommand()
 int RuntimeClient::RuntimeEnableCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idMethodMap_[id] = std::make_tuple("enable", "");
@@ -83,6 +91,10 @@ int RuntimeClient::RuntimeEnableCommand()
 int RuntimeClient::RuntimeDisableCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idMethodMap_[id] = std::make_tuple("disable", "");
@@ -103,6 +115,10 @@ int RuntimeClient::RuntimeDisableCommand()
 int RuntimeClient::RunIfWaitingForDebuggerCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idMethodMap_[id] = std::make_tuple("runIfWaitingForDebugger", "");
@@ -125,6 +141,10 @@ int RuntimeClient::RunIfWaitingForDebuggerCommand()
 int RuntimeClient::GetPropertiesCommand()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idMethodMap_[id] = std::make_tuple("getProperties", objectId_);
@@ -152,6 +172,10 @@ int RuntimeClient::GetPropertiesCommand()
 int RuntimeClient::GetPropertiesCommand2()
 {
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
     uint32_t id = session->GetMessageId();
 
     idMethodMap_[id] = std::make_tuple("getProperties", objectId_);
@@ -248,6 +272,10 @@ void RuntimeClient::HandleGetProperties(std::unique_ptr<PtJson> json, const int 
     }
 
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return;
+    }
     StackManager &stackManager = session->GetStackManager();
     VariableManager &variableManager = session->GetVariableManager();
     std::map<int32_t, std::map<int32_t, std::string>> treeInfo = stackManager.GetScopeChainInfo();
@@ -298,6 +326,10 @@ void RuntimeClient::HandleHeapUsage(std::unique_ptr<PtJson> json)
     }
 
     Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return;
+    }
     VariableManager &variableManager = session->GetVariableManager();
     std::unique_ptr<GetHeapUsageReturns> heapUsageReturns = GetHeapUsageReturns::Create(*result);
     if (heapUsageReturns == nullptr) {
