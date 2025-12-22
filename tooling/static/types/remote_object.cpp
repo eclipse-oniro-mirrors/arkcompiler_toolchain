@@ -24,9 +24,9 @@
 #include <utility>
 #include <variant>
 
-#include "libpandafile/helpers.h"
-#include "macros.h"
-#include "utils/json_builder.h"
+#include "libarkfile/helpers.h"
+#include "libarkbase/macros.h"
+#include "libarkbase/utils/json_builder.h"
 
 #include "types/object_preview.h"
 #include "types/property_descriptor.h"
