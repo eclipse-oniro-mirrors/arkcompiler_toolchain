@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -414,13 +414,13 @@ public:
         return arrayOrContainer_.has_value();
     }
  
-    const bool &GetArrayOrContainer() const
+    const std::string &GetArrayOrContainer() const
     {
         ASSERT(HasArrayOrContainer());
         return arrayOrContainer_.value();
     }
  
-    RemoteObject &SetArrayOrContainer(const bool &value)
+    RemoteObject &SetArrayOrContainer(const std::string &value)
     {
         arrayOrContainer_ = value;
         return *this;
@@ -531,6 +531,8 @@ public:
     static const std::string JSLocaleDescription;              // NOLINT (readability-identifier-naming)
     static const std::string JSListFormatDescription;          // NOLINT (readability-identifier-naming)
     static const std::string JSRelativeTimeFormatDescription;  // NOLINT (readability-identifier-naming)
+    static const std::string ArrayMarker;                      // NOLINT (readability-identifier-naming)
+    static const std::string ContainerMarker;                  // NOLINT (readability-identifier-naming)
 
 private:
     NO_COPY_SEMANTIC(RemoteObject);
@@ -544,7 +546,7 @@ private:
     std::optional<std::string> description_ {};
     std::optional<RemoteObjectId> objectId_ {};
     std::optional<std::string> previewValue_ {};
-    std::optional<bool> arrayOrContainer_ { false };
+    std::optional<std::string> arrayOrContainer_ {};
 };
 
 class PrimitiveRemoteObject final : public RemoteObject {
@@ -592,7 +594,8 @@ public:
     ObjectRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged, const std::string &classname,
         const std::string &subtype);
     ~ObjectRemoteObject() override = default;
-    static std::string DescriptionForObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged, bool &arrayOrContainer);
+    static std::string DescriptionForObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged,
+                                            std::string &arrayOrContainer);
 
 private:
     enum NumberSize : uint8_t { BYTES_OF_16BITS = 2, BYTES_OF_32BITS = 4, BYTES_OF_64BITS = 8 };

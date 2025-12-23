@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -239,57 +239,57 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
     } else if (value->IsJSDateTimeFormat(vm_)) {
         GetDateTimeFormatValue(value, outPropertyDesc);
     } else if (value->IsSharedMap(vm_)) {
-        GetSharedMapValue(value, outPropertyDesc);
+        GetSharedMapValue(value, outPropertyDesc, params);
     } else if (value->IsMap(vm_)) {
-        GetMapValue(value, outPropertyDesc);
+        GetMapValue(value, outPropertyDesc, params);
     } else if (value->IsWeakMap(vm_)) {
-        GetWeakMapValue(value, outPropertyDesc);
+        GetWeakMapValue(value, outPropertyDesc, params);
     } else if (value->IsRegExp(vm_)) {
         GetRegExpValue(value, outPropertyDesc);
     } else if (value->IsSharedSet(vm_)) {
-        GetSendableSetValue(value, outPropertyDesc);
+        GetSendableSetValue(value, outPropertyDesc, params);
     } else if (value->IsSet(vm_)) {
-        GetSetValue(value, outPropertyDesc);
+        GetSetValue(value, outPropertyDesc, params);
     } else if (value->IsWeakSet(vm_)) {
-        GetWeakSetValue(value, outPropertyDesc);
+        GetWeakSetValue(value, outPropertyDesc, params);
     } else if (value->IsDataView(vm_)) {
         GetDataViewValue(value, outPropertyDesc);
     } else if (value->IsHashMap(vm_)) {
-        GetHashMapValue(value, outPropertyDesc);
+        GetHashMapValue(value, outPropertyDesc, params);
     } else if (value->IsHashSet(vm_)) {
-        GetHashSetValue(value, outPropertyDesc);
+        GetHashSetValue(value, outPropertyDesc, params);
     } else if (value->IsLightWeightMap(vm_)) {
-        GetLightWeightMapValue(value, outPropertyDesc);
+        GetLightWeightMapValue(value, outPropertyDesc, params);
     } else if (value->IsLightWeightSet(vm_)) {
-        GetLightWeightSetValue(value, outPropertyDesc);
+        GetLightWeightSetValue(value, outPropertyDesc, params);
     } else if (value->IsLinkedList(vm_)) {
-        GetLinkedListValue(value, outPropertyDesc);
+        GetLinkedListValue(value, outPropertyDesc, params);
     } else if (value->IsList(vm_)) {
-        GetListValue(value, outPropertyDesc);
+        GetListValue(value, outPropertyDesc, params);
     } else if (value->IsPlainArray(vm_)) {
-        GetPlainArrayValue(value, outPropertyDesc);
+        GetPlainArrayValue(value, outPropertyDesc, params);
     } else if (value->IsTreeMap(vm_)) {
-        GetTreeMapValue(value, outPropertyDesc);
+        GetTreeMapValue(value, outPropertyDesc, params);
     } else if (value->IsTreeSet(vm_)) {
-        GetTreeSetValue(value, outPropertyDesc);
+        GetTreeSetValue(value, outPropertyDesc, params);
     } else if (value->IsArrayList(vm_)) {
-        GetArrayListValue(value, outPropertyDesc);
+        GetArrayListValue(value, outPropertyDesc, params);
         GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
         return DispatchResponse::Ok();
     } else if (value->IsDeque(vm_)) {
-        GetDequeValue(value, outPropertyDesc);
+        GetDequeValue(value, outPropertyDesc, params);
         GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
         return DispatchResponse::Ok();
     } else if (value->IsQueue(vm_)) {
-        GetQueueValue(value, outPropertyDesc);
+        GetQueueValue(value, outPropertyDesc, params);
         GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
         return DispatchResponse::Ok();
     } else if (value->IsStack(vm_)) {
-        GetStackValue(value, outPropertyDesc);
+        GetStackValue(value, outPropertyDesc, params);
         GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
         return DispatchResponse::Ok();
     } else if (value->IsVector(vm_)) {
-        GetVectorValue(value, outPropertyDesc);
+        GetVectorValue(value, outPropertyDesc, params);
         GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
         return DispatchResponse::Ok();
     } else if (value->IsPromise(vm_)) {
@@ -344,7 +344,7 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
 void RuntimeImpl::AdjustStartAndLength(const GetPropertiesParams &params, int32_t &start, int32_t &end)
 {
     if (!params.IsValidRequestUsingRange()) {
-        LOG_DEBUGGER(ERROR) << "RuntimeImpl::AdjustStartAndLength Invalid 'start' or 'count' from request, start = "
+        LOG_DEBUGGER(DEBUG) << "RuntimeImpl::AdjustStartAndLength Invalid 'start' or 'count' from request, start = "
             << params.GetStartIndex() << ", count = " << params.GetGroupCount();
         return;
     }
@@ -352,7 +352,7 @@ void RuntimeImpl::AdjustStartAndLength(const GetPropertiesParams &params, int32_
     int32_t groupCount = params.GetGroupCount();
     // invalid startIndex if startIndex >= length
     if (startIndex >= end) {
-        LOG_DEBUGGER(ERROR) << "RuntimeImpl::AdjustStartAndLength Invalid 'start' from request, "
+        LOG_DEBUGGER(DEBUG) << "RuntimeImpl::AdjustStartAndLength Invalid 'start' from request, "
             << "start = " << startIndex << ", but end = " << end;
         return;
     }
@@ -517,9 +517,13 @@ void RuntimeImpl::GetAdditionalProperties(Local<JSValueRef> value,
 }
 
 void RuntimeImpl::SetKeyValue(Local<JSValueRef> &jsValueRef,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc, const std::string &strProName)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc, const std::string &strProName,
+    uint32_t originalSize)
 {
     std::unique_ptr<RemoteObject> remoteObj = RemoteObject::FromTagged(vm_, jsValueRef);
+    if (originalSize != NO_NEED_TO_ADJUST_SIZE && remoteObj->HasDescription()) {
+        remoteObj->SetDescription(ModifySizeInDescription(remoteObj->GetDescription(), originalSize));
+    }
     remoteObj->SetObjectId(curObjectId_);
     properties_[curObjectId_++] = Global<JSValueRef>(vm_, jsValueRef);
     std::unique_ptr<PropertyDescriptor> debuggerProperty = std::make_unique<PropertyDescriptor>();
@@ -530,6 +534,28 @@ void RuntimeImpl::SetKeyValue(Local<JSValueRef> &jsValueRef,
         .SetIsOwn(false)
         .SetValue(std::move(remoteObj));
     outPropertyDesc->emplace_back(std::move(debuggerProperty));
+}
+
+std::string RuntimeImpl::ModifySizeInDescription(const std::string &description, uint32_t size)
+{
+    const size_t left = description.find('(');
+    if (left == std::string::npos) {
+        return description;
+    }
+ 
+    const size_t right = description.find(')', left + 1);
+    if (right == std::string::npos) {
+        return description;
+    }
+ 
+    std::string result;
+    constexpr size_t kMaxUintChars = 12;
+    result.reserve(description.size() + kMaxUintChars);
+    result.append(description.data(), left + 1);
+    result.append(std::to_string(size));
+    result.append(description.data() + right, description.size() - right);
+ 
+    return result;
 }
 
 template <typename MapType>
@@ -557,6 +583,36 @@ void RuntimeImpl::GetMapValueCommon(MapType mapRef,
     DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
     SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");
 }
+
+template <typename MapType>
+void RuntimeImpl::GetMapValueCommonWithRange(MapType mapRef,
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc, const GetPropertiesParams &params)
+{
+    // Set size to be the total size of the map
+    uint32_t size = mapRef->GetSize(vm_);
+    Local<JSValueRef> jsValueRef = NumberRef::New(vm_, size);
+    SetKeyValue(jsValueRef, outPropertyDesc, "size");
+    // Adjust start and len corresponding to the request
+    int32_t len = mapRef->GetTotalElements(vm_);
+    int32_t start = 0;
+    AdjustStartAndLength(params, start, len);
+    uint32_t arrayIndex = 0;
+    jsValueRef = ArrayRef::New(vm_, len - start);
+    for (int32_t i = start; i < len; ++i) {
+        Local<JSValueRef> key = mapRef->GetKey(vm_, i);
+        if (key->IsHole()) {
+            continue;
+        }
+        Local<JSValueRef> value = mapRef->GetValue(vm_, i);
+        Local<ObjectRef> objRef = ObjectRef::New(vm_);
+        objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "key"), key);
+        objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), value);
+        DebuggerApi::AddInternalProperties(vm_, objRef, ArkInternalValueType::Entry, internalObjects_);
+        ArrayRef::SetValueAt(vm_, jsValueRef, arrayIndex++, objRef);
+    }
+    DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
+    SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]", size);
+}
  
 template <typename SetType>
 void RuntimeImpl::GetSetValueCommon(SetType setRef,
@@ -583,6 +639,37 @@ void RuntimeImpl::GetSetValueCommon(SetType setRef,
     }
     DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
     SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");
+}
+
+template <typename SetType>
+void RuntimeImpl::GetSetValueCommonWithRange(SetType setRef,
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc, const GetPropertiesParams &params)
+{
+    // Set size to be the total size of the set
+    uint32_t size = setRef->GetSize(vm_);
+    Local<JSValueRef> jsValueRef = NumberRef::New(vm_, size);
+    SetKeyValue(jsValueRef, outPropertyDesc, "size");
+    // Adjust start and len corresponding to the request
+    int32_t len = setRef->GetTotalElements(vm_);
+    int32_t start = 0;
+    AdjustStartAndLength(params, start, len);
+    uint32_t arrayIndex = 0;
+    jsValueRef = ArrayRef::New(vm_, len - start);
+    for (int32_t i = start; i < len; ++i) {
+        Local<JSValueRef> elementRef = setRef->GetValue(vm_, i);
+        if (elementRef->IsHole()) {
+            continue;
+        } else if (elementRef->IsObject(vm_)) {
+            Local<ObjectRef> objRef = ObjectRef::New(vm_);
+            objRef->Set(vm_, StringRef::NewFromUtf8(vm_, "value"), elementRef);
+            DebuggerApi::AddInternalProperties(vm_, objRef, ArkInternalValueType::Entry, internalObjects_);
+            ArrayRef::SetValueAt(vm_, jsValueRef, arrayIndex++, objRef);
+        } else {
+            ArrayRef::SetValueAt(vm_, jsValueRef, arrayIndex++, elementRef);
+        }
+    }
+    DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
+    SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]", size);
 }
  
 template <typename IterType>
@@ -688,45 +775,75 @@ void RuntimeImpl::GetDateTimeFormatValue(Local<JSValueRef> value,
 }
 
 void RuntimeImpl::GetSharedMapValue(Local<JSValueRef> value,
-                                    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+                                    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+                                    const GetPropertiesParams &params)
 {
     Local<SendableMapRef> sendableMapRef(value);
-    GetMapValueCommon(sendableMapRef, outPropertyDesc);
+    if (params.IsValidRequestUsingRange()) {
+        GetMapValueCommonWithRange(sendableMapRef, outPropertyDesc, params);
+    } else {
+        GetMapValueCommon(sendableMapRef, outPropertyDesc);
+    }
 }
 
 void RuntimeImpl::GetMapValue(Local<JSValueRef> value,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
 {
     Local<MapRef> mapRef = value->ToObject(vm_);
-    GetMapValueCommon(mapRef, outPropertyDesc);
+    if (params.IsValidRequestUsingRange()) {
+        GetMapValueCommonWithRange(mapRef, outPropertyDesc, params);
+    } else {
+        GetMapValueCommon(mapRef, outPropertyDesc);
+    }
 }
 
 void RuntimeImpl::GetWeakMapValue(Local<JSValueRef> value,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
 {
     Local<WeakMapRef> weakMapRef = value->ToObject(vm_);
-    GetMapValueCommon(weakMapRef, outPropertyDesc);
+    if (params.IsValidRequestUsingRange()) {
+        GetMapValueCommonWithRange(weakMapRef, outPropertyDesc, params);
+    } else {
+        GetMapValueCommon(weakMapRef, outPropertyDesc);
+    }
 }
 
 void RuntimeImpl::GetSendableSetValue(Local<JSValueRef> value,
-                                      std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+                                      std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+                                      const GetPropertiesParams &params)
 {
     Local<SendableSetRef> setRef = value->ToObject(vm_);
-    GetSetValueCommon(setRef, outPropertyDesc);
+    if (params.IsValidRequestUsingRange()) {
+        GetSetValueCommonWithRange(setRef, outPropertyDesc, params);
+    } else {
+        GetSetValueCommon(setRef, outPropertyDesc);
+    }
 }
 
 void RuntimeImpl::GetSetValue(Local<JSValueRef> value,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
 {
     Local<SetRef> setRef = value->ToObject(vm_);
-    GetSetValueCommon(setRef, outPropertyDesc);
+    if (params.IsValidRequestUsingRange()) {
+        GetSetValueCommonWithRange(setRef, outPropertyDesc, params);
+    } else {
+        GetSetValueCommon(setRef, outPropertyDesc);
+    }
 }
 
 void RuntimeImpl::GetWeakSetValue(Local<JSValueRef> value,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
 {
     Local<WeakSetRef> weakSetRef = value->ToObject(vm_);
-    GetSetValueCommon(weakSetRef, outPropertyDesc);
+    if (params.IsValidRequestUsingRange()) {
+        GetSetValueCommonWithRange(weakSetRef, outPropertyDesc, params);
+    } else {
+        GetSetValueCommon(weakSetRef, outPropertyDesc);
+    }
 }
 
 void RuntimeImpl::GetDataViewValue(Local<JSValueRef> value,
@@ -769,129 +886,269 @@ void RuntimeImpl::GetRegExpValue(Local<JSValueRef> value,
 }
 
 void RuntimeImpl::GetArrayListValue(Local<JSValueRef> value,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
 {
-    Local<JSValueRef> jsValueRef = DebuggerApi::GetArrayListValue(vm_, value, internalObjects_);
-    Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
-    SetKeyValue(size, outPropertyDesc, "size");
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[ArrayList]]");
+    if (params.IsValidRequestUsingRange()) {
+        uint32_t originalSize = 0;
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetArrayListValueWithRange(vm_, value, internalObjects_,
+            params.GetStartIndex(), params.GetGroupCount(), originalSize);
+        Local<JSValueRef> size = NumberRef::New(vm_, originalSize);
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[ArrayList]]", originalSize);
+    } else {
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetArrayListValue(vm_, value, internalObjects_);
+        Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[ArrayList]]");
+    }
 }
 
 void RuntimeImpl::GetDequeValue(Local<JSValueRef> value,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
 {
-    Local<JSValueRef> jsValueRef = DebuggerApi::GetDequeValue(vm_, value, internalObjects_);
-    Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
-    SetKeyValue(size, outPropertyDesc, "size");
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[Deque]]");
+    if (params.IsValidRequestUsingRange()) {
+        uint32_t originalSize = 0;
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetDequeValueWithRange(vm_, value, internalObjects_,
+            params.GetStartIndex(), params.GetGroupCount(), originalSize);
+        Local<JSValueRef> size = NumberRef::New(vm_, originalSize);
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[Deque]]", originalSize);
+    } else {
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetDequeValue(vm_, value, internalObjects_);
+        Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[Deque]]");
+    }
 }
 
 void RuntimeImpl::GetHashMapValue(Local<JSValueRef> value,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
 {
-    Local<JSValueRef> jsValueRef = DebuggerApi::GetHashMapValue(vm_, value, internalObjects_);
-    Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
-    SetKeyValue(size, outPropertyDesc, "size");
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[HashMap]]");
+    if (params.IsValidRequestUsingRange()) {
+        uint32_t originalSize = 0;
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetHashMapValueWithRange(vm_, value, internalObjects_,
+            params.GetStartIndex(), params.GetGroupCount(), originalSize);
+        Local<JSValueRef> size = NumberRef::New(vm_, originalSize);
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[HashMap]]", originalSize);
+    } else {
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetHashMapValue(vm_, value, internalObjects_);
+        Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[HashMap]]");
+    }
 }
 
 void RuntimeImpl::GetHashSetValue(Local<JSValueRef> value,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
 {
-    Local<JSValueRef> jsValueRef = DebuggerApi::GetHashSetValue(vm_, value, internalObjects_);
-    Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
-    SetKeyValue(size, outPropertyDesc, "size");
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[HashSet]]");
+    if (params.IsValidRequestUsingRange()) {
+        uint32_t originalSize = 0;
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetHashSetValueWithRange(vm_, value, internalObjects_,
+            params.GetStartIndex(), params.GetGroupCount(), originalSize);
+        Local<JSValueRef> size = NumberRef::New(vm_, originalSize);
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[HashSet]]", originalSize);
+    } else {
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetHashSetValue(vm_, value, internalObjects_);
+        Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[HashSet]]");
+    }
 }
 
 void RuntimeImpl::GetLightWeightMapValue(Local<JSValueRef> value,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
 {
-    Local<JSValueRef> jsValueRef = DebuggerApi::GetLightWeightMapValue(vm_, value, internalObjects_);
-    Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
-    SetKeyValue(size, outPropertyDesc, "size");
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[LightWeightMap]]");
+    if (params.IsValidRequestUsingRange()) {
+        uint32_t originalSize = 0;
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetLightWeightMapValueWithRange(vm_, value, internalObjects_,
+            params.GetStartIndex(), params.GetGroupCount(), originalSize);
+        Local<JSValueRef> size = NumberRef::New(vm_, originalSize);
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[LightWeightMap]]", originalSize);
+    } else {
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetLightWeightMapValue(vm_, value, internalObjects_);
+        Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[LightWeightMap]]");
+    }
 }
 
 void RuntimeImpl::GetLightWeightSetValue(Local<JSValueRef> value,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
 {
-    Local<JSValueRef> jsValueRef = DebuggerApi::GetLightWeightSetValue(vm_, value, internalObjects_);
-    Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
-    SetKeyValue(size, outPropertyDesc, "size");
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[LightWeightSet]]");
+    if (params.IsValidRequestUsingRange()) {
+        uint32_t originalSize = 0;
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetLightWeightSetValueWithRange(vm_, value, internalObjects_,
+            params.GetStartIndex(), params.GetGroupCount(), originalSize);
+        Local<JSValueRef> size = NumberRef::New(vm_, originalSize);
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[LightWeightSet]]", originalSize);
+    } else {
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetLightWeightSetValue(vm_, value, internalObjects_);
+        Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[LightWeightSet]]");
+    }
 }
 
 void RuntimeImpl::GetLinkedListValue(Local<JSValueRef> value,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
 {
-    Local<JSValueRef> jsValueRef = DebuggerApi::GetLinkedListValue(vm_, value, internalObjects_);
-    Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
-    SetKeyValue(size, outPropertyDesc, "size");
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[LinkedList]]");
+    if (params.IsValidRequestUsingRange()) {
+        uint32_t originalSize = 0;
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetLinkedListValueWithRange(vm_, value, internalObjects_,
+            params.GetStartIndex(), params.GetGroupCount(), originalSize);
+        Local<JSValueRef> size = NumberRef::New(vm_, originalSize);
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[LinkedList]]", originalSize);
+    } else {
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetLinkedListValue(vm_, value, internalObjects_);
+        Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[LinkedList]]");
+    }
 }
 
 void RuntimeImpl::GetListValue(Local<JSValueRef> value,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
 {
-    Local<JSValueRef> jsValueRef = DebuggerApi::GetListValue(vm_, value, internalObjects_);
-    Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
-    SetKeyValue(size, outPropertyDesc, "size");
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[List]]");
+    if (params.IsValidRequestUsingRange()) {
+        uint32_t originalSize = 0;
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetListValueWithRange(vm_, value, internalObjects_,
+            params.GetStartIndex(), params.GetGroupCount(), originalSize);
+        Local<JSValueRef> size = NumberRef::New(vm_, originalSize);
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[List]]", originalSize);
+    } else {
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetListValue(vm_, value, internalObjects_);
+        Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[List]]");
+    }
 }
 
 void RuntimeImpl::GetPlainArrayValue(Local<JSValueRef> value,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
 {
-    Local<JSValueRef> jsValueRef = DebuggerApi::GetPlainArrayValue(vm_, value, internalObjects_);
-    Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
-    SetKeyValue(size, outPropertyDesc, "size");
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[PlainArray]]");
+    if (params.IsValidRequestUsingRange()) {
+        uint32_t originalSize = 0;
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetPlainArrayValueWithRange(vm_, value, internalObjects_,
+            params.GetStartIndex(), params.GetGroupCount(), originalSize);
+        Local<JSValueRef> size = NumberRef::New(vm_, originalSize);
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[PlainArray]]", originalSize);
+    } else {
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetPlainArrayValue(vm_, value, internalObjects_);
+        Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[PlainArray]]");
+    }
 }
 
 void RuntimeImpl::GetQueueValue(Local<JSValueRef> value,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
 {
-    Local<JSValueRef> jsValueRef = DebuggerApi::GetQueueValue(vm_, value, internalObjects_);
-    Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
-    SetKeyValue(size, outPropertyDesc, "size");
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[Queue]]");
+    if (params.IsValidRequestUsingRange()) {
+        uint32_t originalSize = 0;
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetQueueValueWithRange(vm_, value, internalObjects_,
+            params.GetStartIndex(), params.GetGroupCount(), originalSize);
+        Local<JSValueRef> size = NumberRef::New(vm_, originalSize);
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[Queue]]", originalSize);
+    } else {
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetQueueValue(vm_, value, internalObjects_);
+        Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[Queue]]");
+    }
 }
 
 void RuntimeImpl::GetStackValue(Local<JSValueRef> value,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
 {
-    Local<JSValueRef> jsValueRef = DebuggerApi::GetStackValue(vm_, value, internalObjects_);
-    Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
-    SetKeyValue(size, outPropertyDesc, "size");
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[Stack]]");
+    if (params.IsValidRequestUsingRange()) {
+        uint32_t originalSize = 0;
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetStackValueWithRange(vm_, value, internalObjects_,
+            params.GetStartIndex(), params.GetGroupCount(), originalSize);
+        Local<JSValueRef> size = NumberRef::New(vm_, originalSize);
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[Stack]]", originalSize);
+    } else {
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetStackValue(vm_, value, internalObjects_);
+        Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[Stack]]");
+    }
 }
 
 void RuntimeImpl::GetTreeMapValue(Local<JSValueRef> value,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
 {
-    Local<JSValueRef> jsValueRef = DebuggerApi::GetTreeMapValue(vm_, value, internalObjects_);
-    Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
-    SetKeyValue(size, outPropertyDesc, "size");
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[TreeMap]]");
+    if (params.IsValidRequestUsingRange()) {
+        uint32_t originalSize = 0;
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetTreeMapValueWithRange(vm_, value, internalObjects_,
+            params.GetStartIndex(), params.GetGroupCount(), originalSize);
+        Local<JSValueRef> size = NumberRef::New(vm_, originalSize);
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[TreeMap]]", originalSize);
+    } else {
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetTreeMapValue(vm_, value, internalObjects_);
+        Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[TreeMap]]");
+    }
 }
 
 void RuntimeImpl::GetTreeSetValue(Local<JSValueRef> value,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
 {
-    Local<JSValueRef> jsValueRef = DebuggerApi::GetTreeSetValue(vm_, value, internalObjects_);
-    Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
-    SetKeyValue(size, outPropertyDesc, "size");
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[TreeSet]]");
+    if (params.IsValidRequestUsingRange()) {
+        uint32_t originalSize = 0;
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetTreeSetValueWithRange(vm_, value, internalObjects_,
+            params.GetStartIndex(), params.GetGroupCount(), originalSize);
+        Local<JSValueRef> size = NumberRef::New(vm_, originalSize);
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[TreeSet]]", originalSize);
+    } else {
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetTreeSetValue(vm_, value, internalObjects_);
+        Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[TreeSet]]");
+    }
 }
 
 void RuntimeImpl::GetVectorValue(Local<JSValueRef> value,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
 {
-    Local<JSValueRef> jsValueRef = DebuggerApi::GetVectorValue(vm_, value, internalObjects_);
-    Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
-    SetKeyValue(size, outPropertyDesc, "size");
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[Vector]]");
+    if (params.IsValidRequestUsingRange()) {
+        uint32_t originalSize = 0;
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetVectorValueWithRange(vm_, value, internalObjects_,
+            params.GetStartIndex(), params.GetGroupCount(), originalSize);
+        Local<JSValueRef> size = NumberRef::New(vm_, originalSize);
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[Vector]]", originalSize);
+    } else {
+        Local<JSValueRef> jsValueRef = DebuggerApi::GetVectorValue(vm_, value, internalObjects_);
+        Local<JSValueRef> size = NumberRef::New(vm_, DebuggerApi::GetContainerLength(vm_, jsValueRef));
+        SetKeyValue(size, outPropertyDesc, "size");
+        SetKeyValue(jsValueRef, outPropertyDesc, "[[Vector]]");
+    }
 }
 
 void RuntimeImpl::GetProxyValue(Local<JSValueRef> value,
