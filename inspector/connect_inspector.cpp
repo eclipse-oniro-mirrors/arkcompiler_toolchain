@@ -33,6 +33,7 @@ static constexpr char OPEN_ARKUI_STATE_PROFILER[] = "ArkUIStateProfilerOpen";
 static constexpr char CLOSE_ARKUI_STATE_PROFILER[] = "ArkUIStateProfilerClose";
 static constexpr char START_RECORD_MESSAGE[] = "rsNodeStartRecord";
 static constexpr char STOP_RECORD_MESSAGE[] = "rsNodeStopRecord";
+static constexpr char DECODE_DISCONNECT_MSG[] = "disconnect";
 std::function<void(bool)> g_setConnectCallBack;
 
 void* HandleDebugManager(void* const server)
@@ -60,6 +61,11 @@ void OnConnectedMessage(const std::string& message)
         }
         for (auto& info : g_inspector->infoBuffer_) {
             g_inspector->connectServer_->SendMessage(info.second);
+        }
+    }
+    if (message.find(DECODE_DISCONNECT_MSG, 0) != std::string::npos) {
+        if (g_setConnectCallBack != nullptr) {
+            g_setConnectCallBack(false);
         }
     }
 }
