@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -425,9 +425,9 @@ HWTEST_F_L0(PtTypesTest, DescriptionForObjectForDate)
 {
     double input = 123456789.0;
     Local<DateRef> date = DateRef::New(ecmaVm, input);
-    bool arrayOrContainer = false;
+    std::string arrayOrContainer;
     std::string description = ObjectRemoteObject::DescriptionForObject(ecmaVm, date, arrayOrContainer);
-    ASSERT_TRUE(!arrayOrContainer);
+    ASSERT_TRUE(arrayOrContainer.empty());
     ASSERT_TRUE(description.find("GMT") != std::string::npos);
 }
 
@@ -435,9 +435,9 @@ HWTEST_F_L0(PtTypesTest, DescriptionForObjectForPromise)
 {
     Local<PromiseCapabilityRef> capability = PromiseCapabilityRef::New(ecmaVm);
     Local<PromiseRef> promise = capability->GetPromise(ecmaVm);
-    bool arrayOrContainer = false;
+    std::string arrayOrContainer;
     std::string description = ObjectRemoteObject::DescriptionForObject(ecmaVm, promise, arrayOrContainer);
-    ASSERT_TRUE(!arrayOrContainer);
+    ASSERT_TRUE(arrayOrContainer.empty());
     ASSERT_TRUE(description == "Promise");
 }
 
@@ -941,9 +941,9 @@ HWTEST_F_L0(PtTypesTest, SamplingHeapProfileTransferHead)
 HWTEST_F_L0(PtTypesTest, DescriptionForObjectTest)
 {
     Local<WeakMapRef> weakmap = WeakMapRef::New(ecmaVm);
-    bool arrayOrContainer = false;
+    std::string arrayOrContainer;
     std::string description = ObjectRemoteObject::DescriptionForObject(ecmaVm, weakmap, arrayOrContainer);
-    ASSERT_TRUE(arrayOrContainer);
+    ASSERT_TRUE(!arrayOrContainer.empty());
     ASSERT_TRUE(description.find("WeakMap") != std::string::npos);
 
     Local<MapRef> map = MapRef::New(ecmaVm);
@@ -1099,10 +1099,10 @@ HWTEST_F_L0(PtTypesTest, InvalidUtf16DescriptionTest)
     JSHandle<JSTaggedValue> primitiveStrHandle =
         JSHandle<JSTaggedValue>::Cast(factory->NewJSPrimitiveRef(PrimitiveType::PRIMITIVE_STRING, invalidStrHandle));
     Local<JSValueRef> primitiveStr = JSNApiHelper::ToLocal<JSValueRef>(primitiveStrHandle);
-    bool arrayOrContainer = false;
+    std::string arrayOrContainer;
     std::string primitiveStrDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, primitiveStr, arrayOrContainer);
     ASSERT_TRUE(primitiveStrDesc.find(invalidStrInDebugger) != std::string::npos);
-    ASSERT_TRUE(!arrayOrContainer);
+    ASSERT_TRUE(arrayOrContainer.empty());
 
     // RegExp
     JSHandle<JSHClass> jsRegExpClass = factory->NewEcmaHClass(JSRegExp::SIZE, JSType::JS_REG_EXP);
@@ -1117,28 +1117,28 @@ HWTEST_F_L0(PtTypesTest, InvalidUtf16DescriptionTest)
     Local<MapRef> mapRef = MapRef::New(ecmaVm);
     mapRef->Set(ecmaVm, invalidStrRef, invalidStrRef);
     std::string mapDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, mapRef, arrayOrContainer);
-    ASSERT_TRUE(arrayOrContainer);
+    ASSERT_TRUE(!arrayOrContainer.empty());
     ASSERT_TRUE(mapDesc.find(invalidStrInDebugger) != std::string::npos);
 
     // WeakMap
     Local<WeakMapRef> weakMapRef = WeakMapRef::New(ecmaVm);
     weakMapRef->Set(ecmaVm, primitiveStr, invalidStrRef);
     std::string weakMapDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, weakMapRef, arrayOrContainer);
-    ASSERT_TRUE(arrayOrContainer);
+    ASSERT_TRUE(!arrayOrContainer.empty());
     ASSERT_TRUE(weakMapDesc.find(invalidStrInDebugger) != std::string::npos);
 
     // Set
     Local<SetRef> setRef = SetRef::New(ecmaVm);
     setRef->Add(ecmaVm, invalidStrRef);
     std::string setDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, setRef, arrayOrContainer);
-    ASSERT_TRUE(arrayOrContainer);
+    ASSERT_TRUE(!arrayOrContainer.empty());
     ASSERT_TRUE(setDesc.find(invalidStrInDebugger) != std::string::npos);
 
     // WeakSet
     Local<WeakSetRef> weakSetRef = WeakSetRef::New(ecmaVm);
     weakSetRef->Add(ecmaVm, invalidStrRef);
     std::string weakSetDesc = ObjectRemoteObject::DescriptionForObject(ecmaVm, weakSetRef, arrayOrContainer);
-    ASSERT_TRUE(arrayOrContainer);
+    ASSERT_TRUE(!arrayOrContainer.empty());
     ASSERT_TRUE(weakSetDesc.find(invalidStrInDebugger) != std::string::npos);
 
     // Error

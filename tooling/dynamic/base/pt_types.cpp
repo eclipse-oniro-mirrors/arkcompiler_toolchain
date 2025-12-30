@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -111,6 +111,8 @@ const std::string RemoteObject::JSLocaleDescription = "Locale";            // NO
 const std::string RemoteObject::JSListFormatDescription = "ListFormat";    // NOLINT (readability-identifier-naming)
 const std::string RemoteObject::JSRelativeTimeFormatDescription =          // NOLINT (readability-identifier-naming)
     "RelativeTimeFormat";
+const std::string RemoteObject::ArrayMarker = "Array";                     // NOLINT (readability-identifier-naming)
+const std::string RemoteObject::ContainerMarker = "Container";             // NOLINT (readability-identifier-naming)
 
 std::unique_ptr<RemoteObject> RemoteObject::FromTagged(const EcmaVM *ecmaVm, Local<JSValueRef> tagged)
 {
@@ -350,7 +352,7 @@ GeneratorFunctionRemoteObject::GeneratorFunctionRemoteObject(const EcmaVM *ecmaV
 ObjectRemoteObject::ObjectRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged,
                                        const std::string &classname)
 {
-    bool arrayOrContainer = false;
+    std::string arrayOrContainer;
     std::string description = DescriptionForObject(ecmaVm, tagged, arrayOrContainer);
     SetPreviewValue(description);
     AppendingHashToDescription(ecmaVm, tagged, description);
@@ -366,7 +368,7 @@ ObjectRemoteObject::ObjectRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> t
 ObjectRemoteObject::ObjectRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged,
                                        const std::string &classname, const std::string &subtype)
 {
-    bool arrayOrContainer = false;
+    std::string arrayOrContainer;
     std::string description = DescriptionForObject(ecmaVm, tagged, arrayOrContainer);
     SetPreviewValue(description);
     AppendingHashToDescription(ecmaVm, tagged, description);
@@ -381,14 +383,14 @@ ObjectRemoteObject::ObjectRemoteObject(const EcmaVM *ecmaVm, Local<JSValueRef> t
 }
 
 std::string ObjectRemoteObject::DescriptionForObject(const EcmaVM *ecmaVm, Local<JSValueRef> tagged,
-    bool &arrayOrContainer)
+    std::string &arrayOrContainer)
 {
     // proxy must be placed in front of all object types
     if (tagged->IsProxy(ecmaVm)) {
         return RemoteObject::ProxyDescription;
     }
     if (tagged->IsArray(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ArrayMarker;
         return DescriptionForArray(ecmaVm, Local<ArrayRef>(tagged));
     }
     if (tagged->IsRegExp(ecmaVm)) {
@@ -398,19 +400,19 @@ std::string ObjectRemoteObject::DescriptionForObject(const EcmaVM *ecmaVm, Local
         return DescriptionForDate(ecmaVm, Local<DateRef>(tagged));
     }
     if (tagged->IsMap(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ContainerMarker;
         return DescriptionForMap(ecmaVm, Local<MapRef>(tagged));
     }
     if (tagged->IsWeakMap(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ContainerMarker;
         return DescriptionForWeakMap(ecmaVm, Local<WeakMapRef>(tagged));
     }
     if (tagged->IsSet(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ContainerMarker;
         return DescriptionForSet(ecmaVm, Local<SetRef>(tagged));
     }
     if (tagged->IsWeakSet(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ContainerMarker;
         return DescriptionForWeakSet(ecmaVm, Local<WeakSetRef>(tagged));
     }
     if (tagged->IsDataView(ecmaVm)) {
@@ -441,47 +443,47 @@ std::string ObjectRemoteObject::DescriptionForObject(const EcmaVM *ecmaVm, Local
         return DescriptionForSharedArrayBuffer(ecmaVm, Local<ArrayBufferRef>(tagged));
     }
     if (tagged->IsUint8Array(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ArrayMarker;
         return DescriptionForUint8Array(ecmaVm, Local<TypedArrayRef>(tagged));
     }
     if (tagged->IsUint8ClampedArray(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ArrayMarker;
         return DescriptionForUint8ClampedArray(ecmaVm, Local<TypedArrayRef>(tagged));
     }
     if (tagged->IsInt8Array(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ArrayMarker;
         return DescriptionForInt8Array(ecmaVm, Local<TypedArrayRef>(tagged));
     }
     if (tagged->IsUint16Array(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ArrayMarker;
         return DescriptionForUint16Array(ecmaVm, Local<TypedArrayRef>(tagged));
     }
     if (tagged->IsInt16Array(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ArrayMarker;
         return DescriptionForInt16Array(ecmaVm, Local<TypedArrayRef>(tagged));
     }
     if (tagged->IsUint32Array(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ArrayMarker;
         return DescriptionForUint32Array(ecmaVm, Local<TypedArrayRef>(tagged));
     }
     if (tagged->IsInt32Array(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ArrayMarker;
         return DescriptionForInt32Array(ecmaVm, Local<TypedArrayRef>(tagged));
     }
     if (tagged->IsFloat32Array(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ArrayMarker;
         return DescriptionForFloat32Array(ecmaVm, Local<TypedArrayRef>(tagged));
     }
     if (tagged->IsBigInt64Array(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ArrayMarker;
         return DescriptionForBigInt64Array(ecmaVm, Local<TypedArrayRef>(tagged));
     }
     if (tagged->IsBigUint64Array(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ArrayMarker;
         return DescriptionForBigUint64Array(ecmaVm, Local<TypedArrayRef>(tagged));
     }
     if (tagged->IsFloat64Array(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ArrayMarker;
         return DescriptionForFloat64Array(ecmaVm, Local<TypedArrayRef>(tagged));
     }
     if (tagged->IsJSPrimitiveRef(ecmaVm) && tagged->IsJSPrimitiveNumber(ecmaVm)) {
@@ -524,59 +526,59 @@ std::string ObjectRemoteObject::DescriptionForObject(const EcmaVM *ecmaVm, Local
         return DescriptionForJSListFormat();
     }
     if (tagged->IsArrayList(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ContainerMarker;
         return DescriptionForArrayList();
     }
     if (tagged->IsDeque(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ContainerMarker;
         return DescriptionForDeque();
     }
     if (tagged->IsHashMap(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ContainerMarker;
         return DescriptionForHashMap();
     }
     if (tagged->IsHashSet(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ContainerMarker;
         return DescriptionForHashSet();
     }
     if (tagged->IsLightWeightMap(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ContainerMarker;
         return DescriptionForLightWeightMap();
     }
     if (tagged->IsLightWeightSet(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ContainerMarker;
         return DescriptionForLightWeightSet();
     }
     if (tagged->IsLinkedList(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ContainerMarker;
         return DescriptionForLinkedList();
     }
     if (tagged->IsList(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ContainerMarker;
         return DescriptionForList();
     }
     if (tagged->IsPlainArray(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ContainerMarker;
         return DescriptionForPlainArray();
     }
     if (tagged->IsQueue(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ContainerMarker;
         return DescriptionForQueue();
     }
     if (tagged->IsStack(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ContainerMarker;
         return DescriptionForStack();
     }
     if (tagged->IsTreeMap(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ContainerMarker;
         return DescriptionForTreeMap();
     }
     if (tagged->IsTreeSet(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ContainerMarker;
         return DescriptionForTreeSet();
     }
     if (tagged->IsVector(ecmaVm)) {
-        arrayOrContainer = true;
+        arrayOrContainer = RemoteObject::ContainerMarker;
         return DescriptionForVector();
     }
     if (tagged->IsNativePointer(ecmaVm)) {
@@ -1193,8 +1195,8 @@ std::unique_ptr<PtJson> RemoteObject::ToJson() const
     if (objectId_) {
         result->Add("objectId", std::to_string(objectId_.value()).c_str());
     }
-    if (arrayOrContainer_ && arrayOrContainer_.value()) {
-        result->Add("arrayOrContainer", arrayOrContainer_.value());
+    if (arrayOrContainer_ && !(arrayOrContainer_.value().empty())) {
+        result->Add("arrayOrContainer", arrayOrContainer_->c_str());
     }
 
     return result;

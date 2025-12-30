@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,7 +89,8 @@ private:
     void GetAdditionalProperties(Local<JSValueRef> value,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
     void SetKeyValue(Local<JSValueRef> &jsValueRef,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc, const std::string &cstrProName);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc, const std::string &cstrProName,
+        uint32_t originalSize = NO_NEED_TO_ADJUST_SIZE);
     void GetPrimitiveNumberValue(Local<JSValueRef> value,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
     void GetPrimitiveStringValue(Local<JSValueRef> value,
@@ -111,49 +112,69 @@ private:
     void GetDateTimeFormatValue(Local<JSValueRef> value,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
     void GetSharedMapValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetMapValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetWeakMapValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetSendableSetValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetSetValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetWeakSetValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetDataViewValue(Local<JSValueRef> value,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
     void GetRegExpValue(Local<JSValueRef> value,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
     void GetArrayListValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetDequeValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetHashMapValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetHashSetValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetLightWeightMapValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetLightWeightSetValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetLinkedListValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetListValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetStackValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetPlainArrayValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetQueueValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetTreeMapValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetTreeSetValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetVectorValue(Local<JSValueRef> value,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void GetProxyValue(Local<JSValueRef> value,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
     void GetPromiseValue(Local<JSValueRef> value,
@@ -164,16 +185,28 @@ private:
     template <typename MapType>
     void GetMapValueCommon(MapType mapRef,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
- 
+
+    template <typename MapType>
+    void GetMapValueCommonWithRange(MapType mapRef,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
+
     template <typename SetType>
     void GetSetValueCommon(SetType setRef,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
- 
+
+    template <typename MapType>
+    void GetSetValueCommonWithRange(MapType setRef,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
+
     template <typename IterType>
     void GetIteratorValueCommon(IterType iterRef,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
  
     void AdjustStartAndLength(const GetPropertiesParams &params, int32_t &start, int32_t &length);
+
+    std::string ModifySizeInDescription(const std::string &description, uint32_t size);
 
     class Frontend {
     public:
@@ -195,6 +228,7 @@ private:
     std::unordered_map<RemoteObjectId, Global<JSValueRef>> properties_ {};
     Global<MapRef> internalObjects_;
     std::vector<std::string> runtimeExtendedProtocols_ {};
+    static constexpr uint32_t NO_NEED_TO_ADJUST_SIZE {0};
 
     friend class DebuggerImpl;
 };

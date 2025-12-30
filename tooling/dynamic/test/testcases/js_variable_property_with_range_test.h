@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2025 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -203,7 +203,7 @@ private:
         "\"writable\":false,\"configurable\":false,\"enumerable\":false,\"isOwn\":false},"
         "{\"name\":\"[[PlainArray]]\",\"value\":{\"type\":\"object\",\"subtype\":\"array\","
         "\"className\":\"Array\",\"unserializableValue\":\"Array(150)\",\"description\":"
-        "\"Array(150)\",\"objectId\":\"43\",\"arrayOrContainer\":true},\"writable\":false,"
+        "\"Array(150)\",\"objectId\":\"43\",\"arrayOrContainer\":\"Array\"},\"writable\":false,"
         "\"configurable\":false,\"enumerable\":false,\"isOwn\":false}]}}",
  
         "{\"id\":9,\"result\":{\"result\":[{\"name\":\"0\",\"value\":{\"type\":\"object\","
@@ -241,7 +241,7 @@ private:
         "\"writable\":false,\"configurable\":false,\"enumerable\":false,\"isOwn\":false},"
         "{\"name\":\"[[ArrayList]]\",\"value\":{\"type\":\"object\",\"subtype\":\"array\","
         "\"className\":\"Array\",\"unserializableValue\":\"Array(150)\","
-        "\"description\":\"Array(150)\",\"objectId\":\"55\",\"arrayOrContainer\":true},"
+        "\"description\":\"Array(150)\",\"objectId\":\"55\",\"arrayOrContainer\":\"Array\"},"
         "\"writable\":false,\"configurable\":false,\"enumerable\":false,\"isOwn\":false}]}}",
  
         "{\"id\":11,\"result\":{\"result\":[{\"name\":\"10\",\"value\":{\"type\":\"number\","
@@ -262,7 +262,7 @@ private:
         "\"writable\":false,\"configurable\":false,\"enumerable\":false,\"isOwn\":false},"
         "{\"name\":\"[[Entries]]\",\"value\":{\"type\":\"object\",\"subtype\":\"array\","
         "\"className\":\"Array\",\"unserializableValue\":\"Array(150)\","
-        "\"description\":\"Array(150)\",\"objectId\":\"57\",\"arrayOrContainer\":true},"
+        "\"description\":\"Array(150)\",\"objectId\":\"57\",\"arrayOrContainer\":\"Array\"},"
         "\"writable\":false,\"configurable\":false,\"enumerable\":false,\"isOwn\":false}]}}",
  
         "{\"id\":13,\"result\":{\"result\":[{\"name\":\"140\",\"value\":{\"type\":\"object\","
