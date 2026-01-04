@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -386,20 +386,24 @@ std::string DebugInfoCache::GetSourceCode(std::string_view sourceFile)
     return result;
 }
 
-std::vector<std::string> DebugInfoCache::GetPandaFiles(const std::function<bool(std::string_view)> &sourceFileFilter)
+std::vector<const panda_file::File*> DebugInfoCache::GetPandaFiles(
+    const std::function<bool(std::string_view)> &sourceFileFilter)
 {
-    std::vector<std::string> pandaFiles;
+    std::unordered_set<const panda_file::File*> uniquePandaFiles;
     // clang-format off
     EnumerateLineEntries(
         [](auto, auto &) { return true; },
         [&sourceFileFilter](auto, auto &debugInfo, auto methodId) {
             return sourceFileFilter(debugInfo.GetSourceFile(methodId));
         },
-        [&pandaFiles](const auto *pf, auto &, auto, auto &, auto) {
-            pandaFiles.emplace_back(pf->GetFilename());
+        [&uniquePandaFiles](const panda_file::File* pf, auto &, auto, auto &, auto) {
+            uniquePandaFiles.insert(pf);
             return false;
         });
     // clang-format on
+    std::vector<const panda_file::File*> pandaFiles;
+    pandaFiles.reserve(uniquePandaFiles.size());
+    pandaFiles.assign(uniquePandaFiles.begin(), uniquePandaFiles.end());
     return pandaFiles;
 }
 

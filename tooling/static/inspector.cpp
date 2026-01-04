@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -419,10 +419,14 @@ void Inspector::RemoveBreakpoint([[maybe_unused]] PtThread thread, BreakpointId 
     breakpointStorage_.RemoveBreakpoint(id);
 }
 
-void Inspector::RemoveBreakpoints(PtThread thread, const SourceFileFilter &sourceFilesFilter)
+void Inspector::RemoveBreakpointsByUrl(PtThread thread, const char* url, const SourceFileFilter &sourceFilesFilter)
 {
     os::memory::ReadLockHolder lock(vmDeathLock_);
     if (UNLIKELY(CheckVmDead())) {
+        return;
+    }
+
+    if (url == nullptr || strlen(url) == 0) {
         return;
     }
 
@@ -430,16 +434,12 @@ void Inspector::RemoveBreakpoints(PtThread thread, const SourceFileFilter &sourc
     if (debuggableThread == nullptr) {
         return;
     }
-    auto pandaFilesPaths = debugInfoCache_.GetPandaFiles(sourceFilesFilter);
-    if (pandaFilesPaths.empty()) {
-        return;
-    }
+    auto pandaFilesPaths =  debugInfoCache_.GetPandaFiles(sourceFilesFilter);
 
-    breakpointStorage_.RemoveBreakpoints([pfs = std::as_const(pandaFilesPaths)](const auto &loc) {
+    breakpointStorage_.RemoveBreakpoints([this, url, pfs = std::as_const(pandaFilesPaths)](const auto &loc) {
         for (const auto &pf : pfs) {
-            if (pf == loc.GetPandaFile()) {
-                return true;
-            }
+            const char* sourceFile = debugInfoCache_.GetDebugInfo(pf)->GetSourceFile(loc.GetMethodId());
+            return sourceFile && std::strcmp(sourceFile, url) == 0;
         }
         return false;
     });
@@ -816,7 +816,8 @@ void Inspector::RegisterMethodHandlers()
     inspectorServer_.OnCallDebuggerGetScriptSource(std::bind(&Inspector::GetSourceCode, this, _1));
     inspectorServer_.OnCallDebuggerPause(std::bind(&Inspector::Pause, this, _1));
     inspectorServer_.OnCallDebuggerRemoveBreakpoint(std::bind(&Inspector::RemoveBreakpoint, this, _1, _2));
-    inspectorServer_.OnCallDebuggerRemoveBreakpointsByUrl(std::bind(&Inspector::RemoveBreakpoints, this, _1, _2));
+    inspectorServer_.OnCallDebuggerRemoveBreakpointsByUrl(
+        std::bind(&Inspector::RemoveBreakpointsByUrl, this, _1, _2, _3));
     inspectorServer_.OnCallDebuggerRestartFrame(std::bind(&Inspector::RestartFrame, this, _1, _2));
     inspectorServer_.OnCallDebuggerResume(std::bind(&Inspector::Continue, this, _1));
     inspectorServer_.OnCallDebuggerSetAsyncCallStackDepth(std::bind(&Inspector::SetAsyncCallStackDepth, this, _1));

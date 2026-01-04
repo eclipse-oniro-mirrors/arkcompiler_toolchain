@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,7 +20,7 @@
 
 #include "assembly-emitter.h"
 #include "assembly-parser.h"
-#include "runtime.h"
+#include "include/runtime.h"
 #include "types/location.h"
 #include "libarkbase/utils/json_builder.h"
 
@@ -54,10 +54,15 @@ public:
 
     MOCK_METHOD(void, OnCallMock, (const std::string &method_call, Handler &&handler));
 
-    bool RunOne() override
+    bool RunOne()
     {
         return true;
     };
+
+    bool ParseMessage(const std::string& msg) override
+    {
+        return true;
+    }
 
 private:
     void OnCallImpl(const char *method_call, Handler &&handler) override
@@ -356,6 +361,9 @@ TEST_F(ServerTest, OnCallDebuggerGetScriptSource)
 {
     auto scriptId = 0;
 
+    EXPECT_CALL(server, CallMock(g_sessionId, "Debugger.scriptParsed", testing::_))
+        .WillOnce([&](testing::Unused, testing::Unused, auto s) {});
+
     EXPECT_CALL(server, CallMock(g_sessionId, "Debugger.paused", testing::_))
         .WillOnce([&](testing::Unused, testing::Unused, auto s) { ToObject(std::move(s)); });
 
@@ -430,6 +438,13 @@ std::optional<BreakpointId> handlerForSetBreak([[maybe_unused]] PtThread thread,
     return BreakpointId(line);
 }
 
+void handlerForRemoveBreakpointsByUrl([[maybe_unused]] PtThread thread,
+                                      [[maybe_unused]] const char* url,
+                                      [[maybe_unused]] SourceFileFilter sourceFileFilter)
+{
+    return;
+}
+
 std::optional<BreakpointId> handlerForSetBreakEmpty([[maybe_unused]] PtThread thread,
                                                     [[maybe_unused]] const std::function<bool(std::string_view)> &comp,
                                                     [[maybe_unused]] size_t line,
@@ -438,6 +453,60 @@ std::optional<BreakpointId> handlerForSetBreakEmpty([[maybe_unused]] PtThread th
 {
     sources.insert("source");
     return {};
+}
+
+TEST_F(ServerTest, OnCallDebuggerRemoveBreakpointsByUrl)
+{
+    auto scriptId = 0;
+    size_t start = 5;
+    size_t end = 5;
+    size_t start1 = 5;
+    size_t start2 = 6;
+    inspectorServer.CallTargetAttachedToTarget(g_mthread);
+    EXPECT_CALL(server, OnCallMock("Debugger.getPossibleAndSetBreakpointByUrl", testing::_))
+        .WillOnce([&](testing::Unused, auto handler) {
+            class RequestLocation : public JsonSerializable {
+            public:
+                explicit RequestLocation(std::string url, size_t lineNumber) : url_(url), lineNumber_(lineNumber) {}
+                void Serialize(JsonObjectBuilder &builder) const override
+                {
+                    builder.AddProperty("url", url_);
+                    builder.AddProperty("lineNumber", lineNumber_);
+                }
+            private:
+                std::string url_;
+                size_t lineNumber_;
+            };
+            std::vector<RequestLocation> requestLocations = {RequestLocation("file://source1", start1),
+                                                             RequestLocation("file://source2", start2)};
+            JsonObjectBuilder builder;
+            builder.AddProperty("locations", [&](JsonArrayBuilder &locations) {
+                for (const auto &loc : requestLocations) {
+                    locations.Add(loc);
+                }
+            });
+            handler(g_sessionId, JsonObject(std::move(builder).Build()));
+        });
+    inspectorServer.OnCallDebuggerGetPossibleAndSetBreakpointByUrl(handlerForSetBreak);
+    EXPECT_CALL(server, OnCallMock("Debugger.removeBreakpointsByUrl", testing::_))
+        .WillOnce([&](testing::Unused, auto handler) {
+            JsonObjectBuilder params;
+            params.AddProperty("url", "file://source2");
+            handler(g_sessionId, JsonObject(std::move(params).Build()));
+        });
+    inspectorServer.OnCallDebuggerRemoveBreakpointsByUrl(handlerForRemoveBreakpointsByUrl);
+    EXPECT_CALL(server, OnCallMock("Debugger.getPossibleBreakpoints", testing::_))
+        .WillOnce(std::bind(g_getPossibleBreakpointsHandler, scriptId, start, end, true, _1, _2));
+    auto getLinesTrue = [](std::string_view source, size_t startLine, size_t endLine, bool restrictToFunction) {
+        std::set<size_t> result;
+        if ((source == g_sourceFile) && restrictToFunction) {
+            for (auto i = startLine; i < endLine; i++) {
+                result.insert(i);
+            }
+        }
+        return result;
+    };
+    inspectorServer.OnCallDebuggerGetPossibleBreakpoints(getLinesTrue);
 }
 
 TEST_F(ServerTest, OnCallDebuggerSetBreakpoint)

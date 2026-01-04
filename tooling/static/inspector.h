@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -98,7 +98,7 @@ private:
     std::optional<BreakpointId> SetBreakpoint(PtThread thread, SourceFileFilter &&sourceFilesFilter, size_t lineNumber,
                                               std::set<std::string_view> &sourceFiles, const std::string *condition);
     void RemoveBreakpoint(PtThread thread, BreakpointId id);
-    void RemoveBreakpoints(PtThread thread, const SourceFileFilter &sourceFilesFilter);
+    void RemoveBreakpointsByUrl(PtThread thread, const char* url, const SourceFileFilter &sourceFilesFilter);
 
     void SetPauseOnExceptions(PtThread thread, PauseOnExceptionsState state);
 

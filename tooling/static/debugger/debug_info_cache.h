@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -50,7 +50,7 @@ public:
 
     std::string GetSourceCode(std::string_view sourceFile);
 
-    std::vector<std::string> GetPandaFiles(const std::function<bool(std::string_view)> &sourceFileFilter);
+    std::vector<const panda_file::File*> GetPandaFiles(const std::function<bool(std::string_view)> &sourceFileFilter);
 
     const char *GetSourceFile(Method *method);
 

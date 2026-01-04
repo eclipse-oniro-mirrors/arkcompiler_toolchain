@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,10 @@
 
 #include "libarkbase/utils/json_builder.h"
 #include "libarkbase/utils/json_parser.h"
+
+namespace ark::tooling::inspector {
+using SourceFileFilter = std::function<bool(std::string_view)>;
+}  // namespace ark::tooling::inspector
 
 namespace ark::tooling::inspector::test {
 template <typename T>

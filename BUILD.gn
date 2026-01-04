@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -279,6 +279,7 @@ group("ark_toolchain_unittest") {
     "./inspector/test:unittest",
     "./tooling/dynamic/test:unittest",
     "./websocket/test:unittest",
+    "./tooling/static:unittest",
   ]
   if (is_ohos && is_standard_system) {
     deps += [ "./test/fuzztest:fuzztest" ]
@@ -294,6 +295,7 @@ group("ark_toolchain_host_unittest") {
     "./inspector/test:host_unittest",
     "./tooling/dynamic/test:host_unittest",
     "./websocket/test:host_unittest",
+    "./tooling/static:host_unittest",
   ]
 }
 
