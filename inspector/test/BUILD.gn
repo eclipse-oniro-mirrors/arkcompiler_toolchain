@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Copyright (c) 2024-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -24,11 +24,13 @@ host_unittest_action("InspectorConnectTest") {
   sources = [
     # test file
     "connect_server_test.cpp",
+    "inspector_test.cpp",
   ]
 
   configs = [ "$toolchain_root:toolchain_test_config" ]
 
   deps = [
+    "$toolchain_root/inspector:ark_debugger",
     "$toolchain_root/inspector:connectserver_debugger",
     "$toolchain_root/websocket:websocket_client",
     "$toolchain_root/websocket:libwebsocket_server",

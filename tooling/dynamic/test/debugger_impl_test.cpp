@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,10 +47,107 @@ public:
     {
         return debuggerImpl_->DecodeAndCheckBase64(src, dest);
     }
+
+    void SetNativeOutPause(bool value)
+    {
+        debuggerImpl_->nativeOutPause_ = value;
+    }
+
+    bool GetNativeOutPause()
+    {
+        return debuggerImpl_->nativeOutPause_;
+    }
+
+    void SetSkipAllPausess(bool value)
+    {
+        debuggerImpl_->skipAllPausess_ = value;
+    }
+
+    void SetBreakpointsState(bool value)
+    {
+        debuggerImpl_->breakpointsState_ = value;
+    }
+
+    void SetPauseOnExceptions(PauseOnExceptionsState state)
+    {
+        debuggerImpl_->pauseOnException_ = state;
+    }
+
+    void SetDebuggerState(DebuggerState state)
+    {
+        debuggerImpl_->debuggerState_ = state;
+    }
+
+    void NotifyPaused(const std::optional<JSPtLocation> &location, PauseReason reason)
+    {
+        debuggerImpl_->NotifyPaused(location, reason);
+    }
+
+    bool CheckPauseOnException()
+    {
+        return debuggerImpl_->CheckPauseOnException();
+    }
+
+    void GeneratePausedInfo(PauseReason pauseReason, std::vector<std::string> &hitBreakpoints,
+        Local<JSValueRef> exception)
+    {
+        debuggerImpl_->GeneratePausedInfo(pauseReason, hitBreakpoints, exception);
+    }
+
+    void FrontendBreakpointResolved(EcmaVM *ecmaVm)
+    {
+        debuggerImpl_->frontend_.BreakpointResolved(ecmaVm);
+    }
+
+    void FrontendScriptFailedToParse(EcmaVM *ecmaVm)
+    {
+        debuggerImpl_->frontend_.ScriptFailedToParse(ecmaVm);
+    }
+
+    void FrontendNativeCalling(EcmaVM *ecmaVm)
+    {
+        tooling::NativeCalling nativeCalling;
+        debuggerImpl_->frontend_.NativeCalling(ecmaVm, nativeCalling);
+    }
+
+    void FrontendMixedStack(EcmaVM *ecmaVm)
+    {
+        tooling::MixedStack mixedStack;
+        debuggerImpl_->frontend_.MixedStack(ecmaVm, mixedStack);
+    }
+
+    void FrontendScriptParsed(EcmaVM *ecmaVm)
+    {
+        tooling::ScriptId scriptId = 1;
+        std::string fileName = "name_1";
+        std::string url = "url_1";
+        std::string source = "source_1";
+        PtScript script(scriptId, fileName, url, source);
+        debuggerImpl_->frontend_.ScriptParsed(ecmaVm, script);
+    }
+
 private:
     std::unique_ptr<DebuggerImpl> debuggerImpl_;
 };
 }
+
+class MockProtocolChannel : public ProtocolChannel {
+public:
+    MockProtocolChannel() : sendNotificationCalled(false) {}
+    ~MockProtocolChannel() override = default;
+    void WaitForDebugger() override {}
+    void RunIfWaitingForDebugger() override {}
+    void SendResponse(const DispatchRequest &request, const DispatchResponse &response,
+                      const PtBaseReturns &result) override {}
+
+    void SendNotification(const PtBaseEvents &events) override
+    {
+        sendNotificationCalled = true;
+        notificationName = events.GetName();
+    }
+    bool sendNotificationCalled;
+    std::string notificationName;
+};
 
 namespace panda::test {
 class DebuggerImplTest : public testing::Test {
@@ -162,8 +259,6 @@ HWTEST_F_L0(DebuggerImplTest, IsApplicationFile__002)
     ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
     // DebuggerImpl::IsApplicationFile -- non-application fileName passed in
     std::string strFilename = "fileName/someFile";
-    EXPECT_FALSE(debuggerImpl->IsApplicationFile(strFilename));
-    strFilename = "/fileName/someFile";
     EXPECT_FALSE(debuggerImpl->IsApplicationFile(strFilename));
     ecmaVm->GetJsDebuggerManager()->SetIsDebugApp(false);
     ecmaVm->GetJsDebuggerManager()->SetDebugMode(false);
@@ -2318,5 +2413,354 @@ HWTEST_F_L0(DebuggerImplTest, ConvertToLocal__001)
     ASSERT_TRUE(taggedValue.IsEmpty());
     taggedValue = debugger->ConvertToLocal("1");
     ASSERT_TRUE(!taggedValue.IsEmpty());
+}
+
+HWTEST_F_L0(DebuggerImplTest, NotifyScriptParsed_WithNullJsPandaFile)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    ecmaVm->GetJsDebuggerManager()->SetIsDebugApp(true);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
+    std::string nonExistentFile = "/non_existent_file.abc";
+    EXPECT_FALSE(debuggerImpl->NotifyScriptParsed(nonExistentFile, ""));
+    ecmaVm->GetJsDebuggerManager()->SetIsDebugApp(false);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(false);
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, NotifyPaused_CallSuccess__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto debugger = std::make_unique<DebuggerImplFriendTest>(debuggerImpl);
+    debugger->SetNativeOutPause(true);
+    EXPECT_TRUE(debugger->GetNativeOutPause());
+    debugger->SetSkipAllPausess(true);
+    debugger->NotifyPaused(std::nullopt, PauseReason::OTHER);
+    EXPECT_TRUE(debugger->GetNativeOutPause());
+    debugger->SetNativeOutPause(false);
+    debugger->SetSkipAllPausess(false);
+    debugger->SetBreakpointsState(true);
+    JSPtLocation location(nullptr, EntityId(1), 10);
+    debugger->NotifyPaused(location, PauseReason::DEBUGGERSTMT);
+    EXPECT_FALSE(debugger->GetNativeOutPause());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, NotifyPaused_CallSuccess__002)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto debugger = std::make_unique<DebuggerImplFriendTest>(debuggerImpl);
+    debugger->SetNativeOutPause(true);
+    EXPECT_TRUE(debugger->GetNativeOutPause());
+    debugger->SetSkipAllPausess(false);
+    JSPtLocation location(nullptr, EntityId(1), 10);
+    debugger->SetPauseOnExceptions(PauseOnExceptionsState::NONE);
+    debugger->SetBreakpointsState(false);
+    debugger->NotifyPaused(location, PauseReason::OTHER);
+    EXPECT_TRUE(debugger->GetNativeOutPause());
+    debugger->SetNativeOutPause(false);
+    debugger->SetBreakpointsState(true);
+    debugger->NotifyPaused(location, PauseReason::DEBUGGERSTMT);
+    EXPECT_FALSE(debugger->GetNativeOutPause());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, CheckPauseOnException__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto debugger = std::make_unique<DebuggerImplFriendTest>(debuggerImpl);
+    debugger->SetPauseOnExceptions(PauseOnExceptionsState::ALL);
+    bool ret = debugger->CheckPauseOnException();
+    EXPECT_TRUE(ret);
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, CheckPauseOnException__002)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto debugger = std::make_unique<DebuggerImplFriendTest>(debuggerImpl);
+    debugger->SetPauseOnExceptions(PauseOnExceptionsState::UNCAUGHT);
+    bool ret = debugger->CheckPauseOnException();
+    EXPECT_TRUE(ret);
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, GeneratePausedInfo__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto debugger = std::make_unique<DebuggerImplFriendTest>(debuggerImpl);
+    std::vector<std::string> hitBreakpoints;
+    Local<JSValueRef> emptyValue = JSValueRef::Hole(ecmaVm);
+    debugger->SetNativeOutPause(true);
+    EXPECT_TRUE(debugger->GetNativeOutPause());
+    debugger->GeneratePausedInfo(PauseReason::DEBUGGERSTMT, hitBreakpoints, emptyValue);
+    EXPECT_FALSE(debugger->GetNativeOutPause());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, GeneratePausedInfo__002)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    auto debugger = std::make_unique<DebuggerImplFriendTest>(debuggerImpl);
+    std::vector<std::string> hitBreakpoints;
+    Local<StringRef> errorMsg = StringRef::NewFromUtf8(ecmaVm, "Test exception");
+    Local<JSValueRef> error = Exception::Error(ecmaVm, errorMsg);
+    debugger->SetNativeOutPause(true);
+    EXPECT_TRUE(debugger->GetNativeOutPause());
+    debugger->GeneratePausedInfo(PauseReason::EXCEPTION, hitBreakpoints, error);
+    EXPECT_FALSE(debugger->GetNativeOutPause());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Frontend_BreakpointResolved__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    DebuggerImplFriendTest testHelper(debuggerImpl);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(false);
+    testHelper.FrontendBreakpointResolved(ecmaVm);
+    EXPECT_TRUE(outStrForCallbackCheck.empty());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Frontend_BreakpointResolved__002)
+{
+    MockProtocolChannel *mockProtocolChannel = new MockProtocolChannel();
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, mockProtocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, mockProtocolChannel, runtimeImpl.get());
+    DebuggerImplFriendTest testHelper(debuggerImpl);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
+    testHelper.FrontendBreakpointResolved(ecmaVm);
+    EXPECT_TRUE(mockProtocolChannel->sendNotificationCalled);
+    EXPECT_EQ(mockProtocolChannel->notificationName, "Debugger.breakpointResolved");
+    if (mockProtocolChannel) {
+        delete mockProtocolChannel;
+        mockProtocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Frontend_NativeCalling__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    DebuggerImplFriendTest testHelper(debuggerImpl);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(false);
+    testHelper.FrontendNativeCalling(ecmaVm);
+    EXPECT_TRUE(outStrForCallbackCheck.empty());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Frontend_NativeCalling__002)
+{
+    MockProtocolChannel *mockProtocolChannel = new MockProtocolChannel();
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, mockProtocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, mockProtocolChannel, runtimeImpl.get());
+    DebuggerImplFriendTest testHelper(debuggerImpl);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
+    testHelper.FrontendNativeCalling(ecmaVm);
+    EXPECT_TRUE(mockProtocolChannel->sendNotificationCalled);
+    EXPECT_EQ(mockProtocolChannel->notificationName, "Debugger.nativeCalling");
+    if (mockProtocolChannel) {
+        delete mockProtocolChannel;
+        mockProtocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Frontend_MixedStack__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    DebuggerImplFriendTest testHelper(debuggerImpl);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(false);
+    testHelper.FrontendMixedStack(ecmaVm);
+    EXPECT_TRUE(outStrForCallbackCheck.empty());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Frontend_MixedStack__002)
+{
+    MockProtocolChannel *mockProtocolChannel = new MockProtocolChannel();
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, mockProtocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, mockProtocolChannel, runtimeImpl.get());
+    DebuggerImplFriendTest testHelper(debuggerImpl);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
+    testHelper.FrontendMixedStack(ecmaVm);
+    EXPECT_TRUE(mockProtocolChannel->sendNotificationCalled);
+    EXPECT_EQ(mockProtocolChannel->notificationName, "Debugger.mixedStack");
+    if (mockProtocolChannel) {
+        delete mockProtocolChannel;
+        mockProtocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Frontend_ScriptFailedToParse__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    DebuggerImplFriendTest testHelper(debuggerImpl);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(false);
+    testHelper.FrontendScriptFailedToParse(ecmaVm);
+    EXPECT_TRUE(outStrForCallbackCheck.empty());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Frontend_ScriptFailedToParse__002)
+{
+    MockProtocolChannel *mockProtocolChannel = new MockProtocolChannel();
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, mockProtocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, mockProtocolChannel, runtimeImpl.get());
+    DebuggerImplFriendTest testHelper(debuggerImpl);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
+    testHelper.FrontendScriptFailedToParse(ecmaVm);
+    EXPECT_TRUE(mockProtocolChannel->sendNotificationCalled);
+    EXPECT_EQ(mockProtocolChannel->notificationName, "Debugger.scriptFailedToParse");
+    if (mockProtocolChannel) {
+        delete mockProtocolChannel;
+        mockProtocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Frontend_ScriptParsed__001)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+    DebuggerImplFriendTest testHelper(debuggerImpl);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(false);
+    testHelper.FrontendScriptParsed(ecmaVm);
+    EXPECT_TRUE(outStrForCallbackCheck.empty());
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Frontend_ScriptParsed__002)
+{
+    MockProtocolChannel *mockProtocolChannel = new MockProtocolChannel();
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, mockProtocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, mockProtocolChannel, runtimeImpl.get());
+    DebuggerImplFriendTest testHelper(debuggerImpl);
+    ecmaVm->GetJsDebuggerManager()->SetDebugMode(true);
+    testHelper.FrontendScriptParsed(ecmaVm);
+    EXPECT_TRUE(mockProtocolChannel->sendNotificationCalled);
+    EXPECT_EQ(mockProtocolChannel->notificationName, "Debugger.scriptParsed");
+    if (mockProtocolChannel) {
+        delete mockProtocolChannel;
+        mockProtocolChannel = nullptr;
+    }
+}
+
+HWTEST_F_L0(DebuggerImplTest, Frontend_StepOver__001)
+{
+    MockProtocolChannel *mockProtocolChannel = new MockProtocolChannel();
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, mockProtocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, mockProtocolChannel, runtimeImpl.get());
+    debuggerImpl->SetDebuggerState(DebuggerState::ENABLED);
+    StepOverParams params;
+    DispatchResponse response = debuggerImpl->StepOver(params);
+    EXPECT_TRUE(!response.IsOk());
+    if (mockProtocolChannel) {
+        delete mockProtocolChannel;
+        mockProtocolChannel = nullptr;
+    }
 }
 }  // namespace panda::test

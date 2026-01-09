@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -999,6 +999,54 @@ HWTEST_F_L0(PtTypesTest, FromTaggedTest)
     remoteObject = RemoteObject::FromTagged(ecmaVm, nativepointer);
     description = remoteObject->GetDescription();
     ASSERT_TRUE(description.find("External") != std::string::npos);
+}
+
+HWTEST_F_L0(PtTypesTest, FromTaggedPrimitiveTypes)
+{
+    // Test number
+    int32_t input = 12345;
+    Local<NumberRef> numberRef = NumberRef::New(ecmaVm, input);
+    std::unique_ptr<RemoteObject> remoteObject2 = RemoteObject::FromTagged(ecmaVm, numberRef);
+    std::string description = remoteObject2->GetType();
+    ASSERT_EQ(description, "number");
+
+    // Test boolean - true
+    Local<BooleanRef> trueRef = BooleanRef::New(ecmaVm, true);
+    std::unique_ptr<RemoteObject> trueRemoteObj = RemoteObject::FromTagged(ecmaVm, trueRef);
+    ASSERT_TRUE(trueRemoteObj != nullptr);
+    ASSERT_EQ(trueRemoteObj->GetType(), RemoteObject::TypeName::Boolean);
+    ASSERT_TRUE(trueRemoteObj->HasDescription());
+    ASSERT_EQ(trueRemoteObj->GetDescription(), "true");
+
+    // Test boolean - false
+    Local<BooleanRef> falseRef = BooleanRef::New(ecmaVm, false);
+    std::unique_ptr<RemoteObject> falseRemoteObj = RemoteObject::FromTagged(ecmaVm, falseRef);
+    ASSERT_TRUE(falseRemoteObj != nullptr);
+    ASSERT_EQ(falseRemoteObj->GetType(), RemoteObject::TypeName::Boolean);
+    ASSERT_TRUE(falseRemoteObj->HasDescription());
+    ASSERT_EQ(falseRemoteObj->GetDescription(), "false");
+
+    // Test number
+    Local<NumberRef> numberRef2 = NumberRef::New(ecmaVm, 123.45);
+    std::unique_ptr<RemoteObject> numberRemoteObj = RemoteObject::FromTagged(ecmaVm, numberRef2);
+    ASSERT_TRUE(numberRemoteObj != nullptr);
+    ASSERT_EQ(numberRemoteObj->GetType(), RemoteObject::TypeName::Number);
+    ASSERT_TRUE(numberRemoteObj->HasDescription());
+
+    // Test bigint
+    int64_t num = 456;
+    Local<BigIntRef> bigIntRef = BigIntRef::New(ecmaVm, num);
+    std::unique_ptr<RemoteObject> bigIntRemoteObj = RemoteObject::FromTagged(ecmaVm, bigIntRef);
+    ASSERT_TRUE(bigIntRemoteObj != nullptr);
+    ASSERT_EQ(bigIntRemoteObj->GetType(), RemoteObject::TypeName::Bigint);
+    ASSERT_TRUE(bigIntRemoteObj->HasDescription());
+    ASSERT_TRUE(bigIntRemoteObj->GetDescription().find("456n") != std::string::npos);
+
+    Local<WeakSetRef> weakSetRef = WeakSetRef::New(ecmaVm);
+    std::unique_ptr<RemoteObject> weakSetObj = RemoteObject::FromTagged(ecmaVm, weakSetRef);
+    ASSERT_TRUE(weakSetObj != nullptr);
+    description = weakSetObj->GetDescription();
+    ASSERT_TRUE(description.find("WeakSet") != std::string::npos);
 }
 
 HWTEST_F_L0(PtTypesTest, NativeRangeCreateTest)

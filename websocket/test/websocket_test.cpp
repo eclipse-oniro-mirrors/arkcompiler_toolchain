@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include <arpa/inet.h>
 #include <csignal>
+#include <fcntl.h>
 #include <securec.h>
 #include <sys/un.h>
 
@@ -279,4 +280,189 @@ HWTEST_F(WebSocketTest, ServerAbnormalTest, testing::ext::TestSize.Level0)
                   << errno << ", desc = " << strerror(errno) << std::endl;
     }
 }
+
+HWTEST_F(WebSocketTest, InitUnixWebSocketWithValidSocketfdTest, testing::ext::TestSize.Level0)
+{
+#if defined(OHOS_PLATFORM)
+    WebSocketServer serverSocket;
+    int sockfd[2];
+    bool ret = false;
+    ASSERT_EQ(socketpair(AF_UNIX, SOCK_STREAM, 0, sockfd), 0);
+    ret = serverSocket.InitUnixWebSocket(sockfd[0]);
+    ASSERT_TRUE(ret);
+    ret = serverSocket.InitUnixWebSocket(sockfd[1]);
+    ASSERT_TRUE(ret);
+    serverSocket.Close();
+    close(sockfd[0]);
+    close(sockfd[1]);
+#endif
+}
+
+HWTEST_F(WebSocketTest, InitUnixWebSocketWithInvalidFdTest, testing::ext::TestSize.Level0)
+{
+#if defined(OHOS_PLATFORM)
+    WebSocketServer invalidFdServerSocket;
+    bool ret = invalidFdServerSocket.InitUnixWebSocket(-1);
+    ASSERT_FALSE(ret);
+#endif
+}
+
+HWTEST_F(WebSocketTest, InitUnixWebSocketNormalInitCloseTest, testing::ext::TestSize.Level0)
+{
+#if defined(OHOS_PLATFORM)
+    WebSocketServer normalServerSocket;
+    int sockfd[2];
+    bool ret = false;
+    ASSERT_EQ(socketpair(AF_UNIX, SOCK_STREAM, 0, sockfd), 0);
+    ret = normalServerSocket.InitUnixWebSocket(sockfd[0]);
+    ASSERT_TRUE(ret);
+    normalServerSocket.Close();
+    close(sockfd[0]);
+    close(sockfd[1]);
+#endif
+}
+
+HWTEST_F(WebSocketTest, InitUnixWebSocketWithClosedFdTest, testing::ext::TestSize.Level0)
+{
+#if defined(OHOS_PLATFORM)
+    WebSocketServer closedFdServerSocket;
+    int closedFd = socket(AF_UNIX, SOCK_STREAM, 0);
+    ASSERT_GE(closedFd, 0);
+    close(closedFd);
+    bool ret = closedFdServerSocket.InitUnixWebSocket(closedFd);
+    ASSERT_FALSE(ret);
+#endif
+}
+
+HWTEST_F(WebSocketTest, ConnectUnixWebSocketBySocketpairTest, testing::ext::TestSize.Level0)
+{
+#if defined(OHOS_PLATFORM)
+    WebSocketServer serverSocket;
+    int sockfd[2];
+    bool ret = false;
+    ASSERT_EQ(socketpair(AF_UNIX, SOCK_STREAM, 0, sockfd), 0);
+    ASSERT_TRUE(serverSocket.InitUnixWebSocket(sockfd[0]));
+    pid_t pid = fork();
+    if (pid == 0) {
+        const char* upgradeRequest = "GET / HTTP/1.1\r\n"
+                                     "Host: localhost\r\n"
+                                     "Upgrade: websocket\r\n"
+                                     "Connection: Upgrade\r\n"
+                                     "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
+                                     "Sec-WebSocket-Version: 13\r\n"
+                                     "\r\n";
+        ssize_t sent = send(sockfd[1], upgradeRequest, strlen(upgradeRequest), 0);
+        ASSERT_EQ(sent, static_cast<ssize_t>(strlen(upgradeRequest)));
+        char buffer[1024] = {0};
+        ssize_t received = recv(sockfd[1], buffer, sizeof(buffer) - 1, 0);
+        ASSERT_GT(received, 0);
+        close(sockfd[1]);
+        exit(0);
+    } else if (pid > 0) {
+        ret = serverSocket.ConnectUnixWebSocketBySocketpair();
+        ASSERT_TRUE(ret);
+        int status;
+        waitpid(pid, &status, 0);
+        ASSERT_EQ(status, 0);
+        serverSocket.Close();
+    } else {
+        std::cerr << "ConnectUnixWebSocketBySocketpairTest::fork failed, error = "
+                  << errno << ", desc = " << strerror(errno) << std::endl;
+    }
+    close(sockfd[0]);
+#endif
+}
+
+HWTEST_F(WebSocketTest, ConnectUnixWebSocketBySocketpairFailedTest, testing::ext::TestSize.Level0)
+{
+#if defined(OHOS_PLATFORM)
+    WebSocketServer serverSocket;
+    int sockfd[2];
+    bool ret = false;
+    ASSERT_EQ(socketpair(AF_UNIX, SOCK_STREAM, 0, sockfd), 0);
+    ASSERT_TRUE(serverSocket.InitUnixWebSocket(sockfd[0]));
+    pid_t pid = fork();
+    if (pid == 0) {
+        const char* invalidRequest = "GET / HTTP/1.1\r\n"
+                                     "Host: localhost\r\n"
+                                     "\r\n";
+        ssize_t sent = send(sockfd[1], invalidRequest, strlen(invalidRequest), 0);
+        ASSERT_EQ(sent, static_cast<ssize_t>(strlen(invalidRequest)));
+        char buffer[1024] = {0};
+        ssize_t received = recv(sockfd[1], buffer, sizeof(buffer) - 1, 0);
+        ASSERT_GT(received, 0);
+        close(sockfd[1]);
+        exit(0);
+    } else if (pid > 0) {
+        ret = serverSocket.ConnectUnixWebSocketBySocketpair();
+        ASSERT_FALSE(ret);
+        int status;
+        waitpid(pid, &status, 0);
+        ASSERT_EQ(status, 0);
+        serverSocket.Close();
+    } else {
+        std::cerr << "ConnectUnixWebSocketBySocketpairHandshakeFailedTest::fork failed, error = "
+                  << errno << ", desc = " << strerror(errno) << std::endl;
+    }
+    close(sockfd[0]);
+#endif
+}
+
+HWTEST_F(WebSocketTest, InitTcpWebSocketInvalidPortTest, testing::ext::TestSize.Level0)
+{
+    WebSocketServer serverSocket;
+    bool ret = false;
+    ret = serverSocket.InitTcpWebSocket(-1, 5);
+    ASSERT_FALSE(ret);
+}
+
+HWTEST_F(WebSocketTest, InitTcpWebSocketAlreadyInitedTest, testing::ext::TestSize.Level0)
+{
+    WebSocketServer serverSocket;
+    bool ret = false;
+    ret = serverSocket.InitTcpWebSocket(TCP_PORT, 5);
+    ASSERT_TRUE(ret);
+    ret = serverSocket.InitTcpWebSocket(TCP_PORT, 5);
+    ASSERT_TRUE(ret);
+    serverSocket.Close();
+}
+
+HWTEST_F(WebSocketTest, InitTcpWebSocketPortInUseTest, testing::ext::TestSize.Level0)
+{
+    WebSocketServer serverSocket1;
+    WebSocketServer serverSocket2;
+    bool ret = false;
+    ret = serverSocket1.InitTcpWebSocket(TCP_PORT + 2, 5);
+    ASSERT_TRUE(ret);
+    ret = serverSocket2.InitTcpWebSocket(TCP_PORT + 2, 5);
+    ASSERT_FALSE(ret);
+    serverSocket1.Close();
+}
+
+HWTEST_F(WebSocketTest, InitToolchainWebSocketForPortTest, testing::ext::TestSize.Level0)
+{
+    bool ret = false;
+    WebSocketClient clientSocket1;
+    ret = clientSocket1.InitToolchainWebSocketForPort(-1, 5);
+    ASSERT_FALSE(ret);
+    WebSocketClient clientSocket2;
+    struct rlimit originalLimit;
+    ASSERT_EQ(getrlimit(RLIMIT_NOFILE, &originalLimit), 0);
+    struct rlimit newLimit;
+    newLimit.rlim_cur = 2;
+    newLimit.rlim_max = originalLimit.rlim_max;
+    ASSERT_EQ(setrlimit(RLIMIT_NOFILE, &newLimit), 0);
+    std::vector<int> dummyFds;
+    int fd;
+    while ((fd = open("/dev/null", O_RDONLY)) >= 0) {
+        dummyFds.push_back(fd);
+    }
+    ret = clientSocket2.InitToolchainWebSocketForPort(8080, 5);
+    ASSERT_FALSE(ret);
+    for (int dummyFd : dummyFds) {
+        close(dummyFd);
+    }
+    ASSERT_EQ(setrlimit(RLIMIT_NOFILE, &originalLimit), 0);
+}
+
 }  // namespace panda::test

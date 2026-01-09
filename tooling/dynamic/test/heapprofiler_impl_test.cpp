@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "agent/heapprofiler_impl.h"
 #include "ecmascript/tests/test_helper.h"
+#include <uv.h>
 
 using namespace panda::ecmascript;
 using namespace panda::ecmascript::tooling;
@@ -51,6 +52,14 @@ public:
     {
         heapprofilerImpl_->frontend_.ReportHeapSnapshotProgress(done, total);
     }
+
+    static void TestHeapTrackingCallback(uv_timer_t* handle)
+    {
+#if defined(ECMASCRIPT_SUPPORT_HEAPPROFILER)
+        HeapProfilerImpl::HeapTrackingCallback(handle);
+#endif
+    }
+
 private:
     std::unique_ptr<HeapProfilerImpl> heapprofilerImpl_;
 };
@@ -619,5 +628,250 @@ HWTEST_F_L0(HeapProfilerImplTest, ReportHeapSnapshotProgress)
     auto heapprofiler = std::make_unique<HeapProfilerImplFriendTest>(tracing);
     heapprofiler->ReportHeapSnapshotProgress(0, 0);
     ASSERT_TRUE(result == "");
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplDispatchGetSamplingProfile)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(heapProfiler));
+    std::string msg = "";
+    msg += R"({"id":0,"method":"HeapProfiler.getSamplingProfile","params":{}})";
+    DispatchRequest request(msg);
+    dispatcherImpl->Dispatch(request);
+    ASSERT_TRUE(result.find("GetSamplingProfile fail") != std::string::npos);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplDispatchGetSamplingProfileSuccess)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(heapProfiler));
+    std::string msg1 = "";
+    msg1 += R"({"id":0,"method":"HeapProfiler.startSampling","params":{"samplingInterval":1000}})";
+    DispatchRequest request1(msg1);
+    dispatcherImpl->Dispatch(request1);
+    result.clear();
+    std::string msg2 = "";
+    msg2 += R"({"id":0,"method":"HeapProfiler.getSamplingProfile","params":{}})";
+    DispatchRequest request2(msg2);
+    dispatcherImpl->Dispatch(request2);
+    ASSERT_TRUE(result.find("\"result\"") != std::string::npos);
+    ASSERT_TRUE(result.find("\"error\"") == std::string::npos);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplDispatchStartSampling)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(heapProfiler));
+    std::string msg1 = "";
+    msg1 += R"({"id":0,"method":"HeapProfiler.startSampling","params":{"samplingInterval":1000}})";
+    DispatchRequest request1(msg1);
+    dispatcherImpl->Dispatch(request1);
+    ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
+    result.clear();
+    std::string msg2 = "";
+    msg2 += R"({"id":0,"method":"HeapProfiler.startSampling","params":{"samplingInterval":"Test"}})";
+    DispatchRequest request2(msg2);
+    dispatcherImpl->Dispatch(request2);
+    ASSERT_TRUE(result.find("wrong params") != std::string::npos);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplDispatchStartTrackingHeapObjects)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(heapProfiler));
+    std::string msg1 = "";
+    msg1 += R"({"id":0,"method":"HeapProfiler.startTrackingHeapObjects","params":{"trackAllocations":false}})";
+    DispatchRequest request1(msg1);
+    dispatcherImpl->Dispatch(request1);
+    ASSERT_TRUE(result.find("Loop is nullptr") != std::string::npos);
+    result.clear();
+    std::string msg2 = "";
+    msg2 += R"({"id":0,"method":"HeapProfiler.startTrackingHeapObjects","params":{"trackAllocations":0}})";
+    DispatchRequest request2(msg2);
+    dispatcherImpl->Dispatch(request2);
+    ASSERT_TRUE(result == "{\"id\":0,\"result\":{\"code\":1,\"message\":\"wrong params\"}}");
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplDispatchStopSampling)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(heapProfiler));
+    std::string msg = "";
+    msg += R"({"id":0,"method":"HeapProfiler.stopSampling","params":{}})";
+    DispatchRequest request(msg);
+    dispatcherImpl->Dispatch(request);
+    ASSERT_TRUE(result.find("StopSampling fail") != std::string::npos);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplDispatchStopSamplingSuccess)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(heapProfiler));
+    std::string msg1 = "";
+    msg1 += R"({"id":0,"method":"HeapProfiler.startSampling","params":{"samplingInterval":1000}})";
+    DispatchRequest request1(msg1);
+    dispatcherImpl->Dispatch(request1);
+    result.clear();
+    std::string msg2 = "";
+    msg2 += R"({"id":0,"method":"HeapProfiler.stopSampling","params":{}})";
+    DispatchRequest request2(msg2);
+    dispatcherImpl->Dispatch(request2);
+    ASSERT_TRUE(result.find("\"result\"") != std::string::npos);
+    ASSERT_TRUE(result.find("\"error\"") == std::string::npos);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplDispatchStopTrackingHeapObjects_01)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(heapProfiler));
+    std::string msg1 = "";
+    msg1 += R"({"id":0,"method":"HeapProfiler.stopTrackingHeapObjects","params":{"reportProgress":false}})";
+    DispatchRequest request1(msg1);
+    dispatcherImpl->Dispatch(request1);
+    ASSERT_TRUE(result.find("StopHeapTracking fail") != std::string::npos);
+    result.clear();
+    std::string msg2 = "";
+    msg2 += R"({"id":0,"method":"HeapProfiler.stopTrackingHeapObjects","params":{"reportProgress":0}})";
+    DispatchRequest request2(msg2);
+    dispatcherImpl->Dispatch(request2);
+    ASSERT_TRUE(result == "{\"id\":0,\"result\":{\"code\":1,\"message\":\"wrong params\"}}");
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplDispatchStopTrackingHeapObjects_02)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(tracing));
+    std::string msg = std::string() + R"({"id":0,"method":"HeapProfiler.stopTrackingHeapObjects","params":{
+        "reportProgress":10,
+        "treatGlobalObjectsAsRoots":10,
+        "captureNumericValue":10}})";
+    DispatchRequest request(msg);
+    dispatcherImpl->Dispatch(request);
+    ASSERT_TRUE(result.find("wrong params") != std::string::npos);
+    msg = std::string() + R"({"id":0,"method":"HeapProfiler.stopTrackingHeapObjects","params":{
+        "reportProgress":true,
+        "treatGlobalObjectsAsRoots":true,
+        "captureNumericValue":true}})";
+    DispatchRequest request1(msg);
+    dispatcherImpl->Dispatch(request1);
+    ASSERT_TRUE(result.find("StopHeapTracking fail") != std::string::npos);
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplDispatchTakeHeapSnapshot)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(heapProfiler));
+    std::string msg1 = "";
+    msg1 += R"({"id":0,"method":"HeapProfiler.takeHeapSnapshot","params":{
+        "reportProgress":10,
+        "treatGlobalObjectsAsRoots":10,
+        "captureNumericValue":10}})";
+    DispatchRequest request1(msg1);
+    dispatcherImpl->Dispatch(request1);
+    ASSERT_TRUE(result.find("wrong params") != std::string::npos);
+    result.clear();
+    std::string msg2 = "";
+    msg2 += R"({"id":0,"method":"HeapProfiler.takeHeapSnapshot","params":{
+        "reportProgress":true,
+        "treatGlobalObjectsAsRoots":true,
+        "captureNumericValue":true}})";
+    DispatchRequest request2(msg2);
+    dispatcherImpl->Dispatch(request2);
+    ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, HeapTrackingCallbackTest)
+{
+#if defined(ECMASCRIPT_SUPPORT_HEAPPROFILER)
+    std::string result = "";
+    uv_timer_t handle1;
+    handle1.data = nullptr;
+    HeapProfilerImplFriendTest::TestHeapTrackingCallback(&handle1);
+    ASSERT_TRUE(result == "");
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    uv_timer_t handle2;
+    handle2.data = heapProfiler.get();
+    HeapProfilerImplFriendTest::TestHeapTrackingCallback(&handle2);
+    ASSERT_TRUE(result == "");
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
+#endif
 }
 }  // namespace panda::test
