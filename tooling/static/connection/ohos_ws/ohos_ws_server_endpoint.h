@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,7 +37,12 @@ protected:
 private:
     void SendMessage(const std::string &message) override
     {
-        auto wasSent = endpoint_->SendReply(message);
+        auto wasSent = false;
+        if (endpoint_ != nullptr) {
+            if (endpoint_->IsConnected()) {
+                wasSent = endpoint_->SendReply(message);
+            }
+        }
         if (!wasSent) {
             LOG(INFO, DEBUGGER) << "Did not send message: " << message;
         }
