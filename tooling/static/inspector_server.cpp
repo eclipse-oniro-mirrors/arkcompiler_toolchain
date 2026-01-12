@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -386,7 +386,8 @@ static auto GetUrlFileFilter(const std::string &url)
     };
 }
 
-void InspectorServer::OnCallDebuggerRemoveBreakpointsByUrl(std::function<void(PtThread, SourceFileFilter)> &&handler)
+void InspectorServer::OnCallDebuggerRemoveBreakpointsByUrl(
+    std::function<void(PtThread, const char*, SourceFileFilter)> &&handler)
 {
     // clang-format off
     server_.OnCall("Debugger.removeBreakpointsByUrl",
@@ -397,7 +398,7 @@ void InspectorServer::OnCallDebuggerRemoveBreakpointsByUrl(std::function<void(Pt
                 LOG(INFO, DEBUGGER) << msg;
                 return Unexpected(JRPCError(msg, ErrorCode::PARSE_ERROR));
             }
-            handler(sessionManager_.GetThreadBySessionId(sessionId), GetUrlFileFilter(*url));
+            handler(sessionManager_.GetThreadBySessionId(sessionId), (*url).c_str(), GetUrlFileFilter(*url));
             return std::unique_ptr<JsonSerializable>();
     });
     // clang-format on

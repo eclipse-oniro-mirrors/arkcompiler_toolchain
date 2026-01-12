@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -84,7 +84,7 @@ public:
     void OnCallDebuggerGetScriptSource(std::function<std::string(std::string_view)> &&handler);
     void OnCallDebuggerPause(std::function<void(PtThread)> &&handler);
     void OnCallDebuggerRemoveBreakpoint(std::function<void(PtThread, BreakpointId)> &&handler);
-    void OnCallDebuggerRemoveBreakpointsByUrl(std::function<void(PtThread, SourceFileFilter)> &&handler);
+    void OnCallDebuggerRemoveBreakpointsByUrl(std::function<void(PtThread, const char*, SourceFileFilter)> &&handler);
     void OnCallDebuggerRestartFrame(std::function<void(PtThread, FrameId)> &&handler);
     void OnCallDebuggerResume(std::function<void(PtThread)> &&handler);
     void OnCallDebuggerSetAsyncCallStackDepth(std::function<void(PtThread)> &&handler);

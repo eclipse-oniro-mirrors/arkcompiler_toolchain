@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,9 +19,9 @@
 
 #include "assembly-emitter.h"
 #include "assembly-parser.h"
-#include "runtime.h"
-#include "runtime_options.h"
-#include "thread_scopes.h"
+#include "include/runtime.h"
+#include "include/runtime_options.h"
+#include "include/thread_scopes.h"
 
 #include "test_frame.h"
 
@@ -136,9 +136,9 @@ TEST_F(DebugInfoCacheTest, GetLocals)
     auto mapLocals = cache.GetLocals(fr0);
     ASSERT_EQ(ARGUMENTS_COUNT + LOCALS_COUNT, mapLocals.size());
 
-    EXPECT_NO_THROW(mapLocals.at("a0"));
-    EXPECT_NO_THROW(mapLocals.at("a1"));
-    EXPECT_NO_THROW(mapLocals.at("v101"));
+    EXPECT_TRUE(mapLocals.find("a0") != mapLocals.end());
+    EXPECT_TRUE(mapLocals.find("a1") != mapLocals.end());
+    EXPECT_TRUE(mapLocals.find("v101") != mapLocals.end());
 
     ASSERT_EQ(mapLocals.at("a0").GetAsU64(), 1U);
     ASSERT_EQ(mapLocals.at("a1").GetAsU64(), 2U);
