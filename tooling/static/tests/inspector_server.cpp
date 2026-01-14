@@ -278,8 +278,8 @@ TEST_F(ServerTest, OnCallDebuggerResume)
     });
 }
 
-static JsonObject CreatePossibleBreakpointsRequest(ScriptId startScriptId, size_t start, ScriptId endScriptId,
-                                                   size_t end, bool restrictToFunction)
+static JsonObject CreatePossibleBreakpointsRequest(ScriptId startScriptId, int32_t start, ScriptId endScriptId,
+                                                   int32_t end, bool restrictToFunction)
 {
     JsonObjectBuilder params;
     params.AddProperty("start", Location(startScriptId, start));
@@ -288,7 +288,7 @@ static JsonObject CreatePossibleBreakpointsRequest(ScriptId startScriptId, size_
     return JsonObject(std::move(params).Build());
 }
 
-static auto g_getPossibleBreakpointsHandler = [](ScriptId scriptId, size_t start, size_t end, bool restrictToFunction,
+static auto g_getPossibleBreakpointsHandler = [](ScriptId scriptId, int32_t start, int32_t end, bool restrictToFunction,
                                                  testing::Unused, auto handler) {
     auto res =
         handler(g_sessionId, CreatePossibleBreakpointsRequest(scriptId, start, scriptId, end, restrictToFunction));
@@ -314,8 +314,8 @@ static void DefaultFrameEnumerator(const InspectorServer::FrameInfoHandler &hand
 TEST_F(ServerTest, OnCallDebuggerGetPossibleBreakpoints)
 {
     auto scriptId = 0;
-    size_t start = 5;
-    size_t end = 5;
+    int32_t start = 5;
+    int32_t end = 5;
 
     inspectorServer.CallTargetAttachedToTarget(g_mthread);
     inspectorServer.CallDebuggerPaused(g_mthread, {}, {}, PauseReason::OTHER, DefaultFrameEnumerator);
@@ -323,8 +323,8 @@ TEST_F(ServerTest, OnCallDebuggerGetPossibleBreakpoints)
     EXPECT_CALL(server, OnCallMock("Debugger.getPossibleBreakpoints", testing::_))
         .WillOnce(std::bind(g_getPossibleBreakpointsHandler, scriptId, start, end,  // NOLINT(modernize-avoid-bind)
                             true, _1, _2));
-    auto getLinesTrue = [](std::string_view source, size_t startLine, size_t endLine, bool restrictToFunction) {
-        std::set<size_t> result;
+    auto getLinesTrue = [](std::string_view source, int32_t startLine, int32_t endLine, bool restrictToFunction) {
+        std::set<int32_t> result;
         if ((source == g_sourceFile) && restrictToFunction) {
             for (auto i = startLine; i < endLine; i++) {
                 result.insert(i);
@@ -337,8 +337,8 @@ TEST_F(ServerTest, OnCallDebuggerGetPossibleBreakpoints)
     EXPECT_CALL(server, OnCallMock("Debugger.getPossibleBreakpoints", testing::_))
         .WillOnce(std::bind(g_getPossibleBreakpointsHandler, scriptId, start, end,  // NOLINT(modernize-avoid-bind)
                             false, _1, _2));
-    auto getLinesFalse = [](std::string_view source, size_t startLine, size_t endLine, bool restrictToFunction) {
-        std::set<size_t> result;
+    auto getLinesFalse = [](std::string_view source, int32_t startLine, int32_t endLine, bool restrictToFunction) {
+        std::set<int32_t> result;
         if ((source == g_sourceFile) && !restrictToFunction) {
             for (auto i = startLine; i < endLine; i++) {
                 result.insert(i);
@@ -357,6 +357,33 @@ TEST_F(ServerTest, OnCallDebuggerGetPossibleBreakpoints)
     inspectorServer.OnCallDebuggerGetPossibleBreakpoints(getLinesFalse);
 }
 
+TEST_F(ServerTest, OnCallDebuggerGetPossibleBreakpointsInVaildNumber)
+{
+    auto scriptId = 0;
+    int32_t start = -1;
+    int32_t end = -1;
+
+    inspectorServer.CallTargetAttachedToTarget(g_mthread);
+    inspectorServer.CallDebuggerPaused(g_mthread, {}, {}, PauseReason::OTHER, DefaultFrameEnumerator);
+
+    EXPECT_CALL(server, OnCallMock("Debugger.getPossibleBreakpoints", testing::_))
+        .WillOnce([&](testing::Unused, auto handler) {
+            auto res =
+                handler(g_sessionId, CreatePossibleBreakpointsRequest(scriptId, start, scriptId, end, false));
+            ASSERT_FALSE(res.HasValue());
+        });
+    auto getLinesTrue = [](std::string_view source, int32_t startLine, int32_t endLine, bool restrictToFunction) {
+        std::set<int32_t> result;
+        if ((source == g_sourceFile) && !restrictToFunction) {
+            for (auto i = startLine; i <= endLine; i++) {
+                result.insert(i);
+            }
+        }
+        return result;
+    };
+    inspectorServer.OnCallDebuggerGetPossibleBreakpoints(getLinesTrue);
+}
+     
 TEST_F(ServerTest, OnCallDebuggerGetScriptSource)
 {
     auto scriptId = 0;
@@ -431,7 +458,7 @@ TEST_F(ServerTest, OnCallDebuggerStepOver)
 
 std::optional<BreakpointId> handlerForSetBreak([[maybe_unused]] PtThread thread,
                                                [[maybe_unused]] const std::function<bool(std::string_view)> &comp,
-                                               size_t line, [[maybe_unused]] std::set<std::string_view> &sources,
+                                               int32_t line, [[maybe_unused]] std::set<std::string_view> &sources,
                                                [[maybe_unused]] const std::string *condition)
 {
     sources.insert("source");
@@ -447,7 +474,7 @@ void handlerForRemoveBreakpointsByUrl([[maybe_unused]] PtThread thread,
 
 std::optional<BreakpointId> handlerForSetBreakEmpty([[maybe_unused]] PtThread thread,
                                                     [[maybe_unused]] const std::function<bool(std::string_view)> &comp,
-                                                    [[maybe_unused]] size_t line,
+                                                    [[maybe_unused]] int32_t line,
                                                     [[maybe_unused]] std::set<std::string_view> &sources,
                                                     [[maybe_unused]] const std::string *condition)
 {
@@ -458,16 +485,16 @@ std::optional<BreakpointId> handlerForSetBreakEmpty([[maybe_unused]] PtThread th
 TEST_F(ServerTest, OnCallDebuggerRemoveBreakpointsByUrl)
 {
     auto scriptId = 0;
-    size_t start = 5;
-    size_t end = 5;
-    size_t start1 = 5;
-    size_t start2 = 6;
+    int32_t start = 5;
+    int32_t end = 5;
+    int32_t start1 = 5;
+    int32_t start2 = 6;
     inspectorServer.CallTargetAttachedToTarget(g_mthread);
     EXPECT_CALL(server, OnCallMock("Debugger.getPossibleAndSetBreakpointByUrl", testing::_))
         .WillOnce([&](testing::Unused, auto handler) {
             class RequestLocation : public JsonSerializable {
             public:
-                explicit RequestLocation(std::string url, size_t lineNumber) : url_(url), lineNumber_(lineNumber) {}
+                explicit RequestLocation(std::string url, int32_t lineNumber) : url_(url), lineNumber_(lineNumber) {}
                 void Serialize(JsonObjectBuilder &builder) const override
                 {
                     builder.AddProperty("url", url_);
@@ -475,7 +502,7 @@ TEST_F(ServerTest, OnCallDebuggerRemoveBreakpointsByUrl)
                 }
             private:
                 std::string url_;
-                size_t lineNumber_;
+                int32_t lineNumber_;
             };
             std::vector<RequestLocation> requestLocations = {RequestLocation("file://source1", start1),
                                                              RequestLocation("file://source2", start2)};
@@ -497,8 +524,8 @@ TEST_F(ServerTest, OnCallDebuggerRemoveBreakpointsByUrl)
     inspectorServer.OnCallDebuggerRemoveBreakpointsByUrl(handlerForRemoveBreakpointsByUrl);
     EXPECT_CALL(server, OnCallMock("Debugger.getPossibleBreakpoints", testing::_))
         .WillOnce(std::bind(g_getPossibleBreakpointsHandler, scriptId, start, end, true, _1, _2));
-    auto getLinesTrue = [](std::string_view source, size_t startLine, size_t endLine, bool restrictToFunction) {
-        std::set<size_t> result;
+    auto getLinesTrue = [](std::string_view source, int32_t startLine, int32_t endLine, bool restrictToFunction) {
+        std::set<int32_t> result;
         if ((source == g_sourceFile) && restrictToFunction) {
             for (auto i = startLine; i < endLine; i++) {
                 result.insert(i);
@@ -512,7 +539,7 @@ TEST_F(ServerTest, OnCallDebuggerRemoveBreakpointsByUrl)
 TEST_F(ServerTest, OnCallDebuggerSetBreakpoint)
 {
     auto scriptId = 0;
-    size_t start = 5;
+    int32_t start = 5;
 
     inspectorServer.CallTargetAttachedToTarget(g_mthread);
     inspectorServer.CallDebuggerPaused(g_mthread, {}, {}, PauseReason::OTHER, DefaultFrameEnumerator);
@@ -555,7 +582,7 @@ TEST_F(ServerTest, OnCallDebuggerSetBreakpoint)
 TEST_F(ServerTest, OnCallDebuggerSetBreakpointByUrl)
 {
     auto scriptId = 0;
-    size_t start = 5;
+    int32_t start = 5;
 
     inspectorServer.CallTargetAttachedToTarget(g_mthread);
 
@@ -767,7 +794,7 @@ TEST_F(ServerTest, OnCallDebuggerReplyNativeCalling)
 TEST_F(ServerTest, OnCallDebuggerContinueToLocation)
 {
     auto scriptId = 0;
-    size_t start = 5;
+    int32_t start = 5;
 
     inspectorServer.CallTargetAttachedToTarget(g_mthread);
 
@@ -778,7 +805,7 @@ TEST_F(ServerTest, OnCallDebuggerContinueToLocation)
             handler(g_sessionId, JsonObject(std::move(params).Build()));
         });
 
-    inspectorServer.OnCallDebuggerContinueToLocation([](PtThread thread, std::string_view, size_t) {
+    inspectorServer.OnCallDebuggerContinueToLocation([](PtThread thread, std::string_view, int32_t) {
         ASSERT_EQ(thread.GetId(), g_mthread.GetId());
         g_handlerCalled = true;
     });
@@ -851,8 +878,8 @@ TEST_F(ServerTest, OnCallDebuggerCallFunctionOn)
 TEST_F(ServerTest, OnCallDebuggerGetPossibleAndSetBreakpointByUrl)
 {
     auto scriptId = 0;
-    size_t start1 = 5;
-    size_t start2 = 6;
+    int32_t start1 = 5;
+    int32_t start2 = 6;
 
     inspectorServer.CallTargetAttachedToTarget(g_mthread);
 
@@ -860,7 +887,7 @@ TEST_F(ServerTest, OnCallDebuggerGetPossibleAndSetBreakpointByUrl)
         .WillOnce([&](testing::Unused, auto handler) {
             class RequestLocation : public JsonSerializable {
             public:
-                explicit RequestLocation(std::string url, size_t lineNumber) : url_(url), lineNumber_(lineNumber) {}
+                explicit RequestLocation(std::string url, int32_t lineNumber) : url_(url), lineNumber_(lineNumber) {}
 
                 void Serialize(JsonObjectBuilder &builder) const override
                 {
@@ -870,7 +897,7 @@ TEST_F(ServerTest, OnCallDebuggerGetPossibleAndSetBreakpointByUrl)
 
             private:
                 std::string url_;
-                size_t lineNumber_;
+                int32_t lineNumber_;
             };
             std::vector<RequestLocation> requestLocations = {RequestLocation("file://source", start1),
                                                              RequestLocation("file://source", start2)};

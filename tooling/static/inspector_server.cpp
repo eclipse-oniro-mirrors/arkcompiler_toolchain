@@ -242,7 +242,7 @@ void InspectorServer::CallTargetDetachedFromTarget(PtThread thread)
 }
 
 void InspectorServer::OnCallDebuggerContinueToLocation(
-    std::function<void(PtThread, std::string_view, size_t)> &&handler)
+    std::function<void(PtThread, std::string_view, int32_t)> &&handler)
 {
     // clang-format off
     server_.OnCall("Debugger.continueToLocation",
@@ -278,7 +278,7 @@ void InspectorServer::OnCallDebuggerEnable(std::function<void()> &&handler)
 }
 
 void InspectorServer::OnCallDebuggerGetPossibleBreakpoints(
-    std::function<std::set<size_t>(std::string_view, size_t, size_t, bool)> &&handler)
+    std::function<std::set<int32_t>(std::string_view, int32_t, int32_t, bool)> &&handler)
 {
     // clang-format off
     server_.OnCall("Debugger.getPossibleBreakpoints",
@@ -291,7 +291,7 @@ void InspectorServer::OnCallDebuggerGetPossibleBreakpoints(
 
             auto scriptId = optStart->GetScriptId();
 
-            size_t endLine = ~0U;
+            int32_t endLine = ~0U;
             if (auto end = Location::FromJsonProperty(params, "end")) {
                 if (end->GetScriptId() != scriptId) {
                     std::string_view msg = "Script ids don't match";
@@ -1092,7 +1092,7 @@ void InspectorServer::AddCallFrameInfo(JsonArrayBuilder &callFrames, const CallF
 }
 
 void InspectorServer::AddLocations(UrlBreakpointResponse &response, const std::set<std::string_view> &sourceFiles,
-                                   size_t lineNumber, [[maybe_unused]] PtThread thread)
+                                   int32_t lineNumber, [[maybe_unused]] PtThread thread)
 {
     for (auto sourceFile : sourceFiles) {
         auto [scriptId, isNew] = sourceManager_.GetScriptId(sourceFile);

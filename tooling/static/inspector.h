@@ -93,9 +93,9 @@ private:
     void SetBreakpointsActive(PtThread thread, bool active);
     void SetSkipAllPauses(PtThread thread, bool skip);
     void SetMixedDebugEnabled(PtThread thread, bool mixedDebugEnabled);
-    std::set<size_t> GetPossibleBreakpoints(std::string_view sourceFile, size_t startLine, size_t endLine,
+    std::set<int32_t> GetPossibleBreakpoints(std::string_view sourceFile, int32_t startLine, int32_t endLine,
                                             bool restrictToFunction);
-    std::optional<BreakpointId> SetBreakpoint(PtThread thread, SourceFileFilter &&sourceFilesFilter, size_t lineNumber,
+    std::optional<BreakpointId> SetBreakpoint(PtThread thread, SourceFileFilter &&sourceFilesFilter, int32_t lineNumber,
                                               std::set<std::string_view> &sourceFiles, const std::string *condition);
     void RemoveBreakpoint(PtThread thread, BreakpointId id);
     void RemoveBreakpointsByUrl(PtThread thread, const char* url, const SourceFileFilter &sourceFilesFilter);
@@ -105,7 +105,7 @@ private:
     void StepInto(PtThread thread);
     void StepOver(PtThread thread);
     void StepOut(PtThread thread);
-    void ContinueToLocation(PtThread thread, std::string_view sourceFile, size_t lineNumber);
+    void ContinueToLocation(PtThread thread, std::string_view sourceFile, int32_t lineNumber);
 
     void RestartFrame(PtThread thread, FrameId frameId);
 

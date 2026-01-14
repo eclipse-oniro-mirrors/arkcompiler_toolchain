@@ -46,7 +46,7 @@ class UrlBreakpointRequest;
 
 class InspectorServer final {
 public:
-    using SetBreakpointHandler = std::optional<BreakpointId>(PtThread, SourceFileFilter &&, size_t,
+    using SetBreakpointHandler = std::optional<BreakpointId>(PtThread, SourceFileFilter &&, int32_t,
                                                              std::set<std::string_view> &, const std::string *);
     using FrameInfoHandler = std::function<void(FrameId, std::string_view, std::string_view, size_t,
                                                 const std::vector<Scope> &, const std::optional<RemoteObject> &)>;
@@ -77,10 +77,10 @@ public:
     bool CallTargetAttachedToTarget(PtThread thread);
     void CallTargetDetachedFromTarget(PtThread thread);
 
-    void OnCallDebuggerContinueToLocation(std::function<void(PtThread, std::string_view, size_t)> &&handler);
+    void OnCallDebuggerContinueToLocation(std::function<void(PtThread, std::string_view, int32_t)> &&handler);
     void OnCallDebuggerEnable(std::function<void()> &&handler);
     void OnCallDebuggerGetPossibleBreakpoints(
-        std::function<std::set<size_t>(std::string_view, size_t, size_t, bool)> &&handler);
+        std::function<std::set<int32_t>(std::string_view, int32_t, int32_t, bool)> &&handler);
     void OnCallDebuggerGetScriptSource(std::function<std::string(std::string_view)> &&handler);
     void OnCallDebuggerPause(std::function<void(PtThread)> &&handler);
     void OnCallDebuggerRemoveBreakpoint(std::function<void(PtThread, BreakpointId)> &&handler);
@@ -132,7 +132,7 @@ private:
         FrameId frameId;
         std::string_view sourceFile;
         std::string_view methodName;
-        size_t lineNumber;
+        int32_t lineNumber;
     };
 
 private:
@@ -145,8 +145,8 @@ private:
     Expected<std::unique_ptr<UrlBreakpointResponse>, std::string> SetBreakpointByUrl(
         const std::string &sessionId, const UrlBreakpointRequest &breakpointRequest,
         const std::function<SetBreakpointHandler> &handler);
-    void AddLocations(UrlBreakpointResponse &response, const std::set<std::string_view> &sourceFiles, size_t lineNumber,
-                      PtThread thread);
+    void AddLocations(UrlBreakpointResponse &response, const std::set<std::string_view> &sourceFiles,
+                      int32_t lineNumber, PtThread thread);
     static void AddHitBreakpoints(JsonArrayBuilder &hitBreakpointsBuilder,
                                   const std::vector<BreakpointId> &hitBreakpoints);
     static std::string GetExecutionContextUniqueId(const PtThread &thread);

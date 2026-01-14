@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,7 +31,7 @@ class JsonObjectBuilder;
 namespace ark::tooling::inspector {
 class ExceptionDetails final : public JsonSerializable {
 public:
-    ExceptionDetails(size_t exceptionId, std::string text, size_t lineNumber, size_t columnNumber)
+    ExceptionDetails(size_t exceptionId, std::string text, int32_t lineNumber, int32_t columnNumber)
         : exceptionId_(exceptionId), text_(std::move(text)), lineNumber_(lineNumber), columnNumber_(columnNumber)
     {
     }
@@ -48,12 +48,12 @@ public:
         return text_;
     }
 
-    size_t GetLine() const
+    int32_t GetLine() const
     {
         return lineNumber_;
     }
 
-    size_t GetColumn() const
+    int32_t GetColumn() const
     {
         return columnNumber_;
     }
@@ -126,8 +126,8 @@ public:
 private:
     size_t exceptionId_ {0};
     std::string text_;
-    size_t lineNumber_ {0};
-    size_t columnNumber_ {0};
+    int32_t lineNumber_ {0};
+    int32_t columnNumber_ {0};
     std::optional<ScriptId> scriptId_;
     std::optional<std::string> url_;
     std::optional<RemoteObject> exception_;

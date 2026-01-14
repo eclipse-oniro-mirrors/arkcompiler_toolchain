@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -66,7 +66,7 @@ void BreakpointStorage::RemoveBreakpoint(BreakpointId id)
     breakpointStorage_.erase(id);
 }
 
-std::optional<BreakpointId> BreakpointStorage::SetBreakpoint(SourceFileFilter &&sourceFilesFilter, size_t lineNumber,
+std::optional<BreakpointId> BreakpointStorage::SetBreakpoint(SourceFileFilter &&sourceFilesFilter, int32_t lineNumber,
                                                              std::set<std::string_view> &sourceFiles,
                                                              const std::string *condition,
                                                              const DebugInfoCache &debugCache)

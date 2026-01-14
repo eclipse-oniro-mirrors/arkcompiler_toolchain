@@ -53,7 +53,7 @@ void DebugInfoCache::AddPandaFile(const panda_file::File &file, bool isUserPanda
 }
 
 void DebugInfoCache::GetSourceLocation(const PtFrame &frame, std::string_view &sourceFile, std::string_view &methodName,
-                                       size_t &lineNumber)
+                                       int32_t &lineNumber)
 {
     auto method = frame.GetMethod();
     auto pandaFile = method->GetPandaFile();
@@ -111,7 +111,7 @@ std::unordered_set<PtLocation, HashLocation> DebugInfoCache::GetCurrentLineLocat
 }
 
 std::unordered_set<PtLocation, HashLocation> DebugInfoCache::GetContinueToLocations(std::string_view sourceFile,
-                                                                                    size_t lineNumber)
+                                                                                    int32_t lineNumber)
 {
     std::unordered_set<PtLocation, HashLocation> locations;
     EnumerateLineEntries(
@@ -144,7 +144,7 @@ std::unordered_set<PtLocation, HashLocation> DebugInfoCache::GetContinueToLocati
 }
 
 std::unordered_set<PtLocation, HashLocation> DebugInfoCache::GetBreakpointLocations(
-    const std::function<bool(std::string_view)> &sourceFileFilter, size_t lineNumber,
+    const std::function<bool(std::string_view)> &sourceFileFilter, int32_t lineNumber,
     std::set<std::string_view> &sourceFiles) const
 {
     std::unordered_set<PtLocation, HashLocation> locations;
@@ -170,10 +170,10 @@ std::unordered_set<PtLocation, HashLocation> DebugInfoCache::GetBreakpointLocati
     return locations;
 }
 
-std::set<size_t> DebugInfoCache::GetValidLineNumbers(std::string_view sourceFile, size_t startLine, size_t endLine,
-                                                     bool restrictToFunction)
+std::set<int32_t> DebugInfoCache::GetValidLineNumbers(std::string_view sourceFile, int32_t startLine,
+                                                      int32_t endLine, bool restrictToFunction)
 {
-    std::set<size_t> lineNumbers;
+    std::set<int32_t> lineNumbers;
     auto lineHandler = [startLine, endLine, &lineNumbers](auto, auto &, auto, auto &entry, auto /* next */) {
         if (entry.line >= startLine && entry.line < endLine) {
             lineNumbers.insert(entry.line);

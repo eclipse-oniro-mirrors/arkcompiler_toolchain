@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,7 @@ class EvaluationEngine;
 /// @brief Breakpoint without condition, can be set in multiple locations
 class Breakpoint final : public BreakpointBase {
 public:
-    explicit Breakpoint(BreakpointId id, SourceFileFilter &&filter, size_t line, bool isUrlPattern)
+    explicit Breakpoint(BreakpointId id, SourceFileFilter &&filter, int32_t line, bool isUrlPattern)
         : BreakpointBase(id), sourceFileFilter_(std::move(filter)), lineNumber_(line), isUrlPattern_(isUrlPattern)
     {
     }
@@ -71,7 +71,7 @@ protected:
 private:
     std::unordered_set<PtLocation, HashLocation> locations_;
     SourceFileFilter sourceFileFilter_;
-    size_t lineNumber_ {0};
+    int32_t lineNumber_ {0};
     bool isUrlPattern_ {false};
 };
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,22 +29,22 @@ namespace ark::tooling::inspector {
 /// @brief Response for single breakpoint set by custom "Debugger.getPossibleAndSetBreakpointByUrl"
 class CustomUrlBreakpointResponse final : public JsonSerializable {
 public:
-    explicit CustomUrlBreakpointResponse(size_t lineNumber) : lineNumber_(lineNumber) {}
+    explicit CustomUrlBreakpointResponse(int32_t lineNumber) : lineNumber_(lineNumber) {}
 
     DEFAULT_COPY_SEMANTIC(CustomUrlBreakpointResponse);
     DEFAULT_MOVE_SEMANTIC(CustomUrlBreakpointResponse);
 
     ~CustomUrlBreakpointResponse() override = default;
 
-    CustomUrlBreakpointResponse &SetLineNumber(size_t lineNumber)
+    CustomUrlBreakpointResponse &SetLineNumber(int32_t lineNumber)
     {
         lineNumber_ = lineNumber;
         return *this;
     }
 
-    CustomUrlBreakpointResponse &SetColumnNumber(std::optional<size_t> optColumnNumber)
+    CustomUrlBreakpointResponse &SetColumnNumber(std::optional<int32_t> optColumnNumber)
     {
-        columnNumber_ = optColumnNumber.has_value() ? *optColumnNumber : DEFAULT_COLUMN_NUMBER;
+        columnNumber_ = optColumnNumber.has_value() ? *optColumnNumber : defaultColumnNumber;
         return *this;
     }
 
@@ -64,12 +64,12 @@ public:
 
 private:
     // CC-OFFNXT(G.NAM.03-CPP) project code style
-    static constexpr size_t DEFAULT_COLUMN_NUMBER = 0;
+    static constexpr int32_t defaultColumnNumber = 0;
 
 private:
     // Default values are selected for compatibility
-    size_t lineNumber_ {0};
-    size_t columnNumber_ {DEFAULT_COLUMN_NUMBER};
+    int32_t lineNumber_ {0};
+    int32_t columnNumber_ {defaultColumnNumber};
     ScriptId scriptId_ {0};
     std::optional<BreakpointId> id_ {};  // "invalid" default value
 };
