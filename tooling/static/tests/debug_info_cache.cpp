@@ -152,7 +152,7 @@ TEST_F(DebugInfoCacheTest, GetSourceLocation)
 
     std::string_view disasm_file;
     std::string_view method_name;
-    size_t line_number = 0;
+    int32_t line_number = 0;
 
     cache.GetSourceLocation(fr0, disasm_file, method_name, line_number);
     ASSERT_NE(disasm_file.find(ASM_FILE_NAME.data()), std::string::npos);

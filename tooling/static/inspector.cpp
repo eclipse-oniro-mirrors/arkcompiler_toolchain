@@ -373,8 +373,8 @@ void Inspector::SetMixedDebugEnabled(PtThread thread, bool mixedDebugEnabled)
     }
 }
 
-std::set<size_t> Inspector::GetPossibleBreakpoints(std::string_view sourceFile, size_t startLine, size_t endLine,
-                                                   bool restrictToFunction)
+std::set<int32_t> Inspector::GetPossibleBreakpoints(std::string_view sourceFile, int32_t startLine,
+                                                    int32_t endLine, bool restrictToFunction)
 {
     os::memory::ReadLockHolder lock(vmDeathLock_);
     if (UNLIKELY(CheckVmDead())) {
@@ -385,7 +385,7 @@ std::set<size_t> Inspector::GetPossibleBreakpoints(std::string_view sourceFile, 
 }
 
 std::optional<BreakpointId> Inspector::SetBreakpoint([[maybe_unused]] PtThread thread,
-                                                     SourceFileFilter &&sourceFilesFilter, size_t lineNumber,
+                                                     SourceFileFilter &&sourceFilesFilter, int32_t lineNumber,
                                                      std::set<std::string_view> &sourceFiles,
                                                      const std::string *condition)
 {
@@ -525,7 +525,7 @@ void Inspector::StepOut(PtThread thread)
     }
 }
 
-void Inspector::ContinueToLocation(PtThread thread, std::string_view sourceFile, size_t lineNumber)
+void Inspector::ContinueToLocation(PtThread thread, std::string_view sourceFile, int32_t lineNumber)
 {
     os::memory::ReadLockHolder lock(vmDeathLock_);
     if (UNLIKELY(CheckVmDead())) {
@@ -614,7 +614,7 @@ void Inspector::DebuggableThreadPostSuspend(PtThread thread, ObjectRepository &o
                                                            &frameId](const PtFrame &frame) {
                 std::string_view sourceFile;
                 std::string_view methodName;
-                size_t lineNumber;
+                int32_t lineNumber;
                 debugInfoCache_.GetSourceLocation(frame, sourceFile, methodName, lineNumber);
                 if (sourceFile.empty()) {
                     return false;
@@ -680,7 +680,7 @@ std::optional<ExceptionDetails> Inspector::CreateExceptionDetails(PtThread threa
 
     std::string_view sourceFile;
     std::string_view methodName;
-    size_t lineNumber;
+    int32_t lineNumber;
     debugInfoCache_.GetSourceLocation(*frame.Value(), sourceFile, methodName, lineNumber);
 
     ExceptionDetails exceptionDetails(GetNewExceptionId(), "", lineNumber, 0);

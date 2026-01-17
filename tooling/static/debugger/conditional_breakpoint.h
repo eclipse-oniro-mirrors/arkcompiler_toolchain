@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,8 @@ class EvaluationEngine;
 /// @brief Conditional breakpoint, allows only one location, condition is evaluated on breakpoint hit
 class ConditionalBreakpoint final : public BreakpointBase {
 public:
-    explicit ConditionalBreakpoint(BreakpointId id, SourceFileFilter &&filter, size_t line, const std::string *bytecode)
+    explicit ConditionalBreakpoint(BreakpointId id, SourceFileFilter &&filter,
+                                   int32_t line, const std::string *bytecode)
         : BreakpointBase(id), sourceFileFilter_(std::move(filter)), lineNumber_(line), bytecode_(*bytecode)
     {
     }
@@ -57,7 +58,7 @@ protected:
 private:
     std::optional<PtLocation> location_;
     SourceFileFilter sourceFileFilter_;
-    size_t lineNumber_ {0};
+    int32_t lineNumber_ {0};
     std::string bytecode_;
     Method *method_ {nullptr};
 };

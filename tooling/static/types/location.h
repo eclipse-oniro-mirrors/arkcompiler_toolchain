@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,7 +34,7 @@ class JsonObjectBuilder;
 namespace ark::tooling::inspector {
 class Location final : public JsonSerializable {
 public:
-    Location(ScriptId scriptId, size_t lineNumber, std::optional<size_t> columnNumber = {})
+    Location(ScriptId scriptId, int32_t lineNumber, std::optional<int32_t> columnNumber = {})
         : scriptId_(scriptId), lineNumber_(lineNumber), columnNumber_(columnNumber)
     {
     }
@@ -46,22 +46,22 @@ public:
         return scriptId_;
     }
 
-    size_t GetLineNumber() const
+    int32_t GetLineNumber() const
     {
         return lineNumber_;
     }
 
-    void SetLineNumber(size_t lineNumber)
+    void SetLineNumber(int32_t lineNumber)
     {
         lineNumber_ = lineNumber;
     }
 
-    std::optional<size_t> GetColumnNumber() const
+    std::optional<int32_t> GetColumnNumber() const
     {
         return columnNumber_;
     }
 
-    void SetColumnNumber(size_t columnNumber)
+    void SetColumnNumber(int32_t columnNumber)
     {
         columnNumber_ = columnNumber;
     }
@@ -70,8 +70,8 @@ public:
 
 private:
     ScriptId scriptId_;
-    size_t lineNumber_;
-    std::optional<size_t> columnNumber_;
+    int32_t lineNumber_;
+    std::optional<int32_t> columnNumber_;
 };
 }  // namespace ark::tooling::inspector
 
