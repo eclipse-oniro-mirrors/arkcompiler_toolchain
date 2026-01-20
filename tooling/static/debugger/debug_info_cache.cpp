@@ -355,7 +355,10 @@ std::string DebugInfoCache::GetSourceCode(std::string_view sourceFile)
 
         auto it = disassemblies_.find(sourceFile);
         if (it != disassemblies_.end()) {
-            return GetDebugInfo(&it->second.first)->GetSourceCode(it->second.second);
+            auto* debugInfo = GetDebugInfo(&it->second.first);
+            if (debugInfo != nullptr) {
+                return debugInfo->GetSourceCode(it->second.second);
+            }
         }
     }
 
