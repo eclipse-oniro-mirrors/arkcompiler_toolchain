@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -84,13 +84,14 @@ bool DebuggerImpl::NotifyScriptParsed(const std::string &fileName, std::string_v
         return false;
     }
 
-    if (!vm_->GetJsDebuggerManager()->GetFaApp() && jsPandaFile->IsBundlePack()) {
+    if (!vm_->GetJsDebuggerManager()->GetFaApp() && DebuggerApi::JSPandaFileIsBundlePack(jsPandaFile)) {
         LOG_DEBUGGER(DEBUG) << "NotifyScriptParsed: Unmerge file: " << fileName;
         return false;
     }
 
     const char *recordName = entryPoint.data();
-    auto mainMethodIndex = panda_file::File::EntityId(jsPandaFile->GetMainMethodIndex(recordName));
+    auto mainMethodIndex = panda_file::File::EntityId(
+        DebuggerApi::GetJSPandaFileMainMethodIndex(jsPandaFile, recordName));
     const std::string &source = extractor->GetSourceCode(mainMethodIndex);
     const std::string &url = extractor->GetSourceFile(mainMethodIndex);
     // if load module, it needs to check whether clear singlestepper_
@@ -192,7 +193,7 @@ bool DebuggerImpl::NotifyScriptParsedBySendable(JSHandle<Method> method)
     }
     auto methodId = method->GetMethodId();
     const std::string &url = extractor->GetSourceFile(methodId);
-    const std::string &fileName = std::string(jsPandaFile->GetJSPandaFileDesc());
+    const std::string &fileName = std::string(DebuggerApi::GetJSPandaFileDesc(jsPandaFile));
     // Check url path & is debugable in module.json
     if (!CheckScriptParsed(fileName)) {
         return false;
@@ -275,7 +276,7 @@ bool DebuggerImpl::IsSkipLine(const JSPtLocation &location)
     };
 
     // In hot reload scenario, use the base js panda file instead
-    const auto &fileName = DebuggerApi::GetBaseJSPandaFile(vm_, jsPandaFile)->GetJSPandaFileDesc();
+    const auto &fileName = DebuggerApi::GetJSPandaFileDesc(DebuggerApi::GetBaseJSPandaFile(vm_, jsPandaFile));
     if (!MatchScripts(scriptFunc, fileName.c_str(), ScriptMatchType::FILE_NAME) || extractor == nullptr) {
         LOG_DEBUGGER(INFO) << "StepComplete: skip unknown file " << fileName.c_str();
         return true;
@@ -2053,7 +2054,8 @@ void DebuggerImpl::GenerateScopeChains(bool getScope,
         for (auto &scope : closureScopeChains) {
             scopeChain.emplace_back(std::move(scope));
         }
-        if (jsPandaFile != nullptr && !jsPandaFile->IsBundlePack() && jsPandaFile->IsNewVersion()) {
+        if (jsPandaFile != nullptr && !DebuggerApi::JSPandaFileIsBundlePack(jsPandaFile) &&
+            DebuggerApi::JSPandaFileIsNewVersion(jsPandaFile)) {
             JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm_));
             if (currentModule->IsSourceTextModule()) { // CJS module is string
                 scopeChain.emplace_back(GetModuleScopeChain(frameHandler));

@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -57,7 +57,7 @@ bool JSPtHooks::SingleStep(const JSPtLocation &location)
 
     // Do not set hybrid step flag when executing non-application pandafiles
     auto jsPandaFile = location.GetJsPandaFile();
-    if (jsPandaFile != nullptr && debugger_->IsApplicationFile(jsPandaFile->GetJSPandaFileDesc().data())) {
+    if (jsPandaFile != nullptr && debugger_->IsApplicationFile(DebuggerApi::GetJSPandaFileDesc(jsPandaFile).data())) {
         DebugStepFlags::Get().SetDyn2StatInto(true);
     }
 
