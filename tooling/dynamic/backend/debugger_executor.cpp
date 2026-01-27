@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -226,7 +226,8 @@ Local<JSValueRef> DebuggerExecutor::GetModuleValue(const EcmaVM *vm, const Frame
     Method *method = DebuggerApi::GetMethod(frameHandler);
     JSThread *thread = vm->GetJSThread();
     const JSPandaFile *jsPandaFile = method->GetJSPandaFile(thread);
-    if (jsPandaFile != nullptr && (jsPandaFile->IsBundlePack() || !jsPandaFile->IsNewVersion())) {
+    if (jsPandaFile != nullptr && (DebuggerApi::JSPandaFileIsBundlePack(jsPandaFile) ||
+        !DebuggerApi::JSPandaFileIsNewVersion(jsPandaFile))) {
         return result;
     }
     JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm));
@@ -243,7 +244,8 @@ bool DebuggerExecutor::SetModuleValue(const EcmaVM *vm, const FrameHandler *fram
     Method *method = DebuggerApi::GetMethod(frameHandler);
     JSThread *thread = vm->GetJSThread();
     const JSPandaFile *jsPandaFile = method->GetJSPandaFile(thread);
-    if (jsPandaFile != nullptr && (jsPandaFile->IsBundlePack() || !jsPandaFile->IsNewVersion())) {
+    if (jsPandaFile != nullptr && (DebuggerApi::JSPandaFileIsBundlePack(jsPandaFile) ||
+        !DebuggerApi::JSPandaFileIsNewVersion(jsPandaFile))) {
         return false;
     }
     JSHandle<JSTaggedValue> currentModule(thread, DebuggerApi::GetCurrentModule(vm));
