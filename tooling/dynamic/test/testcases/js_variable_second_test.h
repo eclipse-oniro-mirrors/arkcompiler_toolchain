@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -212,7 +212,7 @@ private:
         const std::map<std::string, std::vector<std::string>> variableMap_ = {
             { "nop", { "undefined" } },
             { "foo", { "function", "Function", "function foo( { [js code] }",
-                       "Cannot get source code of funtion"} },
+                       "Cannot get source code of function"} },
             { "string0", { "string", "helloworld", "helloworld" } },
             { "boolean0", { "object", "Object", "Boolean{[[PrimitiveValue]]: false}", "false", "[[PrimitiveValue]]",
                             "boolean", "false", "false" } },
@@ -235,9 +235,9 @@ private:
                                 "object", "Object", "BigInt64Array", "0,0,0", "[[BigUint64Array]]", "object", "Object",
                                 "BigUint64Array", "0,0,0" } },
             { "function0", { "function", "Function", "function function0( { [js code] }",
-                             "Cannot get source code of funtion" } },
+                             "Cannot get source code of function" } },
             { "generator0", { "function", "Generator", "function* generator0( { [js code] }",
-                              "Cannot get source code of funtion" } },
+                              "Cannot get source code of function" } },
             { "map0", { "object", "map", "Map", "Map(0)", "[object Map]", "size", "number", "0", "0", "[[Entries]]",
                         "object", "array", "Array", "Array(0)", "" } },
             { "set0", { "object", "set", "Set", "Set(0)", "[object Set]", "size", "number", "0", "0", "[[Entries]]",
@@ -294,8 +294,8 @@ private:
                           "Boolean{[[PrimitiveValue]]: false}", "false", "length", "number", "1", "1" } },
             { "array8", { "object", "array", "Array", "Array(1)", "[object Object]", "0", "object", "Object",
                           "Object", "[object Object]", "length", "number", "1", "1" } },
-            { "array9", { "object", "array", "Array", "Array(1)", "Cannot get source code of funtion", "0", "function",
-                          "Function", "function function0( { [js code] }", "Cannot get source code of funtion",
+            { "array9", { "object", "array", "Array", "Array(1)", "Cannot get source code of function", "0", "function",
+                          "Function", "function function0( { [js code] }", "Cannot get source code of function",
                           "length", "number", "1", "1" } },
             { "array10", { "object", "array", "Array", "Array(1)", "[object Map]", "0", "object", "map", "Map",
                            "Map(0)", "[object Map]", "length", "number", "1", "1" } },
@@ -305,9 +305,9 @@ private:
                            "1", "1" } },
             { "array13", { "object", "array", "Array", "Array(1)", "Apple,Banana", "0", "object", "array", "Array",
                            "Array(2)", "Apple,Banana", "length", "number", "1", "1" } },
-            { "array14", { "object", "array", "Array", "Array(1)", "Cannot get source code of funtion", "0",
+            { "array14", { "object", "array", "Array", "Array(1)", "Cannot get source code of function", "0",
                            "function", "Generator", "function* generator0( { [js code] }",
-                           "Cannot get source code of funtion", "length", "number", "1", "1" } },
+                           "Cannot get source code of function", "length", "number", "1", "1" } },
             { "array15", { "object", "array", "Array", "Array(1)", "/^\\d+\\.\\d+$/i", "0", "object", "regexp",
                            "RegExp", "/^\\d+\\.\\d+$/i", "/^\\d+\\.\\d+$/i", "length", "number", "1", "1" } },
             { "array16", { "object", "array", "Array", "Array(1)", "[object ArrayBuffer]", "0", "object",
@@ -397,19 +397,19 @@ private:
                             "[[Entries]]", "object", "array", "Array", "Array(2)",
                             "[object Object],[object Object]" } },
             { "Parent", { "function", "Function", "function Parent( { [js code] }",
-                          "Cannot get source code of funtion" } },
+                          "Cannot get source code of function" } },
             { "class1", { "object", "Object", "customClass", "[object Object]", "_a", "number", "1", "1",
                           "_b", "number", "2", "2", "child", "object", "Object", "Child", "[object Object]", "print",
-                          "function", "Function", "function ( { [js code] }", "Cannot get source code of funtion" } },
+                          "function", "Function", "function ( { [js code] }", "Cannot get source code of function" } },
             { "parent", { "object", "Object", "Parent", "[object Object]", "name", "string", "parent", "parent",
                           "age", "number", "50", "50" } },
             { "customClass", { "function", "Function", "function customClass( { [js code] }",
-                               "Cannot get source code of funtion" } },
+                               "Cannot get source code of function" } },
             { "child", { "object", "Object", "Child", "[object Object]", "name", "string", "child", "child",
                          "age", "number", "15", "15", "idNumber", "string", "1234", "1234" } },
             { "class2", { "object", "Object", "Object", "[object Object]", "name", "string", "class2", "class2" } },
             { "Child", { "function", "Function", "function Child( { [js code] }",
-                         "Cannot get source code of funtion" } },
+                         "Cannot get source code of function" } },
         };
 
         int32_t index_ {0};
