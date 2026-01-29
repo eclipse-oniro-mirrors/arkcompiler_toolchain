@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Copyright (c) 2024 Huawei Device Co., Ltd.
+Copyright (c) 2026 Huawei Device Co., Ltd.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -21,7 +21,7 @@ import sys
 import json
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).parent.parent)) # add aw path to sys.path
+sys.path.append(str(Path(__file__).parent.parent))  # add aw path to sys.path
 
 from all_utils import CommonUtils
 from implement_api.protocol_api import ProtocolImpl
@@ -38,6 +38,7 @@ class HeapProfilerImpl(ProtocolImpl):
         self.dispatch_table = {"startTrackingHeapObjects": (self.start_tracking_heap_objects, ProtocolType.send),
                                "stopTrackingHeapObjects": (self.stop_tracking_heap_objects, ProtocolType.send),
                                "takeHeapSnapshot": (self.take_heap_snapshot, ProtocolType.send),
+                               "takeHeapSnapshotStatic": (self.take_heap_snapshot_static, ProtocolType.send),
                                "startSampling": (self.start_sampling, ProtocolType.send),
                                "stopSampling": (self.stop_sampling, ProtocolType.send)}
 
@@ -70,13 +71,18 @@ class HeapProfilerImpl(ProtocolImpl):
         response = await comm_with_debugger_server(self.websocket, connection,
                                                    heap_profiler.take_heap_snapshot(), message_id)
         assert r'\"location_fields\":[\"object_index\",\"script_id\",\"line\",\"column\"]' in response, \
-            'This is not the last message of addHeapSnapshotChunk'
+            'This is not the first message of addHeapSnapshotChunk'
         pre_response = response
         while response.startswith('{"method":"HeapProfiler.addHeapSnapshotChunk"'):
             pre_response = response
             response = await self.websocket.recv_msg_of_debugger_server(connection.instance_id,
                                                                         connection.received_msg_queue)
         assert pre_response.endswith(r'\n]\n}\n"}}'), 'This is not the last message of addHeapSnapshotChunk'
+        CommonUtils.assert_equal(json.loads(response), {"id": message_id, "result": {}})
+
+    async def take_heap_snapshot_static(self, message_id, connection, params):
+        response = await comm_with_debugger_server(self.websocket, connection,
+                                                   heap_profiler.take_heap_snapshot_static(), message_id)
         CommonUtils.assert_equal(json.loads(response), {"id": message_id, "result": {}})
 
     async def start_sampling(self, message_id, connection, params):
@@ -88,5 +94,5 @@ class HeapProfilerImpl(ProtocolImpl):
         response = await comm_with_debugger_server(self.websocket, connection,
                                                    heap_profiler.stop_sampling(), message_id)
         response = json.loads(response)
-        CommonUtils.assert_equal(response['id'], message_id)
+        CommonUtils.assert_equal(response["id"], message_id)
         return response

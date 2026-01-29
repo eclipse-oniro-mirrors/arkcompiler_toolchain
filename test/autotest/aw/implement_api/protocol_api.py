@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Copyright (c) 2024 Huawei Device Co., Ltd.
+Copyright (c) 2026 Huawei Device Co., Ltd.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -20,7 +20,7 @@ Description: Python Protocol Domain Interfaces
 import sys
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).parent.parent)) # add aw path to sys.path
+sys.path.append(str(Path(__file__).parent.parent))  # add aw path to sys.path
 
 from customized_types import ProtocolType
 
@@ -31,10 +31,15 @@ class ProtocolImpl(object):
         self.id_generator = id_generator
         self.class_name = self.__class__.__name__
         self.domain = self.class_name[:-4]
+        # dispatch_table maps protocol strings to a tuple of (handler, protocol_type)
+        #   key: protocol name (str)
+        #   value: (handler_function, ProtocolType)
+        #   handler_function: method to handle the protocol
+        #   ProtocolType: send or recv, indicating protocol direction
         self.dispatch_table = {}
         self.websocket = websocket
 
-    async def send(self, protocol_name, connection, params=None):
+    async def send(self, protocol_name, connection, params=None, is_hybrid=False, counts=1, sessionId=""):
         protocol = self._check_and_parse_protocol(protocol_name)
         if self.dispatch_table.get(protocol) is not None:
             if self.dispatch_table.get(protocol)[1] != ProtocolType.send:
@@ -42,16 +47,24 @@ class ProtocolImpl(object):
                                      .format(self.class_name, protocol_name, "send",
                                              self.dispatch_table.get(protocol)[1]))
             message_id = next(self.id_generator)
-            return await self.dispatch_table.get(protocol)[0](message_id, connection, params)
+            if is_hybrid:
+                return await self.dispatch_table.get(protocol)[0](message_id, connection, params, is_hybrid, counts, sessionId)
+            else:
+                return await self.dispatch_table.get(protocol)[0](message_id, connection, params)
 
-    async def recv(self, protocol_name, connection, params=None):
+
+    async def recv(self, protocol_name, connection, params=None, is_hybrid=False, counts=1):
         protocol = self._check_and_parse_protocol(protocol_name)
         if self.dispatch_table.get(protocol) is not None:
             if self.dispatch_table.get(protocol)[1] != ProtocolType.recv:
                 raise AssertionError("{} recv ProtocolType inconsistent: Protocol {}, calling {}, should be {}"
                                      .format(self.class_name, protocol_name, "recv",
                                              self.dispatch_table.get(protocol)[1]))
-            return await self.dispatch_table.get(protocol)[0](connection, params)
+            if is_hybrid:
+                return await self.dispatch_table.get(protocol)[0](connection, params, is_hybrid, counts)
+            else:
+                return await self.dispatch_table.get(protocol)[0](connection, params)
+
 
     def _check_and_parse_protocol(self, protocol_name):
         res = protocol_name.split('.')

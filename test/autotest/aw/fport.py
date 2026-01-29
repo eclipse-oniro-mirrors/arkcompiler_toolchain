@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Copyright (c) 2024 Huawei Device Co., Ltd.
+Copyright (c) 2026 Huawei Device Co., Ltd.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -25,31 +25,38 @@ class Fport(object):
         self.increase_step = 7
 
     def fport_connect_server(self, port, pid, bundle_name):
-        for _ in range(Fport.retry_times):
-            cmd = f"fport tcp:{port} ark:{pid}@{bundle_name}"
-            self.driver.log_info('fport connect server: ' + cmd)
-            result = self.driver.hdc(cmd)
-            self.driver.log_info(result)
-            if result == 'Forwardport result:OK':
-                return port
-            else:    # The port may be occupied
-                port += Fport.increase_step
-        return -1
+        for _ in range(self.retry_times):
+            fport_info = f"tcp:{port} ark:{pid}@{bundle_name}"
+            if self.fport_server(fport_info):
+                return port, fport_info
+            else:  # The port may be occupied
+                port += self.increase_step
+        return -1, ''
 
     def fport_debugger_server(self, port, pid, tid=0):
-        for _ in range(Fport.retry_times):
+        for _ in range(self.retry_times):
             if tid == 0:
-                cmd = f"fport tcp:{port} ark:{pid}@Debugger"
+                fport_info = f"tcp:{port} ark:{pid}@Debugger"
             else:
-                cmd = f"fport tcp:{port} ark:{pid}@{tid}@Debugger"
-            self.driver.log_info('fport_debugger_server: ' + cmd)
-            result = self.driver.hdc(cmd)
-            self.driver.log_info(result)
-            if result == 'Forwardport result:OK':
-                return port
-            else:    # The port may be occupied
-                port += Fport.increase_step
-        return -1
+                fport_info = f"tcp:{port} ark:{pid}@{tid}@Debugger"
+            if self.fport_server(fport_info):
+                return port, fport_info
+            else:  # The port may be occupied
+                port += self.increase_step
+        return -1, ''
+
+    def fport_server(self, fport_info):
+        cmd = f"fport {fport_info}"
+        self.driver.log_info('fport_server: ' + cmd)
+        result = self.driver.hdc(cmd)
+        self.driver.log_info(result)
+        return result == 'Forwardport result:OK'
+
+    def rm_fport_server(self, fport_info):
+        cmd = f"fport rm {fport_info}"
+        self.driver.log_info('rm_port: ' + cmd)
+        result = self.driver.hdc(cmd)
+        assert 'success' in result, result
 
     def clear_fport(self):
         list_fport_cmd = 'fport ls'

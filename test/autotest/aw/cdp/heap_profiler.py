@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Copyright (c) 2024 Huawei Device Co., Ltd.
+Copyright (c) 2026 Huawei Device Co., Ltd.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -52,3 +52,7 @@ def stop_sampling():
 
 def take_heap_snapshot():
     return {'method': 'HeapProfiler.takeHeapSnapshot'}
+
+def take_heap_snapshot_static():
+    return {'method': 'DumpHeapSnapshot.start',
+            'sessionId': ''}
