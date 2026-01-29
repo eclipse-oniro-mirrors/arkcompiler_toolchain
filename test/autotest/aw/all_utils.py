@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Copyright (c) 2024 Huawei Device Co., Ltd.
+Copyright (c) 2026 Huawei Device Co., Ltd.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -38,22 +38,22 @@ class TimeRecord:
 
     def avg_actual_time(self):
         return sum(self.actual_times) / len(self.actual_times)
-    
+
     def max_actual_time(self):
         return max(self.actual_times)
-    
+
     def min_actual_time(self):
         return min(self.actual_times)
-    
+
     def add_actual_time(self, actual_time):
         self.actual_times.append(actual_time)
 
     def avg_proportion(self):
-        return self.avg_actual_time * 100 / self.expected_time
-    
+        return self.avg_actual_time() * 100 / self.expected_time
+
     def rounds(self):
         return len(self.actual_times)
-    
+
     def mid_actual_time(self):
         self.actual_times.sort()
         return self.actual_times[len(self.actual_times) // 2]
@@ -64,18 +64,23 @@ class CommonUtils(object):
         self.driver = driver
 
     @staticmethod
-    async def communicate_with_debugger_server(websocket, connection, command, message_id):
-        '''
+    async def communicate_with_debugger_server(websocket, connection, command, message_id, counts=1):
+        """
+        counts:  represents the number of recv messages corresponding to one send message.
         Assembles and send the commands, then return the response.
         Send message to the debugger server corresponding to the to_send_queue.
         Return the response from the received_queue.
-        '''
+        """
         command['id'] = message_id
         await websocket.send_msg_to_debugger_server(connection.instance_id, connection.send_msg_queue, command)
-        response = await websocket.recv_msg_of_debugger_server(connection.instance_id,
-                                                               connection.received_msg_message)
+        if counts > 1 :
+            response = await websocket.recv_msg_of_debugger_server(connection.instance_id,
+                                                                   connection.received_msg_queue, counts)
+        else:
+            response = await websocket.recv_msg_of_debugger_server(connection.instance_id,
+                                                               connection.received_msg_queue)
         return response
-    
+
     @staticmethod
     def get_custom_protocols():
         protocols = ["removeBreakpointsByUrl",
@@ -100,9 +105,16 @@ class CommonUtils(object):
     @staticmethod
     def assert_equal(actual, expected):
         '''
-        判断actual和expected是否相同,若不相同,则抛出异常
+        判断actual和expected是否相同,若不相同则抛出异常
         '''
         assert actual == expected, f"\nExpected: {expected}\nActual: {actual}"
+
+    @staticmethod
+    def assert_not_equal(actual, expected):
+        '''
+        判断actual和expected是否不同,若相同则抛出异常
+        '''
+        assert actual != expected, f"\nThe expected is same as the actual: {actual}"
 
     @staticmethod
     def get_variables_from_properties(properties, prefix_name):
@@ -131,7 +143,7 @@ class CommonUtils(object):
                 subtype = value.get('subtype')
                 variables[name] = subtype if subtype is not None else value.get('type')
         return variables
-    
+
     def get_pid(self, bundle_name):
         '''
         获取bundle_name对应的pid
@@ -141,12 +153,12 @@ class CommonUtils(object):
             return 0
         self.driver.log_info(f'pid of {bundle_name}: ' + pid)
         return int(pid)
-    
+
     def attach(self, bundle_name):
         '''
         通过bundle_name使指定应用进入调试模式
         '''
-        attach_result = self.driver.shell(f"aa attach b {bundle_name}").strip()
+        attach_result = self.driver.shell(f"aa attach -b {bundle_name}").strip()
         self.driver.log_info(attach_result)
         self.assert_equal(attach_result, 'attach app debug successfully.')
 
@@ -154,21 +166,14 @@ class CommonUtils(object):
         '''
         根据config连接ConnectServer
         '''
-        fport = Fport(self.driver)
-        fport.clear_fport()
-        connect_server_port = fport.fport_connect_server(config['connect_server_port'], config['pid'],
-                                                         config['bundle_name'])
-        assert connect_server_port > 0, 'Failed to fport connect server for 3 times, the port is very likely occupied'
-        config['connect_server_port'] = connect_server_port
-        config['websocket'] = ToolchainWebSocket(self.driver, config['connect_server_port'], 
-                                                config['debugger_server_port'], config.get('print_protocol', True))
+        config['websocket'] = ToolchainWebSocket(self.driver, config, config.get('print_protocol', True))
         config['taskpool'] = TaskPool()
 
     def hot_reload(self, hqf_path: Union[str, list]):
         '''
         根据hqf_path路径对应用进行热重载
         '''
-        assert isinstance(hqf_path, (str, list)), 'Tyep of hqf_path is NOT string or list!'
+        assert isinstance(hqf_path, (str, list)), 'Type of hqf_path is NOT string or list!'
         if isinstance(hqf_path, str):
             cmd = f'bm quickfix -a -f {hqf_path} -d'
         elif isinstance(hqf_path, list):
@@ -176,7 +181,7 @@ class CommonUtils(object):
         self.driver.log_info('hot reload: ' + cmd)
         result = self.driver.shell(cmd).strip()
         self.driver.log_info(result)
-        self.assert_equal(result, 'apply quickfic succeed.')
+        self.assert_equal(result, 'apply quickfix succeed.')
 
     async def async_wait_timeout(self, task, timeout=3):
         '''
@@ -210,13 +215,12 @@ class CommonUtils(object):
 
     def clear_fault_log(self):
         '''
-        清楚故障日志
+        清除故障日志
         '''
         cmd = 'rm /data/log/faultlog/faultlogger/*'
         self.driver.log_info(cmd)
         result = self.driver.shell(cmd)
         self.driver.log_info(result)
-        assert 'successfully' in result, result
 
     def save_fault_log(self, log_path):
         '''
@@ -229,8 +233,42 @@ class CommonUtils(object):
         self.driver.log_info(cmd)
         result = self.driver.hdc(cmd)
         self.driver.log_info(result)
-        assert 'successfully' in result, result
 
+    def remove_file(self, file):
+        '''
+        删除指定文件
+        '''
+        cmd = rf'rm {file}'
+        self.driver.shell(cmd)
+
+    def check_snapshot(self, path, pid):
+        '''
+        校验目标路径下是否生成了'jsheap-pid'格式的snapshot，且文件大小不为0
+        '''
+        cmd = rf'ls -alth {path} | grep jsheap-{pid}'
+        result = self.driver.shell(cmd)
+        parts = result.split()
+        self.assert_equal(len(parts), 8)
+        size_str = parts[4]
+        self.assert_not_equal(size_str.strip(), '0')
+
+    def try_confirm_usb_connection_method(self):
+        '''
+        设备重启后，会出现选择并确认USB连接方式的页面，该函数的作用为点击确定使该页面消失
+        '''
+        component = self.driver.UiTree.find_component_by_path(
+            '/WindowScene[0]/Stack/Row/UIExtensionComponent/root/Dialog/Column/__Common__/JsView/Scroll/Column/JsView/'
+            'Column[1]/Scroll/Column/List/ListItem[0]/Column/Button/Row/Flex/Text[0]')
+        if component:
+            self.assert_equal(component.text, '传输文件')
+            confirm = self.driver.UiTree.find_component_by_path(
+                '/WindowScene[0]/Stack/Row/UIExtensionComponent/root/Dialog/Column/__Common__/JsView/Scroll/Column/'
+                'JsView/Column[2]/Row')
+            confirm.click()
+            component = self.driver.UiTree.find_component_by_path(
+                '/WindowScene[0]/Stack/Row/UIExtensionComponent/root/Dialog/Column/__Common__/JsView/Scroll/Column/'
+                'JsView/Column[1]/Scroll/Column/List/ListItem[0]/Column/Button/Row/Flex/Text[0]')
+        self.assert_equal(component, None)
 
 class UiUtils(object):
     def __init__(self, driver):
@@ -247,7 +285,7 @@ class UiUtils(object):
             match = re.search(r'physical resolution=(\d+)x(\d+)', screen_info)
         assert match is not None, f"screen_info is incorrect: {screen_info}"
         return int(match.group(1)), int(match.group(2))
-    
+
     def click(self, x, y):
         '''
         点击屏幕指定坐标位置
@@ -266,9 +304,9 @@ class UiUtils(object):
         self.click(middle_x, middle_y)
 
     def back(self):
-        '''
+        """
         返回上一步
-        '''
+        """
         cmd = 'uitest uiInput keyEvent Back'
         self.driver.log_info('click the back button: ' + cmd)
         result = self.driver.shell(cmd).strip()
@@ -276,19 +314,19 @@ class UiUtils(object):
         CommonUtils.assert_equal(result, 'No Error')
 
     def keep_awake(self):
-        '''
+        """
         保持屏幕常亮,要在屏幕亮起时使用该方法才有效
-        '''
+        """
         cmd = 'power-shell wakeup'
         result = self.driver.shell(cmd).strip()
         assert "WakeupDevice is called" in result, result
-        cmd = 'power-shell timeout -o 214748647'
+        cmd = 'power-shell timeout -o 2147483647'
         result = self.driver.shell(cmd).strip()
-        assert "Override screen off time to 214748647" in result, result
+        assert "Override screen off time to 2147483647" in result, result
         cmd = 'power-shell setmode 602'
         result = self.driver.shell(cmd).strip()
         assert "Set Mode Success!" in result, result
-        self.driver.log_info('Keep the screen awake Success!')
+        self.driver.log_info("Keep the screen awake Success!")
 
     def open_control_center(self):
         '''
@@ -314,41 +352,41 @@ class UiUtils(object):
 
     def disable_location(self):
         '''
-        关闭位置信息(GPS),不能在异步任务中使用
+        关闭位置信息（GPS）,不能在异步任务中使用
         '''
         self.driver.wait(1)
         SystemUI.open_control_center(self.driver)
         comp = self.driver.find_component(BY.key("ToggleBaseComponent_Image_location", MatchPattern.CONTAINS))
         result = comp.getAllProperties()
         try:
-            bg = result.backgroudColor
+            bg = result.backgroundColor
             value = int("0x" + bg[3:], base=16)
-            # 读取背景颜色判断开启或关闭
+            # 读取背景颜色判断开启和关闭
             if value < 0xffffff:
                 comp.click()
                 self.driver.wait(1)
             self.driver.press_back()
         except Exception as e:
             raise RuntimeError("Fail to disable location")
-    
+
     def enable_location(self):
         '''
-        开启位置信息(GPS),不能在异步任务中使用
+        开启位置信息（GPS）,不能在异步任务中使用
         '''
         self.driver.wait(1)
         SystemUI.open_control_center(self.driver)
         comp = self.driver.find_component(BY.key("ToggleBaseComponent_Image_location", MatchPattern.CONTAINS))
         result = comp.getAllProperties()
         try:
-            bg = result.backgroudColor
+            bg = result.backgroundColor
             value = int("0x" + bg[3:], base=16)
-            # 读取背景颜色判断开启或关闭
+            # 读取背景颜色判断开启和关闭
             if value == 0xffffff:
                 comp.click()
                 self.driver.wait(1)
             self.driver.press_back()
         except Exception as e:
-            raise RuntimeError("Fail to disable location")
+            raise RuntimeError("Fail to enable location")
 
 
 class PerformanceUtils(object):
@@ -365,7 +403,7 @@ class PerformanceUtils(object):
         self.board_ipa_support = False
         self.perfg_version = "0.0"
 
-    def show_performace_data_in_html(self):
+    def show_performance_data_in_html(self):
         '''
         将性能数据以html格式展示出来
         '''
@@ -379,14 +417,14 @@ class PerformanceUtils(object):
                 failed_cases.append(key)
             content.append([key, value.rounds(), value.expected_time, value.max_actual_time(),
                             value.min_actual_time(), value.mid_actual_time(),
-                            f'{value.avg_actual_time()}:.2f',
-                            f'{value.avg_proportion()}:.2f'])
-        table_html = '<table border="1" cellpadding="5" cellspacing="0"'
+                            f'{value.avg_actual_time():.2f}',
+                            f'{value.avg_proportion():.2f}'])
+        table_html = '<table border="1" cellpadding="5" cellspacing="0">'
         header_html = '<thead>'
         for i in header:
             header_html += f'<th>{i}</th>'
         header_html += '</thead>'
-        content_html = 'tbody'
+        content_html = '<tbody>'
         for row in content:
             row_html = '<tr style="color: red;">' if row[0] in failed_cases else '<tr>'
             for i in row:
@@ -396,7 +434,7 @@ class PerformanceUtils(object):
         table_html += header_html
         table_html += content_html
         table_html += '</table>'
-        self.driver.lg_info(table_html)
+        self.driver.log_info(table_html)
         assert len(failed_cases) == 0, "The following cases have obvious deterioration: " + " ".join(failed_cases)
 
     def add_time_data(self, case_name: str, expected_time: int, actual_time: int):
@@ -441,9 +479,9 @@ class PerformanceUtils(object):
         # create a sub-process to receive the hilog
         hilog_process = subprocess.Popen(['hdc', 'shell', 'hilog'],
                                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        
+
         def get_time_from_records(records):
-            # 解析records的数据
+            # 解析record的数据
             pattern = r"\((.*?)\) Expected Time = (\d+), Actual Time = (\d+)"
             for record in records:
                 match = re.search(pattern, record)
@@ -467,12 +505,12 @@ class PerformanceUtils(object):
                 self.driver.log_info('hilog stream is closed.')
             finally:
                 get_time_from_records(records)
-        
+
         perf_records_thread = threading.Thread(target=get_perf_records)
         perf_records_thread.start()
 
         return hilog_process, perf_records_thread
-    
+
     def lock_for_performance(self):
         '''
         执行性能用例前先进行锁频锁核操作
@@ -494,10 +532,10 @@ class PerformanceUtils(object):
         # 锁中核和大核
         self._lock_core_by_id(self.cpu_start_id[1], self.total_cpu_num - 1)
         return True
-    
+
     def _check_if_support_ipa(self):
         '''
-        壳温IPA支持情况检查,检查结果存在self.board_ipa_support中
+        壳温IPA支持情况检查,检查结果存在 self.board_ipa_support 中
         '''
         result = self.driver.shell("cat /sys/class/thermal/thermal_zone1/type").strip()
         self.board_ipa_support = (result == 'board_thermal')
@@ -533,7 +571,7 @@ class PerformanceUtils(object):
             self.driver.log_info('Get small-core cpu num failed')
             return False
         self.cpu_start_id[1] = int(result[idx + 1:]) + 1
-        self.driver.log_info('cpu_start_id[1] = ' + str(self.cpu_start_id[1]))
+        self.driver.log_info('self.cpu_start_id[1] = ' + str(self.cpu_start_id[1]))
         # 获取CPU中核个数
         result = self.driver.shell(
             f"cat /sys/devices/system/cpu/cpu{self.cpu_start_id[1]}/topology/core_siblings_list").strip()
@@ -545,7 +583,7 @@ class PerformanceUtils(object):
         if self.cpu_start_id[2] == self.total_cpu_num:
             self.cpu_start_id[2] = self.cpu_start_id[1]
             return True
-        self.driver.log_info('cpu_start_id[2] = ' + str(self.cpu_start_id[2]))
+        self.driver.log_info('self.cpu_start_id[2] = ' + str(self.cpu_start_id[2]))
         # 获取CPU大核个数
         result = self.driver.shell(
             f"cat /sys/devices/system/cpu/cpu{self.cpu_start_id[2]}/topology/core_siblings_list").strip()
@@ -553,7 +591,7 @@ class PerformanceUtils(object):
             self.driver.log_info('Get large-core cpu num failed')
             return False
         idx = result.find('-')
-        tmp_total_cpu_num = (int(result) if idx == -1 else int(result[idx + 1])) + 1
+        tmp_total_cpu_num = (int(result) if idx == -1 else int(result[idx + 1:])) + 1
         if tmp_total_cpu_num != self.total_cpu_num:
             self.driver.log_info('Get large-core cpu num failed')
             return False
@@ -564,7 +602,7 @@ class PerformanceUtils(object):
                              f'Medium-core cpu number: {self.cpu_num_list[1]};'
                              f'Large-core cpu number: {self.cpu_num_list[2]};')
         return True
-    
+
     def _disable_perf_limitation(self):
         '''
         查杀省电精灵并关闭IPA和PerfGenius
@@ -575,20 +613,18 @@ class PerformanceUtils(object):
             self.driver.shell("rm -rf /system/app/HwPowerGenieEngine3")
             self.driver.System.reboot()
             self.driver.System.wait_for_boot_complete()
-            
         # 关闭IPA
         self.driver.shell("echo disabled > /sys/class/thermal/thermal_zone0/mode")
         if self.board_ipa_support:
-            self.driver.shell("echo disabled > /sys/class/thermal/thermal_zone0/mode")
-            self.driver.shell("echo 10000 > /sys/class/thermal/thermal_zone0/sustainable_power")
-        # 关闭perfGenius, 使用时需要手动修改下方bundle_name
-        bundle_name = ''
+            self.driver.shell("echo disabled > /sys/class/thermal/thermal_zone1/mode")
+            self.driver.shell("echo 10000 > /sys/class/thermal/thermal_zone1/sustainable_power")
+        # 关闭perfGenius
         if self.perfg_version == '0.0':
             self.driver.shell("dumpsys perfhub --perfhub_dis")
         else:
-            self.driver.shell(f"lshal debug {bundle_name}@{self.perfg_version}"
+            self.driver.shell(f"lshal debug vendor.huawei.hardware.perfgenius@{self.perfg_version}"
                               f"::IPerfGenius/perfgenius --perfgenius_dis")
-            
+
     def _lock_frequency_by_start_id(self, start_id):
         '''
         锁id为start_id的CPU核的频率
@@ -596,11 +632,11 @@ class PerformanceUtils(object):
         self.driver.log_info(f"Lock frequency, start_id = {start_id}")
         result = self.driver.shell(
             f"cat /sys/devices/system/cpu/cpu{start_id}/cpufreq/scaling_available_frequencies").strip()
-        freq_list = list(map(int, result.strip()))
+        freq_list = list(map(int, result.split()))
         max_freq = max(freq_list)
-        self.driver.shell(f"echo {max_freq} > cat /sys/devices/system/cpu/cpu{start_id}/cpufreq/scaling_max_freq")
-        self.driver.shell(f"echo {max_freq} > cat /sys/devices/system/cpu/cpu{start_id}/cpufreq/scaling_min_freq")
-        self.driver.shell(f"echo {max_freq} > cat /sys/devices/system/cpu/cpu{start_id}/cpufreq/scaling_max_freq")
+        self.driver.shell(f"echo {max_freq} >  /sys/devices/system/cpu/cpu{start_id}/cpufreq/scaling_max_freq")
+        self.driver.shell(f"echo {max_freq} >  /sys/devices/system/cpu/cpu{start_id}/cpufreq/scaling_min_freq")
+        self.driver.shell(f"echo {max_freq} >  /sys/devices/system/cpu/cpu{start_id}/cpufreq/scaling_max_freq")
 
     def _lock_ddr_frequency(self):
         '''
@@ -609,14 +645,14 @@ class PerformanceUtils(object):
         std_freq = 749000000
         self.driver.log_info("Lock ddr frequency")
         result = self.driver.shell("cat /sys/class/devfreq/ddrfreq/available_frequencies").strip()
-        freq_list = list(map(int, result.strip()))
+        freq_list = list(map(int, result.split()))
         freq = min(freq_list, key=lambda x: abs(x - std_freq))
-        self.driver.shell(f"echo {freq} > /sys/class/devfreq/ddrfreq/max_freq")
-        self.driver.shell(f"echo {freq} > /sys/class/devfreq/ddrfreq/min_freq")
-        self.driver.shell(f"echo {freq} > /sys/class/devfreq/ddrfreq/max_freq")
-        self.driver.shell(f"echo {freq} > /sys/class/devfreq/ddrfreq_up_threshold/max_freq")
-        self.driver.shell(f"echo {freq} > /sys/class/devfreq/ddrfreq_up_threshold/min_freq")
-        self.driver.shell(f"echo {freq} > /sys/class/devfreq/ddrfreq_up_threshold/max_freq")
+        self.driver.shell(f"echo {freq} >  /sys/class/devfreq/ddrfreq/max_freq")
+        self.driver.shell(f"echo {freq} >  /sys/class/devfreq/ddrfreq/min_freq")
+        self.driver.shell(f"echo {freq} >  /sys/class/devfreq/ddrfreq/max_freq")
+        self.driver.shell(f"echo {freq} >  /sys/class/devfreq/ddrfreq_up_threshold/max_freq")
+        self.driver.shell(f"echo {freq} >  /sys/class/devfreq/ddrfreq_up_threshold/min_freq")
+        self.driver.shell(f"echo {freq} >  /sys/class/devfreq/ddrfreq_up_threshold/max_freq")
 
     def _lock_frequency(self):
         '''
@@ -632,7 +668,7 @@ class PerformanceUtils(object):
 
     def _lock_core_by_id(self, start_id, end_id):
         '''
-        锁start_id到end_id的CPU核
+        锁start_id到end_id的cpu核
         '''
         for i in range(start_id, end_id + 1):
             self.driver.shell(f"echo 0 > sys/devices/system/cpu/cpu{i}/online")

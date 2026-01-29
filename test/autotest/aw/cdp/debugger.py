@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Copyright (c) 2024 Huawei Device Co., Ltd.
+Copyright (c) 2026 Huawei Device Co., Ltd.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -87,14 +87,12 @@ class BreakLocationUrl:
             json['condition'] = self.condition
         return json
 
-
 @dataclass
 class SymbolicBreakpoint:
     functionName: str
 
     def to_json(self):
         return {'functionName': self.functionName}
-
 
 @dataclass
 class RemoveBreakpointsUrl:
@@ -105,11 +103,9 @@ class RemoveBreakpointsUrl:
 class SetBreakpointsLocations:
     locations: list = field(default_factory=list)
 
-
 @dataclass
 class SymbolicBreakpoints:
-    SymbolicBreakpoints: List[SymbolicBreakpoint] = field(default_factory=list)
-
+    symbolicBreakpoints: List[SymbolicBreakpoint] = field(default_factory=list)
 
 def enable(params: EnableAccelerateLaunchParams | None):
     command = {'method': 'Debugger.enable'}
@@ -120,17 +116,33 @@ def enable(params: EnableAccelerateLaunchParams | None):
         }
     return command
 
+def enable_static(params: EnableAccelerateLaunchParams | None):
+    # params is reserved for future extension
+    _ = params
+    command = {'method': 'Debugger.enable',
+               'params': {},
+               "sessionId": ''}
+    return command
 
 def resume():
     command = {'method': 'Debugger.resume'}
     return command
 
+def resume_static():
+    command = {'method': 'Debugger.resume',
+               "sessionId": ''}
+    return command
 
 def remove_breakpoints_by_url(params: RemoveBreakpointsUrl):
     command = {'method': 'Debugger.removeBreakpointsByUrl',
                'params': {'url': params.url}}
     return command
 
+def remove_breakpoints_by_url_static(params: RemoveBreakpointsUrl):
+    command = {'method': 'Debugger.removeBreakpointsByUrl',
+               'params': {'url': params.url},
+               "sessionId": ''}
+    return command
 
 def get_possible_and_set_breakpoint_by_url(params: SetBreakpointsLocations):
     locations = []
@@ -140,44 +152,66 @@ def get_possible_and_set_breakpoint_by_url(params: SetBreakpointsLocations):
                'params': {'locations': locations}}
     return command
 
+def get_possible_and_set_breakpoint_by_url_static(params: SetBreakpointsLocations):
+    locations = []
+    for location in params.locations:
+        locations.append(location.to_json())
+    command = {'method': 'Debugger.getPossibleAndSetBreakpointByUrl',
+               'params': {'locations': locations},
+               "sessionId": ''}
+    return command
 
 def set_symbolic_breakpoints(params: SymbolicBreakpoints):
     symbolicBreakpoints = []
-    for symbolicBreakpoint in params.SymbolicBreakpoints:
+    for symbolicBreakpoint in params.symbolicBreakpoints:
         symbolicBreakpoints.append(symbolicBreakpoint.to_json())
     command = {'method': 'Debugger.setSymbolicBreakpoints',
                'params': {'symbolicBreakpoints': symbolicBreakpoints}}
     return command
 
-
 def remove_symbolic_breakpoints(params: SymbolicBreakpoints):
     symbolicBreakpoints = []
-    for symbolicBreakpoint in params.SymbolicBreakpoints:
+    for symbolicBreakpoint in params.symbolicBreakpoints:
         symbolicBreakpoints.append(symbolicBreakpoint.to_json())
     command = {'method': 'Debugger.removeSymbolicBreakpoints',
                'params': {'symbolicBreakpoints': symbolicBreakpoints}}
     return command
 
-
 def step_over():
     command = {'method': 'Debugger.stepOver'}
     return command
 
+def step_over_static():
+    command = {'method': 'Debugger.stepOver',
+               "sessionId": ''}
+    return command
 
 def step_into():
     command = {'method': 'Debugger.stepInto'}
     return command
 
+def step_into_static(sessionId = ""):
+    command = {'method': 'Debugger.stepInto',
+               "sessionId": sessionId}
+    return command
 
 def step_out():
     command = {'method': 'Debugger.stepOut'}
     return command
 
+def step_out_static():
+    command = {'method': 'Debugger.stepOut',
+               "sessionId": ''}
+    return command
 
 def disable():
     command = {'method': 'Debugger.disable'}
     return command
 
+def disable_static():
+    command = {'method': 'Debugger.disable',
+               "sessionId": ''}
+    return command
 
 def set_pause_on_exceptions(params: PauseOnExceptionsState):
     command = {'method': 'Debugger.setPauseOnExceptions',
@@ -190,7 +224,7 @@ def evaluate_on_call_frame(params: EvaluateOnCallFrameParams):
                'params': {
                    'callFrameId': str(params.call_frame_id),
                    'expression': params.expression,
-                   'includeCommandLineAPI': params.include_command_line_api,
+                   'includeCommandLineApi': params.include_command_line_api,
                    'objectGroup': params.object_group,
                    'silent': params.silent}}
     return command
@@ -231,9 +265,9 @@ def save_all_possible_breakpoints(params: SaveAllPossibleBreakpointsParams):
         positions = []
         for pos in value:
             if isinstance(pos, int):
-                positions.append({"lineNumber": pos, "colomnNumber": 0})
+                positions.append({"lineNumber": pos, "columnNumber": 0})
             else:
-                positions.append({"lineNumber": pos[0], "colomnNumber": pos[1]})
+                positions.append({"lineNumber": pos[0], "columnNumber": pos[1]})
         locations[key] = positions
     command = {'method': 'Debugger.saveAllPossibleBreakpoints',
                'params': {'locations': locations}}

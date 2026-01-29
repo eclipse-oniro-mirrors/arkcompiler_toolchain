@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Copyright (c) 2024 Huawei Device Co., Ltd.
+Copyright (c) 2026 Huawei Device Co., Ltd.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -36,7 +36,9 @@ class DebuggerImpl(ProtocolImpl):
     def __init__(self, id_generator, websocket):
         super().__init__(id_generator, websocket)
         self.dispatch_table = {"enable": (self.enable, ProtocolType.send),
+                               "enableStatic": (self.enable, ProtocolType.send),
                                "disable": (self.disable, ProtocolType.send),
+                                "disableStatic": (self.disable_static, ProtocolType.send),
                                "resume": (self.resume, ProtocolType.send),
                                "pause": (self.pause, ProtocolType.send),
                                "removeBreakpointsByUrl": (self.remove_breakpoints_by_url, ProtocolType.send),
@@ -87,12 +89,23 @@ class DebuggerImpl(ProtocolImpl):
         return response
 
     async def enable(self, message_id, connection, params):
-        response = await comm_with_debugger_server(self.websocket, connection,
-                                                   debugger.enable(params), message_id)
+        response = await comm_with_debugger_server(self.websocket,
+                                                   connection,
+                                                   debugger.enable(params),
+                                                   message_id,
+                                                   counts)
         while response.startswith('{"method":"Debugger.scriptParsed"'):
             response = await self.websocket.recv_msg_of_debugger_server(connection.instance_id,
                                                                         connection.received_msg_queue)
         # 暂时删除对response的校验,以适配不同版本
+
+    async def enable_static(self, message_id, connection, params, is_hybrid=False, counts=1, sessionId=""):
+        response = await comm_with_debugger_server(self.websocket, connection,
+                                                   debugger.enable_static(params), message_id, counts)
+        while response.startswith('{"method":"Debugger.scriptParsed"'):
+            response = await self.websocket.recv_msg_of_debugger_server(connection.instance_id,
+                                                                        connection.received_msg_queue)
+        # 暂时删除对response的校验，以适配不同版本
 
     async def disable(self, message_id, connection, params):
         response = await comm_with_debugger_server(self.websocket, connection,
@@ -105,6 +118,14 @@ class DebuggerImpl(ProtocolImpl):
         expected_response = {"id": message_id, "result": {}}
         CommonUtils.assert_equal(json.loads(response), expected_response)
 
+    async def disable_static(self, message_id, connection, params, is_hybrid=False, counts=1, sessionId=""):
+        response = await comm_with_debugger_server(self.websocket, connection,
+                                                   debugger.disable_static(), message_id)
+        while response.startswith('{"method":"Debugger.resumed"') \
+                or response.startswith('{"method":"HeapProfiler.lastSeenObjectId"') \
+                or response.startswith('{"method":"HeapProfiler.heapStatsUpdate"'):
+            response = await self.websocket.recv_msg_of_debugger_server(connection.instance_id,
+                                                                        connection.received_msg_queue)
     async def script_parsed(self, connection, params):
         response = await self.websocket.recv_msg_of_debugger_server(connection.instance_id,
                                                                     connection.received_msg_queue)

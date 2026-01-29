@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Copyright (c) 2024 Huawei Device Co., Ltd.
+Copyright (c) 2026 Huawei Device Co., Ltd.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -36,14 +36,23 @@ class RuntimeImpl(ProtocolImpl):
     def __init__(self, id_generator, websocket):
         super().__init__(id_generator, websocket)
         self.dispatch_table = {"enable": (self.enable, ProtocolType.send),
+                               "enableStatic": (self.enable_static, ProtocolType.send),
                                "runIfWaitingForDebugger": (self.run_if_waiting_for_debugger, ProtocolType.send),
                                "getProperties": (self.get_properties, ProtocolType.send),
+                               "getPropertiesStatic": (self.get_properties_static, ProtocolType.send),
                                "getHeapUsage": (self.get_heap_usage, ProtocolType.send)}
 
     async def enable(self, message_id, connection, params):
         response = await comm_with_debugger_server(self.websocket, connection,
                                                    runtime.enable(), message_id)
         CommonUtils.assert_equal(json.loads(response), {"id": message_id, "result": {"protocol": []}})
+
+    async def enable_static(self, message_id, connection, params, is_hybrid=False, counts=1, sessionId=""):
+        response = await comm_with_debugger_server(self.websocket,
+                                                   connection,
+                                                   runtime.enable_static(),
+                                                   message_id,
+                                                   counts)
 
     async def run_if_waiting_for_debugger(self, message_id, connection, params):
         response = await comm_with_debugger_server(self.websocket, connection,
@@ -55,6 +64,14 @@ class RuntimeImpl(ProtocolImpl):
                                                    runtime.get_properties(params), message_id)
         response = json.loads(response)
         CommonUtils.assert_equal(response['id'], message_id)
+        return response
+
+    async def get_properties_static(self, message_id, connection, params, is_hybrid=False, counts=1, sessionId=""):
+        response = await comm_with_debugger_server(self.websocket,
+                                                   connection,
+                                                   runtime.get_properties_static(params, sessionId),
+                                                   message_id)
+        response = json.loads(response)
         return response
 
     async def get_heap_usage(self, message_id, connection, params):
