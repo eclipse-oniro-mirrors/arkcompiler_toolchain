@@ -566,9 +566,8 @@ void StopOldDebug(int tid, const std::string& componentName)
 void StoreDebuggerInfo(int tid, void* vm, const DebuggerPostTask& debuggerPostTask)
 {
     std::unique_lock<std::shared_mutex> lock(g_mutex);
-    if (g_debuggerInfo.find(tid) == g_debuggerInfo.end()) {
-        g_debuggerInfo.emplace(tid, std::make_pair(vm, debuggerPostTask));
-    }
+    g_debuggerInfo.erase(tid);
+    g_debuggerInfo.emplace(tid, std::make_pair(vm, debuggerPostTask));
 }
 
 // The returned pointer must be released using free() after it is no longer needed.
