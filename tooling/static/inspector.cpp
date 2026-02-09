@@ -208,9 +208,7 @@ void Inspector::ThreadStart(PtThread thread)
     os::memory::WriteLockHolder lock(debuggerEventsLock_);
 
     if (thread != PtThread::NONE) {
-        if (inspectorServer_.CallTargetAttachedToTarget(thread)) {
-            WaitForDebugger();
-        }
+        inspectorServer_.CallTargetAttachedToTarget(thread); // IDE not adjusted
     }
 
     // NOLINTBEGIN(modernize-avoid-bind)
