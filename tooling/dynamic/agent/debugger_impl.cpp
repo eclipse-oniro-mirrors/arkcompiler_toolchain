@@ -14,11 +14,12 @@
  */
 
 #include "agent/debugger_impl.h"
-
 #include "backend/debugger_executor.h"
-
 #include "ecmascript/jspandafile/js_pandafile_manager.h"
 #include "ecmascript/napi/jsnapi_helper.h"
+#include "protocol_handler.h"
+#include "tooling/dynamic/base/pt_base64.h"
+#include "tooling/hybrid_step/hybrid_single_stepper.h"
 
 #include "protocol_handler.h"
 
@@ -1378,6 +1379,8 @@ DispatchResponse DebuggerImpl::Resume([[maybe_unused]] const ResumeParams &param
     }
     frontend_.Resumed(vm_);
     debuggerState_ = DebuggerState::ENABLED;
+    // Reset DYNAMIC_TO_STATIC flag to be false when resuming
+    HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::DYNAMIC_TO_STATIC, false);
     return DispatchResponse::Ok();
 }
 
@@ -1660,6 +1663,9 @@ DispatchResponse DebuggerImpl::StepInto([[maybe_unused]] const StepIntoParams &p
     }
     frontend_.Resumed(vm_);
     debuggerState_ = DebuggerState::ENABLED;
+    // Set DYNAMIC_TO_STATIC flag to be true in order for
+    // static side to pause when stepping from dynamic to static
+    HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::DYNAMIC_TO_STATIC, true);
     return DispatchResponse::Ok();
 }
 
@@ -1685,6 +1691,9 @@ DispatchResponse DebuggerImpl::StepOut()
     }
     frontend_.Resumed(vm_);
     debuggerState_ = DebuggerState::ENABLED;
+    // Set DYNAMIC_TO_STATIC flag to be true in order for
+    // static side to pause when stepping from dynamic to static
+    HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::DYNAMIC_TO_STATIC, true);
     return DispatchResponse::Ok();
 }
 

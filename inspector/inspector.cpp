@@ -36,8 +36,8 @@
 #include "ffrt.h"
 #endif
 
-#include <string>
 #include <regex>
+#include <string>
 
 namespace OHOS::ArkCompiler::Toolchain {
 namespace {
@@ -330,7 +330,7 @@ void Inspector::OnMessage(std::string&& msg, bool isHybrid)
         static const std::regex hasKey("\"sessionId\"\\s*:\\s*\"");
         auto pos = std::regex_search(msg, hasKey);
         if (!pos) {
-            g_onMessage(vm_, std::move(msg)); //没有sessionId走1.1
+            g_onMessage(vm_, std::move(msg));  //If there is no sessionId, proceed to dynamic.
         } else {
             static const std::regex valPattern("\"sessionId\"\\s*:\\s*\"(\\d*)\"");
             std::smatch m;

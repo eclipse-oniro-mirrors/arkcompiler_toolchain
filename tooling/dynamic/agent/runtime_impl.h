@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -195,15 +195,15 @@ private:
     void GetSetValueCommon(SetType setRef,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
 
-    template <typename MapType>
-    void GetSetValueCommonWithRange(MapType setRef,
+    template <typename SetType>
+    void GetSetValueCommonWithRange(SetType setRef,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
         const GetPropertiesParams &params);
 
     template <typename IterType>
     void GetIteratorValueCommon(IterType iterRef,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
- 
+
     void AdjustStartAndLength(const GetPropertiesParams &params, int32_t &start, int32_t &length);
 
     std::string ModifySizeInDescription(const std::string &description, uint32_t size);

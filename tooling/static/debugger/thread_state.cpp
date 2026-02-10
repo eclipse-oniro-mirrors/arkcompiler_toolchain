@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,8 +24,8 @@
 #include "breakpoint.h"
 #include "error.h"
 #include "types/numeric_id.h"
+#include "tooling/hybrid_step/hybrid_single_stepper.h"
 
-#include "../../hybrid_step/debug_step_flags.h"
 namespace ark::tooling::inspector {
 
 void ThreadState::Reset()
@@ -51,6 +51,8 @@ void ThreadState::Continue()
     stepKind_ = StepKind::NONE;
     paused_ = false;
     pauseReason_ = PauseReason::OTHER;
+    // Reset STATIC_TO_DYNAMIC flag to be false when resuming
+    HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::STATIC_TO_DYNAMIC, false);
 }
 
 void ThreadState::ContinueTo(std::unordered_set<PtLocation, HashLocation> locations)
@@ -59,6 +61,8 @@ void ThreadState::ContinueTo(std::unordered_set<PtLocation, HashLocation> locati
     stepLocations_ = std::move(locations);
     paused_ = false;
     pauseReason_ = PauseReason::OTHER;
+    // Reset STATIC_TO_DYNAMIC flag to be false when resuming
+    HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::STATIC_TO_DYNAMIC, false);
 }
 
 void ThreadState::StepInto(std::unordered_set<PtLocation, HashLocation> locations)
@@ -68,6 +72,9 @@ void ThreadState::StepInto(std::unordered_set<PtLocation, HashLocation> location
     stepLocations_ = std::move(locations);
     paused_ = false;
     pauseReason_ = PauseReason::STEP;
+    // Set STATIC_TO_DYNAMIC flag to be true in order for
+    // static side to pause when stepping from static to dynamic
+    HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::STATIC_TO_DYNAMIC, true);
 }
 
 void ThreadState::StepOver(std::unordered_set<PtLocation, HashLocation> locations)
@@ -85,6 +92,9 @@ void ThreadState::StepOut()
     methodEntered_ = true;
     paused_ = false;
     pauseReason_ = PauseReason::STEP;
+    // Set STATIC_TO_DYNAMIC flag to be true in order for
+    // static side to pause when stepping from static to dynamic
+    HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::STATIC_TO_DYNAMIC, true);
 }
 
 void ThreadState::Pause()
@@ -189,12 +199,13 @@ void ThreadState::OnSingleStep(const PtLocation &location, const char *sourceFil
             return;
         }
     }
-
-    DebugStepFlags::Get().SetStat2DynInto(true);
-    if (DebugStepFlags::Get().GetDyn2StatInto()) {
-        LOG(DEBUG, DEBUGGER) << "ThreadState::OnSingleStep SingleStep from Dynamic";
+    // pause by single step from dynamic side
+    if (HybridSingleStepper::GetInstance().GetHybridSingleStepFlag(HybridStepDirection::DYNAMIC_TO_STATIC)) {
+        LOG(DEBUG, DEBUGGER) << "ThreadState::OnSingleStep paused by single step from dynamic side";
+        // reset DYNAMIC_TO_STATIC to false to avoid redundant pauses
+        HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::DYNAMIC_TO_STATIC, false);
         paused_ = true;
-        DebugStepFlags::Get().SetDyn2StatInto(false);
+        pauseReason_ = PauseReason::OTHER;
         return;
     }
 

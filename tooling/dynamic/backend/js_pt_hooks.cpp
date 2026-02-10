@@ -15,7 +15,7 @@
 
 #include "backend/js_pt_hooks.h"
 #include "agent/debugger_impl.h"
-#include "../hybrid_step/debug_step_flags.h"
+#include "tooling/hybrid_step/hybrid_single_stepper.h"
 
 namespace panda::ecmascript::tooling {
 void JSPtHooks::DebuggerStmt([[maybe_unused]] const JSPtLocation &location)
@@ -55,17 +55,13 @@ bool JSPtHooks::SingleStep(const JSPtLocation &location)
         return false;
     }
 
-    // Do not set hybrid step flag when executing non-application pandafiles
-    auto jsPandaFile = location.GetJsPandaFile();
-    if (jsPandaFile != nullptr && debugger_->IsApplicationFile(DebuggerApi::GetJSPandaFileDesc(jsPandaFile).data())) {
-        DebugStepFlags::Get().SetDyn2StatInto(true);
-    }
-
-    if (DebugStepFlags::Get().GetStat2DynInto()) {
-        LOG_DEBUGGER(DEBUG) << "JSPtHooks::SingleStep SingleStep from Static";
+    // pause by single step from static side
+    if (HybridSingleStepper::GetInstance().GetHybridSingleStepFlag(HybridStepDirection::STATIC_TO_DYNAMIC)) {
+        LOG_DEBUGGER(DEBUG) << "JSPtHooks::SingleStep paused by single step from static side";
+        // reset STATIC_TO_DYNAMIC to false to avoid redundant pauses
+        HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::STATIC_TO_DYNAMIC, false);
         debugger_->NotifyPaused({}, OTHER);
-        DebugStepFlags::Get().SetStat2DynInto(false);
-        return false;
+        return true;
     }
 
     // pause or step complete

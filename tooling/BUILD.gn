@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -16,6 +16,10 @@ import("../toolchain.gni")
 ohos_shared_library("libark_ecma_debugger") {
   stack_protector_ret = true
   deps = [ "./dynamic/:libark_ecma_debugger_static" ]
+  external_deps = []
+  if (enable_hilog) {
+    external_deps += [ "hilog:libhilog" ]
+  }
   install_enable = true
 
   if (is_mingw || is_win) {
@@ -42,7 +46,9 @@ ohos_shared_library("libarkinspector_plus") {
     "runtime_core:libarktsbase",
     "runtime_core:libarkruntime",
   ]
-
+  if (enable_hilog) {
+    external_deps += [ "hilog:libhilog" ]
+  }
   external_deps += hiviewdfx_ext_deps
  
   if (is_mingw || is_win) {

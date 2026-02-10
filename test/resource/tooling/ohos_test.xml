@@ -36,6 +36,7 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/common_func.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/watch_variable.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/smart_stepInto.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/promise.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/local_export.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/module_watch.abc -> /data/test" src="out"/>
             <option name="push" value="test/test/libjsdebugtest.so -> /data/test" src="out"/>
@@ -66,6 +67,7 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/common_func.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/watch_variable.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/smart_stepInto.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/promise.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/local_export.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/module_watch.abc -> /data/test" src="out"/>
             <option name="push" value="test/test/libjsdebugtest.so -> /data/test" src="out"/>
@@ -96,6 +98,7 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/common_func.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/watch_variable.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/smart_stepInto.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/promise.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/local_export.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/module_watch.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/variable_properties_with_range.abc -> /data/test" src="out"/>
@@ -125,6 +128,7 @@
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/common_func.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/watch_variable.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/smart_stepInto.abc -> /data/test" src="out"/>
+            <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/promise.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/local_export.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/module_watch.abc -> /data/test" src="out"/>
             <option name="push" value="obj/arkcompiler/toolchain/tooling/dynamic/test/variable_properties_with_range.abc -> /data/test" src="out"/>

@@ -225,6 +225,7 @@ host_unittest_action("DebuggerTest") {
     "runtime_impl_test.cpp",
     "target_impl_test.cpp",
     "tracing_impl_test.cpp",
+    "hybrid_single_stepper_test.cpp",
   ]
 
   configs = [ ":debug_api_test" ]

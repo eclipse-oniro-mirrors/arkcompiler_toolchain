@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -285,12 +285,12 @@ HWTEST_F_L0(PtParamsTest, RuntimeGetPropertiesParamTest)
     ASSERT_TRUE(result != nullptr);
     // Asset this parameter is valid for requesting with range
     ASSERT_TRUE(result->IsValidRequestUsingRange());
- 
+
     requestWithoutStartAndCount->Add("objectId", "0");
     requestWithoutStartAndCount->Add("accessorPropertiesOnly", true);
     requestWithoutStartAndCount->Add("generatePreview", true);
     requestWithoutStartAndCount->Add("ownProperties", false);
- 
+
     result = GetPropertiesParams::Create(*requestWithoutStartAndCount);
     // Assert creating request paramater success
     ASSERT_TRUE(result != nullptr);
