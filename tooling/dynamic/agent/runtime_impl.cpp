@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -264,8 +264,12 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
         GetLightWeightSetValue(value, outPropertyDesc, params);
     } else if (value->IsLinkedList(vm_)) {
         GetLinkedListValue(value, outPropertyDesc, params);
+        GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
+        return DispatchResponse::Ok();
     } else if (value->IsList(vm_)) {
         GetListValue(value, outPropertyDesc, params);
+        GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
+        return DispatchResponse::Ok();
     } else if (value->IsPlainArray(vm_)) {
         GetPlainArrayValue(value, outPropertyDesc, params);
     } else if (value->IsTreeMap(vm_)) {
