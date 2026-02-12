@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -873,28 +873,28 @@ std::string ObjectRemoteObject::DescriptionForUint32Array(const EcmaVM *ecmaVm, 
     std::string description = ("Uint32Array(" + std::to_string(len) + ")");
     return description;
 }
- 
+
 std::string ObjectRemoteObject::DescriptionForFloat32Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged)
 {
     uint32_t len = tagged->ByteLength(ecmaVm) / NumberSize::BYTES_OF_32BITS;
     std::string description = ("Float32Array(" + std::to_string(len) + ")");
     return description;
 }
- 
+
 std::string ObjectRemoteObject::DescriptionForBigInt64Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged)
 {
     uint32_t len = tagged->ByteLength(ecmaVm) / NumberSize::BYTES_OF_64BITS;
     std::string description = ("BigInt64Array(" + std::to_string(len) + ")");
     return description;
 }
- 
+
 std::string ObjectRemoteObject::DescriptionForBigUint64Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged)
 {
     uint32_t len = tagged->ByteLength(ecmaVm) / NumberSize::BYTES_OF_64BITS;
     std::string description = ("BigUint64Array(" + std::to_string(len) + ")");
     return description;
 }
- 
+
 std::string ObjectRemoteObject::DescriptionForFloat64Array(const EcmaVM *ecmaVm, Local<TypedArrayRef> tagged)
 {
     uint32_t len = tagged->ByteLength(ecmaVm) / NumberSize::BYTES_OF_64BITS;

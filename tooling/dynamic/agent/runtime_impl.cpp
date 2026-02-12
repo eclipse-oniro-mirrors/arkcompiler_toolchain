@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -613,7 +613,7 @@ void RuntimeImpl::GetMapValueCommonWithRange(MapType mapRef,
     DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
     SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]", size);
 }
- 
+
 template <typename SetType>
 void RuntimeImpl::GetSetValueCommon(SetType setRef,
     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
@@ -671,7 +671,7 @@ void RuntimeImpl::GetSetValueCommonWithRange(SetType setRef,
     DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
     SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]", size);
 }
- 
+
 template <typename IterType>
 void RuntimeImpl::GetIteratorValueCommon(IterType iterRef,
     std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)

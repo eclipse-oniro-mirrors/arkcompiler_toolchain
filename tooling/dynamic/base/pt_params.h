@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -716,22 +716,22 @@ public:
     {
         return startIndex_.has_value();
     }
- 
+
     int32_t GetStartIndex() const
     {
         return startIndex_.value_or(INVALID_START_OR_COUNT);
     }
- 
+
     bool HasGroupCount() const
     {
         return groupCount_.has_value();
     }
- 
+
     int32_t GetGroupCount() const
     {
         return groupCount_.value_or(INVALID_START_OR_COUNT);
     }
- 
+
     bool IsValidRequestUsingRange() const
     {
         return HasStartIndex() && HasGroupCount() &&

@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,46 @@
 namespace panda::ecmascript::tooling::test {
 class JsClosureScopeTest : public TestActions {
 public:
+    static bool ValidateInnerResult(const std::unique_ptr<PtJson>& innerResult)
+    {
+        bool found_v2_1 = false;
+        bool found_v2_2 = false;
+        std::string name;
+        std::string valueDes;
+        std::unique_ptr<PtJson> value;
+
+        for (size_t i = 0; i < EXPECTED_VARIABLE_COUNT; ++i) {
+            Result ret = innerResult->Get(i)->GetString("name", &name);
+            if (ret != Result::SUCCESS) {
+                return false;
+            }
+
+            if (name == "v2_1") {
+                ret = innerResult->Get(i)->GetObject("value", &value);
+                if (ret != Result::SUCCESS) {
+                    return false;
+                }
+                ret = value->GetString("description", &valueDes);
+                if (ret != Result::SUCCESS || valueDes != "2") {
+                    return false;
+                }
+                found_v2_1 = true;
+            } else if (name == "v2_2") {
+                ret = innerResult->Get(i)->GetObject("value", &value);
+                if (ret != Result::SUCCESS) {
+                    return false;
+                }
+                ret = value->GetString("description", &valueDes);
+                if (ret != Result::SUCCESS || valueDes != "3") {
+                    return false;
+                }
+                found_v2_2 = true;
+            } else {
+                return false;
+            }
+        }
+        return found_v2_1 && found_v2_2;
+    }
     JsClosureScopeTest()
     {
         testAction = {
@@ -133,40 +173,7 @@ public:
                 if (ret != Result::SUCCESS) {
                     return false;
                 }
-
-                std::string name;
-                ret = innerResult->Get(0)->GetString("name", &name);
-                if (ret != Result::SUCCESS || name != "v2_2") {
-                    return false;
-                }
-
-                std::unique_ptr<PtJson> value;
-                ret = innerResult->Get(0)->GetObject("value", &value);
-                if (ret != Result::SUCCESS) {
-                    return false;
-                }
-
-                std::string valueDes;
-                ret = value->GetString("description", &valueDes);
-                if (ret != Result::SUCCESS || valueDes != "3") {
-                    return false;
-                }
-
-                ret = innerResult->Get(1)->GetString("name", &name);
-                if (ret != Result::SUCCESS || name != "v2_1") {
-                    return false;
-                }
-
-                ret = innerResult->Get(1)->GetObject("value", &value);
-                if (ret != Result::SUCCESS) {
-                    return false;
-                }
-
-                ret = value->GetString("description", &valueDes);
-                if (ret != Result::SUCCESS || valueDes != "2") {
-                    return false;
-                }
-                return true;
+                return ValidateInnerResult(innerResult);
             }},
             {SocketAction::SEND, "print 4"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [] (auto recv, auto, auto) -> bool {
@@ -338,6 +345,7 @@ private:
     std::string pandaFile_ = DEBUGGER_ABC_DIR "closure_scope.abc";
     std::string sourceFile_ = DEBUGGER_JS_DIR "closure_scope.js";
     std::string entryPoint_ = "closure_scope";
+    static constexpr size_t EXPECTED_VARIABLE_COUNT = 2;
 };
 
 std::unique_ptr<TestActions> GetJsClosureScopeTest()
