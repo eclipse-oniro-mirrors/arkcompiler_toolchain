@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -30,6 +30,11 @@ RemoteObject ObjectRepository::CreateGlobalObject()
     return RemoteObject::Object("[Global]", GLOBAL_OBJECT_ID, "Global object");
 }
 
+bool ObjectRepository::IsSkippedVariable(std::string varName)
+{
+    return (varName == "=t" || varName == "opt");
+}
+
 RemoteObject ObjectRepository::CreateFrameObject(const PtFrame &frame, const std::map<std::string, TypedValue> &locals,
                                                  std::optional<RemoteObject> &objThis)
 {
@@ -39,6 +44,10 @@ RemoteObject ObjectRepository::CreateFrameObject(const PtFrame &frame, const std
     properties.reserve(locals.size());
     auto thisParamName = extension_->GetThisParameterName();
     for (const auto &[paramName, value] : locals) {
+        // skip unrelated paramName
+        if (IsSkippedVariable(paramName)) {
+            continue;
+        }
         auto obj = CreateObject(value);
         if (paramName == thisParamName) {
             objThis.emplace(std::move(obj));

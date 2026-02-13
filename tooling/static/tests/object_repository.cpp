@@ -207,6 +207,26 @@ TEST_F(ObjectRepositoryTest, TestFrameObjectNoThis)
     // No "this" parameter was provided.
     ASSERT_FALSE(objThis.has_value());
 }
+
+TEST_F(ObjectRepositoryTest, TestFrameObjectSkipVariable)
+{
+    ObjectRepository obj;
+
+    PtDebugFrame frame(methodFoo, nullptr);
+    std::map<std::string, TypedValue> locals;
+    locals.emplace("a", TypedValue::U16(56U));
+    locals.emplace("ref", TypedValue::Reference(clsObject));
+    // those two should be skipped
+    locals.emplace("=t", TypedValue::Reference(clsObject));
+    locals.emplace("opt", TypedValue::Reference(clsObject));
+
+    std::optional<RemoteObject> objThis;
+    auto frameObj = obj.CreateFrameObject(frame, locals, objThis);
+    ASSERT_EQ(frameObj.GetObjectId().value(), RemoteObjectId(2UL));
+
+    auto properties = obj.GetProperties(frameObj.GetObjectId().value(), true);
+    ASSERT_EQ(properties.size(), 2UL);
+}
 }  // namespace ark::tooling::inspector::test
 
 // NOLINTEND
