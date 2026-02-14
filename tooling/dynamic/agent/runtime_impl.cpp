@@ -264,8 +264,12 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
         GetLightWeightSetValue(value, outPropertyDesc, params);
     } else if (value->IsLinkedList(vm_)) {
         GetLinkedListValue(value, outPropertyDesc, params);
+        GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
+        return DispatchResponse::Ok();
     } else if (value->IsList(vm_)) {
         GetListValue(value, outPropertyDesc, params);
+        GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
+        return DispatchResponse::Ok();
     } else if (value->IsPlainArray(vm_)) {
         GetPlainArrayValue(value, outPropertyDesc, params);
     } else if (value->IsTreeMap(vm_)) {
