@@ -48,6 +48,11 @@ public:
         heapprofilerImpl_->frontend_.AddHeapSnapshotChunk(data, size);
     }
 
+    void AddHeapSnapshotExtraInfo(char *data, int32_t size)
+    {
+        heapprofilerImpl_->frontend_.AddHeapSnapshotExtraInfo(data, size);
+    }
+
     void ReportHeapSnapshotProgress(int32_t done, int32_t total)
     {
         heapprofilerImpl_->frontend_.ReportHeapSnapshotProgress(done, total);
@@ -873,5 +878,58 @@ HWTEST_F_L0(HeapProfilerImplTest, HeapTrackingCallbackTest)
         channel = nullptr;
     }
 #endif
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, TakeHeapSnapshotWithNativeAddrToNodeIdMap)
+{
+#if defined(ECMASCRIPT_SUPPORT_HEAPPROFILER)
+    ProtocolChannel *channel = nullptr;
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    StopTrackingHeapObjectsParams params;
+    DispatchResponse response = heapProfiler->TakeHeapSnapshot(params);
+    ASSERT_TRUE(response.IsOk());
+#else
+    ASSERT_TRUE(true);
+#endif
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, AddHeapSnapshotExtraInfo)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+
+    auto tracing = std::make_unique<HeapProfilerImpl>(ecmaVm, nullptr);
+    auto heapprofiler = std::make_unique<HeapProfilerImplFriendTest>(tracing);
+    heapprofiler->AddHeapSnapshotExtraInfo(nullptr, 0);
+    ASSERT_TRUE(result == "");
+
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto tracing2 = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    auto heapprofiler2 = std::make_unique<HeapProfilerImplFriendTest>(tracing2);
+    char testData[] = "test";
+    heapprofiler2->AddHeapSnapshotExtraInfo(testData, 4);
+    ASSERT_TRUE(result.find("HeapProfiler.addHeapSnapshotExtraInfo") != std::string::npos);
+
+    delete channel;
+}
+
+HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplTakeHeapSnapshotWithNativeAddrToNodeIdMap)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(heapProfiler));
+    std::string msg = "";
+    msg += R"({"id":0,"method":"HeapProfiler.takeHeapSnapshot","params":{"nativeAddrToNodeIdMap":1}})";
+    DispatchRequest request(msg);
+    dispatcherImpl->Dispatch(request);
+    ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
+    if (channel) {
+        delete channel;
+        channel = nullptr;
+    }
 }
 }  // namespace panda::test

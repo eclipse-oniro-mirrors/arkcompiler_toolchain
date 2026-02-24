@@ -297,4 +297,28 @@ HWTEST_F_L0(PtParamsTest, RuntimeGetPropertiesParamTest)
     // Asset this parameter is NOT valid for requesting with range
     ASSERT_TRUE(!result->IsValidRequestUsingRange());
 }
+
+HWTEST_F_L0(PtParamsTest, StopTrackingHeapObjectsParamsNativeAddrToNodeIdMapTest)
+{
+    std::string msg;
+    std::unique_ptr<StopTrackingHeapObjectsParams> params;
+
+    msg = std::string() + R"({"id":0,"method":"HeapProfiler.stopTrackingHeapObjects","params":{}})";
+    params = StopTrackingHeapObjectsParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_TRUE(params != nullptr);
+    ASSERT_FALSE(params->HasNativeAddrToNodeIdMap());
+    ASSERT_EQ(params->GetNativeAddrToNodeIdMap(), 0);
+
+    msg = std::string() +
+          R"({"id":0,"method":"HeapProfiler.stopTrackingHeapObjects","params":{"nativeAddrToNodeIdMap":1}})";
+    params = StopTrackingHeapObjectsParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_TRUE(params != nullptr);
+    ASSERT_TRUE(params->HasNativeAddrToNodeIdMap());
+    ASSERT_EQ(params->GetNativeAddrToNodeIdMap(), 1);
+
+    msg = std::string() +
+          R"({"id":0,"method":"HeapProfiler.stopTrackingHeapObjects","params":{"nativeAddrToNodeIdMap":"invalid"}})";
+    params = StopTrackingHeapObjectsParams::Create(DispatchRequest(msg).GetParams());
+    ASSERT_TRUE(params == nullptr);
+}
 }  // namespace panda::test
