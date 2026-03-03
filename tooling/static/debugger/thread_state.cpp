@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -175,19 +175,16 @@ bool ThreadState::OnMethodEntry()
     UNREACHABLE();
 }
 
-void ThreadState::OnSingleStep(const PtLocation &location, const char *sourceFile)
+void ThreadState::OnSingleStep(const PtLocation &location)
 {
     ASSERT(!paused_);
 
     if (breakOnStart_) {
-        std::string_view file = sourceFile;
-        if (sourceFiles_.find(file) == sourceFiles_.end()) {
-            sourceFiles_.emplace(file);
-            stepKind_ = StepKind::BREAK_ON_START;
-            paused_ = true;
-            pauseReason_ = PauseReason::BREAK_ON_START;
-            return;
-        }
+        stepKind_ = StepKind::BREAK_ON_START;
+        paused_ = true;
+        pauseReason_ = PauseReason::BREAK_ON_START;
+        breakOnStart_ = false;
+        return;
     }
 
     DebugStepFlags::Get().SetStat2DynInto(true);

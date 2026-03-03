@@ -40,8 +40,8 @@ static void LogDebuggerNotPaused(std::string_view methodName)
     LOG(WARNING, DEBUGGER) << "Inspector method '" << methodName << "' must be called on pause";
 }
 
-Inspector::Inspector(Server &server, DebugInterface &debugger, bool breakOnStart)
-    : breakOnStart_(breakOnStart), inspectorServer_(server), debugger_(debugger)
+Inspector::Inspector(Server &server, DebugInterface &debugger)
+    : inspectorServer_(server), debugger_(debugger)
 {
     if (!HandleError(debugger_.RegisterHooks(this))) {
         return;
@@ -134,7 +134,7 @@ void Inspector::FramePop(PtThread thread, Method * /* method */, bool /* was_pop
     }
 }
 
-void Inspector::MethodEntry(PtThread thread, Method * /* method */)
+void Inspector::MethodEntry(PtThread thread, Method *method)
 {
     os::memory::ReadLockHolder lock(debuggerEventsLock_);
 
@@ -146,10 +146,20 @@ void Inspector::MethodEntry(PtThread thread, Method * /* method */)
     if (debuggableThread == nullptr) {
         return;
     }
-    if (debuggableThread != nullptr) {
-        if (debuggableThread->OnMethodEntry()) {
-            HandleError(debugger_.NotifyFramePop(thread, 0));
+
+    // Check if this source file has triggered BREAK_ON_START (shared across all threads)
+    auto sourceFile = debugInfoCache_.GetUserSourceFile(method);
+    if (sourceFile != nullptr) {
+        std::string_view file = sourceFile;
+        if (sourceFiles_.find(file) == sourceFiles_.end()) {
+            os::memory::LockHolder sourceFilesLock(sourceFilesMutex_);
+            sourceFiles_.emplace(file);
+            debuggableThread->BreakOnStart();
         }
+    }
+
+    if (debuggableThread->OnMethodEntry()) {
+        HandleError(debugger_.NotifyFramePop(thread, 0));
     }
 }
 
@@ -199,7 +209,7 @@ void Inspector::SingleStep(PtThread thread, Method *method, const PtLocation &lo
 
     auto *debuggableThread = GetDebuggableThread(thread);
     if (debuggableThread != nullptr) {
-        debuggableThread->OnSingleStep(location, sourceFile);
+        debuggableThread->OnSingleStep(location);
     }
 }
 
@@ -227,10 +237,6 @@ void Inspector::ThreadStart(PtThread thread)
         std::forward_as_tuple(thread.GetManagedThread(), &debugger_, std::move(callbacks), breakpointStorage_));
     (void)inserted;
     ASSERT(inserted);
-
-    if (breakOnStart_) {
-        it->second.BreakOnStart();
-    }
 }
 
 void Inspector::ThreadEnd(PtThread thread)

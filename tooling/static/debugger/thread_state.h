@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -67,7 +67,7 @@ public:
     void OnException(bool uncaught);
     void OnFramePop();
     bool OnMethodEntry();
-    void OnSingleStep(const PtLocation &location, const char *sourceFile);
+    void OnSingleStep(const PtLocation &location);
 
     PauseReason GetPauseReason() const
     {
@@ -123,7 +123,6 @@ private:
     bool skipAllPauses_ {false};
     bool mixedDebugEnabled_ {false};
     bool breakOnStart_ {false};
-    std::set<std::string_view> sourceFiles_;
     PauseReason pauseReason_ {PauseReason::OTHER};
 };
 }  // namespace ark::tooling::inspector

@@ -52,7 +52,7 @@ class Server;
 
 class Inspector final : public PtHooks {
 public:
-    Inspector(Server &server, DebugInterface &debugger, bool breakOnStart);
+    Inspector(Server &server, DebugInterface &debugger);
     ~Inspector() override;
 
     NO_COPY_SEMANTIC(Inspector);
@@ -150,8 +150,6 @@ private:
     void PauseOtherThreads(PtThread thread);
 
 private:
-    bool breakOnStart_;
-
     os::memory::RWLock debuggerEventsLock_;
     bool connecting_ {false};  // Should be accessed only from the server thread
 
@@ -166,6 +164,10 @@ private:
     bool isVmDead_ GUARDED_BY(vmDeathLock_) {false};
 
     BreakpointStorage breakpointStorage_;
+
+    // Shared set of source files that have triggered BREAK_ON_START across all threads
+    std::set<std::string_view> sourceFiles_;
+    os::memory::Mutex sourceFilesMutex_;
 
     std::thread serverThread_;
     uint32_t samplingInterval_ {0};

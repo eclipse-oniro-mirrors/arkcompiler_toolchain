@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -195,13 +195,13 @@ bool DebuggableThread::OnMethodEntry()
     return state_.OnMethodEntry();
 }
 
-void DebuggableThread::OnSingleStep(const PtLocation &location, const char *sourceFile)
+void DebuggableThread::OnSingleStep(const PtLocation &location)
 {
     if (IsEvaluating()) {
         return;
     }
     os::memory::LockHolder lock(mutex_);
-    state_.OnSingleStep(location, sourceFile);
+    state_.OnSingleStep(location);
     while (state_.IsPaused()) {
         ObjectRepository objectRepository;
         auto hitBreakpoints = state_.GetBreakpointsByLocation(location);

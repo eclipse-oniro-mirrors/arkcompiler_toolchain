@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,11 +27,11 @@ void OnMessageStatic(std::string &&message);
 
 int StopDebuggerForStatic();
 
-bool StartDebuggerForStatic(std::shared_ptr<void> endpoint, bool breakOnStart);
+bool StartDebuggerForStatic(std::shared_ptr<void> endpoint);
 
 void WaitForDebuggerForStatic();
 
-int StartDebuggerInitForStatic(uint32_t port, bool breakOnStart);
+int StartDebuggerInitForStatic(uint32_t port);
 
 int StopDebuggerInitForStatic();
 }
