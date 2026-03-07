@@ -58,34 +58,34 @@ protected:
 TEST_F(ThreadStateTest, BreakOnStart)
 {
     ASSERT_FALSE(state->IsPaused());
-    state->OnSingleStep(fake, source);
+    state->OnSingleStep(fake);
     ASSERT_FALSE(state->IsPaused());
 
     state->BreakOnStart();
-    state->OnSingleStep(fake, source);
+    state->OnSingleStep(fake);
     ASSERT_TRUE(state->IsPaused());
 }
 
 TEST_F(ThreadStateTest, PauseAndContinue)
 {
     state->Pause();
-    state->OnSingleStep(fake, source);
+    state->OnSingleStep(fake);
     ASSERT_TRUE(state->IsPaused());
     state->Continue();
-    state->OnSingleStep(fake, source);
+    state->OnSingleStep(fake);
     ASSERT_FALSE(state->IsPaused());
 
     state->Pause();
     ASSERT_FALSE(state->IsPaused());
     state->Continue();
-    state->OnSingleStep(fake, source);
+    state->OnSingleStep(fake);
     ASSERT_FALSE(state->IsPaused());
 }
 
 TEST_F(ThreadStateTest, StepInto)
 {
     state->Pause();
-    state->OnSingleStep(fake, source);
+    state->OnSingleStep(fake);
 
     std::unordered_set<PtLocation, HashLocation> locs;
     locs.insert(location1);
@@ -93,16 +93,16 @@ TEST_F(ThreadStateTest, StepInto)
 
     ASSERT_TRUE(state->IsPaused());
     state->StepInto(locs);
-    state->OnSingleStep(location2, source);
+    state->OnSingleStep(location2);
     ASSERT_FALSE(state->IsPaused());
-    state->OnSingleStep(location3, source);
+    state->OnSingleStep(location3);
     ASSERT_TRUE(state->IsPaused());
 }
 
 TEST_F(ThreadStateTest, ContinueTo)
 {
     state->Pause();
-    state->OnSingleStep(fake, source);
+    state->OnSingleStep(fake);
 
     std::unordered_set<PtLocation, HashLocation> locs;
     locs.insert(location1);
@@ -110,34 +110,34 @@ TEST_F(ThreadStateTest, ContinueTo)
 
     ASSERT_TRUE(state->IsPaused());
     state->ContinueTo(locs);
-    state->OnSingleStep(location0, source);
+    state->OnSingleStep(location0);
     ASSERT_FALSE(state->IsPaused());
-    state->OnSingleStep(location1, source);
+    state->OnSingleStep(location1);
     ASSERT_TRUE(state->IsPaused());
 }
 
 TEST_F(ThreadStateTest, StepOut)
 {
     state->Pause();
-    state->OnSingleStep(fake, source);
+    state->OnSingleStep(fake);
 
     ASSERT_TRUE(state->IsPaused());
     state->StepOut();
-    state->OnSingleStep(location0, source);
+    state->OnSingleStep(location0);
     ASSERT_FALSE(state->IsPaused());
-    state->OnSingleStep(location1, source);
+    state->OnSingleStep(location1);
     ASSERT_FALSE(state->IsPaused());
-    state->OnSingleStep(location2, source);
+    state->OnSingleStep(location2);
     ASSERT_FALSE(state->IsPaused());
     state->OnFramePop();
-    state->OnSingleStep(fake, source);
+    state->OnSingleStep(fake);
     ASSERT_TRUE(state->IsPaused());
 }
 
 TEST_F(ThreadStateTest, StepOver)
 {
     state->Pause();
-    state->OnSingleStep(fake, source);
+    state->OnSingleStep(fake);
 
     std::unordered_set<PtLocation, HashLocation> locs;
     locs.insert(location1);
@@ -145,16 +145,16 @@ TEST_F(ThreadStateTest, StepOver)
 
     ASSERT_TRUE(state->IsPaused());
     state->StepOver(locs);
-    state->OnSingleStep(location1, source);
+    state->OnSingleStep(location1);
     ASSERT_FALSE(state->IsPaused());
     state->OnMethodEntry();
-    state->OnSingleStep(fake, source);
+    state->OnSingleStep(fake);
     ASSERT_FALSE(state->IsPaused());
     state->OnFramePop();
-    state->OnSingleStep(location2, source);
+    state->OnSingleStep(location2);
     ASSERT_FALSE(state->IsPaused());
     state->OnFramePop();
-    state->OnSingleStep(fake, source);
+    state->OnSingleStep(fake);
     ASSERT_TRUE(state->IsPaused());
 }
 

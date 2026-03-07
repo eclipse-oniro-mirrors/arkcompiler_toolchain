@@ -185,19 +185,16 @@ bool ThreadState::OnMethodEntry()
     UNREACHABLE();
 }
 
-void ThreadState::OnSingleStep(const PtLocation &location, const char *sourceFile)
+void ThreadState::OnSingleStep(const PtLocation &location)
 {
     ASSERT(!paused_);
 
     if (breakOnStart_) {
-        std::string_view file = sourceFile;
-        if (sourceFiles_.find(file) == sourceFiles_.end()) {
-            sourceFiles_.emplace(file);
-            stepKind_ = StepKind::BREAK_ON_START;
-            paused_ = true;
-            pauseReason_ = PauseReason::BREAK_ON_START;
-            return;
-        }
+        stepKind_ = StepKind::BREAK_ON_START;
+        paused_ = true;
+        pauseReason_ = PauseReason::BREAK_ON_START;
+        breakOnStart_ = false;
+        return;
     }
     // pause by single step from dynamic side
     if (HybridSingleStepper::GetInstance().GetHybridSingleStepFlag(HybridStepDirection::DYNAMIC_TO_STATIC)) {

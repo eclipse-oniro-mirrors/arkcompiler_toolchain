@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -42,7 +42,7 @@ static ark::Runtime::DebugSessionHandle g_debugSession;
 // NOLINTNEXTLINE(fuchsia-statically-constructed-objects)
 static InspectorWebSocketServer g_server;
 
-int StartDebugger(uint32_t port, bool breakOnStart)
+int StartDebugger(uint32_t port)
 {
     if (g_inspector) {
         LOG(ERROR, DEBUGGER) << "Debugger has already been started";
@@ -53,11 +53,11 @@ int StartDebugger(uint32_t port, bool breakOnStart)
         return 1;
     }
     g_debugSession = ark::Runtime::GetCurrent()->StartDebugSession();
-    g_inspector.emplace(g_server, g_debugSession->GetDebugger(), breakOnStart);
+    g_inspector.emplace(g_server, g_debugSession->GetDebugger());
     return 0;
 }
 
-void InitializeInspector(std::shared_ptr<void> endPoint, bool breakOnStart)
+void InitializeInspector(std::shared_ptr<void> endPoint)
 {
     if (g_inspector) {
         g_server.Stop();
@@ -67,7 +67,7 @@ void InitializeInspector(std::shared_ptr<void> endPoint, bool breakOnStart)
     if (!g_inspector) {
         LOG(INFO, DEBUGGER) << "InitializeInspector started";
         g_debugSession = ark::Runtime::GetCurrent()->StartDebugSession();
-        g_inspector.emplace(g_server, g_debugSession->GetDebugger(), breakOnStart);
+        g_inspector.emplace(g_server, g_debugSession->GetDebugger());
     }
 }
 

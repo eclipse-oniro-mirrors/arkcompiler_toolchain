@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,8 +22,8 @@ extern "C" {
 #endif
 #endif /* End of #ifdef __cplusplus */
 
-TOOLCHAIN_EXPORT int StartDebugger(uint32_t port, bool breakOnStart);
-TOOLCHAIN_EXPORT void InitializeInspector(std::shared_ptr<void> vm, bool breakOnStart);
+TOOLCHAIN_EXPORT int StartDebugger(uint32_t port);
+TOOLCHAIN_EXPORT void InitializeInspector(std::shared_ptr<void> vm);
 TOOLCHAIN_EXPORT void HandleMessage(std::string &&msg);
 TOOLCHAIN_EXPORT void StopInspector();
 TOOLCHAIN_EXPORT void WaitForDebugger();

@@ -501,9 +501,9 @@ void WaitForDebugger(void* vm)
 }
 
 
-int StartDebugger(uint32_t port, bool breakOnStart)
+int StartDebugger(uint32_t port)
 {
-    return StartDebuggerInitForStatic(port, breakOnStart);
+    return StartDebuggerInitForStatic(port);
 }
  
 int StopDebugger()

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,11 +35,11 @@
 namespace OHOS::ArkCompiler::Toolchain {
 
 
-using InitializeInspectorFunc = void(*)(std::shared_ptr<void>, bool);
+using InitializeInspectorFunc = void(*)(std::shared_ptr<void>);
 using HandleMessageFunc = void(*)(std::string&&);
 using StopInspectorFunc = void(*)();
 using WaitForDebuggerFunc = void(*)();
-using StartDebuggerFunc = void(*)(uint32_t, bool);
+using StartDebuggerFunc = void(*)(uint32_t);
 using StopDebuggerFunc = void(*)();
 
 static void* g_debuggerHandle = nullptr;
@@ -104,12 +104,12 @@ int StopDebuggerForStatic()
     return 0;
 }
 
-bool StartDebuggerForStatic(std::shared_ptr<void> endpoint, bool breakOnStart)
+bool StartDebuggerForStatic(std::shared_ptr<void> endpoint)
 {
     if (endpoint == nullptr) {
         LOGE("StartDebuggerForStatic Endpoint == nullptr");
     }
-    g_initializeInspectorForStatic(endpoint, breakOnStart);
+    g_initializeInspectorForStatic(endpoint);
     return true;
 }
 void WaitForDebuggerForStatic()
@@ -117,12 +117,12 @@ void WaitForDebuggerForStatic()
     g_waitForDebuggerForStatic();
 }
 
-int StartDebuggerInitForStatic(uint32_t port, bool breakOnStart)
+int StartDebuggerInitForStatic(uint32_t port)
 {
     if (!InitializeArkFunctionsForStatic()) {
         LOGE("StartDebuggerInitForStatic Error");
     }
-    g_startDebuggerForStatic(port, breakOnStart);
+    g_startDebuggerForStatic(port);
     return 1;
 }
 
