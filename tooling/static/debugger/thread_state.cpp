@@ -218,7 +218,6 @@ void ThreadState::OnSingleStep(const PtLocation &location)
         }
 
         case StepKind::BREAK_ON_START: {
-            paused_ = true;
             break;
         }
 
