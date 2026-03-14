@@ -217,7 +217,7 @@ TEST_F(ObjectRepositoryTest, TestFrameObjectSkipVariable)
     locals.emplace("a", TypedValue::U16(56U));
     locals.emplace("ref", TypedValue::Reference(clsObject));
     // those two should be skipped
-    locals.emplace("=t", TypedValue::Reference(clsObject));
+    locals.emplace("this", TypedValue::Reference(clsObject));
     locals.emplace("opt", TypedValue::Reference(clsObject));
 
     std::optional<RemoteObject> objThis;
