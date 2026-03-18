@@ -212,7 +212,7 @@ void ResetService()
     if (g_inspector != nullptr && g_inspector->connectServer_ != nullptr) {
         g_inspector->connectServer_->StopServer();
         g_inspector->connectServer_.reset();
-        g_inspector.reset();
+        g_inspector->infoBuffer_.clear();
     }
 }
 
