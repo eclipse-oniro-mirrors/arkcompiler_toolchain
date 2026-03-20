@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -894,6 +894,35 @@ private:
     NO_MOVE_SEMANTIC(AddHeapSnapshotChunk);
 
     std::string chunk_ {};
+};
+
+class AddHeapSnapshotExtraInfo final : public PtBaseEvents {
+public:
+    AddHeapSnapshotExtraInfo() = default;
+    ~AddHeapSnapshotExtraInfo() override = default;
+    std::unique_ptr<PtJson> ToJson() const override;
+
+    std::string GetName() const override
+    {
+        return "HeapProfiler.addHeapSnapshotExtraInfo";
+    }
+
+    AddHeapSnapshotExtraInfo &SetExtraInfo(const std::string &extraInfo)
+    {
+        extraInfo_ = extraInfo;
+        return *this;
+    }
+    
+    std::string &GetExtraInfo()
+    {
+        return extraInfo_;
+    }
+
+private:
+    NO_COPY_SEMANTIC(AddHeapSnapshotExtraInfo);
+    NO_MOVE_SEMANTIC(AddHeapSnapshotExtraInfo);
+
+    std::string extraInfo_ {};
 };
 
 class ConsoleProfileFinished final : public PtBaseEvents {

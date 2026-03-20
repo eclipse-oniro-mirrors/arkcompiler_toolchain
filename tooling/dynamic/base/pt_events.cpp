@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -260,6 +260,19 @@ std::unique_ptr<PtJson> AddHeapSnapshotChunk::ToJson() const
 
     std::unique_ptr<PtJson> object = PtJson::CreateObject();
     object->Add("method", GetName().c_str());
+    object->Add("params", result);
+
+    return object;
+}
+
+std::unique_ptr<PtJson> AddHeapSnapshotExtraInfo::ToJson() const
+{
+    std::unique_ptr<PtJson> result = PtJson::CreateObject();
+
+    result->Add("extraInfo", extraInfo_.c_str());
+
+    std::unique_ptr<PtJson> object = PtJson::CreateObject();
+    object->Add("method", "HeapProfiler.addHeapSnapshotExtraInfo");
     object->Add("params", result);
 
     return object;

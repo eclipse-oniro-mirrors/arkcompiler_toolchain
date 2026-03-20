@@ -985,6 +985,16 @@ public:
         return captureNumericValue_.has_value();
     }
 
+    int32_t GetNativeAddrToNodeIdMap() const
+    {
+        return nativeAddrToNodeIdMap_.value_or(0);
+    }
+
+    bool HasNativeAddrToNodeIdMap() const
+    {
+        return nativeAddrToNodeIdMap_.has_value();
+    }
+
 private:
     NO_COPY_SEMANTIC(StopTrackingHeapObjectsParams);
     NO_MOVE_SEMANTIC(StopTrackingHeapObjectsParams);
@@ -992,6 +1002,7 @@ private:
     std::optional<bool> reportProgress_ {};
     std::optional<bool> treatGlobalObjectsAsRoots_ {};
     std::optional<bool> captureNumericValue_ {};
+    std::optional<int32_t> nativeAddrToNodeIdMap_ {};
 };
 
 class AddInspectedHeapObjectParams : public PtBaseParams {

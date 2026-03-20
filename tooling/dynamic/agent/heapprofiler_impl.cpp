@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -262,6 +262,21 @@ void HeapProfilerImpl::Frontend::AddHeapSnapshotChunk(char *data, int32_t size)
     channel_->SendNotification(addHeapSnapshotChunk);
 }
 
+void HeapProfilerImpl::Frontend::AddHeapSnapshotExtraInfo(char *data, int32_t size)
+{
+    if (!AllowNotify()) {
+        return;
+    }
+
+    tooling::AddHeapSnapshotExtraInfo addHeapSnapshotExtraInfo;
+    addHeapSnapshotExtraInfo.GetExtraInfo().resize(size);
+    for (int32_t i = 0; i < size; ++i) {
+        addHeapSnapshotExtraInfo.GetExtraInfo()[i] = data[i];
+    }
+
+    channel_->SendNotification(addHeapSnapshotExtraInfo);
+}
+
 void HeapProfilerImpl::Frontend::ReportHeapSnapshotProgress(int32_t done, int32_t total)
 {
     if (!AllowNotify()) {
@@ -458,11 +473,13 @@ DispatchResponse HeapProfilerImpl::StopTrackingHeapObjects(const StopTrackingHea
 DispatchResponse HeapProfilerImpl::TakeHeapSnapshot(const StopTrackingHeapObjectsParams &params)
 {
     bool captureNumericValue = params.GetCaptureNumericValue();
+    int32_t nativeAddrToNodeIdMap = params.GetNativeAddrToNodeIdMap();
     DumpSnapShotOption dumpOption;
     dumpOption.dumpFormat = DumpFormat::JSON;
     dumpOption.isVmMode = true;
     dumpOption.isPrivate = false;
     dumpOption.captureNumericValue = captureNumericValue;
+    dumpOption.nativeAddrToNodeIdMap = nativeAddrToNodeIdMap;
     if (params.GetReportProgress()) {
         HeapProfilerProgress progress(&frontend_);
         panda::DFXJSNApi::DumpHeapSnapshot(vm_, &stream_, dumpOption, &progress);

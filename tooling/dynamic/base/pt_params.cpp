@@ -1006,6 +1006,13 @@ std::unique_ptr<StopTrackingHeapObjectsParams> StopTrackingHeapObjectsParams::Cr
         error += "Wrong type of 'captureNumericValue';";
     }
 
+    int32_t nativeAddrToNodeIdMap = 0;
+    ret = params.GetInt("nativeAddrToNodeIdMap", &nativeAddrToNodeIdMap);
+    if (ret == Result::SUCCESS) {
+        paramsObject->nativeAddrToNodeIdMap_ = nativeAddrToNodeIdMap;
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'nativeAddrToNodeIdMap';";
+    }
     if (!error.empty()) {
         LOG_DEBUGGER(ERROR) << "StopTrackingHeapObjectsParams::Create " << error;
         return nullptr;

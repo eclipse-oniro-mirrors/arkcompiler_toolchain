@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -113,6 +113,7 @@ private:
         ~Frontend() = default;
 
         void AddHeapSnapshotChunk(char *data, int32_t size);
+        void AddHeapSnapshotExtraInfo(char *data, int32_t size);
         void ReportHeapSnapshotProgress(int32_t done, int32_t total);
         void HeapStatsUpdate(HeapStat* updateData, int32_t count);
         void LastSeenObjectId(int32_t lastSeenObjectId, int64_t timeStampUs);
@@ -141,6 +142,14 @@ private:
                 return false;
             }
             frontend_->AddHeapSnapshotChunk(data, size);
+            return true;
+        }
+        bool WriteExtraInfo(char *data, int32_t size) override
+        {
+            if (!Good()) {
+                return false;
+            }
+            frontend_->AddHeapSnapshotExtraInfo(data, size);
             return true;
         }
         bool WriteBinBlock(char *data, int32_t size) override
