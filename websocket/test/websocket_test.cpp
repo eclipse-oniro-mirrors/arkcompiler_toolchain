@@ -17,6 +17,7 @@
 #include <csignal>
 #include <fcntl.h>
 #include <securec.h>
+#include <sys/resource.h>
 #include <sys/un.h>
 
 #include "gtest/gtest.h"
