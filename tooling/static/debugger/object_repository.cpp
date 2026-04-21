@@ -32,7 +32,7 @@ RemoteObject ObjectRepository::CreateGlobalObject()
 
 bool ObjectRepository::IsSkippedVariable(std::string varName)
 {
-    return (varName == "=t" || varName == "opt");
+    return varName == "opt";
 }
 
 RemoteObject ObjectRepository::CreateFrameObject(const PtFrame &frame, const std::map<std::string, TypedValue> &locals,
