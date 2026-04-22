@@ -265,7 +265,7 @@ private:
         "{\"id\":12,\"result\":{\"result\":[{\"name\":\"size\",\"value\":{\"type\":\"number\","
         "\"unserializableValue\":\"150\",\"description\":\"150\",\"objectId\":\"56\"},"
         "\"writable\":false,\"configurable\":false,\"enumerable\":false,\"isOwn\":false},"
-        "{\"name\":\"[[Entries]]\",\"value\":{\"type\":\"object\",\"subtype\":\"array\","
+        "{\"name\":\"[[SendableMap]]\",\"value\":{\"type\":\"object\",\"subtype\":\"array\","
         "\"className\":\"Array\",\"unserializableValue\":\"Array(100)\","
         "\"description\":\"Array(150)\",\"objectId\":\"57\",\"arrayOrContainer\":\"Array\"},"
         "\"writable\":false,\"configurable\":false,\"enumerable\":false,\"isOwn\":false}]}}",

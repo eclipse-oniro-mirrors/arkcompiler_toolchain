@@ -184,21 +184,21 @@ private:
     // Common template functions for map, set, and iterator kind
     template <typename MapType>
     void GetMapValueCommon(MapType mapRef,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc, const std::string &desc);
 
     template <typename MapType>
     void GetMapValueCommonWithRange(MapType mapRef,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
-        const GetPropertiesParams &params);
+        const GetPropertiesParams &params, const std::string &desc);
 
     template <typename SetType>
     void GetSetValueCommon(SetType setRef,
-        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc, const std::string &desc);
 
     template <typename SetType>
     void GetSetValueCommonWithRange(SetType setRef,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
-        const GetPropertiesParams &params);
+        const GetPropertiesParams &params, const std::string &desc);
 
     template <typename IterType>
     void GetIteratorValueCommon(IterType iterRef,

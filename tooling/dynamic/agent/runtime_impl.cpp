@@ -564,7 +564,7 @@ std::string RuntimeImpl::ModifySizeInDescription(const std::string &description,
 
 template <typename MapType>
 void RuntimeImpl::GetMapValueCommon(MapType mapRef,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc, const std::string &desc)
 {
     uint32_t size = mapRef->GetSize(vm_);
     uint32_t len = mapRef->GetTotalElements(vm_);
@@ -585,12 +585,13 @@ void RuntimeImpl::GetMapValueCommon(MapType mapRef,
         ArrayRef::SetValueAt(vm_, jsValueRef, index++, objRef);
     }
     DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");
+    SetKeyValue(jsValueRef, outPropertyDesc, desc);
 }
 
 template <typename MapType>
 void RuntimeImpl::GetMapValueCommonWithRange(MapType mapRef,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc, const GetPropertiesParams &params)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc, const GetPropertiesParams &params,
+    const std::string &desc)
 {
     // Set size to be the total size of the map
     uint32_t size = mapRef->GetSize(vm_);
@@ -615,12 +616,12 @@ void RuntimeImpl::GetMapValueCommonWithRange(MapType mapRef,
         ArrayRef::SetValueAt(vm_, jsValueRef, arrayIndex++, objRef);
     }
     DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]", size);
+    SetKeyValue(jsValueRef, outPropertyDesc, desc, size);
 }
 
 template <typename SetType>
 void RuntimeImpl::GetSetValueCommon(SetType setRef,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc, const std::string &desc)
 {
     uint32_t size = setRef->GetSize(vm_);
     uint32_t len = setRef->GetTotalElements(vm_);
@@ -642,12 +643,13 @@ void RuntimeImpl::GetSetValueCommon(SetType setRef,
         }
     }
     DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]");
+    SetKeyValue(jsValueRef, outPropertyDesc, desc);
 }
 
 template <typename SetType>
 void RuntimeImpl::GetSetValueCommonWithRange(SetType setRef,
-    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc, const GetPropertiesParams &params)
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc, const GetPropertiesParams &params,
+    const std::string &desc)
 {
     // Set size to be the total size of the set
     uint32_t size = setRef->GetSize(vm_);
@@ -673,7 +675,7 @@ void RuntimeImpl::GetSetValueCommonWithRange(SetType setRef,
         }
     }
     DebuggerApi::AddInternalProperties(vm_, jsValueRef, ArkInternalValueType::Entry, internalObjects_);
-    SetKeyValue(jsValueRef, outPropertyDesc, "[[Entries]]", size);
+    SetKeyValue(jsValueRef, outPropertyDesc, desc, size);
 }
 
 template <typename IterType>
@@ -784,9 +786,9 @@ void RuntimeImpl::GetSharedMapValue(Local<JSValueRef> value,
 {
     Local<SendableMapRef> sendableMapRef(value);
     if (params.IsValidRequestUsingRange()) {
-        GetMapValueCommonWithRange(sendableMapRef, outPropertyDesc, params);
+        GetMapValueCommonWithRange(sendableMapRef, outPropertyDesc, params, "[[SendableMap]]");
     } else {
-        GetMapValueCommon(sendableMapRef, outPropertyDesc);
+        GetMapValueCommon(sendableMapRef, outPropertyDesc, "[[SendableMap]]");
     }
 }
 
@@ -796,9 +798,9 @@ void RuntimeImpl::GetMapValue(Local<JSValueRef> value,
 {
     Local<MapRef> mapRef = value->ToObject(vm_);
     if (params.IsValidRequestUsingRange()) {
-        GetMapValueCommonWithRange(mapRef, outPropertyDesc, params);
+        GetMapValueCommonWithRange(mapRef, outPropertyDesc, params, "[[Map]]");
     } else {
-        GetMapValueCommon(mapRef, outPropertyDesc);
+        GetMapValueCommon(mapRef, outPropertyDesc, "[[Map]]");
     }
 }
 
@@ -808,9 +810,9 @@ void RuntimeImpl::GetWeakMapValue(Local<JSValueRef> value,
 {
     Local<WeakMapRef> weakMapRef = value->ToObject(vm_);
     if (params.IsValidRequestUsingRange()) {
-        GetMapValueCommonWithRange(weakMapRef, outPropertyDesc, params);
+        GetMapValueCommonWithRange(weakMapRef, outPropertyDesc, params, "[[WeakMap]]");
     } else {
-        GetMapValueCommon(weakMapRef, outPropertyDesc);
+        GetMapValueCommon(weakMapRef, outPropertyDesc, "[[WeakMap]]");
     }
 }
 
@@ -820,9 +822,9 @@ void RuntimeImpl::GetSendableSetValue(Local<JSValueRef> value,
 {
     Local<SendableSetRef> setRef = value->ToObject(vm_);
     if (params.IsValidRequestUsingRange()) {
-        GetSetValueCommonWithRange(setRef, outPropertyDesc, params);
+        GetSetValueCommonWithRange(setRef, outPropertyDesc, params, "[[SendableSet]]");
     } else {
-        GetSetValueCommon(setRef, outPropertyDesc);
+        GetSetValueCommon(setRef, outPropertyDesc, "[[SendableSet]]");
     }
 }
 
@@ -832,9 +834,9 @@ void RuntimeImpl::GetSetValue(Local<JSValueRef> value,
 {
     Local<SetRef> setRef = value->ToObject(vm_);
     if (params.IsValidRequestUsingRange()) {
-        GetSetValueCommonWithRange(setRef, outPropertyDesc, params);
+        GetSetValueCommonWithRange(setRef, outPropertyDesc, params, "[[Set]]");
     } else {
-        GetSetValueCommon(setRef, outPropertyDesc);
+        GetSetValueCommon(setRef, outPropertyDesc, "[[Set]]");
     }
 }
 
@@ -844,9 +846,9 @@ void RuntimeImpl::GetWeakSetValue(Local<JSValueRef> value,
 {
     Local<WeakSetRef> weakSetRef = value->ToObject(vm_);
     if (params.IsValidRequestUsingRange()) {
-        GetSetValueCommonWithRange(weakSetRef, outPropertyDesc, params);
+        GetSetValueCommonWithRange(weakSetRef, outPropertyDesc, params, "[[WeakSet]]");
     } else {
-        GetSetValueCommon(weakSetRef, outPropertyDesc);
+        GetSetValueCommon(weakSetRef, outPropertyDesc, "[[WeakSet]]");
     }
 }
 
