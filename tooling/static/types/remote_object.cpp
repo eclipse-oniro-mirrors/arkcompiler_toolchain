@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -133,7 +133,9 @@ void RemoteObject::Serialize(JsonObjectBuilder &builder) const
             UNREACHABLE();
         }
     } else if (auto bigint = std::get_if<RemoteObjectType::BigIntT>(&value_)) {
-        builder.AddProperty("unserializableValue", GetDescription(*bigint));
+        auto desc = GetDescription(*bigint);
+        builder.AddProperty("unserializableValue", desc);
+        builder.AddProperty("description", desc);
     } else if (auto string = std::get_if<std::string>(&value_)) {
         builder.AddProperty("value", *string);
     } else if (auto symbol = std::get_if<RemoteObjectType::SymbolT>(&value_)) {
