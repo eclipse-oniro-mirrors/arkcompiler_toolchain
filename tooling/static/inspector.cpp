@@ -663,8 +663,16 @@ Expected<EvaluationResult, std::string> Inspector::Evaluate(PtThread thread, con
         return Unexpected(std::string("Expression evaluation can be done only on pause"));
     }
 
+    size_t totalFrames = GetFrameCount(thread);
+    if (frameNumber < 0 || frameNumber >= totalFrames) {
+        return Unexpected(std::string("Invalid frameNumber."));
+    }
+
     std::string bytecode;
-    Base64Decoder::Decode(bytecodeBase64, bytecode);
+    if (!Base64Decoder::Decode(bytecodeBase64, bytecode)) {
+        return Unexpected(std::string("EvaluateValue: base64 decode failed"));
+    }
+
     auto optResult = debuggableThread->EvaluateExpression(frameNumber, bytecode);
     if (!optResult) {
         return Unexpected(std::move(optResult.Error()));
@@ -701,6 +709,23 @@ DebuggableThread *Inspector::GetDebuggableThread(PtThread thread)
 {
     auto it = threads_.find(thread);
     return it != threads_.end() ? &it->second : nullptr;
+}
+
+size_t Inspector::GetFrameCount(PtThread thread)
+{
+    size_t totalFrames = 0;
+    HandleError(debugger_.EnumerateFrames(thread, [this, &totalFrames](const PtFrame &frame) {
+        std::string_view sourceFile;
+        std::string_view methodName;
+        int32_t lineNumber;
+        debugInfoCache_.GetSourceLocation(frame, sourceFile, methodName, lineNumber);
+        if (sourceFile.empty()) {
+            return false;
+        }
+        totalFrames++;
+        return true;
+    }));
+    return totalFrames;
 }
 
 void Inspector::Disable(PtThread thread)

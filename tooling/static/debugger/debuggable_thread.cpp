@@ -145,6 +145,9 @@ Expected<std::pair<RemoteObject, std::optional<RemoteObject>>, std::string> Debu
         [this, frameNumber, &bytecode, &optResult, &optException, &optError](ObjectRepository &objectRepo) {
             Method *method = nullptr;
             auto res = EvaluateExpression(frameNumber, bytecode, &method);
+            // Stub: Return "hello world" string object directly
+            optResult.emplace(RemoteObject::String("hello world"));
+            return;
             if (!res) {
                 HandleError(res.Error());
                 optError = res.Error();

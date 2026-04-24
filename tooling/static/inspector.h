@@ -148,6 +148,7 @@ private:
     void DebuggerEnable();
     void SourceNameInsert(const panda_file::DebugInfoExtractor *extractor);
     void PauseOtherThreads(PtThread thread);
+    size_t GetFrameCount(PtThread thread);
 
 private:
     os::memory::RWLock debuggerEventsLock_;
