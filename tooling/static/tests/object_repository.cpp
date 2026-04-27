@@ -229,6 +229,31 @@ TEST_F(ObjectRepositoryTest, TestFrameObjectSkipVariable)
     auto properties = obj.GetProperties(frameObj.GetObjectId().value(), true);
     ASSERT_EQ(properties.size(), 2UL);
 }
+
+TEST_F(ObjectRepositoryTest, CharTypeAsString)
+{
+    ObjectRepository obj;
+
+    auto charObj = obj.CreateObject(TypedValue::U16(65U));
+    ASSERT_THAT(ToJson(charObj), GetPrimitiveProperties<JsonObject::StringT>("string", "A"));
+
+    auto charObj2 = obj.CreateObject(TypedValue::U16(97U));
+    ASSERT_THAT(ToJson(charObj2), GetPrimitiveProperties<JsonObject::StringT>("string", "a"));
+
+    auto charObj3 = obj.CreateObject(TypedValue::U16(48U));
+    ASSERT_THAT(ToJson(charObj3), GetPrimitiveProperties<JsonObject::StringT>("string", "0"));
+}
+
+TEST_F(ObjectRepositoryTest, CharTypeAsStringNonAscii)
+{
+    ObjectRepository obj;
+
+    auto charObj = obj.CreateObject(TypedValue::U16(0xFFU));
+    ASSERT_THAT(ToJson(charObj), GetPrimitiveProperties<JsonObject::StringT>("string", "\xC3\xBF"));
+
+    auto charObj2 = obj.CreateObject(TypedValue::U16(0x4EU));
+    ASSERT_THAT(ToJson(charObj2), GetPrimitiveProperties<JsonObject::StringT>("string", "N"));
+}
 }  // namespace ark::tooling::inspector::test
 
 // NOLINTEND

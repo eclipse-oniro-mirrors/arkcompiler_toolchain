@@ -78,8 +78,13 @@ RemoteObject ObjectRepository::CreateObject(TypedValue value)
             return RemoteObject::Number(value.GetAsU8());
         case panda_file::Type::TypeId::I16:
             return RemoteObject::Number(value.GetAsI16());
-        case panda_file::Type::TypeId::U16:
-            return RemoteObject::Number(value.GetAsU16());
+        case panda_file::Type::TypeId::U16: {
+            // U16 represents chars, need to be converted as String for IDE
+            uint16_t utf16Char = value.GetAsU16();
+            auto utf8Char = ark::utf::ConvertUtf16ToUtf8(utf16Char, 0, false);
+            std::string result(reinterpret_cast<const char*>(utf8Char.ch.data()), utf8Char.n);
+            return RemoteObject::String(std::move(result));
+        }
         case panda_file::Type::TypeId::I32:
             return RemoteObject::Number(value.GetAsI32());
         case panda_file::Type::TypeId::U32:
