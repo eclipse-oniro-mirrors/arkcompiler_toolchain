@@ -147,6 +147,8 @@ TEST_F(ObjectRepositoryTest, S)
     auto hugeObj = obj.CreateObject(TypedValue::I64(I64_VALUE));
     ASSERT_THAT(ToJson(hugeObj),
                 GetPrimitiveProperties<JsonObject::StringT>("bigint", "200000000000002", "unserializableValue"));
+    ASSERT_THAT(ToJson(hugeObj),
+                GetPrimitiveProperties<JsonObject::StringT>("bigint", "200000000000002", "description"));
 
     auto doubObj = obj.CreateObject(TypedValue::F64(F64_VALUE));
     ASSERT_THAT(ToJson(doubObj), GetPrimitiveProperties<JsonObject::NumT>("number", testing::DoubleEq(F64_VALUE)));

@@ -593,7 +593,7 @@ private:
 
         "{\"id\":19,\"result\":{\"result\":[{\"name\":\"size\",\"value\":{\"type\":\"number\",\"unserializableValue\":"
         "\"0\",\"description\":\"0\",\"objectId\":\"120\"},\"writable\":false,\"configurable\":false,\"enumerable\":"
-        "false,\"isOwn\":false},{\"name\":\"[[Entries]]\",\"value\":{\"type\":\"object\",\"subtype\":\"array\","
+        "false,\"isOwn\":false},{\"name\":\"[[Map]]\",\"value\":{\"type\":\"object\",\"subtype\":\"array\","
         "\"className\":\"Array\",\"unserializableValue\":\"Array(0)\",\"description\":\"Array(0)\",\"objectId\":"
         "\"121\",\"arrayOrContainer\":\"Array\"},"
         "\"writable\":false,\"configurable\":false,\"enumerable\":false,\"isOwn\":false}]}}",
@@ -628,7 +628,7 @@ private:
 
         "{\"id\":22,\"result\":{\"result\":[{\"name\":\"size\",\"value\":{\"type\":\"number\",\"unserializableValue\":"
         "\"0\",\"description\":\"0\",\"objectId\":\"131\"},\"writable\":false,\"configurable\":false,\"enumerable\":"
-        "false,\"isOwn\":false},{\"name\":\"[[Entries]]\",\"value\":{\"type\":\"object\",\"subtype\":\"array\","
+        "false,\"isOwn\":false},{\"name\":\"[[Set]]\",\"value\":{\"type\":\"object\",\"subtype\":\"array\","
         "\"className\":\"Array\",\"unserializableValue\":\"Array(0)\",\"description\":\"Array(0)\",\"objectId\":"
         "\"132\",\"arrayOrContainer\":\"Array\"},"
         "\"writable\":false,\"configurable\":false,\"enumerable\":false,\"isOwn\":false}]}}",
