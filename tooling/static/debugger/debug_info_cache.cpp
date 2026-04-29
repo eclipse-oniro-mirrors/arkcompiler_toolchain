@@ -287,6 +287,8 @@ static panda_file::Type::TypeId GetTypeIdBySignature(char signature)
             return panda_file::Type::TypeId::U64;
         case 'A':
             return panda_file::Type::TypeId::TAGGED;
+        case 'X':
+            return panda_file::Type::TypeId::NOVALUE;
         case 'L':
         case '[':
             return panda_file::Type::TypeId::REFERENCE;
