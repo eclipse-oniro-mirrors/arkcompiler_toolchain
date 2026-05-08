@@ -149,6 +149,7 @@ private:
     void SourceNameInsert(const panda_file::DebugInfoExtractor *extractor);
     void PauseOtherThreads(PtThread thread);
     size_t GetFrameCount(PtThread thread);
+    bool NeedSkippedForSingleStep(Method *method);
 
 private:
     os::memory::RWLock debuggerEventsLock_;
@@ -167,7 +168,8 @@ private:
     BreakpointStorage breakpointStorage_;
 
     // Shared set of source files that have triggered BREAK_ON_START across all threads
-    std::set<std::string_view> sourceFiles_;
+    // sourceFiles <fileUrl, needBreakOnStart>
+    std::map<std::string_view, bool> sourceFiles_;
     os::memory::Mutex sourceFilesMutex_;
 
     std::thread serverThread_;

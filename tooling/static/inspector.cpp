@@ -153,7 +153,7 @@ void Inspector::MethodEntry(PtThread thread, Method *method)
         std::string_view file = sourceFile;
         if (sourceFiles_.find(file) == sourceFiles_.end()) {
             os::memory::LockHolder sourceFilesLock(sourceFilesMutex_);
-            sourceFiles_.emplace(file);
+            sourceFiles_.emplace(file, true);
             debuggableThread->BreakOnStart();
         }
     }
@@ -197,6 +197,25 @@ void Inspector::ResolveBreakpoints(const panda_file::File &file, const panda_fil
     breakpointStorage_.ResolveBreakpoints(file, debugInfo);
 }
 
+bool Inspector::NeedSkippedForSingleStep(Method *method)
+{
+    auto methodName = utf::Mutf8AsCString(method->GetName().data);
+    auto className = utf::Mutf8AsCString(method->GetClassName().data);
+    // NOTE: skip class constructor for ETSGLOBAL and constructor for UI component
+    if ((std::string(methodName) == "<cctor>" && std::string(className).find("ETSGLOBAL") != std::string::npos) ||
+        (std::string(methodName) == "<ctor>" && std::string(className).find("__EntryWrapper") != std::string::npos)) {
+        return true;
+    }
+    // NOTE: skip lambda-lambda-invoke_X function for any singleStep operation
+    if ((std::string(methodName) == "<ctor>") &&
+        (std::string(className).find("lambda-lambda_invoke") != std::string::npos)) {
+        LOG(DEBUG, DEBUGGER) << "Skipping SingleStep of methodName: " << methodName << " className: " << className;
+        return true;
+    }
+
+    return false;
+}
+
 void Inspector::SingleStep(PtThread thread, Method *method, const PtLocation &location)
 {
     os::memory::ReadLockHolder lock(debuggerEventsLock_);
@@ -205,6 +224,23 @@ void Inspector::SingleStep(PtThread thread, Method *method, const PtLocation &lo
     // NOTE(fangting, #IC98Z2): etsstdlib.ets should not call loadModule in pytest.
     if ((sourceFile == nullptr) || (strcmp(sourceFile, "etsstdlib.ets") == 0)) {
         return;
+    }
+
+    std::string_view file = sourceFile;
+    // Skip single step if not loaded file
+    if (sourceFiles_.find(file) == sourceFiles_.end()) {
+        return;
+    }
+    // if need break on start on this file, set the flag to false
+    // and go on the single step
+    if (sourceFiles_[file]) {
+        os::memory::LockHolder sourceFilesLock(sourceFilesMutex_);
+        sourceFiles_[file] = false;
+    } else {
+        // if need to skip in special cases, skip it.
+        if (NeedSkippedForSingleStep(method)) {
+            return;
+        }
     }
 
     auto *debuggableThread = GetDebuggableThread(thread);
