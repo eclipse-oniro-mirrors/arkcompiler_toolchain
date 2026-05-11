@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -305,8 +305,8 @@ bool WebSocketServer::InitUnixWebSocket(const std::string& sockName, uint32_t ti
         return false;
     }
     un.sun_path[0] = '\0';
-    uint32_t len = offsetof(struct sockaddr_un, sun_path) + strlen(sockName.c_str()) + 1;
-    if (bind(serverFd_, reinterpret_cast<struct sockaddr*>(&un), static_cast<int32_t>(len)) != SOCKET_SUCCESS) {
+    socklen_t len = static_cast<socklen_t>(offsetof(struct sockaddr_un, sun_path) + strlen(sockName.c_str()) + 1);
+    if (bind(serverFd_, reinterpret_cast<struct sockaddr*>(&un), len) != SOCKET_SUCCESS) {
         LOGE("InitUnixWebSocket bind failed, errno = %{public}d", errno);
         CloseServerSocket();
         return false;

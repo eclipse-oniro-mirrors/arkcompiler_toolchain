@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -99,12 +99,12 @@ void TcpServer::SendCommand(std::string inputStr)
     }
 
     if (uv_is_active(reinterpret_cast<uv_handle_t*>(g_inputSignal))) {
-        uint32_t len = inputStr.length();
-        if (len < 0) {
+        size_t len = inputStr.length();
+        if (len > SIZE_MAX - 1) {
             CloseServer();
             return;
         }
-        char* msg = (char*)malloc(len + 1);
+        char* msg = static_cast<char*>(malloc(len + 1));
         if (msg == nullptr) {
             return;
         }
@@ -113,7 +113,7 @@ void TcpServer::SendCommand(std::string inputStr)
             CloseServer();
             return;
         }
-        g_inputSignal->data = std::move(msg);
+        g_inputSignal->data = msg;
         uv_async_send(g_inputSignal);
     }
     return;

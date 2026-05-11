@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -153,8 +153,8 @@ bool WebSocketClient::InitToolchainWebSocketForSockName(const std::string &sockN
     }
     serverAddr.sun_path[0] = '\0';
 
-    uint32_t len = offsetof(struct sockaddr_un, sun_path) + strlen(sockName.c_str()) + 1;
-    int ret = connect(connection, reinterpret_cast<struct sockaddr*>(&serverAddr), static_cast<int32_t>(len));
+    socklen_t len = static_cast<socklen_t>(offsetof(struct sockaddr_un, sun_path) + strlen(sockName.c_str()) + 1);
+    int ret = connect(connection, reinterpret_cast<struct sockaddr*>(&serverAddr), len);
     if (ret != SOCKET_SUCCESS) {
         LOGE("InitToolchainWebSocketForSockName::client connect failed, error = %{public}d, desc = %{public}s",
             errno, strerror(errno));
