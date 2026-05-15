@@ -22,6 +22,7 @@
 #include "assembly-parser.h"
 #include "include/runtime.h"
 #include "include/runtime_options.h"
+#include "runtime/include/coretypes/tagged_value.h"
 #include "tooling/debugger.h"
 
 #include "types/numeric_id.h"
@@ -133,7 +134,24 @@ TEST_F(ObjectRepositoryTest, S)
                                                 JsonProperty<JsonObject::JsonObjPointer> {"value", testing::IsNull()}));
 
     auto invObj = obj.CreateObject(TypedValue::Invalid());
-    ASSERT_THAT(ToJson(invObj), JsonProperties(JsonProperty<JsonObject::StringT> {"type", "undefined"}));
+    ASSERT_THAT(ToJson(invObj), JsonProperties(JsonProperty<JsonObject::StringT> {"type", "undefined"},
+                                               JsonProperty<JsonObject::StringT> {"description", "undefined"}));
+
+    auto holeObj = obj.CreateObject(TypedValue::Tagged(coretypes::TaggedValue(coretypes::TaggedValue::VALUE_HOLE)));
+    ASSERT_THAT(ToJson(holeObj), JsonProperties(JsonProperty<JsonObject::StringT> {"type", "undefined"},
+                                                JsonProperty<JsonObject::StringT> {"description", "undefined"}));
+
+    auto undefObj = obj.CreateObject(
+        TypedValue::Tagged(coretypes::TaggedValue(coretypes::TaggedValue::VALUE_UNDEFINED)));
+    ASSERT_THAT(ToJson(undefObj), JsonProperties(JsonProperty<JsonObject::StringT> {"type", "undefined"},
+                                                 JsonProperty<JsonObject::StringT> {"description", "undefined"}));
+
+    auto taggedNullObj = obj.CreateObject(
+        TypedValue::Tagged(coretypes::TaggedValue(coretypes::TaggedValue::VALUE_NULL)));
+    ASSERT_THAT(ToJson(taggedNullObj),
+                JsonProperties(JsonProperty<JsonObject::StringT> {"type", "object"},
+                               JsonProperty<JsonObject::StringT> {"subtype", "null"},
+                               JsonProperty<JsonObject::JsonObjPointer> {"value", testing::IsNull()}));
 
     auto boolObj = obj.CreateObject(TypedValue::U1(true));
     ASSERT_THAT(ToJson(boolObj), GetPrimitiveProperties<JsonObject::BoolT>("boolean", true));
@@ -250,6 +268,47 @@ TEST_F(ObjectRepositoryTest, CharTypeAsStringNonAscii)
 
     auto charObj2 = obj.CreateObject(TypedValue::U16(0x4EU));
     ASSERT_THAT(ToJson(charObj2), GetPrimitiveProperties<JsonObject::StringT>("string", "N"));
+}
+
+TEST_F(ObjectRepositoryTest, TestFrameWithUndefinedVariable)
+{
+    ObjectRepository obj;
+
+    PtDebugFrame frame(methodFoo, nullptr);
+    std::map<std::string, TypedValue> locals;
+    locals.emplace("undefVar", TypedValue::Tagged(coretypes::TaggedValue(coretypes::TaggedValue::VALUE_HOLE)));
+    locals.emplace("nullVar", TypedValue::Tagged(coretypes::TaggedValue(coretypes::TaggedValue::VALUE_NULL)));
+    locals.emplace("numVar", TypedValue::U16(42U));
+
+    std::optional<RemoteObject> objThis;
+    auto frameObj = obj.CreateFrameObject(frame, locals, objThis);
+
+    auto properties = obj.GetProperties(frameObj.GetObjectId().value(), false);
+    ASSERT_EQ(properties.size(), 3UL);
+
+    // 0: index of nullVar
+    auto nullVar = properties[0];
+    EXPECT_EQ(nullVar.GetName(), "nullVar");
+    ASSERT_THAT(ToJson(nullVar),
+                GetFrameObjectProperties("nullVar", testing::Pointee(
+                    JsonProperties(JsonProperty<JsonObject::StringT> {"type", "object"},
+                                   JsonProperty<JsonObject::StringT> {"subtype", "null"},
+                                   JsonProperty<JsonObject::JsonObjPointer> {"value", testing::IsNull()}))));
+
+    // 1: index of numVar
+    auto numVar = properties[1];
+    EXPECT_EQ(numVar.GetName(), "numVar");
+    ASSERT_THAT(ToJson(numVar),
+                GetFrameObjectProperties("numVar", testing::Pointee(
+                    GetPrimitiveProperties<JsonObject::StringT>("string", "*"))));
+
+    // 2: index of undefVar
+    auto undefVar = properties[2];
+    EXPECT_EQ(undefVar.GetName(), "undefVar");
+    ASSERT_THAT(ToJson(undefVar),
+                GetFrameObjectProperties("undefVar", testing::Pointee(
+                    JsonProperties(JsonProperty<JsonObject::StringT> {"type", "undefined"},
+                                   JsonProperty<JsonObject::StringT> {"description", "undefined"}))));
 }
 }  // namespace ark::tooling::inspector::test
 

@@ -22,6 +22,7 @@
 #include "include/runtime.h"
 #include "include/runtime_options.h"
 #include "include/thread_scopes.h"
+#include "runtime/include/coretypes/tagged_value.h"
 
 #include "test_frame.h"
 
@@ -143,6 +144,45 @@ TEST_F(DebugInfoCacheTest, GetLocals)
     ASSERT_EQ(mapLocals.at("a0").GetAsU64(), 1U);
     ASSERT_EQ(mapLocals.at("a1").GetAsU64(), 2U);
     ASSERT_EQ(mapLocals.at("v101").GetAsU64(), 101U);
+}
+
+TEST_F(DebugInfoCacheTest, GetLocalsWithTaggedSpecialValues)
+{
+    static constexpr size_t ARGUMENTS_COUNT = 2U;
+    static constexpr size_t LOCALS_COUNT = 103U;
+
+    auto fr0 = TestFrame(methodFoo, 2U);  // offset 2, line 3 of function
+
+    // Arguments use signature-based type ('U' -> U32), RegisterKind is ignored.
+    // Set them as PRIMITIVE to match the existing debug info signature.
+    for (size_t i = 0; i < ARGUMENTS_COUNT; i++) {
+        fr0.SetArgument(i, i + 1);
+        fr0.SetArgumentKind(i, PtFrame::RegisterKind::PRIMITIVE);
+    }
+
+    // For vregs, if the debug info has no typeSignature, RegisterKind is used.
+    // Set v0 = VALUE_HOLE (0x00) with REFERENCE kind to test REFERENCE -> TAGGED conversion
+    fr0.SetVReg(0, coretypes::TaggedValue::VALUE_HOLE);
+    fr0.SetVRegKind(0, PtFrame::RegisterKind::REFERENCE);
+    // Set v1 = VALUE_NULL (0x02) with REFERENCE kind to test REFERENCE -> TAGGED conversion
+    fr0.SetVReg(1, coretypes::TaggedValue::VALUE_NULL);
+    fr0.SetVRegKind(1, PtFrame::RegisterKind::REFERENCE);
+    for (size_t i = 2; i < LOCALS_COUNT; i++) {
+        fr0.SetVReg(i, i);
+        fr0.SetVRegKind(i, PtFrame::RegisterKind::PRIMITIVE);
+    }
+
+    auto mapLocals = cache.GetLocals(fr0);
+
+    // v0 (VALUE_HOLE via REFERENCE register) should be converted to TAGGED type
+    ASSERT_TRUE(mapLocals.find("v0") != mapLocals.end());
+    EXPECT_TRUE(mapLocals.at("v0").IsTagged());
+    EXPECT_TRUE(mapLocals.at("v0").GetAsTagged().IsHole());
+
+    // v1 (VALUE_NULL via REFERENCE register) should be converted to TAGGED type
+    ASSERT_TRUE(mapLocals.find("v1") != mapLocals.end());
+    EXPECT_TRUE(mapLocals.at("v1").IsTagged());
+    EXPECT_TRUE(mapLocals.at("v1").GetAsTagged().IsNull());
 }
 
 TEST_F(DebugInfoCacheTest, GetSourceLocation)
