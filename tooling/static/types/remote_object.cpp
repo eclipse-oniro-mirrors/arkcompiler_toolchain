@@ -120,7 +120,9 @@ void RemoteObject::Serialize(JsonObjectBuilder &builder) const
 {
     GetType().Serialize(builder);
 
-    if (std::holds_alternative<std::nullptr_t>(value_)) {
+    if (std::holds_alternative<std::monostate>(value_)) {
+        builder.AddProperty("description", "undefined");
+    } else if (std::holds_alternative<std::nullptr_t>(value_)) {
         builder.AddProperty("value", nullptr);
     } else if (auto boolean = std::get_if<bool>(&value_)) {
         builder.AddProperty("value", *boolean);

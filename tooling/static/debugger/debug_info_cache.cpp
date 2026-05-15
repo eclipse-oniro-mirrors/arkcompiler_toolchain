@@ -247,8 +247,15 @@ static TypedValue CreateTypedValueFromReg(uint64_t reg, panda_file::Type::TypeId
             return TypedValue::I64(reg);
         case panda_file::Type::TypeId::U64:
             return TypedValue::U64(reg);
-        case panda_file::Type::TypeId::REFERENCE:
+        case panda_file::Type::TypeId::REFERENCE: {
+            auto rawTagged = static_cast<coretypes::TaggedType>(reg);
+            if (rawTagged == coretypes::TaggedValue::VALUE_UNDEFINED ||
+                rawTagged == coretypes::TaggedValue::VALUE_HOLE ||
+                rawTagged == coretypes::TaggedValue::VALUE_NULL) {
+                return TypedValue::Tagged(coretypes::TaggedValue(rawTagged));
+            }
             return TypedValue::Reference(reinterpret_cast<ObjectHeader *>(reg));
+        }
         case panda_file::Type::TypeId::TAGGED:
             return TypedValue::Tagged(coretypes::TaggedValue(static_cast<coretypes::TaggedType>(reg)));
         default:
