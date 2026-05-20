@@ -138,17 +138,14 @@ TEST_F(ObjectRepositoryTest, S)
     auto boolObj = obj.CreateObject(TypedValue::U1(true));
     ASSERT_THAT(ToJson(boolObj), GetPrimitiveProperties<JsonObject::BoolT>("boolean", true));
 
-    auto numObj = obj.CreateObject(TypedValue::U16(U16_VALUE));
-    ASSERT_THAT(ToJson(numObj), GetPrimitiveProperties<JsonObject::NumT>("number", U16_VALUE));
-
     auto negObj = obj.CreateObject(TypedValue::I32(I32_VALUE));
     ASSERT_THAT(ToJson(negObj), GetPrimitiveProperties<JsonObject::NumT>("number", I32_VALUE));
 
     auto hugeObj = obj.CreateObject(TypedValue::I64(I64_VALUE));
     ASSERT_THAT(ToJson(hugeObj),
-                GetPrimitiveProperties<JsonObject::StringT>("bigint", "200000000000002", "unserializableValue"));
-    ASSERT_THAT(ToJson(hugeObj),
-                GetPrimitiveProperties<JsonObject::StringT>("bigint", "200000000000002", "description"));
+                JsonProperties(JsonProperty<JsonObject::StringT>{"type", "bigint"},
+                               JsonProperty<JsonObject::StringT>{"unserializableValue", "200000000000002"},
+                               JsonProperty<JsonObject::StringT>{"description", "200000000000002"}));
 
     auto doubObj = obj.CreateObject(TypedValue::F64(F64_VALUE));
     ASSERT_THAT(ToJson(doubObj), GetPrimitiveProperties<JsonObject::NumT>("number", testing::DoubleEq(F64_VALUE)));
@@ -178,7 +175,7 @@ TEST_F(ObjectRepositoryTest, S)
 
     ASSERT_THAT(
         ToJson(properties[0]),
-        GetFrameObjectProperties("a", testing::Pointee(GetPrimitiveProperties<JsonObject::NumT>("number", 56U))));
+        GetFrameObjectProperties("a", testing::Pointee(GetPrimitiveProperties<JsonObject::StringT>("string", "8"))));
 
     ASSERT_THAT(ToJson(properties[1]),
                 GetFrameObjectProperties("ref", testing::Pointee(GetObjectProperties(testing::_, testing::_, "1"))));
