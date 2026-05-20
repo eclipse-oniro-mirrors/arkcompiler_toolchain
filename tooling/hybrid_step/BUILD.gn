@@ -22,7 +22,10 @@ ohos_source_set("libarkhybridstep_set") {
     "./",
   ]
 
-  sources = [ "hybrid_single_stepper.cpp" ]
+  sources = [
+    "hybrid_single_stepper.cpp",
+    "frame_info_extractor.cpp",
+  ]
 
   external_deps = []
 

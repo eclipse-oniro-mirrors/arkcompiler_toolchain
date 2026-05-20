@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 #include "types/numeric_id.h"
 #include "json_serialization/serializable.h"
 
+#include <cstring>
 #include <variant>
 #include <optional>
 
@@ -75,6 +76,25 @@ public:
         if (subtype_ != nullptr) {
             builder.AddProperty("subtype", subtype_);
         }
+    }
+
+    bool operator==(const RemoteObjectType &other) const
+    {
+        if (type_ != other.type_) {
+            return false;
+        }
+        if (subtype_ == nullptr && other.subtype_ == nullptr) {
+            return true;
+        }
+        if (subtype_ == nullptr || other.subtype_ == nullptr) {
+            return false;
+        }
+        return strcmp(subtype_, other.subtype_) == 0;
+    }
+
+    bool operator!=(const RemoteObjectType &other) const
+    {
+        return !(*this == other);
     }
 
 private:

@@ -42,6 +42,8 @@
 #include "types/profile_result.h"
 #include "types/property_descriptor.h"
 #include "types/remote_object.h"
+#include "hybrid/static_frame_provider.h"
+#include "tooling/hybrid_step/frame_info_extractor.h"
 
 namespace ark::tooling {
 class DebugInterface;
@@ -115,6 +117,10 @@ private:
     void DebuggableThreadPostSuspend(PtThread thread, ObjectRepository &objectRepository,
                                      const std::vector<BreakpointId> &hitBreakpoints, ObjectHeader *exception,
                                      PauseReason pauseReason);
+    void EnumerateStaticFrames(PtThread thread, ObjectRepository &objectRepository,
+                               FrameId &frameId, const InspectorServer::FrameInfoHandler &handler);
+    void EnumerateHybridFrames(ObjectRepository &objectRepository, FrameId &frameId,
+                               const InspectorServer::FrameInfoHandler &handler);
 
     void NotifyExecutionEnded();
 

@@ -41,8 +41,8 @@ const std::string DATA_APP_PATH = "/data/";
 
 static std::atomic<uint32_t> g_scriptId {0};
 
-DebuggerImpl::DebuggerImpl(const EcmaVM *vm, ProtocolChannel *channel, RuntimeImpl *runtime)
-    : vm_(vm), frontend_(channel), runtime_(runtime)
+DebuggerImpl::DebuggerImpl(const EcmaVM *vm, ProtocolChannel *channel, RuntimeImpl *runtime, bool isHybrid)
+    : isHybrid_(isHybrid), vm_(vm), frontend_(channel), runtime_(runtime)
 {
     hooks_ = std::make_unique<JSPtHooks>(this);
 
@@ -55,10 +55,19 @@ DebuggerImpl::DebuggerImpl(const EcmaVM *vm, ProtocolChannel *channel, RuntimeIm
     vm_->GetJsDebuggerManager()->SetLocalScopeUpdater(&updaterFunc_);
     vm_->GetJsDebuggerManager()->SetStepperFunc(&stepperFunc_);
     vm_->GetJsDebuggerManager()->SetJSReturnNativeFunc(&returnNative_);
+
+    // Register dynamic frame provider with hybrid step coordinator
+    panda::tooling::hybrid_step::FrameInfoExtractor::Get().RegisterProvider(
+        false,  // isStaticFrame
+        vm_,    // vm pointer for multi-VM support
+        std::make_unique<DynamicFrameProvider>(this));
 }
 
 DebuggerImpl::~DebuggerImpl()
 {
+    // Unregister dynamic frame provider for this VM
+    panda::tooling::hybrid_step::FrameInfoExtractor::Get().UnregisterProvider(vm_);
+
     // in worker thread, it will ~DebuggerImpl before release worker thread
     // after ~DebuggerImpl, it maybe call these methods
     vm_->GetJsDebuggerManager()->SetLocalScopeUpdater(nullptr);
@@ -365,10 +374,22 @@ void DebuggerImpl::GeneratePausedInfo(PauseReason reason,
 {
     // Notify paused event
     std::vector<std::unique_ptr<CallFrame>> callFrames;
-    if (!GenerateCallFrames(&callFrames, true)) {
-        LOG_DEBUGGER(ERROR) << "NotifyPaused: GenerateCallFrames failed";
-        return;
+    bool isEmptyUnionStack = true;
+    if (isHybrid_) {
+        DebuggerApi::UnionStackIsEmpty(vm_, &isEmptyUnionStack);
     }
+    if (isEmptyUnionStack) {
+        if (!GenerateCallFrames(&callFrames, true)) {
+            LOG_DEBUGGER(ERROR) << "NotifyPaused: GenerateCallFrames failed";
+            return;
+        }
+    } else {
+        if (!GenerateHybridFrames(&callFrames)) {
+            LOG_DEBUGGER(ERROR) << "NotifyPaused: GenerateHybridFrames failed";
+            return;
+        }
+    }
+
     tooling::Paused paused;
     if (reason == DEBUGGERSTMT) {
         BreakpointDetails detail;
@@ -1896,6 +1917,145 @@ bool DebuggerImpl::GenerateCallFrames(std::vector<std::unique_ptr<CallFrame>> *c
         return StackState::CONTINUE;
     };
     return DebuggerApi::StackWalker(vm_, walkerFunc);
+}
+
+static std::unique_ptr<RemoteObject> ConvertFromUnifiedRemoteObject(
+    const panda::tooling::hybrid_step::UnifiedRemoteObject &unifiedObj)
+{
+    auto remoteObj = std::make_unique<RemoteObject>();
+
+    switch (unifiedObj.type) {
+        case panda::tooling::hybrid_step::UnifiedRemoteObject::Type::NULL_VALUE:
+            remoteObj->SetType("object");
+            remoteObj->SetSubType("null");
+            break;
+        case panda::tooling::hybrid_step::UnifiedRemoteObject::Type::BOOLEAN:
+            remoteObj->SetType("boolean");
+            if (unifiedObj.booleanValue.has_value()) {
+                remoteObj->SetDescription(unifiedObj.booleanValue.value() ? "true" : "false");
+            }
+            break;
+        case panda::tooling::hybrid_step::UnifiedRemoteObject::Type::NUMBER:
+            remoteObj->SetType("number");
+            if (unifiedObj.numberValue.has_value()) {
+                remoteObj->SetDescription(std::to_string(unifiedObj.numberValue.value()));
+            }
+            break;
+        case panda::tooling::hybrid_step::UnifiedRemoteObject::Type::STRING:
+            remoteObj->SetType("string");
+            if (unifiedObj.stringValue.has_value()) {
+                remoteObj->SetDescription(unifiedObj.stringValue.value());
+            }
+            break;
+        case panda::tooling::hybrid_step::UnifiedRemoteObject::Type::OBJECT:
+            remoteObj->SetType("object");
+            break;
+        case panda::tooling::hybrid_step::UnifiedRemoteObject::Type::FUNCTION:
+            remoteObj->SetType("function");
+            break;
+        case panda::tooling::hybrid_step::UnifiedRemoteObject::Type::ARRAY:
+            remoteObj->SetType("object");
+            remoteObj->SetSubType("array");
+            break;
+        case panda::tooling::hybrid_step::UnifiedRemoteObject::Type::UNDEFINED:
+        default:
+            remoteObj->SetType("undefined");
+            break;
+    }
+
+    remoteObj->SetClassName(unifiedObj.className);
+    if (unifiedObj.description.has_value()) {
+        remoteObj->SetDescription(unifiedObj.description.value());
+    }
+    if (unifiedObj.objectId.has_value()) {
+        remoteObj->SetObjectId(unifiedObj.objectId.value());
+    }
+    return remoteObj;
+}
+
+// Helper Function to convert UnifiedScope to Scope
+static std::unique_ptr<Scope> ConvertFromUnifiedScope(
+    const panda::tooling::hybrid_step::UnifiedScope &unifiedScope)
+{
+    auto scope = std::make_unique<Scope>();
+    const auto &unifiedObj = unifiedScope.object;
+    auto remoteObj = ConvertFromUnifiedRemoteObject(unifiedObj);
+
+    // Convert scope type
+    switch (unifiedScope.type) {
+        case panda::tooling::hybrid_step::UnifiedScope::Type::GLOBAL:
+            scope->SetType(Scope::Type::Global());
+            break;
+        case panda::tooling::hybrid_step::UnifiedScope::Type::LOCAL:
+        default:
+            scope->SetType(Scope::Type::Local());
+            break;
+    }
+
+    scope->SetObject(std::move(remoteObj));
+    return scope;
+}
+
+void DebuggerImpl::ProcessStaticFrame(const void *frame, CallFrameId &callFrameId,
+                                      std::vector<std::unique_ptr<CallFrame>> *callFrames)
+{
+    panda::tooling::hybrid_step::UnifiedFrameInfo frameInfo;
+    if (!panda::tooling::hybrid_step::FrameInfoExtractor::Get().ExtractStaticFrameInfo(frame, frameInfo)
+        || !frameInfo.hasInfo) {
+        return;
+    }
+    auto callFrame = std::make_unique<CallFrame>();
+    callFrame->SetCallFrameId(callFrameId);
+    callFrame->SetFunctionName(frameInfo.methodName);
+    callFrame->SetUrl(frameInfo.sourceFile);
+    auto location = std::make_unique<Location>();
+    location->SetScriptId(0).SetLine(frameInfo.lineNumber).SetColumn(frameInfo.columnNumber);
+    callFrame->SetLocation(std::move(location));
+    callFrame->SetIsStaticFrame(true);
+
+    std::vector<std::unique_ptr<Scope>> scopes;
+    for (const auto &unifiedScope : frameInfo.scopeChain) {
+        scopes.push_back(ConvertFromUnifiedScope(unifiedScope));
+    }
+    if (frameInfo.thisObject.has_value()) {
+        callFrame->SetThis(ConvertFromUnifiedRemoteObject(frameInfo.thisObject.value()));
+    }
+    callFrame->SetScopeChain(std::move(scopes));
+    callFrames->emplace_back(std::move(callFrame));
+    callFrameId++;
+}
+
+void DebuggerImpl::ProcessDynamicFrame(const void *frame, CallFrameId &callFrameId,
+                                       std::vector<std::unique_ptr<CallFrame>> *callFrames)
+{
+    const FrameHandler *frameHandler = static_cast<const FrameHandler *>(frame);
+    if (DebuggerApi::IsNativeMethod(frameHandler)) {
+        LOG_DEBUGGER(INFO) << "ProcessDynamicFrame: Skip CFrame and Native method";
+        return;
+    }
+    auto callFrame = std::make_unique<CallFrame>();
+    if (GenerateCallFrame(callFrame.get(), frameHandler, callFrameId, true)) {
+        SaveCallFrameHandler(frameHandler);
+        callFrames->emplace_back(std::move(callFrame));
+        callFrameId++;
+    }
+}
+
+bool DebuggerImpl::GenerateHybridFrames(std::vector<std::unique_ptr<CallFrame>> *callFrames)
+{
+    CallFrameId callFrameId = 0;
+    bool success = DebuggerApi::ForEachFrameInUnionStack(vm_,
+        [this, &callFrameId, callFrames](const void *frame, bool isStaticFrame) {
+            if (isStaticFrame) {
+                ProcessStaticFrame(frame, callFrameId, callFrames);
+            } else {
+                ProcessDynamicFrame(frame, callFrameId, callFrames);
+            }
+        });
+    if (!success) {
+        LOG_DEBUGGER(ERROR) << "GenerateHybridFrames: ForEachFrameInUnionStack failed";
+    }
+    return !callFrames->empty();
 }
 
 bool DebuggerImpl::GenerateAsyncFrames(std::shared_ptr<AsyncStack> asyncStack, bool skipTopFrame)

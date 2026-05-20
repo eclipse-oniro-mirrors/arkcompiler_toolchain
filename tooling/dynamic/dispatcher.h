@@ -1,5 +1,5 @@
- /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -149,7 +149,7 @@ private:
 
 class Dispatcher {
 public:
-    explicit Dispatcher(const EcmaVM *vm, ProtocolChannel *channel);
+    explicit Dispatcher(const EcmaVM *vm, ProtocolChannel *channel, bool isHybrid = false);
     ~Dispatcher() = default;
     std::optional<std::string> Dispatch(const DispatchRequest &request, bool crossLanguageDebug = false) const;
     std::string GetJsFrames() const;

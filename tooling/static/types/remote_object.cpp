@@ -116,6 +116,20 @@ RemoteObjectType RemoteObject::GetType() const
     UNREACHABLE();
 }
 
+std::string RemoteObject::GetClassName() const
+{
+    if (auto object = std::get_if<RemoteObjectType::ObjectT>(&value_)) {
+        return object->className;
+    }
+    if (auto array = std::get_if<RemoteObjectType::ArrayT>(&value_)) {
+        return array->className;
+    }
+    if (auto function = std::get_if<RemoteObjectType::FunctionT>(&value_)) {
+        return function->className;
+    }
+    return "";
+}
+
 void RemoteObject::Serialize(JsonObjectBuilder &builder) const
 {
     GetType().Serialize(builder);

@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,7 +21,8 @@
 
 namespace panda::ecmascript::tooling {
 void InitializeDebugger(::panda::ecmascript::EcmaVM *vm,
-                        const std::function<void(const void *, const std::string &)> &onResponse)
+                        const std::function<void(const void *, const std::string &)> &onResponse,
+                        bool isHybrid)
 {
     if (vm == nullptr || vm->GetJsDebuggerManager() == nullptr) {
         LOG_DEBUGGER(DEBUG) << "VM has already been destroyed";
@@ -32,7 +33,7 @@ void InitializeDebugger(::panda::ecmascript::EcmaVM *vm,
         LOG_DEBUGGER(ERROR) << "JS debugger was initialized";
         return;
     }
-    vm->GetJsDebuggerManager()->SetDebuggerHandler(new ProtocolHandler(onResponse, vm));
+    vm->GetJsDebuggerManager()->SetDebuggerHandler(new ProtocolHandler(onResponse, vm, isHybrid));
 }
 
 void SetDebugApp(::panda::ecmascript::EcmaVM *vm)

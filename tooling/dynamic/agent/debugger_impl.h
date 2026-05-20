@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2021-2025 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,6 +25,8 @@
 #include "ecmascript/debugger/js_debugger_manager.h"
 #include "ecmascript/debugger/js_pt_method.h"
 #include "libpandabase/macros.h"
+#include "hybrid/dynamic_frame_provider.h"
+#include "tooling/hybrid_step/frame_info_extractor.h"
 
 namespace panda::ecmascript::tooling {
 namespace test {
@@ -35,7 +37,7 @@ enum class DebuggerState { DISABLED, ENABLED, PAUSED };
 enum class DebuggerFeature { LAUNCH_ACCELERATE, UNKNOWN };
 class DebuggerImpl final {
 public:
-    DebuggerImpl(const EcmaVM *vm, ProtocolChannel *channel, RuntimeImpl *runtime);
+    DebuggerImpl(const EcmaVM *vm, ProtocolChannel *channel, RuntimeImpl *runtime, bool isHybrid = false);
     ~DebuggerImpl();
 
     // Debugger events
@@ -68,6 +70,13 @@ public:
     void SetPauseOnNextByteCode(bool pauseOnNextByteCode);
     void SetDebuggerAccessor(const JSHandle<GlobalEnv> &globalEnv);
     bool IsApplicationFile(const std::string &fileName);
+
+    // Getters for hybrid step integration
+    const EcmaVM *GetVM() const { return vm_; }
+    RuntimeImpl *GetRuntime() const { return runtime_; }
+    DebugInfoExtractor *GetExtractor(const JSPandaFile *jsPandaFile);
+    void GenerateScopeChains(bool getScope, const FrameHandler *frameHandler, const JSPandaFile *jsPandaFile,
+        std::vector<std::unique_ptr<Scope>> &scopeChain, std::unique_ptr<RemoteObject> &thisObj);
 
     DispatchResponse ContinueToLocation(const ContinueToLocationParams &params);
     DispatchResponse Enable(const EnableParams &params, UniqueDebuggerId *id);
@@ -153,6 +162,12 @@ public:
         return result;
     }
     bool GenerateCallFrames(std::vector<std::unique_ptr<CallFrame>> *callFrames, bool getScope);
+    bool GenerateCallFrame(CallFrame *callFrame, const FrameHandler *frameHandler, CallFrameId frameId, bool getScope);
+    bool GenerateHybridFrames(std::vector<std::unique_ptr<CallFrame>> *callFrames);
+    void ProcessStaticFrame(const void *frame, CallFrameId &callFrameId,
+                            std::vector<std::unique_ptr<CallFrame>> *callFrames);
+    void ProcessDynamicFrame(const void *frame, CallFrameId &callFrameId,
+                             std::vector<std::unique_ptr<CallFrame>> *callFrames);
 
     class DispatcherImpl final : public DispatcherBase {
     public:
@@ -252,13 +267,9 @@ private:
     NO_MOVE_SEMANTIC(DebuggerImpl);
 
     std::string Trim(const std::string &str);
-    DebugInfoExtractor *GetExtractor(const JSPandaFile *jsPandaFile);
     std::vector<DebugInfoExtractor *> GetExtractors(const std::string &url);
     std::optional<std::string> CmptEvaluateValue(CallFrameId callFrameId, const std::string &expression,
         std::unique_ptr<RemoteObject> *result);
-    bool GenerateCallFrame(CallFrame *callFrame, const FrameHandler *frameHandler, CallFrameId frameId, bool getScope);
-    void GenerateScopeChains(bool getScope, const FrameHandler *frameHandler, const JSPandaFile *jsPandaFile,
-        std::vector<std::unique_ptr<Scope>> &scopeChain, std::unique_ptr<RemoteObject> &thisObj);
     void SaveCallFrameHandler(const FrameHandler *frameHandler);
     std::unique_ptr<Scope> GetLocalScopeChain(const FrameHandler *frameHandler,
         std::unique_ptr<RemoteObject> *thisObj);
@@ -336,7 +347,7 @@ private:
 
         ProtocolChannel *channel_ {nullptr};
     };
-
+    bool isHybrid_ {false};
     const EcmaVM *vm_ {nullptr};
     Frontend frontend_;
 

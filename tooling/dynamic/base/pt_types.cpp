@@ -2205,11 +2205,21 @@ std::unique_ptr<PtJson> CallFrame::ToJson() const
     }
     result->Add("scopeChain", values);
 
-    ASSERT(this_ != nullptr);
-    result->Add("this", this_->ToJson());
+    if (this_ != nullptr) {
+        result->Add("this", this_->ToJson());
+    } else {
+        std::unique_ptr<PtJson> undefinedThis = PtJson::CreateObject();
+        undefinedThis->Add("type", "undefined");
+        result->Add("this", undefinedThis);
+    }
+
     if (returnValue_) {
         ASSERT(returnValue_.value() != nullptr);
         result->Add("returnValue", returnValue_.value()->ToJson());
+    }
+
+    if (isStaticFrame_) {
+        result->Add("isStaticFrame", true);
     }
 
     return result;

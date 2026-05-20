@@ -308,7 +308,7 @@ static void DefaultFrameEnumerator(const InspectorServer::FrameInfoHandler &hand
 {
     std::optional<RemoteObject> objThis;
     auto scope_chain = std::vector {Scope(Scope::Type::LOCAL, RemoteObject::Number(72))};
-    handler(FrameId(0), std::to_string(0), g_sourceFile, 0, scope_chain, objThis);
+    handler(FrameId(0), std::to_string(0), g_sourceFile, 0, scope_chain, objThis, true);
 }
 
 TEST_F(ServerTest, OnCallDebuggerGetPossibleBreakpoints)

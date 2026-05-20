@@ -25,6 +25,7 @@
 #include "libarkbase/os/mutex.h"
 #include "include/runtime.h"
 #include "libarkbase/utils/logger.h"
+#include "plugins/ets/runtime/interop_js/tooling/internal_api.h"
 
 #include "error.h"
 #include "evaluation/base64.h"
@@ -38,6 +39,70 @@ namespace ark::tooling::inspector {
 static void LogDebuggerNotPaused(std::string_view methodName)
 {
     LOG(WARNING, DEBUGGER) << "Inspector method '" << methodName << "' must be called on pause";
+}
+
+// Helper function to convert UnifiedScope::Type to static Scope::Type
+static Scope::Type ConvertUnifiedScopeType(panda::tooling::hybrid_step::UnifiedScope::Type unifiedType)
+{
+    switch (unifiedType) {
+        case panda::tooling::hybrid_step::UnifiedScope::Type::GLOBAL:
+            return Scope::Type::GLOBAL;
+        case panda::tooling::hybrid_step::UnifiedScope::Type::LOCAL:
+        case panda::tooling::hybrid_step::UnifiedScope::Type::CLOSURE:
+        case panda::tooling::hybrid_step::UnifiedScope::Type::WITH:
+        case panda::tooling::hybrid_step::UnifiedScope::Type::CATCH:
+        case panda::tooling::hybrid_step::UnifiedScope::Type::BLOCK:
+        case panda::tooling::hybrid_step::UnifiedScope::Type::MODULE:
+        default:
+            return Scope::Type::LOCAL;
+    }
+}
+
+// Helper function to convert UnifiedRemoteObject to static RemoteObject
+static RemoteObject ConvertFromUnifiedRemoteObject(
+    const panda::tooling::hybrid_step::UnifiedRemoteObject &unifiedObj)
+{
+    using namespace panda::tooling::hybrid_step;
+
+    switch (unifiedObj.type) {
+        case UnifiedRemoteObject::Type::UNDEFINED:
+            return RemoteObject::Undefined();
+        case UnifiedRemoteObject::Type::NULL_VALUE:
+            return RemoteObject::Null();
+        case UnifiedRemoteObject::Type::BOOLEAN:
+            if (unifiedObj.booleanValue.has_value()) {
+                return RemoteObject::Boolean(unifiedObj.booleanValue.value());
+            }
+            return RemoteObject::Boolean(false);
+        case UnifiedRemoteObject::Type::NUMBER:
+            if (unifiedObj.numberValue.has_value()) {
+                return RemoteObject::Number(unifiedObj.numberValue.value());
+            }
+            return RemoteObject::Number(0);
+        case UnifiedRemoteObject::Type::STRING:
+            if (unifiedObj.stringValue.has_value()) {
+                return RemoteObject::String(unifiedObj.stringValue.value());
+            }
+            return RemoteObject::String("");
+        case UnifiedRemoteObject::Type::OBJECT:
+            return RemoteObject::Object(unifiedObj.className.empty() ? "Object" : unifiedObj.className,
+                unifiedObj.objectId.has_value() ? std::optional<RemoteObjectId>(unifiedObj.objectId.value())
+                                                : std::nullopt,
+                unifiedObj.description);
+        case UnifiedRemoteObject::Type::FUNCTION:
+            return RemoteObject::Function(unifiedObj.className.empty() ? "Function" : unifiedObj.className,
+                "",  // function name - not available in UnifiedRemoteObject
+                0,   // length - not available in UnifiedRemoteObject
+                unifiedObj.objectId.has_value() ? std::optional<RemoteObjectId>(unifiedObj.objectId.value())
+                                                : std::nullopt);
+        case UnifiedRemoteObject::Type::ARRAY:
+            return RemoteObject::Array(unifiedObj.className.empty() ? "Array" : unifiedObj.className,
+                0,   // length - not available in UnifiedRemoteObject
+                unifiedObj.objectId.has_value() ? std::optional<RemoteObjectId>(unifiedObj.objectId.value())
+                                                : std::nullopt);
+        default:
+            return RemoteObject::Undefined();
+    }
 }
 
 Inspector::Inspector(Server &server, DebugInterface &debugger)
@@ -64,6 +129,12 @@ Inspector::Inspector(Server &server, DebugInterface &debugger)
             debuggerEventsLock_.Unlock();
         }
     });
+
+    // Register static frame provider with hybrid step coordinator
+    panda::tooling::hybrid_step::FrameInfoExtractor::Get().RegisterProvider(
+        true,  // isStaticFrame
+        nullptr,
+        std::make_unique<StaticFrameProvider>(debugInfoCache_));
 
     RegisterMethodHandlers();
 }
@@ -640,35 +711,102 @@ std::string Inspector::GetSourceCode(std::string_view sourceFile)
     return debugInfoCache_.GetSourceCode(sourceFile);
 }
 
+static void ProcessStaticFrame(const PtFrame *ptFrame, DebugInfoCache &debugInfoCache,
+                               ObjectRepository &objectRepository, FrameId &frameId,
+                               const InspectorServer::FrameInfoHandler &handler)
+{
+    std::string_view sourceFile;
+    std::string_view methodName;
+    int32_t lineNumber;
+    debugInfoCache.GetSourceLocation(*ptFrame, sourceFile, methodName, lineNumber);
+    if (sourceFile.empty()) {
+        return;
+    }
+
+    std::optional<RemoteObject> objThis;
+    auto frameObject = objectRepository.CreateFrameObject(*ptFrame, debugInfoCache.GetLocals(*ptFrame), objThis);
+    auto scopeChain = std::vector{Scope(Scope::Type::LOCAL, std::move(frameObject)),
+                                  Scope(Scope::Type::GLOBAL, objectRepository.CreateGlobalObject())};
+
+    handler(frameId++, methodName, sourceFile, lineNumber, scopeChain, objThis, true);
+}
+
+static void ProcessDynamicFrame(const void *vm, const void *frame, FrameId &frameId,
+                                const InspectorServer::FrameInfoHandler &handler)
+{
+    panda::tooling::hybrid_step::UnifiedFrameInfo frameInfo;
+    auto &frameInfoExtractor = panda::tooling::hybrid_step::FrameInfoExtractor::Get();
+    if (!frameInfoExtractor.ExtractDynamicFrameInfo(vm, frame, frameInfo) || !frameInfo.hasInfo) {
+        return;
+    }
+
+    std::vector<Scope> scopeChain;
+    scopeChain.reserve(frameInfo.scopeChain.size());
+
+    for (const auto &unifiedScope : frameInfo.scopeChain) {
+        Scope::Type scopeType = ConvertUnifiedScopeType(unifiedScope.type);
+        RemoteObject scopeObject = ConvertFromUnifiedRemoteObject(unifiedScope.object);
+
+        if (unifiedScope.name.has_value()) {
+            scopeChain.emplace_back(scopeType, std::move(scopeObject), unifiedScope.name.value());
+        } else {
+            scopeChain.emplace_back(scopeType, std::move(scopeObject));
+        }
+    }
+
+    std::optional<RemoteObject> objThis;
+    if (frameInfo.thisObject.has_value()) {
+        objThis = ConvertFromUnifiedRemoteObject(frameInfo.thisObject.value());
+    }
+
+    handler(frameId++, frameInfo.methodName, frameInfo.sourceFile,
+            frameInfo.lineNumber + 1, scopeChain, objThis, false);
+}
+
+void Inspector::EnumerateStaticFrames(PtThread thread, ObjectRepository &objectRepository,
+                                      FrameId &frameId, const InspectorServer::FrameInfoHandler &handler)
+{
+    HandleError(debugger_.EnumerateFrames(
+        thread, [this, &objectRepository, &frameId, &handler](const PtFrame &frame) {
+            ProcessStaticFrame(&frame, debugInfoCache_, objectRepository, frameId, handler);
+            return true;
+        }));
+}
+
+void Inspector::EnumerateHybridFrames(ObjectRepository &objectRepository, FrameId &frameId,
+                                      const InspectorServer::FrameInfoHandler &handler)
+{
+    const void *vm = ets::interop::js::GetEcmaVM();
+    ets::interop::js::ForEachFrameInUnionStack([this, vm, &objectRepository, &frameId, &handler](
+                                                    const void *frame, bool isStaticFrame) {
+        if (isStaticFrame) {
+            ProcessStaticFrame(
+                static_cast<const PtFrame *>(frame), debugInfoCache_, objectRepository, frameId, handler);
+        } else {
+            ProcessDynamicFrame(vm, frame, frameId, handler);
+        }
+    });
+}
+
 void Inspector::DebuggableThreadPostSuspend(PtThread thread, ObjectRepository &objectRepository,
                                             const std::vector<BreakpointId> &hitBreakpoints, ObjectHeader *exception,
                                             PauseReason pauseReason)
 {
     auto exceptionRemoteObject = exception != nullptr ? objectRepository.CreateObject(TypedValue::Reference(exception))
                                                       : std::optional<RemoteObject>();
-
-    inspectorServer_.CallDebuggerPaused(
-        thread, hitBreakpoints, exceptionRemoteObject, pauseReason, [this, thread, &objectRepository](auto &handler) {
+    bool isEmpty = true;
+    ets::interop::js::UnionStackIsEmpty(&isEmpty);
+    inspectorServer_.CallDebuggerPaused(thread,
+        hitBreakpoints,
+        exceptionRemoteObject,
+        pauseReason,
+        [this, thread, isEmpty, &objectRepository](auto &handler) {
             FrameId frameId = 0;
-            HandleError(debugger_.EnumerateFrames(thread, [this, &objectRepository, &handler,
-                                                           &frameId](const PtFrame &frame) {
-                std::string_view sourceFile;
-                std::string_view methodName;
-                int32_t lineNumber;
-                debugInfoCache_.GetSourceLocation(frame, sourceFile, methodName, lineNumber);
-                if (sourceFile.empty()) {
-                    return false;
-                }
-
-                std::optional<RemoteObject> objThis;
-                auto frameObject = objectRepository.CreateFrameObject(frame, debugInfoCache_.GetLocals(frame), objThis);
-                auto scopeChain = std::vector {Scope(Scope::Type::LOCAL, std::move(frameObject)),
-                                               Scope(Scope::Type::GLOBAL, objectRepository.CreateGlobalObject())};
-
-                handler(frameId++, methodName, sourceFile, lineNumber, scopeChain, objThis);
-
-                return true;
-            }));
+            if (isEmpty) {
+                EnumerateStaticFrames(thread, objectRepository, frameId, handler);
+            } else {
+                EnumerateHybridFrames(objectRepository, frameId, handler);
+            }
         });
 
     if (!hitBreakpoints.empty()) {
