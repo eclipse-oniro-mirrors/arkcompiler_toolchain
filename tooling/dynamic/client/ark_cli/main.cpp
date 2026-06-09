@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -66,13 +66,19 @@ void InputMessageInSession(uint32_t sessionId, std::vector<std::string>& cliCmdS
 void InputOnMessage(uv_async_t *handle)
 {
     char* msg = static_cast<char*>(handle->data);
-    std::string inputStr = std::string(msg);
-    if (msg != nullptr) {
-        free(msg);
+    if (msg == nullptr) {
+        return;
     }
+    std::string inputStr = std::string(msg);
+    free(msg);
+
     std::vector<std::string> cliCmdStr = Utils::SplitString(inputStr, " ");
+    if (cliCmdStr.empty()) {
+        LOGE("Empty command input");
+        return;
+    }
     if (cliCmdStr[0] == "forall") {
-        if (strstr(cliCmdStr[1].c_str(), "session") != nullptr) {
+        if (cliCmdStr.size() > 1 && strstr(cliCmdStr[1].c_str(), "session") != nullptr) {
             std::cout << "command " << cliCmdStr[1] << " not support forall" << std::endl;
         } else {
             cliCmdStr.erase(cliCmdStr.begin());
