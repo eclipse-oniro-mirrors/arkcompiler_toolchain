@@ -38,6 +38,11 @@ std::string RemoteObject::GetDescription(const RemoteObjectType::BigIntT &bigint
     return (bigint.sign >= 0 ? "" : "-") + std::to_string(bigint.value);
 }
 
+std::string RemoteObject::GetDescription(const RemoteObjectType::BigIntStringT &bigint)
+{
+    return bigint.value;
+}
+
 std::string RemoteObject::GetDescription(const RemoteObjectType::ObjectT &object)
 {
     return object.description.value_or(object.className);
@@ -97,6 +102,9 @@ RemoteObjectType RemoteObject::GetType() const
     if (std::holds_alternative<RemoteObjectType::BigIntT>(value_)) {
         return RemoteObjectType("bigint");
     }
+    if (std::holds_alternative<RemoteObjectType::BigIntStringT>(value_)) {
+        return RemoteObjectType("bigint");
+    }
     if (std::holds_alternative<std::string>(value_)) {
         return RemoteObjectType("string");
     }
@@ -136,6 +144,10 @@ void RemoteObject::Serialize(JsonObjectBuilder &builder) const
         }
     } else if (auto bigint = std::get_if<RemoteObjectType::BigIntT>(&value_)) {
         auto desc = GetDescription(*bigint);
+        builder.AddProperty("unserializableValue", desc);
+        builder.AddProperty("description", desc);
+    } else if (auto bigintString = std::get_if<RemoteObjectType::BigIntStringT>(&value_)) {
+        auto desc = GetDescription(*bigintString);
         builder.AddProperty("unserializableValue", desc);
         builder.AddProperty("description", desc);
     } else if (auto string = std::get_if<std::string>(&value_)) {

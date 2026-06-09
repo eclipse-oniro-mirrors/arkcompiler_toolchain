@@ -177,6 +177,10 @@ RemoteObject ObjectRepository::CreateObject(ObjectHeader *object)
         return RemoteObject::String(*str);
     }
 
+    if (auto bigintStr = extension_->GetAsBigIntString(object)) {
+        return RemoteObject::BigIntString(*bigintStr);
+    }
+
     RemoteObjectId id;
 
     // SUPPRESS_CSA_NEXTLINE(alpha.core.WasteObjHeader)

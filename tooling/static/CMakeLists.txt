@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -115,6 +115,7 @@ panda_add_gtest(
     NO_CORES
     SOURCES
         tests/base64.cpp
+        tests/bigint_decimal_conversion_test.cpp
         tests/debug_info_cache.cpp
         tests/inspector_server.cpp
         tests/json_object_matcher.cpp

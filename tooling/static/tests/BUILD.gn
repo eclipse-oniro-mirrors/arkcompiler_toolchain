@@ -18,6 +18,7 @@ module_output_path = "toolchain/toolchain"
 
 libarkinspector_test_sources = [
     "base64.cpp",
+    "bigint_decimal_conversion_test.cpp",
     "debug_info_cache.cpp",
     "inspector_server.cpp",
     "json_object_matcher.cpp",

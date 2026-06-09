@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,6 +34,10 @@ public:
         uintmax_t value;
     };
 
+    struct BigIntStringT {
+        std::string value;
+    };
+
     struct SymbolT {
         std::string description;
     };
@@ -57,8 +61,8 @@ public:
         size_t length;
     };
 
-    using TypeValue = std::variant<std::monostate, std::nullptr_t, bool, NumberT, BigIntT, std::string, SymbolT,
-                                   ObjectT, ArrayT, FunctionT>;
+    using TypeValue = std::variant<std::monostate, std::nullptr_t, bool, NumberT, BigIntT, BigIntStringT, std::string,
+                                  SymbolT, ObjectT, ArrayT, FunctionT>;
 
 public:
     explicit RemoteObjectType(const char *type, const char *subtype = nullptr) : type_(type), subtype_(subtype) {}
