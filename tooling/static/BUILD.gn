@@ -26,6 +26,7 @@ libarkinspector_sources = [
   "debugger/debuggable_thread.cpp",
   "debugger/object_repository.cpp",
   "debugger/thread_state.cpp",
+  "hybrid/static_frame_provider.cpp",
   "error.cpp",
   "evaluation/evaluation_engine.cpp",
   "inspector.cpp",

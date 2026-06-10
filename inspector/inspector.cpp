@@ -48,7 +48,7 @@ enum DispatchStatus : int32_t {
 };
 
 using SetDebugApp = void(*)(void*);
-using InitializeDebugger = void(*)(void*, const std::function<void(const void*, const std::string&)>&);
+using InitializeDebugger = void(*)(void*, const std::function<void(const void*, const std::string&)>&, bool);
 using UninitializeDebugger = void(*)(void*);
 using WaitForDebugger = void(*)(void*);
 using OnMessage = void(*)(void*, std::string&&);
@@ -434,7 +434,7 @@ bool InitializeDebuggerForSocketpair(void* vm, bool isHybrid)
         };
         g_setDebugApp(vm);
     }
-    g_initializeDebugger(vm, std::bind(&SendReply, vm, std::placeholders::_2));
+    g_initializeDebugger(vm, std::bind(&SendReply, vm, std::placeholders::_2), isHybrid);
     return true;
 }
 
@@ -448,7 +448,7 @@ bool StartDebugForSocketpair(int tid, int socketfd, bool isHybrid)
         return false;
     }
     g_vm = vm;
-    if (!InitializeDebuggerForSocketpair(vm)) {
+    if (!InitializeDebuggerForSocketpair(vm, isHybrid)) {
         return false;
     }
     const DebuggerPostTask &debuggerPostTask = GetDebuggerPostTask(tid);
@@ -477,8 +477,8 @@ bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
         LOGE("Initialize ark functions failed");
         return false;
     }
-
-    g_initializeDebugger(vm, std::bind(&SendReply, vm, std::placeholders::_2));
+    bool isHybrid = false;
+    g_initializeDebugger(vm, std::bind(&SendReply, vm, std::placeholders::_2), isHybrid);
 
     int startDebugInOldProcess = -2; // start debug in old process.
     DebugInfo debugInfo = {startDebugInOldProcess, componentName, instanceId, port};

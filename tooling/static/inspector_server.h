@@ -49,7 +49,7 @@ public:
     using SetBreakpointHandler = std::optional<BreakpointId>(PtThread, SourceFileFilter &&, int32_t,
                                                              std::set<std::string_view> &, const std::string *);
     using FrameInfoHandler = std::function<void(FrameId, std::string_view, std::string_view, size_t,
-                                                const std::vector<Scope> &, const std::optional<RemoteObject> &)>;
+        const std::vector<Scope> &, const std::optional<RemoteObject> &, bool)>;
 
 public:
     explicit InspectorServer(Server &server);
@@ -133,6 +133,7 @@ private:
         std::string_view sourceFile;
         std::string_view methodName;
         int32_t lineNumber;
+        bool isStaticFrame;
     };
 
 private:

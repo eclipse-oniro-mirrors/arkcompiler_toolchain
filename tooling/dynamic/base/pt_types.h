@@ -1777,6 +1777,17 @@ public:
         return returnValue_.has_value();
     }
 
+    bool GetIsStaticFrame()
+    {
+        return isStaticFrame_;
+    }
+
+    CallFrame &SetIsStaticFrame(bool isStaticFrame)
+    {
+        isStaticFrame_ = isStaticFrame;
+        return *this;
+    }
+
 private:
     NO_COPY_SEMANTIC(CallFrame);
     NO_MOVE_SEMANTIC(CallFrame);
@@ -1789,6 +1800,7 @@ private:
     std::vector<std::unique_ptr<Scope>> scopeChain_ {};
     std::unique_ptr<RemoteObject> this_ {nullptr};
     std::optional<std::unique_ptr<RemoteObject>> returnValue_ {};
+    bool isStaticFrame_ {false};
 };
 
 // ========== Heapprofiler types begin

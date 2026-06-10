@@ -1057,8 +1057,8 @@ void InspectorServer::EnumerateCallFrames(JsonArrayBuilder &callFrames, PtThread
                                           const std::function<void(const FrameInfoHandler &)> &enumerateFrames)
 {
     enumerateFrames([this, thread, &callFrames](auto frameId, auto methodName, auto sourceFile, auto lineNumber,
-                                                auto &scopeChain, auto &objThis) {
-        CallFrameInfo callFrameInfo {frameId, sourceFile, methodName, lineNumber};
+                                                auto &scopeChain, auto &objThis, auto isStaticFrame) {
+        CallFrameInfo callFrameInfo {frameId, sourceFile, methodName, lineNumber, isStaticFrame};
         AddCallFrameInfo(callFrames, callFrameInfo, scopeChain, thread, objThis);
     });
 }
@@ -1087,6 +1087,9 @@ void InspectorServer::AddCallFrameInfo(JsonArrayBuilder &callFrames, const CallF
 
         callFrame.AddProperty("this", objThis.value_or(RemoteObject::Undefined()));
         callFrame.AddProperty("canBeRestarted", true);
+        if (callFrameInfo.isStaticFrame) {
+            callFrame.AddProperty("isStaticFrame", true);
+        }
     });
 }
 

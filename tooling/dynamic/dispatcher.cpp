@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -163,7 +163,7 @@ std::unique_ptr<PtJson> DispatcherBase::DispatchResponseToJson(const DispatchRes
     return result;
 }
 
-Dispatcher::Dispatcher(const EcmaVM *vm, ProtocolChannel *channel)
+Dispatcher::Dispatcher(const EcmaVM *vm, ProtocolChannel *channel, bool isHybrid)
 {
     // profiler
 #ifdef ECMASCRIPT_SUPPORT_CPUPROFILER
@@ -184,7 +184,7 @@ Dispatcher::Dispatcher(const EcmaVM *vm, ProtocolChannel *channel)
 
     // debugger
     auto runtime = std::make_unique<RuntimeImpl>(vm, channel);
-    auto debugger = std::make_unique<DebuggerImpl>(vm, channel, runtime.get());
+    auto debugger = std::make_unique<DebuggerImpl>(vm, channel, runtime.get(), isHybrid);
     dispatchers_["Runtime"] =
         std::make_unique<RuntimeImpl::DispatcherImpl>(channel, std::move(runtime));
     dispatchers_["Debugger"] =
