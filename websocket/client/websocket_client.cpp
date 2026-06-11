@@ -284,19 +284,19 @@ bool WebSocketClient::ValidateIncomingFrame(const WebSocketFrame& wsFrame) const
 
 std::string WebSocketClient::CreateFrame(bool isLast, FrameType frameType) const
 {
-    ClientFrameBuilder builder(isLast, frameType, MASK_KEY);
+    ClientFrameBuilder builder(isLast, frameType, GenerateMaskKey());
     return builder.Build();
 }
 
 std::string WebSocketClient::CreateFrame(bool isLast, FrameType frameType, const std::string& payload) const
 {
-    ClientFrameBuilder builder(isLast, frameType, MASK_KEY);
+    ClientFrameBuilder builder(isLast, frameType, GenerateMaskKey());
     return builder.SetPayload(payload).Build();
 }
 
 std::string WebSocketClient::CreateFrame(bool isLast, FrameType frameType, std::string&& payload) const
 {
-    ClientFrameBuilder builder(isLast, frameType, MASK_KEY);
+    ClientFrameBuilder builder(isLast, frameType, GenerateMaskKey());
     return builder.SetPayload(std::move(payload)).Build();
 }
 }  // namespace OHOS::ArkCompiler::Toolchain

@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,8 @@
 
 #include "gtest/gtest.h"
 #include "frame_builder.h"
+#include "client/websocket_client.h"
+#include <set>
 
 using namespace OHOS::ArkCompiler::Toolchain;
 
@@ -172,5 +174,33 @@ HWTEST_F(FrameBuilderTest, TestClientMasking, testing::ext::TestSize.Level0)
         ASSERT_EQ(static_cast<uint8_t>(message[i] ^ MASKING_KEY[i % WebSocketFrame::MASK_LEN]),
                   static_cast<uint8_t>(LONG_MSG[i - HEADER_LENGTH]));
     }
+}
+
+HWTEST_F(FrameBuilderTest, TestClientRandomMaskingKey, testing::ext::TestSize.Level0)
+{
+    constexpr size_t NUM_FRAMES = 100;
+    std::set<std::array<uint8_t, WebSocketFrame::MASK_LEN>> uniqueKeys;
+    WebSocketClient client;
+
+    for (size_t i = 0; i < NUM_FRAMES; ++i) {
+        auto key = client.GenerateMaskKey();
+        uniqueKeys.insert(key);
+
+        ClientFrameBuilder frameBuilder(true, FrameType::TEXT, key);
+        auto message = frameBuilder
+            .SetPayload(SHORT_MSG)
+            .Build();
+
+        ASSERT_EQ(message[1] & 0x80, 0x80);
+
+        constexpr size_t HEADER_LENGTH = 2 + WebSocketFrame::MASK_LEN;
+        for (size_t k = HEADER_LENGTH; k < message.size(); ++k) {
+            size_t payloadIndex = k - HEADER_LENGTH;
+            ASSERT_EQ(static_cast<uint8_t>(message[k] ^ key[payloadIndex % WebSocketFrame::MASK_LEN]),
+                    static_cast<uint8_t>(SHORT_MSG[payloadIndex]));
+        }
+    }
+    
+    ASSERT_EQ(uniqueKeys.size(), NUM_FRAMES);
 }
 }  // namespace panda::test

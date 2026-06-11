@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <random>
 
 namespace OHOS::ArkCompiler::Toolchain {
 class WebSocketClient final : public WebSocketBase {
@@ -41,6 +42,18 @@ public:
     bool ClientRecvWSUpgradeRsp();
 
     std::string GetSocketStateString();
+
+    std::array<uint8_t, WebSocketFrame::MASK_LEN> GenerateMaskKey() const
+    {
+        std::array<uint8_t, WebSocketFrame::MASK_LEN> key = {};
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<uint8_t> dis(0, DISTRIBUTION_UPPER_BOUND);
+        for (size_t i = 0; i < WebSocketFrame::MASK_LEN; ++i) {
+            key[i] = dis(gen);
+        }
+        return key;
+    }
 
 private:
     bool DecodeMessage(WebSocketFrame& wsFrame) const override;
@@ -73,7 +86,7 @@ private:
                                                               "\r\n";
 
     static constexpr int NET_SUCCESS = 1;
-    static constexpr std::array<uint8_t, WebSocketFrame::MASK_LEN> MASK_KEY = {0xa, 0xb, 0xc, 0xd};
+    static constexpr int DISTRIBUTION_UPPER_BOUND = 255;
     char secWebSocketKey_[KEY_LENGTH + 1] = {};
 };
 } // namespace OHOS::ArkCompiler::Toolchain
