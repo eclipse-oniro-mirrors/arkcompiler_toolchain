@@ -241,7 +241,7 @@ std::unique_ptr<RemoteObject> RemoteObject::FromTagged(const EcmaVM *ecmaVm, Loc
 void RemoteObject::AppendingHashToDescription(const EcmaVM *ecmaVm, Local<JSValueRef> tagged,
     std::string &description)
 {
-    if (ecmaVm->GetJsDebuggerManager() != nullptr && ecmaVm->GetJsDebuggerManager()->IsObjHashDisplayEnabled()) {
+    if (ecmaVm->GetJsDebuggerManager() != nullptr && !ecmaVm->GetJsDebuggerManager()->IsRunningTestcases()) {
         JSHandle<JSTaggedValue> valueHandle = JSNApiHelper::ToJSHandle(tagged);
         int32_t hash = DebuggerApi::GetObjectHash(ecmaVm, valueHandle);
         if (hash != 0) {
