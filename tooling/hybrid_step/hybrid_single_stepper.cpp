@@ -21,7 +21,7 @@ HybridSingleStepper& HybridSingleStepper::GetInstance()
     return instance;
 }
 
-bool HybridSingleStepper::GetFlagWithLock(std::shared_mutex &mutex, bool &flag)
+bool HybridSingleStepper::GetFlagWithLock(std::shared_mutex &mutex, const bool &flag) const
 {
     std::shared_lock<std::shared_mutex> readLock(mutex);
     return flag;
@@ -33,7 +33,7 @@ void HybridSingleStepper::SetFlagWithLock(std::shared_mutex &mutex, bool &flag, 
     flag = value;
 }
 
-bool HybridSingleStepper::GetHybridSingleStepFlag(HybridStepDirection direction)
+bool HybridSingleStepper::GetHybridSingleStepFlag(HybridStepDirection direction) const
 {
     bool result = false;
     switch (direction) {
