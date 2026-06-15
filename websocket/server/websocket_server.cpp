@@ -34,9 +34,11 @@ namespace OHOS::ArkCompiler::Toolchain {
 static bool ValidateHandShakeMessage(const HttpRequest& req)
 {
     std::string upgradeHeaderValue = req.upgrade;
+    std::string connectionValue = req.connection;
     // Switch to lower case in order to support obsolete versions of WebSocket protocol.
     ToLowerCase(upgradeHeaderValue);
-    return req.connection.find("Upgrade") != std::string::npos &&
+    ToLowerCase(connectionValue);
+    return connectionValue.find("upgrade") != std::string::npos &&
         upgradeHeaderValue.find("websocket") != std::string::npos &&
         req.version.compare("HTTP/1.1") == 0;
 }
