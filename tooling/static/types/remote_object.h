@@ -89,6 +89,18 @@ public:
         return RemoteObject(std::move(string));
     }
 
+    static RemoteObject BigInt(int8_t sign, uintmax_t value)
+    {
+        return RemoteObject(RemoteObjectType::BigIntT {sign, value});
+    }
+
+    static RemoteObject BigIntString(std::string stringRep)
+    {
+        RemoteObject obj;
+        obj.value_ = RemoteObjectType::BigIntStringT {std::move(stringRep)};
+        return obj;
+    }
+
     static RemoteObject Symbol(std::string description)
     {
         return RemoteObject(RemoteObjectType::SymbolT {std::move(description)});
@@ -136,6 +148,7 @@ public:
     }
 
     static std::string GetDescription(const RemoteObjectType::BigIntT &bigint);
+    static std::string GetDescription(const RemoteObjectType::BigIntStringT &object);
     static std::string GetDescription(const RemoteObjectType::ObjectT &object);
     static std::string GetDescription(const RemoteObjectType::ArrayT &array);
     static std::string GetDescription(const RemoteObjectType::FunctionT &function);

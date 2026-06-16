@@ -35,6 +35,10 @@ public:
         uintmax_t value;
     };
 
+    struct BigIntStringT {
+        std::string value;
+    };
+
     struct SymbolT {
         std::string description;
     };
@@ -58,8 +62,8 @@ public:
         size_t length;
     };
 
-    using TypeValue = std::variant<std::monostate, std::nullptr_t, bool, NumberT, BigIntT, std::string, SymbolT,
-                                   ObjectT, ArrayT, FunctionT>;
+    using TypeValue = std::variant<std::monostate, std::nullptr_t, bool, NumberT, BigIntT, BigIntStringT, std::string,
+                                  SymbolT, ObjectT, ArrayT, FunctionT>;
 
 public:
     explicit RemoteObjectType(const char *type, const char *subtype = nullptr) : type_(type), subtype_(subtype) {}

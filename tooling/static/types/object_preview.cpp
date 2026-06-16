@@ -45,6 +45,8 @@ std::optional<std::string> GetPropertyPreviewValue(const RemoteObjectType::TypeV
         }
     } else if (auto bigint = std::get_if<RemoteObjectType::BigIntT>(&remobjValue)) {
         propPreviewValue.emplace(RemoteObject::GetDescription(*bigint));
+    } else if (auto bigintString = std::get_if<RemoteObjectType::BigIntStringT>(&remobjValue)) {
+        propPreviewValue.emplace(RemoteObject::GetDescription(*bigintString));
     } else if (auto string = std::get_if<std::string>(&remobjValue)) {
         propPreviewValue.emplace(*string);
     } else if (auto symbol = std::get_if<RemoteObjectType::SymbolT>(&remobjValue)) {
