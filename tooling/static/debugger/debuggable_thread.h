@@ -131,6 +131,15 @@ public:
     // Checks if the thread was paused by BreakPoint
     bool IsPausedByBreakPoint();
 
+    // Checks if the current step kind is STEP_INTO
+    bool IsStepInto();
+
+    // Gets the cached ObjectRepository for LLDB GetProperties (returns nullptr if not initialized)
+    ObjectRepository *GetObjectRepository();
+
+    // Creates or resets the cached ObjectRepository. Must be called on the application thread.
+    void ResetObjectRepository();
+
 private:
     using PtThreadEvaluationEngine::EvaluateExpression;
 
@@ -149,6 +158,7 @@ private:
     bool suspended_ GUARDED_BY(mutex_) {false};
     std::optional<std::function<void(ObjectRepository &)>> request_ GUARDED_BY(mutex_);
     os::memory::ConditionVariable requestDone_ GUARDED_BY(mutex_);
+    std::optional<ObjectRepository> objectRepository_ GUARDED_BY(mutex_);
 };
 }  // namespace ark::tooling::inspector
 

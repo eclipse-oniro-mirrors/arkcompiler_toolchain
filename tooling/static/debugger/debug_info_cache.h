@@ -37,7 +37,7 @@ public:
 
     void AddPandaFile(const panda_file::File &file, bool isUserPandafile = false);
     void GetSourceLocation(const PtFrame &frame, std::string_view &sourceFile, std::string_view &methodName,
-                           int32_t &lineNumber);
+                           int32_t &lineNumber) const;
     std::unordered_set<PtLocation, HashLocation> GetCurrentLineLocations(const PtFrame &frame);
     std::unordered_set<PtLocation, HashLocation> GetContinueToLocations(std::string_view sourceFile,
                                                                         int32_t lineNumber);
@@ -47,7 +47,7 @@ public:
     std::set<int32_t> GetValidLineNumbers(std::string_view sourceFile, int32_t startLine,
                                          int32_t endLine, bool restrictToFunction);
 
-    std::map<std::string, TypedValue> GetLocals(const PtFrame &frame);
+    std::map<std::string, TypedValue> GetLocals(const PtFrame &frame) const;
 
     std::string GetSourceCode(std::string_view sourceFile);
 

@@ -15,7 +15,9 @@
 
 #ifndef ECMASCRIPT_TOOLING_INIT_H
 #define ECMASCRIPT_TOOLING_INIT_H
+#include "common.h"
 #include "common/macros.h"
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
@@ -28,6 +30,9 @@ TOOLCHAIN_EXPORT void HandleMessage(std::string &&msg);
 TOOLCHAIN_EXPORT void StopInspector();
 TOOLCHAIN_EXPORT void WaitForDebugger();
 TOOLCHAIN_EXPORT int StopDebugger();
+TOOLCHAIN_EXPORT DebugResponse GetStaticCallFrames();
+TOOLCHAIN_EXPORT DebugResponse OperateJsDebugMessageForStatic(const char* message);
+TOOLCHAIN_EXPORT bool IsStaticRuntimeOnCurrentThread();
 
 #ifdef __cplusplus
 #if __cplusplus

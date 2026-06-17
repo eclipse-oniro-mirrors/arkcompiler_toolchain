@@ -58,6 +58,11 @@ void InspectorServer::Run(const std::string& msg)
     server_.Run(msg);
 }
 
+std::string InspectorServer::RunSync(const std::string& msg)
+{
+    return server_.RunSync(msg);
+}
+
 void InspectorServer::OnValidate(std::function<void()> &&handler)
 {
     server_.OnValidate([handler = std::move(handler)]() {
@@ -848,12 +853,34 @@ void InspectorServer::OnCallDebuggerSetNativeRange(std::function<void(PtThread)>
     });
 }
 
-void InspectorServer::OnCallDebuggerReplyNativeCalling(std::function<void(PtThread)> &&handler)
+void InspectorServer::OnCallDebuggerReplyNativeMethodCall(std::function<void(PtThread, bool)> &&handler)
 {
-    server_.OnCall("Debugger.replyNativeCalling", [this, handler = std::move(handler)](auto &sessionId, auto &) {
-        auto thread = sessionManager_.GetThreadBySessionId(sessionId);
-        handler(thread);
-        return std::unique_ptr<JsonSerializable>();
+    // clang-format off
+    server_.OnCall("Debugger.replyNativeCalling",
+        [this, handler = std::move(handler)](auto &sessionId, const JsonObject &params) -> Server::MethodResponse {
+            bool userCode;
+            if (auto prop = params.GetValue<JsonObject::BoolT>("userCode")) {
+                userCode = *prop;
+            } else {
+                std::string_view msg = "No 'userCode' property";
+                LOG(INFO, DEBUGGER) << msg;
+                return Unexpected(JRPCError(msg));
+            }
+
+            auto thread = sessionManager_.GetThreadBySessionId(sessionId);
+            handler(thread, userCode);
+            return std::unique_ptr<JsonSerializable>();
+        });
+    // clang-format on
+}
+
+void InspectorServer::SendNativeMethodCallEvent(PtThread thread, const void *nativeAddress, bool isStepInto)
+{
+    auto sessionId = sessionManager_.GetSessionIdByThread(thread);
+    server_.Call(sessionId, "Debugger.nativeCalling", [nativeAddress, isStepInto, &sessionId](auto &params) {
+        params.AddProperty("nativeAddress", reinterpret_cast<int64_t>(nativeAddress));
+        params.AddProperty("isStepInto", isStepInto);
+        params.AddProperty("sessionId", sessionId);
     });
 }
 

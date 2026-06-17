@@ -21,6 +21,8 @@
 #include <cstddef>
 #include <string>
 
+#include "init_static.h"
+
 namespace panda::ecmascript {
 class EcmaVM;
 }  // namespace panda::ecmascript
@@ -32,11 +34,6 @@ using DebuggerPostTask = std::function<void(std::function<void()>&&)>;
 #if __cplusplus
 extern "C" {
 #endif
-
-struct DebugResponse {
-    size_t size;
-    char* response;
-};
 
 bool StartDebug(const std::string& componentName, void* vm, bool isDebugMode,
     int32_t instanceId, const DebuggerPostTask& debuggerPostTask, int port);

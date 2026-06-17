@@ -25,6 +25,8 @@
 
 #include "init.h"
 #include "inspector.h"
+#include "runtime/include/runtime.h"
+#include "runtime/include/thread.h"
 
 #ifdef PANDA_TOOLING_ASIO
 using InspectorWebSocketServer = ark::tooling::inspector::AsioServer;
@@ -66,7 +68,6 @@ void InitializeInspector(std::shared_ptr<void> endPoint)
     g_debugSession = ark::Runtime::GetCurrent()->StartDebugSession();
     if (!g_inspector) {
         LOG(INFO, DEBUGGER) << "InitializeInspector started";
-        g_debugSession = ark::Runtime::GetCurrent()->StartDebugSession();
         g_inspector.emplace(g_server, g_debugSession->GetDebugger());
     }
 }
@@ -114,4 +115,29 @@ void HandleMessage(std::string &&msg)
 {
     LOG(ERROR, DEBUGGER) << "Static OnMessage start";
     g_inspector->Run(msg);
+}
+
+DebugResponse GetStaticCallFrames()
+{
+    if (!g_inspector) {
+        return {0, nullptr};
+    }
+    return g_inspector->GetStaticCallFrames();
+}
+
+DebugResponse OperateJsDebugMessageForStatic(const char* message)
+{
+    if (!g_inspector) {
+        return {0, nullptr};
+    }
+    if (message == nullptr) {
+        return {0, nullptr};
+    }
+    return g_inspector->OperateJsDebugMessageForStatic(message);
+}
+
+bool IsStaticRuntimeOnCurrentThread()
+{
+    return ark::Runtime::GetCurrent() != nullptr
+        && ark::ManagedThread::GetCurrent() != nullptr;
 }

@@ -34,6 +34,7 @@
 
 #include "common.h"
 #include "inspector_server.h"
+
 #include "runtime/tooling/tools.h"
 #include "libarkbase/os/mutex.h"
 #include "types/evaluation_result.h"
@@ -69,6 +70,7 @@ public:
     void MethodEntry(PtThread thread, Method *method) override;
     void LoadModule(std::string_view fileName) override;
     void SingleStep(PtThread thread, Method *method, const PtLocation &location) override;
+    void NativeMethodCall(PtThread thread, const void *nativeAddress) override;
     void ThreadStart(PtThread thread) override;
     void ThreadEnd(PtThread thread) override;
     void VmDeath() override;
@@ -76,6 +78,8 @@ public:
     void Run(const std::string& msg);
     void Stop();
     void WaitForDebugger();
+    DebugResponse GetStaticCallFrames();
+    DebugResponse OperateJsDebugMessageForStatic(const char* message);
 
 private:
     void RuntimeEnable(PtThread thread);
@@ -91,7 +95,7 @@ private:
     void SmartStepInto(PtThread thread);
     void DropFrame(PtThread thread);
     void SetNativeRange(PtThread thread);
-    void ReplyNativeCalling(PtThread thread);
+    void ReplyNativeMethodCall(PtThread thread, bool userCode);
     void SetBreakpointsActive(PtThread thread, bool active);
     void SetSkipAllPauses(PtThread thread, bool skip);
     void SetMixedDebugEnabled(PtThread thread, bool mixedDebugEnabled);
@@ -184,6 +188,10 @@ private:
     bool cpuProfilerStarted_ = false;
     os::memory::Mutex waitDebuggerMutex_;
     os::memory::ConditionVariable waitDebuggerCond_ GUARDED_BY(waitDebuggerMutex_);
+
+    os::memory::ConditionVariable nativeMethodCallCond_ GUARDED_BY(waitDebuggerMutex_);
+    bool nativeMethodCallWaiting_ GUARDED_BY(waitDebuggerMutex_) {false};
+
 };
 }  // namespace inspector
 }  // namespace ark::tooling

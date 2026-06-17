@@ -15,17 +15,23 @@
 
 #include "inspector.h"
 
+#include <cstring>
 #include <functional>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "include/method.h"
+
 #include "debugger/breakpoint.h"
+#include "debugger/object_repository.h"
 #include "libarkbase/macros.h"
 #include "libarkbase/os/mutex.h"
 #include "include/runtime.h"
+#include "libarkbase/utils/json_builder.h"
 #include "libarkbase/utils/logger.h"
 #include "plugins/ets/runtime/interop_js/tooling/internal_api.h"
+#include "types/scope.h"
 
 #include "error.h"
 #include "evaluation/base64.h"
@@ -688,9 +694,16 @@ std::vector<PropertyDescriptor> Inspector::GetProperties(PtThread thread, Remote
 
     auto *debuggableThread = GetDebuggableThread(thread);
     if (debuggableThread != nullptr) {
-        debuggableThread->RequestToObjectRepository([objectId, generatePreview, &properties](auto &objectRepository) {
-            properties = objectRepository.GetProperties(objectId, generatePreview);
-        });
+        bool requestOk = debuggableThread->RequestToObjectRepository(
+            [objectId, generatePreview, &properties](auto &objectRepository) {
+                properties = objectRepository.GetProperties(objectId, generatePreview);
+            });
+        if (!requestOk) {
+            auto *objectRepository = debuggableThread->GetObjectRepository();
+            if (objectRepository != nullptr) {
+                properties = objectRepository->GetProperties(objectId, generatePreview);
+            }
+        }
     }
 
     if (!properties) {
@@ -947,9 +960,40 @@ void Inspector::SetNativeRange(PtThread thread)
     (void)thread;
 }
 
-void Inspector::ReplyNativeCalling(PtThread thread)
+void Inspector::NativeMethodCall(PtThread thread, const void *nativeAddress)
 {
-    Continue(thread);
+    {
+        os::memory::ReadLockHolder lock(debuggerEventsLock_);
+        auto *debuggableThread = GetDebuggableThread(thread);
+        if (debuggableThread == nullptr) {
+            return;
+        }
+
+        if (!debuggableThread->IsStepInto()) {
+            LOG(DEBUG, DEBUGGER) << "NativeMethodCall: thread " << thread.GetId()
+                                 << " is not in StepInto state";
+            return;
+        }
+    }
+
+    inspectorServer_.SendNativeMethodCallEvent(thread, nativeAddress, true);
+
+    os::memory::LockHolder<os::memory::Mutex> waitLock(waitDebuggerMutex_);
+    nativeMethodCallWaiting_ = true;
+    while (nativeMethodCallWaiting_) {
+        nativeMethodCallCond_.Wait(&waitDebuggerMutex_);
+    }
+}
+
+void Inspector::ReplyNativeMethodCall(PtThread thread, bool userCode)
+{
+    if (userCode) {
+        Continue(thread);
+    }
+
+    os::memory::LockHolder<os::memory::Mutex> lock(waitDebuggerMutex_);
+    nativeMethodCallWaiting_ = false;
+    nativeMethodCallCond_.Signal();
 }
 
 void Inspector::ProfilerSetSamplingInterval(int32_t interval)
@@ -1041,7 +1085,7 @@ void Inspector::RegisterMethodHandlers()
     inspectorServer_.OnCallDebuggerClientDisconnect(std::bind(&Inspector::ClientDisconnect, this, _1));
     inspectorServer_.OnCallDebuggerDropFrame(std::bind(&Inspector::DropFrame, this, _1));
     inspectorServer_.OnCallDebuggerSetNativeRange(std::bind(&Inspector::SetNativeRange, this, _1));
-    inspectorServer_.OnCallDebuggerReplyNativeCalling(std::bind(&Inspector::ReplyNativeCalling, this, _1));
+    inspectorServer_.OnCallDebuggerReplyNativeMethodCall(std::bind(&Inspector::ReplyNativeMethodCall, this, _1, _2));
     inspectorServer_.OnCallDebuggerCallFunctionOn(std::bind(&Inspector::Evaluate, this, _1, _2, _3));
     inspectorServer_.OnCallDebuggerSetMixedDebugEnabled(std::bind(&Inspector::SetMixedDebugEnabled, this, _1, _2));
     inspectorServer_.OnCallRuntimeEnable(std::bind(&Inspector::RuntimeEnable, this, _1));
@@ -1054,5 +1098,139 @@ void Inspector::RegisterMethodHandlers()
     inspectorServer_.OnCallProfilerStart(std::bind(&Inspector::ProfilerStart, this));
     inspectorServer_.OnCallProfilerStop(std::bind(&Inspector::ProfilerStop, this));
     // NOLINTEND(modernize-avoid-bind)
+}
+
+namespace {
+std::string BuildCallFrameJson(ObjectRepository &objectRepository, const DebugInfoCache &debugInfoCache,
+                               SourceManager &sourceManager, const ark::tooling::PtFrame &frame, uint32_t frameIndex)
+{
+    auto *method = frame.GetMethod();
+    if (method == nullptr) {
+        return "";
+    }
+
+    std::string_view sourceFile;
+    std::string_view methodName;
+    int32_t lineNumber = 0;
+    debugInfoCache.GetSourceLocation(frame, sourceFile, methodName, lineNumber);
+    if (sourceFile.empty()) {
+        return "";
+    }
+
+    auto scriptIdResult = sourceManager.GetScriptId(sourceFile);
+    auto scriptId = scriptIdResult.first;
+
+    std::optional<RemoteObject> objThis;
+    auto locals = debugInfoCache.GetLocals(frame);
+    auto frameObject = objectRepository.CreateFrameObject(frame, locals, objThis);
+    auto globalObject = objectRepository.CreateGlobalObject();
+
+    JsonObjectBuilder builder;
+    builder.AddProperty("callFrameId", std::to_string(frameIndex));
+    builder.AddProperty("functionName", std::string(methodName));
+    builder.AddProperty("location", [&](JsonObjectBuilder &loc) {
+        loc.AddProperty("scriptId", std::to_string(scriptId));
+        loc.AddProperty("lineNumber", std::to_string(lineNumber));
+        loc.AddProperty("columnNumber", "0");
+    });
+    builder.AddProperty("url", std::string(sourceFile));
+    builder.AddProperty("scopeChain", [&](JsonArrayBuilder &scopeChain) {
+        scopeChain.Add([&](JsonObjectBuilder &scope) {
+            scope.AddProperty("type", "local");
+            scope.AddProperty("object", frameObject);
+        });
+        scopeChain.Add([&](JsonObjectBuilder &scope) {
+            scope.AddProperty("type", "global");
+            scope.AddProperty("object", globalObject);
+        });
+    });
+    builder.AddProperty("this", objThis.value_or(RemoteObject::Undefined()));
+    return std::move(builder).Build();
+}
+
+DebugResponse AllocateResponse(const std::string &json)
+{
+    size_t size = json.size();
+    if (size == 0 || size > SIZE_MAX - 1) {
+        return {0, nullptr};
+    }
+    char *response = static_cast<char *>(malloc(size + 1));
+    if (response == nullptr) {
+        return {0, nullptr};
+    }
+    if (strncpy_s(response, size + 1, json.c_str(), size) != 0) {
+        free(response);
+        return {0, nullptr};
+    }
+    return {size, response};
+}
+}  // namespace
+
+DebugResponse Inspector::GetStaticCallFrames()
+{
+    auto *thread = ark::ManagedThread::GetCurrent();
+    if (thread == nullptr) {
+        return {0, nullptr};
+    }
+
+    auto ptThread = ark::tooling::PtThread(thread);
+    auto *debuggableThread = GetDebuggableThread(ptThread);
+    if (debuggableThread == nullptr) {
+        return {0, nullptr};
+    }
+
+    debuggableThread->ResetObjectRepository();
+    auto *objectRepositoryPtr = debuggableThread->GetObjectRepository();
+    if (objectRepositoryPtr == nullptr) {
+        return {0, nullptr};
+    }
+    ObjectRepository &objectRepository = *objectRepositoryPtr;
+
+    std::string framesJson;
+    std::string nativePointerJson;
+    uint32_t frameIndex = 0;
+    std::string npSep;
+    std::string framesSep;
+
+    debugger_.EnumerateFrames(ptThread,
+        [&](const ark::tooling::PtFrame &frame) {
+            auto *method = frame.GetMethod();
+            if (method == nullptr) {
+                return true;
+            }
+            if (method->IsNative()) {
+                nativePointerJson += npSep + std::to_string(reinterpret_cast<intptr_t>(method->GetNativePointer()));
+                npSep = ",";
+                return true;
+            }
+            auto callFrame = BuildCallFrameJson(objectRepository, debugInfoCache_,
+                inspectorServer_.GetSourceManager(), frame, frameIndex);
+            if (callFrame.empty()) {
+                return true;
+            }
+            framesJson += framesSep + callFrame;
+            nativePointerJson += npSep + "0";
+            framesSep = ",";
+            npSep = ",";
+            frameIndex++;
+            return true;
+        });
+
+    return AllocateResponse("{\"method\":\"Debugger.mixedStack\","
+        "\"params\":{\"sessionId\":\"" + inspectorServer_.GetSessionIdByThread(ptThread) + "\","
+        "\"nativePointer\":[" + nativePointerJson + "],"
+        "\"callFrames\":[" + framesJson + "]}}");
+}
+
+DebugResponse Inspector::OperateJsDebugMessageForStatic(const char* message)
+{
+    if (message == nullptr) {
+        return {0, nullptr};
+    }
+    std::string response = inspectorServer_.RunSync(message);
+    if (response.empty()) {
+        return {0, nullptr};
+    }
+    return AllocateResponse(response);
 }
 }  // namespace ark::tooling::inspector
