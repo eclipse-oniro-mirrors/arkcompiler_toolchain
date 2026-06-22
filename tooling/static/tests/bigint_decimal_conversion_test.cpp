@@ -27,43 +27,43 @@ class BigIntDecimalConversionTest : public testing::Test {
 
 TEST_F(BigIntDecimalConversionTest, ZeroValue)
 {
-    ark::PandaVector<uint32_t> bytes = {};
+    std::vector<uint32_t> bytes = {};
     EXPECT_EQ(ark::tooling::BigIntBytesToDecimalString(bytes, 0), "0n");
 }
 
 TEST_F(BigIntDecimalConversionTest, SimpleValue)
 {
-    ark::PandaVector<uint32_t> bytes = {1};
+    std::vector<uint32_t> bytes = {1};
     EXPECT_EQ(ark::tooling::BigIntBytesToDecimalString(bytes, 1), "1n");
 }
 
 TEST_F(BigIntDecimalConversionTest, SmallValue)
 {
-    ark::PandaVector<uint32_t> bytes = {42};
+    std::vector<uint32_t> bytes = {42};
     EXPECT_EQ(ark::tooling::BigIntBytesToDecimalString(bytes, 1), "42");
 }
 
 TEST_F(BigIntDecimalConversionTest, LargeValue)
 {
-    ark::PandaVector<uint32_t> bytes = {4294967295};
+    std::vector<uint32_t> bytes = {4294967295};
     EXPECT_EQ(ark::tooling::BigIntBytesToDecimalString(bytes, 1), "4294967295n");
 }
 
 TEST_F(BigIntDecimalConversionTest, MultiWordValue)
 {
-    ark::PandaVector<uint32_t> bytes = {0, 1};
+    std::vector<uint32_t> bytes = {0, 1};
     EXPECT_EQ(ark::tooling::BigIntBytesToDecimalString(bytes, 1), "4294967296n");
 }
 
 TEST_F(BigIntDecimalConversionTest, TwoWordsValue)
 {
-    ark::PandaVector<uint32_t> bytes = {0, 2};
+    std::vector<uint32_t> bytes = {0, 2};
     EXPECT_EQ(ark::tooling::BigIntBytesToDecimalString(bytes, 1), "8589934592n");
 }
 
 TEST_F(BigIntDecimalConversionTest, NegativeValue)
 {
-    ark::PandaVector<uint32_t> bytes = {42};
+    std::vector<uint32_t> bytes = {42};
     EXPECT_EQ(ark::tooling::BigIntBytesToDecimalString(bytes, -1), "-42n");
 }
 
@@ -72,7 +72,7 @@ TEST_F(BigIntDecimalConversionTest, AddDecimalArrays)
     std::vector<int> lhs = {1, 2, 3};
     std::vector<int> rhs = {1, 2, 3};
     auto result = ark::tooling::AddDecimalArrays(lhs, rhs);
-    EXPECT_EQ(ark::tooling::DecimalArrayToString(result), "579");
+    EXPECT_EQ(ark::tooling::DecimalArrayToString(result), "246");
 }
 
 TEST_F(BigIntDecimalConversionTest, AddDecimalArraysWithCarry)
