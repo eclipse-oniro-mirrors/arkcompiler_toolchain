@@ -26,7 +26,7 @@ FrameInfoExtractor &FrameInfoExtractor::Get()
 void FrameInfoExtractor::RegisterProvider(
     bool isStaticFrame, const void *vm, std::unique_ptr<IFrameInfoProvider> provider)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::shared_mutex> lock(mutex_);
     if (isStaticFrame) {
         staticProvider_ = std::move(provider);
     } else {
@@ -36,14 +36,14 @@ void FrameInfoExtractor::RegisterProvider(
 
 void FrameInfoExtractor::UnregisterProvider(const void *vm)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::shared_mutex> lock(mutex_);
     dynamicProviders_.erase(vm);
 }
 
 bool FrameInfoExtractor::ExtractFrameInfo(
     const void *vm, const void *framePtr, bool isStaticFrame, UnifiedFrameInfo &info)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::shared_mutex> lock(mutex_);
     info.isStaticFrame = isStaticFrame;
 
     if (isStaticFrame) {
