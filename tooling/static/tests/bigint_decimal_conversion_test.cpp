@@ -40,7 +40,7 @@ TEST_F(BigIntDecimalConversionTest, SimpleValue)
 TEST_F(BigIntDecimalConversionTest, SmallValue)
 {
     std::vector<uint32_t> bytes = {42};
-    EXPECT_EQ(ark::tooling::BigIntBytesToDecimalString(bytes, 1), "42");
+    EXPECT_EQ(ark::tooling::BigIntBytesToDecimalString(bytes, 1), "42n");
 }
 
 TEST_F(BigIntDecimalConversionTest, LargeValue)
