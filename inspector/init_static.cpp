@@ -41,6 +41,9 @@ using StopInspectorFunc = void(*)();
 using WaitForDebuggerFunc = void(*)();
 using StartDebuggerFunc = void(*)(uint32_t);
 using StopDebuggerFunc = void(*)();
+using GetStaticCallFramesFunc = DebugResponse(*)();
+using OperateJsDebugMessageFunc = DebugResponse(*)(const char*);
+using IsStaticRuntimeOnCurrentThreadFunc = bool(*)();
 
 static void* g_debuggerHandle = nullptr;
 
@@ -50,6 +53,9 @@ static StopInspectorFunc g_stopInspectorForStatic = nullptr;
 static WaitForDebuggerFunc g_waitForDebuggerForStatic = nullptr;
 static StartDebuggerFunc g_startDebuggerForStatic = nullptr;
 static StopDebuggerFunc g_stopDebuggerForStatic = nullptr;
+static GetStaticCallFramesFunc g_getStaticCallFrames = nullptr;
+static OperateJsDebugMessageFunc g_operateJsDebugMessageForStatic = nullptr;
+static IsStaticRuntimeOnCurrentThreadFunc g_isStaticRuntimeOnCurrentThread = nullptr;
 
 bool InitializeArkFunctionsForStatic()
 {
@@ -88,6 +94,22 @@ bool InitializeArkFunctionsForStatic()
     g_waitForDebuggerForStatic = reinterpret_cast<WaitForDebuggerFunc>(
         ResolveSymbol(g_debuggerHandle, "WaitForDebugger"));
     if (g_waitForDebuggerForStatic == nullptr) {
+        return false;
+    }
+    // Static backtrace feature
+    g_getStaticCallFrames = reinterpret_cast<GetStaticCallFramesFunc>(
+        ResolveSymbol(g_debuggerHandle, "GetStaticCallFrames"));
+    if (g_getStaticCallFrames == nullptr) {
+        return false;
+    }
+    g_operateJsDebugMessageForStatic = reinterpret_cast<OperateJsDebugMessageFunc>(
+        ResolveSymbol(g_debuggerHandle, "OperateJsDebugMessageForStatic"));
+    if (g_operateJsDebugMessageForStatic == nullptr) {
+        return false;
+    }
+    g_isStaticRuntimeOnCurrentThread = reinterpret_cast<IsStaticRuntimeOnCurrentThreadFunc>(
+        ResolveSymbol(g_debuggerHandle, "IsStaticRuntimeOnCurrentThread"));
+    if (g_isStaticRuntimeOnCurrentThread == nullptr) {
         return false;
     }
     return true;
@@ -133,5 +155,29 @@ int StopDebuggerInitForStatic()
     }
     g_stopDebuggerForStatic();
     return 1;
+}
+
+DebugResponse GetStaticCallFramesForStatic()
+{
+    if (g_getStaticCallFrames != nullptr) {
+        return g_getStaticCallFrames();
+    }
+    return {0, nullptr};
+}
+
+DebugResponse OperateJsDebugMessageForStatic(const char* message)
+{
+    if (g_operateJsDebugMessageForStatic != nullptr) {
+        return g_operateJsDebugMessageForStatic(message);
+    }
+    return {0, nullptr};
+}
+
+bool IsStaticRuntimeOnCurrentThreadForStatic()
+{
+    if (g_isStaticRuntimeOnCurrentThread != nullptr) {
+        return g_isStaticRuntimeOnCurrentThread();
+    }
+    return false;
 }
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2024-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,6 +35,10 @@ public:
 void ServerEndpointBase::Call(const std::string &sessionId, const char *method,
                               std::function<void(JsonObjectBuilder &)> &&params)
 {
+    if (IsSyncMode()) {
+        LOG(INFO, DEBUGGER) << "Sync mode: dropping event " << method;
+        return;
+    }
     EndpointBase::Call(sessionId, std::nullopt, method, std::move(params));
 }
 
@@ -59,5 +63,27 @@ void ServerEndpointBase::OnCallImpl(const char *method, Handler &&handler)
             ReplyError(sessionId, *id, std::move(optResult.Error()));
         }
     });
+}
+
+std::string ServerEndpointBase::RunSync(const std::string& msg)
+{
+    std::unique_lock<std::mutex> lock(syncMutex_);
+    syncMode_ = true;
+    syncResponse_.clear();
+    lock.unlock();
+
+    ParseMessage(msg);
+
+    lock.lock();
+    bool ok = syncCond_.wait_for(lock, std::chrono::seconds(5),
+                                 [this] { return !syncResponse_.empty(); });
+    syncMode_ = false;
+    if (!ok) {
+        LOG(WARNING, DEBUGGER) << "RunSync: timed out waiting for response";
+        return "";
+    }
+    std::string result = std::move(syncResponse_);
+    syncResponse_.clear();
+    return result;
 }
 }  // namespace ark::tooling::inspector

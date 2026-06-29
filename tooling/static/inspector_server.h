@@ -60,6 +60,7 @@ public:
 
     void Kill();
     void Run(const std::string& msg);
+    std::string RunSync(const std::string& msg);
 
     void OnValidate(std::function<void()> &&handler);
     void OnOpen(std::function<void()> &&handler);
@@ -105,7 +106,8 @@ public:
     void OnCallDebuggerDisable(std::function<void(PtThread)> &&handler);
     void OnCallDebuggerDropFrame(std::function<void(PtThread)> &&handler);
     void OnCallDebuggerSetNativeRange(std::function<void(PtThread)> &&handler);
-    void OnCallDebuggerReplyNativeCalling(std::function<void(PtThread)> &&handler);
+    void OnCallDebuggerReplyNativeMethodCall(std::function<void(PtThread, bool)> &&handler);
+    void SendNativeMethodCallEvent(PtThread thread, const void *nativeAddress, bool isStepInto);
     void OnCallDebuggerCallFunctionOn(
         std::function<Expected<EvaluationResult, std::string>(PtThread, const std::string &, size_t)> &&handler);
     void OnCallDebuggerSetMixedDebugEnabled(std::function<void(PtThread, bool)> &&handler);
@@ -125,6 +127,11 @@ public:
     SourceManager &GetSourceManager()
     {
         return sourceManager_;
+    }
+
+    std::string GetSessionIdByThread(PtThread thread) const
+    {
+        return sessionManager_.GetSessionIdByThread(thread);
     }
 
 private:

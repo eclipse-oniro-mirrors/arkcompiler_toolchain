@@ -14,7 +14,6 @@
  */
 
 #include "inspector.h"
-#include "init_static.h"
 
 #include <shared_mutex>
 #if defined(OHOS_PLATFORM)
@@ -605,12 +604,18 @@ const char* OperateJsDebugMessage([[maybe_unused]] const char* message)
 DebugResponse GetJsBacktraceV1()
 {
 #if defined(OHOS_PLATFORM)
-    void* vm = GetEcmaVM(Inspector::GetThreadOrTaskId());
-    if (g_getCallFrames == nullptr) {
-        LOGE("GetCallFrames symbol resolve failed");
-        return {0, nullptr};
+    if (IsStaticRuntimeOnCurrentThreadForStatic()) {
+        return GetStaticCallFramesForStatic();
     }
-    return g_getCallFrames(vm);
+    void* vm = GetEcmaVM(Inspector::GetThreadOrTaskId());
+    if (vm != nullptr) {
+        if (g_getCallFrames == nullptr) {
+            LOGE("GetCallFrames symbol resolve failed");
+            return {0, nullptr};
+        }
+        return g_getCallFrames(vm);
+    }
+    return {0, nullptr};
 #else
     return {0, nullptr};
 #endif
@@ -622,6 +627,9 @@ DebugResponse OperateJsDebugMessageV1([[maybe_unused]] const char* message)
     if (message == nullptr) {
         LOGE("OperateDebugMessage message is nullptr");
         return {0, nullptr};
+    }
+    if (IsStaticRuntimeOnCurrentThreadForStatic()) {
+        return OperateJsDebugMessageForStatic(message);
     }
     void* vm = GetEcmaVM(Inspector::GetThreadOrTaskId());
     if (g_operateDebugMessage == nullptr) {

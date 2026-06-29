@@ -37,6 +37,10 @@ protected:
 private:
     void SendMessage(const std::string &message) override
     {
+        if (IsSyncMode()) {
+            SetSyncResponse(message);
+            return;
+        }
         auto wasSent = false;
         if (endpoint_ != nullptr) {
             if (endpoint_->IsConnected()) {

@@ -525,7 +525,7 @@ std::string DebuggerImpl::DispatcherImpl::GetJsFrames()
     tooling::MixedStack mixedStack;
     mixedStack.SetNativePointers(nativePointers);
     std::vector<std::unique_ptr<CallFrame>> callFrames;
-    if (debugger_->GenerateCallFrames(&callFrames, false)) {
+    if (debugger_->GenerateCallFrames(&callFrames, true)) {
         mixedStack.SetCallFrames(std::move(callFrames));
     }
     return mixedStack.ToJson()->Stringify();

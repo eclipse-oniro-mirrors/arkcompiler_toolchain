@@ -74,6 +74,11 @@ public:
         return pauseReason_;
     }
 
+    bool IsStepInto() const
+    {
+        return stepKind_ == StepKind::STEP_INTO;
+    }
+
 private:
     enum class StepKind {
         // Just continue execution

@@ -53,7 +53,7 @@ void DebugInfoCache::AddPandaFile(const panda_file::File &file, bool isUserPanda
 }
 
 void DebugInfoCache::GetSourceLocation(const PtFrame &frame, std::string_view &sourceFile, std::string_view &methodName,
-                                       int32_t &lineNumber)
+                                       int32_t &lineNumber) const
 {
     auto method = frame.GetMethod();
     auto pandaFile = method->GetPandaFile();
@@ -302,7 +302,7 @@ static panda_file::Type::TypeId GetTypeIdBySignature(char signature)
     }
 }
 
-std::map<std::string, TypedValue> DebugInfoCache::GetLocals(const PtFrame &frame)
+std::map<std::string, TypedValue> DebugInfoCache::GetLocals(const PtFrame &frame) const
 {
     std::map<std::string, TypedValue> result;
 

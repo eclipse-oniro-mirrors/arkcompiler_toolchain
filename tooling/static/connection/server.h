@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,7 +17,10 @@
 #define PANDA_TOOLING_INSPECTOR_CONNECTION_SERVER_H
 
 #include <atomic>
+#include <condition_variable>
 #include <functional>
+#include <mutex>
+#include <string>
 
 #include "json_serialization/serializable.h"
 #include "libarkbase/os/mutex.h"
@@ -102,6 +105,13 @@ public:
 
     // Run at most one event loop handler, may block.
     virtual bool ParseMessage(const std::string& msg) = 0;
+
+    /// @brief Synchronously process a CDP message and return the response.
+    /// Returns empty string if not supported or on error.
+    virtual std::string RunSync(const std::string& msg)
+    {
+        return "";
+    }
 
 private:
     virtual void OnCallImpl(const char *method, Handler &&handler) = 0;

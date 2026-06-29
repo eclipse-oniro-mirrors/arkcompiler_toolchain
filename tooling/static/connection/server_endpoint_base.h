@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,10 +16,14 @@
 #ifndef PANDA_TOOLING_INSPECTOR_CONNECTION_SERVER_ENDPOINT_BASE_H
 #define PANDA_TOOLING_INSPECTOR_CONNECTION_SERVER_ENDPOINT_BASE_H
 
+#include <condition_variable>
 #include <functional>
+#include <mutex>
+#include <string>
 
 #include "connection/endpoint_base.h"
 #include "connection/server.h"
+#include "json_serialization/serializable.h"
 
 namespace ark::tooling::inspector {
 // Base class for server endpoints implementations.
@@ -52,10 +56,33 @@ public:
 
     void OnCallImpl(const char *method, Handler &&handler) override;
 
+    /// @brief Synchronously process a CDP message and return the response.
+    std::string RunSync(const std::string& msg) override;
+
+    /// @brief Check if sync mode is active (used by SendMessage overrides).
+    bool IsSyncMode() const
+    {
+        return syncMode_;
+    }
+
+    /// @brief Store sync response and notify waiter (called by SendMessage overrides).
+    void SetSyncResponse(const std::string& response)
+    {
+        std::lock_guard<std::mutex> lock(syncMutex_);
+        syncResponse_ = response;
+        syncCond_.notify_one();
+    }
+
 protected:
     std::function<void()> onValidate_ = []() {};  // NOLINT(misc-non-private-member-variables-in-classes)
     std::function<void()> onOpen_ = []() {};      // NOLINT(misc-non-private-member-variables-in-classes)
     std::function<void()> onFail_ = []() {};      // NOLINT(misc-non-private-member-variables-in-classes)
+
+private:
+    bool syncMode_ = false;
+    std::string syncResponse_;
+    std::mutex syncMutex_;
+    std::condition_variable syncCond_;
 };
 }  // namespace ark::tooling::inspector
 

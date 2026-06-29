@@ -779,14 +779,24 @@ TEST_F(ServerTest, OnCallDebuggerSetNativeRange)
     });
 }
 
-TEST_F(ServerTest, OnCallDebuggerReplyNativeCalling)
+TEST_F(ServerTest, OnCallDebuggerReplyNativeMethodCall)
 {
     inspectorServer.CallTargetAttachedToTarget(g_mthread);
 
-    EXPECT_CALL(server, OnCallMock("Debugger.replyNativeCalling", testing::_)).WillOnce(g_simpleHandler);
+    EXPECT_CALL(server, OnCallMock("Debugger.replyNativeCalling", testing::_))
+        .WillOnce([&](testing::Unused, auto handler) {
+            JsonObjectBuilder params;
+            params.AddProperty("userCode", false);
+            auto res = handler(g_sessionId, JsonObject(std::move(params).Build()));
+            ResultHolder result;
+            GetResult(std::move(res), result);
+            ASSERT_THAT(*result, JsonProperties());
+            ASSERT_TRUE(g_handlerCalled);
+        });
 
-    inspectorServer.OnCallDebuggerReplyNativeCalling([](PtThread thread) {
+    inspectorServer.OnCallDebuggerReplyNativeMethodCall([](PtThread thread, bool userCode) {
         ASSERT_EQ(thread.GetId(), g_mthread.GetId());
+        ASSERT_FALSE(userCode);
         g_handlerCalled = true;
     });
 }

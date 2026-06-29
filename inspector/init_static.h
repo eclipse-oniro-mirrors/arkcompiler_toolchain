@@ -20,6 +20,11 @@
 #include <mutex>
 #include "common/log_wrapper.h"
 
+struct DebugResponse {
+    size_t size;
+    char* response;
+};
+
 namespace OHOS::ArkCompiler::Toolchain {
 bool InitializeArkFunctionsForStatic();
 
@@ -34,6 +39,12 @@ void WaitForDebuggerForStatic();
 int StartDebuggerInitForStatic(uint32_t port);
 
 int StopDebuggerInitForStatic();
+
+DebugResponse GetStaticCallFramesForStatic();
+
+DebugResponse OperateJsDebugMessageForStatic(const char* message);
+
+bool IsStaticRuntimeOnCurrentThreadForStatic();
 }
 
 #endif //ECMASCRIPT_TOOLING_INIT_STATIC_H

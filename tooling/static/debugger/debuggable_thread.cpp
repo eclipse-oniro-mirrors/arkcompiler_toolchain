@@ -301,4 +301,22 @@ bool DebuggableThread::IsPausedByBreakPoint()
     os::memory::LockHolder lock(mutex_);
     return state_.IsPaused() && (state_.GetPauseReason() == PauseReason::OTHER);
 }
+
+bool DebuggableThread::IsStepInto()
+{
+    os::memory::LockHolder lock(mutex_);
+    return state_.IsStepInto();
+}
+
+ObjectRepository *DebuggableThread::GetObjectRepository()
+{
+    os::memory::LockHolder lock(mutex_);
+    return objectRepository_ ? &(*objectRepository_) : nullptr;
+}
+
+void DebuggableThread::ResetObjectRepository()
+{
+    os::memory::LockHolder lock(mutex_);
+    objectRepository_.emplace();
+}
 }  // namespace ark::tooling::inspector
