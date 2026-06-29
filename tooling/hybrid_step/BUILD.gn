@@ -15,6 +15,9 @@ import("../../toolchain.gni")
 
 ohos_source_set("libarkhybridstep_set") {
   stack_protector_ret = true
+  if (!ark_standalone_build) {
+    branch_protector_ret = "pac_ret"
+  }
   defines = []
   deps = []
 
@@ -41,6 +44,9 @@ ohos_source_set("libarkhybridstep_set") {
 ohos_shared_library("arkhybridstep")
 {
   stack_protector_ret = true
+  if (!ark_standalone_build) {
+    branch_protector_ret = "pac_ret"
+  }
   deps = [ ":libarkhybridstep_set" ]
 
   install_enable = true

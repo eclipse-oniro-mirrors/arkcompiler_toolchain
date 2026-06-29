@@ -53,6 +53,9 @@ websocket_base_source = toolchain_platform_source + [
 
 ohos_source_set("websocket_base") {
   stack_protector_ret = true
+  if (!ark_standalone_build) {
+    branch_protector_ret = "pac_ret"
+  }
 
   configs = websocket_configs
 
@@ -79,6 +82,9 @@ websocket_server_source =
 
 ohos_static_library("libwebsocket_server") {
   stack_protector_ret = true
+  if (!ark_standalone_build) {
+    branch_protector_ret = "pac_ret"
+  }
 
   configs = websocket_configs
   public_configs = [ ":websocket_public_config" ]
@@ -97,6 +103,9 @@ ohos_static_library("libwebsocket_server") {
 
 ohos_source_set("websocket_client") {
   stack_protector_ret = true
+  if (!ark_standalone_build) {
+    branch_protector_ret = "pac_ret"
+  }
 
   configs = websocket_configs
   public_configs = [ ":websocket_public_config" ]
