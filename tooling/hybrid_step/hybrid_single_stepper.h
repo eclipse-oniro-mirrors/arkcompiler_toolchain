@@ -30,15 +30,15 @@ public:
     static HybridSingleStepper& GetInstance();
 
     // Retrieve stepper flag based on step type
-    bool GetHybridSingleStepFlag(HybridStepDirection type) const;
+    bool GetHybridSingleStepFlag(HybridStepDirection direction) const;
 
     // Set stepper flag based on step type
-    void SetHybridSingleStepFlag(HybridStepDirection type, bool value);
+    void SetHybridSingleStepFlag(HybridStepDirection direction, bool value);
 
 private:
     bool GetFlagWithLock(std::shared_mutex &mutex, const bool &flag) const;
 
-    void SetFlagWithLock(std::shared_mutex &mutex, bool &flag, bool value);
+    void SetFlagWithLock(std::shared_mutex &mutex, bool &flag, bool value) const;
 
     // Mutex for dynamic to static stepper flag
     mutable std::shared_mutex dynToStatMutex_;

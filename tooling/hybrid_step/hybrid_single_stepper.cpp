@@ -27,7 +27,7 @@ bool HybridSingleStepper::GetFlagWithLock(std::shared_mutex &mutex, const bool &
     return flag;
 }
 
-void HybridSingleStepper::SetFlagWithLock(std::shared_mutex &mutex, bool &flag, bool value)
+void HybridSingleStepper::SetFlagWithLock(std::shared_mutex &mutex, bool &flag, bool value) const
 {
     std::unique_lock<std::shared_mutex> writeLock(mutex);
     flag = value;
