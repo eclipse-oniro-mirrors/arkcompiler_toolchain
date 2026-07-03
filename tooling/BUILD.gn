@@ -15,6 +15,9 @@ import("../toolchain.gni")
 
 ohos_shared_library("libark_ecma_debugger") {
   stack_protector_ret = true
+  if (!ark_standalone_build) {
+    branch_protector_ret = "pac_ret"
+  }
   deps = [ "./dynamic/:libark_ecma_debugger_static" ]
   external_deps = []
   if (enable_hilog) {
@@ -36,6 +39,9 @@ ohos_shared_library("libark_ecma_debugger") {
 }
 
 ohos_shared_library("libarkinspector_plus") {
+  if (!ark_standalone_build) {
+    branch_protector_ret = "pac_ret"
+  }
   deps = [
     "./static/:libarkinspector_plus_static",
   ]

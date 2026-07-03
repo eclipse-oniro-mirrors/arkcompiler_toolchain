@@ -15,6 +15,9 @@ import("//arkcompiler/toolchain/toolchain.gni")
 
 ohos_source_set("ark_debugger_static") {
   stack_protector_ret = true
+  if (!ark_standalone_build) {
+    branch_protector_ret = "pac_ret"
+  }
   defines = []
 
   if (is_mingw || is_mac) {
@@ -56,6 +59,9 @@ ohos_source_set("ark_debugger_static") {
 
 ohos_shared_library("ark_debugger") {
   stack_protector_ret = true
+  if (!ark_standalone_build) {
+    branch_protector_ret = "pac_ret"
+  }
   deps = [ ":ark_debugger_static" ]
 
   if (is_mingw) {
@@ -74,6 +80,9 @@ ohos_shared_library("ark_debugger") {
 
 ohos_source_set("connectserver_debugger_static") {
   stack_protector_ret = true
+  if (!ark_standalone_build) {
+    branch_protector_ret = "pac_ret"
+  }
   defines = []
 
   if (is_mingw || is_mac) {
@@ -119,6 +128,9 @@ ohos_source_set("connectserver_debugger_static") {
 }
 
 ohos_shared_library("connectserver_debugger") {
+  if (!ark_standalone_build) {
+    branch_protector_ret = "pac_ret"
+  }
   deps = [ ":connectserver_debugger_static" ]
   if (enable_hilog) {
     external_deps = [ "hilog:libhilog" ]

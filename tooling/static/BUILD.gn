@@ -68,6 +68,9 @@ config("libarkinspector_config") {
 }
 
 ohos_static_library("libarkinspector_plus_static") {
+  if (!ark_standalone_build) {
+    branch_protector_ret = "pac_ret"
+  }
   sources = libarkinspector_sources
 
   configs = [

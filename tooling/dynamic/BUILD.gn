@@ -55,6 +55,9 @@ if (!is_mingw && !is_mac && target_os != "ios") {
 
 ohos_source_set("libark_ecma_debugger_set") {
   stack_protector_ret = true
+  if (!ark_standalone_build) {
+    branch_protector_ret = "pac_ret"
+  }
   sources = debugger_sources
 
   public_configs = [ ":ark_ecma_debugger_config" ]
@@ -100,6 +103,9 @@ ohos_source_set("libark_ecma_debugger_set") {
 }
 
 ohos_static_library("libark_ecma_debugger_static") {
+  if (!ark_standalone_build) {
+    branch_protector_ret = "pac_ret"
+  }
   deps = [ ":libark_ecma_debugger_set" ]
   external_deps = [ "libuv:uv" ]
   if (is_mac) {
