@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -36,12 +36,16 @@ void EndpointBase::HandleMessage(const std::string &message)
         return;
     }
 
-    LOG(INFO, DEBUGGER) << "Received " << message;
-
     auto sessionId = request.GetValue<JsonObject::StringT>("sessionId");
     auto id = request.GetValue<JsonObject::NumT>("id");
     auto method = request.GetValue<JsonObject::StringT>("method");
     auto result = request.GetValue<JsonObject::JsonObjPointer>("result");
+
+    if (method != nullptr && IsDebugLevelLoggingMethod(*method)) {
+        LOG(DEBUG, DEBUGGER) << "Debugger Received " << message;
+    } else {
+        LOG(INFO, DEBUGGER) << "Debugger Received " << message;
+    }
 
     if (method != nullptr && result == nullptr) {
         os::memory::LockHolder lock(methodHandlersMutex_);
@@ -75,18 +79,21 @@ void EndpointBase::HandleMessage(const std::string &message)
 void EndpointBase::Call(const std::string &sessionId, std::optional<Id> id, const char *method,
                         std::function<void(JsonObjectBuilder &)> &&params)
 {
-    Send([&sessionId, id, method, &params](JsonObjectBuilder &call) {
-        if (id) {
-            call.AddProperty("id", *id);
-        }
+    auto debugLevelLogging = IsDebugLevelLoggingMethod(method);
+    Send(
+        [&sessionId, id, method, &params](JsonObjectBuilder &call) {
+            if (id) {
+                call.AddProperty("id", *id);
+            }
 
-        call.AddProperty("method", method);
-        call.AddProperty("params", std::move(params));
+            call.AddProperty("method", method);
+            call.AddProperty("params", std::move(params));
 
-        if (!sessionId.empty()) {
-            call.AddProperty("sessionId", sessionId);
-        }
-    });
+            if (!sessionId.empty()) {
+                call.AddProperty("sessionId", sessionId);
+            }
+        },
+        debugLevelLogging);
 }
 
 void EndpointBase::HandleUnsupportedMethod(std::optional<double> optId, const std::string &method)
