@@ -34,6 +34,7 @@ if (!ark_standalone_build) {
   ark_third_party_root = "//third_party"
   import("$build_root/config/components/toolchain/build_type.gni")
   import("$build_root/ohos.gni")
+  import("//build/config/components/runtime_core/hilog_config.gni")
 } else {
   ark_third_party_root = "//build/third_party_gn"
   import("$build_root/ark.gni")
@@ -75,8 +76,12 @@ if (defined(is_arkui_x) && is_arkui_x && target_os == "ios") {
 }
 
 # ohos device, windows previewer, mac previewer
-enable_hilog = !ark_standalone_build && !(defined(is_arkui_x) && is_arkui_x) &&
-               (is_ohos || is_mingw || is_mac)
+if (!ark_standalone_build) {
+  enable_hilog = enable_hilog_broad
+} else {
+  # Standalone build: hilog is never enabled (!ark_standalone_build gates it off).
+  enable_hilog = false
+}
 enable_dump_in_faultlog =
     !ark_standalone_build && !(defined(is_arkui_x) && is_arkui_x) && is_ohos &&
     is_standard_system
