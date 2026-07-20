@@ -14,7 +14,9 @@
         "name": "toolchain",
         "subsystem": "arkcompiler",
         "syscap": [],
-        "features": [],
+        "features": [
+            "toolchain_enable_compressed_pointer"
+        ],
         "adapted_system_type": [
             "standard"
         ],
