@@ -179,6 +179,12 @@ private:
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
     void GetPromiseValue(Local<JSValueRef> value,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+    void GetTypedArrayValue(Local<JSValueRef> value,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
+    void GetSharedTypedArrayValue(Local<JSValueRef> value,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
     void InitializeExtendedProtocolsList();
 
     // Common template functions for map, set, and iterator kind
@@ -203,6 +209,11 @@ private:
     template <typename IterType>
     void GetIteratorValueCommon(IterType iterRef,
         std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc);
+
+    template <typename TypedArrayRefType>
+    void GetTypedArrayValueCommon(Local<JSValueRef> value,
+        std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+        const GetPropertiesParams &params);
 
     void AdjustStartAndLength(const GetPropertiesParams &params, int32_t &start, int32_t &length);
 
