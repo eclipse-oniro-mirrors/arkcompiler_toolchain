@@ -51,10 +51,10 @@ arkcompiler/toolchain/
 |   |   |-- base/         # Protocol types and utilities
 |   |   |-- client/       # Client tools (ark_multi, ark_cli)
 |   |   `-- utils/        # Utilities
-|   |-- static/           # ArkTS-Sta implementation
-|   |   |-- connection/   # Connection management
-|   |   |-- debugger/     # Core debugger functionality
-|   |   |-- evaluation/   # Expression evaluation engine
+|   |-- static/           # ArkTS-Sta implementation (CDP debugging for statically-typed ArkTS; see `docs/knowledge/ArkTS-Sta-Subsystem.md`)
+|   |   |-- connection/   # Connection management (ASIO/OHOS WebSocket, build-time selectable)
+|   |   |-- debugger/     # Core debugger functionality (breakpoints, stepping, object inspection)
+|   |   |-- evaluation/   # Expression evaluation engine (base64 bytecode on app thread)
 |   |   |-- types/        # Protocol types and serialization
 |   |   `-- json_serialization/
 |   `-- hybrid_step/      # Hybrid debugging step flags
@@ -120,9 +120,36 @@ See ./README_zh.md for build instructions.
 - ./docs: Detailed feature documentation
 - ./README_zh.md: Repository overview (Chinese)
 
+## 知识路由（SDD）
+
+子系统知识文档（SDD）位于 `docs/knowledge/`，是 AGENTS.md 之上的一层路由索引 + 不变式。进入对应子系统目录前，先读相关 SDD。
+
+### 基于任务的路由
+
+- 断点、单步、对象检视、表达式求值、InspectorServer、PtHooks、条件断点、StaticFrameProvider、ArkTS-Sta 调试变更 → 阅读 `docs/knowledge/ArkTS-Sta-Subsystem.md` + `tooling/static/AGENTS.md`
+- ArkTS-Dyn（动态调试）变更 → 阅读 `tooling/dynamic/` 子模块文档（无独立 SDD）
+- 构建系统变更 → 根目录 `BUILD.gn` + `bundle.json` + `toolchain.gni`
+
+### 基于路径的路由
+
+- `tooling/static/` → 静态 ArkTS 调试子系统；先读 `docs/knowledge/ArkTS-Sta-Subsystem.md`
+- `tooling/dynamic/` → 动态 ArkTS 调试子系统
+- `websocket/` → WebSocket 帧协议实现（ArkTS-Sta 连接层的下层，非 SDD 覆盖范围）
+- `inspector/` → 仓库根会话转发层（ArkTS-Dyn 与 ArkTS-Sta 共用）
+
+### 基于术语的路由
+
+| 术语 | 子系统；核心不变式 | SDD |
+|---|---|---|
+| PtHooks / Inspector / InspectorServer / BreakpointStorage / ConditionalBreakpoint / DebuggableThread / ThreadState / StepKind / ObjectRepository / EvaluationEngine / DebugInfoCache / StaticFrameProvider / PANDA_TOOLING_ASIO / RemoteObject | ArkTS-Sta 调试；ObjectRepository 须在应用线程持 mutator lock、VM 死亡须 CheckVmDead 守卫、连接后端构建期固定 | `docs/knowledge/ArkTS-Sta-Subsystem.md` |
+
 ## Development Notes
 
 - The `tooling/dynamic` directory hosts ArkTS-Dyn, the `tooling/static` directory hosts ArkTS-Sta, and the rest of the code is common to both ArkTS-Dyn and ArkTS-Sta.
 - The code comments in this repository should be written in English.
 - The commit message should be written in English.
 - Don't create commits directly. Have them reviewed.
+
+### 架构不变式
+
+- ArkTS-Sta 的 ObjectRepository 操作必须在应用线程持 mutator lock 时进行；VM 死亡后任何 Inspector 操作前必须经 `CheckVmDead()` 守卫，连接后端（ASIO/OHOS WebSocket）构建期固定不可运行时切换。详见 `docs/knowledge/ArkTS-Sta-Subsystem.md`。
