@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -93,17 +93,27 @@ protected:
     }
 
 private:
+    /// @brief Checks if the method's msg should be logged at DEBUG level
+    static bool IsDebugLevelLoggingMethod(const std::string &method)
+    {
+        return method == "Target.attachedToTarget" || method == "Target.detachedFromTarget";
+    }
+
     /// @brief Sends JSON message.
     virtual void SendMessage(const std::string &message) = 0;
 
     /// @brief Sends JSON message created with the provided build function.
     template <typename BuildFunction>
-    void Send(BuildFunction &&build)
+    void Send(BuildFunction &&build, bool debugLevelLogging = false)
     {
         JsonObjectBuilder builder;
         build(builder);
         auto message = std::move(builder).Build();
-        LOG(INFO, DEBUGGER) << "Sending " << message;
+        if (debugLevelLogging) {
+            LOG(DEBUG, DEBUGGER) << "Debugger Sending " << message;
+        } else {
+            LOG(INFO, DEBUGGER) << "Debugger Sending " << message;
+        }
         SendMessage(message);
     }
 
