@@ -1184,4 +1184,49 @@ void RuntimeImpl::GetPromiseValue(Local<JSValueRef> value,
     Local<JSValueRef> promiseResult = promiseRef->GetPromiseResult(vm_);
     SetKeyValue(promiseResult, outPropertyDesc, "[[PromiseResult]]");
 }
+
+void RuntimeImpl::GetTypedArrayValue(Local<JSValueRef> value,
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
+{
+    GetTypedArrayValueCommon<TypedArrayRef>(value, outPropertyDesc, params);
+}
+
+void RuntimeImpl::GetSharedTypedArrayValue(Local<JSValueRef> value,
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
+{
+    GetTypedArrayValueCommon<SendableTypedArrayRef>(value, outPropertyDesc, params);
+}
+
+template <typename TypedArrayRefType>
+void RuntimeImpl::GetTypedArrayValueCommon(Local<JSValueRef> value,
+    std::vector<std::unique_ptr<PropertyDescriptor>> *outPropertyDesc,
+    const GetPropertiesParams &params)
+{
+    Local<TypedArrayRefType> typedArrayRef(value);
+    uint32_t arrayLength = typedArrayRef->ArrayLength(vm_);
+
+    int32_t start = 0;
+    int32_t end = static_cast<int32_t>(arrayLength);
+    // Adjust start and end according to array's length
+    AdjustStartAndLength(params, start, end);
+
+    for (int32_t i = start; i < end; ++i) {
+        Local<JSValueRef> elementRef = typedArrayRef->Get(vm_, i);
+        std::unique_ptr<RemoteObject> remoteObjElement = RemoteObject::FromTagged(vm_, elementRef);
+        CacheObjectIfNeeded(elementRef, remoteObjElement.get());
+
+        // Define DebuggerProperty for each elements in the array
+        std::unique_ptr<PropertyDescriptor> debuggerProperty = std::make_unique<PropertyDescriptor>();
+        // Fast Path: since the type of elements in a typed array is fixed
+        debuggerProperty->SetName(std::to_string(i))
+            .SetWritable(true)
+            .SetConfigurable(true)
+            .SetEnumerable(true)
+            .SetIsOwn(true)
+            .SetValue(std::move(remoteObjElement));
+        outPropertyDesc->emplace_back(std::move(debuggerProperty));
+    }
+}
 }  // namespace panda::ecmascript::tooling
