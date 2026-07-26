@@ -308,6 +308,12 @@ bool DebuggableThread::IsStepInto()
     return state_.IsStepInto();
 }
 
+bool DebuggableThread::IsMixedDebugEnabled()
+{
+    os::memory::LockHolder lock(mutex_);
+    return state_.IsMixedDebugEnabled();
+}
+
 ObjectRepository *DebuggableThread::GetObjectRepository()
 {
     os::memory::LockHolder lock(mutex_);

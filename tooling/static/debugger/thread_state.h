@@ -79,6 +79,11 @@ public:
         return stepKind_ == StepKind::STEP_INTO;
     }
 
+    bool IsMixedDebugEnabled() const
+    {
+        return mixedDebugEnabled_;
+    }
+
 private:
     enum class StepKind {
         // Just continue execution

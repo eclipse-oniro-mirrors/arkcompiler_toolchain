@@ -189,8 +189,9 @@ private:
     os::memory::Mutex waitDebuggerMutex_;
     os::memory::ConditionVariable waitDebuggerCond_ GUARDED_BY(waitDebuggerMutex_);
 
-    os::memory::ConditionVariable nativeMethodCallCond_ GUARDED_BY(waitDebuggerMutex_);
-    bool nativeMethodCallWaiting_ GUARDED_BY(waitDebuggerMutex_) {false};
+    std::mutex nativeMethodCallMutex_;
+    std::condition_variable nativeMethodCallCond_;
+    bool nativeMethodCallWaiting_ {false};
 
 };
 }  // namespace inspector

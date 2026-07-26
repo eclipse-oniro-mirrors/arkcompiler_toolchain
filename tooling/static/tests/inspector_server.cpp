@@ -838,6 +838,24 @@ TEST_F(ServerTest, OnCallDebuggerSetSkipAllPauses)
     });
 }
 
+TEST_F(ServerTest, OnCallDebuggerSetMixedDebugEnabled)
+{
+    inspectorServer.CallTargetAttachedToTarget(g_mthread);
+
+    EXPECT_CALL(server, OnCallMock("Debugger.setMixedDebugEnabled", testing::_))
+        .WillOnce([&](testing::Unused, auto handler) {
+            JsonObjectBuilder params;
+            params.AddProperty("mixedDebugEnabled", true);
+            handler(g_sessionId, JsonObject(std::move(params).Build()));
+        });
+
+    inspectorServer.OnCallDebuggerSetMixedDebugEnabled([](PtThread thread, bool mixedDebugEnabled) {
+        ASSERT_EQ(thread.GetId(), g_mthread.GetId());
+        ASSERT_TRUE(mixedDebugEnabled);
+        g_handlerCalled = true;
+    });
+}
+
 Expected<EvaluationResult, std::string> handlerForEvaluateFailed([[maybe_unused]] PtThread thread,
                                                                  [[maybe_unused]] const std::string &bytecodeBase64,
                                                                  [[maybe_unused]] size_t frameNumber)
