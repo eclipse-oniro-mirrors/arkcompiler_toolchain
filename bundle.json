@@ -54,6 +54,9 @@
                         ],
                         "header_base": "//arkcompiler/toolchain/websocket"
                     }
+                },
+                {
+                    "name": "//arkcompiler/toolchain/common:libark_toolchain_log"
                 }
             ],
             "test": [
