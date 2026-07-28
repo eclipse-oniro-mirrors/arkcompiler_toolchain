@@ -969,19 +969,23 @@ void Inspector::NativeMethodCall(PtThread thread, const void *nativeAddress)
             return;
         }
 
+        if (!debuggableThread->IsMixedDebugEnabled()) {
+            LOG(DEBUG, DEBUGGER) << "NativeMethodCall mixed debug is disabled, skip sending nativeCalling";
+            return;
+        }
+
         if (!debuggableThread->IsStepInto()) {
-            LOG(DEBUG, DEBUGGER) << "NativeMethodCall: thread " << thread.GetId()
-                                 << " is not in StepInto state";
+            LOG(DEBUG, DEBUGGER) << "NativeMethodCall is not in StepInto state";
             return;
         }
     }
 
     inspectorServer_.SendNativeMethodCallEvent(thread, nativeAddress, true);
 
-    os::memory::LockHolder<os::memory::Mutex> waitLock(waitDebuggerMutex_);
+    std::unique_lock<std::mutex> waitLock(nativeMethodCallMutex_);
     nativeMethodCallWaiting_ = true;
     while (nativeMethodCallWaiting_) {
-        nativeMethodCallCond_.Wait(&waitDebuggerMutex_);
+        nativeMethodCallCond_.wait(waitLock);
     }
 }
 
@@ -991,9 +995,9 @@ void Inspector::ReplyNativeMethodCall(PtThread thread, bool userCode)
         Continue(thread);
     }
 
-    os::memory::LockHolder<os::memory::Mutex> lock(waitDebuggerMutex_);
+    std::lock_guard<std::mutex> lock(nativeMethodCallMutex_);
     nativeMethodCallWaiting_ = false;
-    nativeMethodCallCond_.Signal();
+    nativeMethodCallCond_.notify_one();
 }
 
 void Inspector::ProfilerSetSamplingInterval(int32_t interval)
