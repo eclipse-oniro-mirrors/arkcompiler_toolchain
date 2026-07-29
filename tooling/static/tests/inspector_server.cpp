@@ -845,7 +845,7 @@ TEST_F(ServerTest, OnCallDebuggerSetMixedDebugEnabled)
     EXPECT_CALL(server, OnCallMock("Debugger.setMixedDebugEnabled", testing::_))
         .WillOnce([&](testing::Unused, auto handler) {
             JsonObjectBuilder params;
-            params.AddProperty("mixedDebugEnabled", true);
+            params.AddProperty("enabled", true);
             handler(g_sessionId, JsonObject(std::move(params).Build()));
         });
 
