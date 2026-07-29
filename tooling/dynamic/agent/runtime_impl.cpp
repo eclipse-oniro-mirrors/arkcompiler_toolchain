@@ -209,7 +209,15 @@ DispatchResponse RuntimeImpl::GetProperties(const GetPropertiesParams &params,
             skipProto = true;
         }
     }
-    if (value->IsArrayBuffer(vm_)) {
+    if (value->IsTypedArray(vm_)) {
+        GetTypedArrayValue(value, outPropertyDesc, params);
+        GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
+        return DispatchResponse::Ok();
+    } else if (value->IsSharedTypedArray(vm_)) {
+        GetSharedTypedArrayValue(value, outPropertyDesc, params);
+        GetProtoOrProtoType(value, isOwn, isAccessorOnly, outPropertyDesc);
+        return DispatchResponse::Ok();
+    } else if (value->IsArrayBuffer(vm_)) {
         Local<ArrayBufferRef> arrayBufferRef(value);
         AddTypedArrayRefs(arrayBufferRef, outPropertyDesc);
     } else if (value->IsSharedArrayBuffer(vm_)) {
