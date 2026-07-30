@@ -775,10 +775,10 @@ void InspectorServer::OnCallDebuggerSetMixedDebugEnabled(std::function<void(PtTh
     server_.OnCall("Debugger.setMixedDebugEnabled",
         [this, handler = std::move(handler)](auto &sessionId, const JsonObject &params) -> Server::MethodResponse {
             bool mixedDebugEnabled;
-            if (auto prop = params.GetValue<JsonObject::BoolT>("mixedDebugEnabled")) {
+            if (auto prop = params.GetValue<JsonObject::BoolT>("enabled")) {
                 mixedDebugEnabled = *prop;
             } else {
-                std::string_view msg = "No 'active' property";
+                std::string_view msg = "No 'enabled' property";
                 LOG(INFO, DEBUGGER) << msg;
                 return Unexpected(JRPCError(msg, ErrorCode::INVALID_PARAMS));
             }
