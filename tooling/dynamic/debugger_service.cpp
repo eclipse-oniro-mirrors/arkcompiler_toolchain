@@ -77,6 +77,11 @@ void OnMessage(const ::panda::ecmascript::EcmaVM *vm, std::string &&message)
     ProtocolHandler *handler = vm->GetJsDebuggerManager()->GetDebuggerHandler();
     if (LIKELY(handler != nullptr)) {
         handler->DispatchCommand(std::move(message));
+        if (handler->GetDispatchStatus() != ProtocolHandler::DispatchStatus::DISPATCHING) {
+            // In attach mode, there is no async thread to consume the message queue.
+            // Synchronously call ProcessCommand to handle the queued message immediately.
+            handler->ProcessCommand();
+        }
     }
 }
 
