@@ -190,9 +190,16 @@ void ThreadState::OnSingleStep(const PtLocation &location)
     ASSERT(!paused_);
 
     if (breakOnStart_) {
+        if (ShouldStopAtBreakpoint(location)) {
+            paused_ = true;
+            pauseReason_ = PauseReason::OTHER;
+            return;
+        }
+        if (stepKind_ != StepKind::STEP_INTO) {
+            pauseReason_ = PauseReason::BREAK_ON_START;
+        }
         stepKind_ = StepKind::BREAK_ON_START;
         paused_ = true;
-        pauseReason_ = PauseReason::BREAK_ON_START;
         breakOnStart_ = false;
         return;
     }
