@@ -198,6 +198,13 @@ config("ark_toolchain_common_config") {
   if (toolchain_enable_cmc_gc) {
     defines += [ "USE_CMC_GC" ]
   }
+  print("############ toolchain enable compressed pointer = ${toolchain_enable_compressed_pointer} #############")
+  if (toolchain_enable_compressed_pointer) {
+    defines += [ "USE_COMPRESSED_POINTER" ]
+  }
+  if (is_debug) {
+    defines += [ "STORE_CHECK_FOR_COMPRESSED_POINTER" ]
+  }
 }
 
 config("ark_toolchain_public_config") {

@@ -21,6 +21,8 @@ if (target_cpu == "arm64") {
 
 declare_args() {
   toolchain_enable_cmc_gc = false
+
+  toolchain_enable_compressed_pointer = false
 }
 
 if (defined(enable_cmc_gc)) {
