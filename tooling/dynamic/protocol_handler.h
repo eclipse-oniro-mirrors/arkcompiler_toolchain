@@ -34,7 +34,8 @@ public:
 
     ProtocolHandler(std::function<void(const void *, const std::string &)> callback, const EcmaVM *vm,
                     bool isHybrid = false)
-        : callback_(std::move(callback)), dispatcher_(vm, this, isHybrid), vm_(vm) {}
+        : callback_(std::move(callback)), dispatcher_(vm, this, isHybrid), vm_(vm), isHybrid_(isHybrid) {}
+
     ~ProtocolHandler() override = default;
 
     void WaitForDebugger() override;
@@ -53,6 +54,10 @@ public:
     {
         return &dispatcher_;
     }
+    bool IsHybrid() const
+    {
+        return isHybrid_;
+    }
 
 private:
     NO_MOVE_SEMANTIC(ProtocolHandler);
@@ -68,6 +73,7 @@ private:
     std::queue<std::string> requestQueue_;
     std::mutex requestLock_;
     std::atomic<bool> isDispatchingMessage_ {false};
+    bool isHybrid_ {false};
 };
 }  // namespace panda::ecmascript::tooling
 
