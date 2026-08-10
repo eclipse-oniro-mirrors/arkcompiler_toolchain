@@ -33,11 +33,13 @@ ohos_source_set("ark_debugger_static") {
     libs = [ "log" ]
   }
 
-  deps = [ "../websocket:libwebsocket_server" ]
+  deps = [
+    "../common:libark_toolchain_log",
+    "../websocket:libwebsocket_server",
+  ]
   sources = [
-    "../common/log_wrapper.cpp",
-    "inspector.cpp",
     "init_static.cpp",
+    "inspector.cpp",
     "library_loader.cpp",
     "ws_server.cpp",
   ]
@@ -108,14 +110,13 @@ ohos_source_set("connectserver_debugger_static") {
 
   deps = [ "../websocket:libwebsocket_server" ]
   sources = [
-    "../common/log_wrapper.cpp",
     "../tooling/dynamic/base/pt_json.cpp",
     "connect_inspector.cpp",
     "connect_server.cpp",
   ]
 
-  if (target_os == "ios") {
-    sources -= [ "../common/log_wrapper.cpp" ]
+  if (target_os != "ios") {
+    deps += [ "../common:libark_toolchain_log" ]
   }
 
   # hiviewdfx libraries

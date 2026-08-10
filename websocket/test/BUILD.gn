@@ -23,7 +23,6 @@ host_unittest_action("WebSocketTest") {
 
   sources = [
     # test file
-    "../../common/log_wrapper.cpp",
     "frame_builder_test.cpp",
     "http_decoder_test.cpp",
     "web_socket_frame_test.cpp",
@@ -33,8 +32,9 @@ host_unittest_action("WebSocketTest") {
   configs = [ "$toolchain_root:toolchain_test_config" ]
 
   deps = [
-    "$toolchain_root/websocket:websocket_client",
+    "$toolchain_root/common:libark_toolchain_log",
     "$toolchain_root/websocket:libwebsocket_server",
+    "$toolchain_root/websocket:websocket_client",
   ]
 
   # hiviewdfx libraries
