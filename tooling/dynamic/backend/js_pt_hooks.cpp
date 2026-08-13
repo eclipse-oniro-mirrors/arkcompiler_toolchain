@@ -56,7 +56,8 @@ bool JSPtHooks::SingleStep(const JSPtLocation &location)
     }
 
     // pause by single step from static side
-    if (HybridSingleStepper::GetInstance().GetHybridSingleStepFlag(HybridStepDirection::STATIC_TO_DYNAMIC)) {
+    if (debugger_->isHybrid_ &&
+        HybridSingleStepper::GetInstance().GetHybridSingleStepFlag(HybridStepDirection::STATIC_TO_DYNAMIC)) {
         LOG_DEBUGGER(DEBUG) << "JSPtHooks::SingleStep paused by single step from static side";
         // reset STATIC_TO_DYNAMIC to false to avoid redundant pauses
         HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::STATIC_TO_DYNAMIC, false);

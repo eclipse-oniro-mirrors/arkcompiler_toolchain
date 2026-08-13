@@ -57,16 +57,20 @@ DebuggerImpl::DebuggerImpl(const EcmaVM *vm, ProtocolChannel *channel, RuntimeIm
     vm_->GetJsDebuggerManager()->SetJSReturnNativeFunc(&returnNative_);
 
     // Register dynamic frame provider with hybrid step coordinator
-    panda::tooling::hybrid_step::FrameInfoExtractor::Get().RegisterProvider(
-        false,  // isStaticFrame
-        vm_,    // vm pointer for multi-VM support
-        std::make_unique<DynamicFrameProvider>(this));
+    if (isHybrid_) {
+        panda::tooling::hybrid_step::FrameInfoExtractor::Get().RegisterProvider(
+            false,  // isStaticFrame
+            vm_,    // vm pointer for multi-VM support
+            std::make_unique<DynamicFrameProvider>(this));
+    }
 }
 
 DebuggerImpl::~DebuggerImpl()
 {
     // Unregister dynamic frame provider for this VM
-    panda::tooling::hybrid_step::FrameInfoExtractor::Get().UnregisterProvider(vm_);
+    if (isHybrid_) {
+        panda::tooling::hybrid_step::FrameInfoExtractor::Get().UnregisterProvider(vm_);
+    }
 
     // in worker thread, it will ~DebuggerImpl before release worker thread
     // after ~DebuggerImpl, it maybe call these methods
@@ -1401,7 +1405,9 @@ DispatchResponse DebuggerImpl::Resume([[maybe_unused]] const ResumeParams &param
     frontend_.Resumed(vm_);
     debuggerState_ = DebuggerState::ENABLED;
     // Reset DYNAMIC_TO_STATIC flag to be false when resuming
-    HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::DYNAMIC_TO_STATIC, false);
+    if (isHybrid_) {
+        HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::DYNAMIC_TO_STATIC, false);
+    }
     return DispatchResponse::Ok();
 }
 
@@ -1686,7 +1692,9 @@ DispatchResponse DebuggerImpl::StepInto([[maybe_unused]] const StepIntoParams &p
     debuggerState_ = DebuggerState::ENABLED;
     // Set DYNAMIC_TO_STATIC flag to be true in order for
     // static side to pause when stepping from dynamic to static
-    HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::DYNAMIC_TO_STATIC, true);
+    if (isHybrid_) {
+        HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::DYNAMIC_TO_STATIC, true);
+    }
     return DispatchResponse::Ok();
 }
 
@@ -1714,7 +1722,9 @@ DispatchResponse DebuggerImpl::StepOut()
     debuggerState_ = DebuggerState::ENABLED;
     // Set DYNAMIC_TO_STATIC flag to be true in order for
     // static side to pause when stepping from dynamic to static
-    HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::DYNAMIC_TO_STATIC, true);
+    if (isHybrid_) {
+        HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::DYNAMIC_TO_STATIC, true);
+    }
     return DispatchResponse::Ok();
 }
 
@@ -2043,6 +2053,7 @@ void DebuggerImpl::ProcessDynamicFrame(const void *frame, CallFrameId &callFrame
 
 bool DebuggerImpl::GenerateHybridFrames(std::vector<std::unique_ptr<CallFrame>> *callFrames)
 {
+    if (!isHybrid_) return false;
     CallFrameId callFrameId = 0;
     bool success = DebuggerApi::ForEachFrameInUnionStack(vm_,
         [this, &callFrameId, callFrames](const void *frame, bool isStaticFrame) {
