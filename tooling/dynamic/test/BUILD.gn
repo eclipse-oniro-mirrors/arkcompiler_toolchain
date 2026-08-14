@@ -48,6 +48,9 @@ test_js_files = [
   "export_variable_first",
   "export_variable_second",
   "module_variable",
+  "module_reexport",
+  "reexport_source",
+  "reexport_middle",
   "local_export",
   "module_watch",
   "dropframe",
@@ -75,7 +78,8 @@ foreach(file, test_js_files) {
     extra_args = [ "--debug" ]
     if (file == "module_variable" || file == "export_variable_first" ||
         file == "export_variable_second" || file == "local_export" ||
-        file == "module_watch") {
+        file == "module_watch" || file == "module_reexport" ||
+        file == "reexport_source" || file == "reexport_middle") {
       extra_args += [ "--module" ]
     }
     extra_args += [ "--merge-abc" ]

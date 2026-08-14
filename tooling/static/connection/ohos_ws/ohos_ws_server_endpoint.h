@@ -48,7 +48,7 @@ private:
             }
         }
         if (!wasSent) {
-            LOG(INFO, DEBUGGER) << "Did not send message: " << message;
+            LOG(DEBUG, DEBUGGER) << "Did not send message: " << message;
         }
     }
 };
