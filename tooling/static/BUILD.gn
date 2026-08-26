@@ -84,7 +84,8 @@ ohos_static_library("libarkinspector_plus_static") {
     "runtime_core:libarktsbase",
   ]
   deps = [
-    "../../websocket:libwebsocket_server", 
+    "../../common:libark_toolchain_log",
+    "../../websocket:libwebsocket_server",
     "../hybrid_step:arkhybridstep",
   ]
 
