@@ -193,18 +193,6 @@ TEST_F(ThreadStateTest, OnException)
     ASSERT_TRUE(state->IsPaused());
 }
 
-TEST_F(ThreadStateTest, IsMixedDebugEnabled)
-{
-    ASSERT_FALSE(state->IsMixedDebugEnabled());
-    state->SetMixedDebugEnabled(true);
-    ASSERT_TRUE(state->IsMixedDebugEnabled());
-    state->SetMixedDebugEnabled(false);
-    ASSERT_FALSE(state->IsMixedDebugEnabled());
-    state->SetMixedDebugEnabled(true);
-    state->Reset();
-    ASSERT_FALSE(state->IsMixedDebugEnabled());
-}
-
 }  // namespace ark::tooling::inspector::test
 
 // NOLINTEND

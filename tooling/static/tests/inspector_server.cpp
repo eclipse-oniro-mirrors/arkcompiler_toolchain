@@ -840,8 +840,6 @@ TEST_F(ServerTest, OnCallDebuggerSetSkipAllPauses)
 
 TEST_F(ServerTest, OnCallDebuggerSetMixedDebugEnabled)
 {
-    inspectorServer.CallTargetAttachedToTarget(g_mthread);
-
     EXPECT_CALL(server, OnCallMock("Debugger.setMixedDebugEnabled", testing::_))
         .WillOnce([&](testing::Unused, auto handler) {
             JsonObjectBuilder params;
@@ -849,8 +847,7 @@ TEST_F(ServerTest, OnCallDebuggerSetMixedDebugEnabled)
             handler(g_sessionId, JsonObject(std::move(params).Build()));
         });
 
-    inspectorServer.OnCallDebuggerSetMixedDebugEnabled([](PtThread thread, bool mixedDebugEnabled) {
-        ASSERT_EQ(thread.GetId(), g_mthread.GetId());
+    inspectorServer.OnCallDebuggerSetMixedDebugEnabled([](bool mixedDebugEnabled) {
         ASSERT_TRUE(mixedDebugEnabled);
         g_handlerCalled = true;
     });

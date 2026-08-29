@@ -61,7 +61,6 @@ public:
     void StepOut();
     void Pause();
     void SetSkipAllPauses(bool skip);
-    void SetMixedDebugEnabled(bool mixedDebugEnabled);
     void SetPauseOnExceptions(PauseOnExceptionsState state);
 
     void OnException(bool uncaught);
@@ -77,11 +76,6 @@ public:
     bool IsStepInto() const
     {
         return stepKind_ == StepKind::STEP_INTO;
-    }
-
-    bool IsMixedDebugEnabled() const
-    {
-        return mixedDebugEnabled_;
     }
 
 private:
@@ -131,7 +125,6 @@ private:
 
     bool paused_ {false};
     bool skipAllPauses_ {false};
-    bool mixedDebugEnabled_ {false};
     bool breakOnStart_ {false};
     PauseReason pauseReason_ {PauseReason::OTHER};
 };

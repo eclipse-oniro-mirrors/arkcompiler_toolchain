@@ -89,9 +89,6 @@ public:
     // Enables or disables skipping all pauses
     void SetSkipAllPauses(bool skip);
 
-    // Enables or disables mixdebug && mixstack
-    void SetMixedDebugEnabled(bool mixedDebugEnabled);
-
     // Tells when stops should be made on exceptions
     void SetPauseOnExceptions(PauseOnExceptionsState state);
 
@@ -133,9 +130,6 @@ public:
 
     // Checks if the current step kind is STEP_INTO
     bool IsStepInto();
-
-    // Checks if mixed debug mode is enabled
-    bool IsMixedDebugEnabled();
 
     // Gets the cached ObjectRepository for LLDB GetProperties (returns nullptr if not initialized)
     ObjectRepository *GetObjectRepository();

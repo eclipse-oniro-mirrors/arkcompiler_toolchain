@@ -769,11 +769,11 @@ void InspectorServer::OnCallDebuggerCallFunctionOn(
     // clang-format on
 }
 
-void InspectorServer::OnCallDebuggerSetMixedDebugEnabled(std::function<void(PtThread, bool)> &&handler)
+void InspectorServer::OnCallDebuggerSetMixedDebugEnabled(std::function<void(bool)> &&handler)
 {
     // clang-format off
     server_.OnCall("Debugger.setMixedDebugEnabled",
-        [this, handler = std::move(handler)](auto &sessionId, const JsonObject &params) -> Server::MethodResponse {
+        [handler = std::move(handler)](auto &, const JsonObject &params) -> Server::MethodResponse {
             bool mixedDebugEnabled;
             if (auto prop = params.GetValue<JsonObject::BoolT>("enabled")) {
                 mixedDebugEnabled = *prop;
@@ -783,8 +783,7 @@ void InspectorServer::OnCallDebuggerSetMixedDebugEnabled(std::function<void(PtTh
                 return Unexpected(JRPCError(msg, ErrorCode::INVALID_PARAMS));
             }
 
-            auto thread = sessionManager_.GetThreadBySessionId(sessionId);
-            handler(thread, mixedDebugEnabled);
+            handler(mixedDebugEnabled);
             return std::unique_ptr<JsonSerializable>();
         });
     // clang-format on
