@@ -110,7 +110,7 @@ public:
     void SendNativeMethodCallEvent(PtThread thread, const void *nativeAddress, bool isStepInto);
     void OnCallDebuggerCallFunctionOn(
         std::function<Expected<EvaluationResult, std::string>(PtThread, const std::string &, size_t)> &&handler);
-    void OnCallDebuggerSetMixedDebugEnabled(std::function<void(PtThread, bool)> &&handler);
+    void OnCallDebuggerSetMixedDebugEnabled(std::function<void(bool)> &&handler);
     void OnCallRuntimeEnable(std::function<void(PtThread)> &&handler);
     void OnCallRuntimeGetProperties(
         std::function<std::vector<PropertyDescriptor>(PtThread, RemoteObjectId, bool)> &&handler);

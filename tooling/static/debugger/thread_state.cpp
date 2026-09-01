@@ -34,7 +34,6 @@ void ThreadState::Reset()
     stepLocations_.clear();
     methodEntered_ = false;
     skipAllPauses_ = false;
-    mixedDebugEnabled_ = false;
     pauseOnExceptionsState_ = PauseOnExceptionsState::NONE;
 }
 
@@ -107,12 +106,6 @@ void ThreadState::Pause()
 void ThreadState::SetSkipAllPauses(bool skip)
 {
     skipAllPauses_ = skip;
-}
-
-// NOTE(fangting, #25108): implement "NativeOut" events when in mixed debug mode
-void ThreadState::SetMixedDebugEnabled(bool mixedDebugEnabled)
-{
-    mixedDebugEnabled_ = mixedDebugEnabled;
 }
 
 void ThreadState::SetPauseOnExceptions(PauseOnExceptionsState state)

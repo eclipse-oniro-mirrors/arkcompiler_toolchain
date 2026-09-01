@@ -98,12 +98,6 @@ void DebuggableThread::SetSkipAllPauses(bool skip)
     state_.SetSkipAllPauses(skip);
 }
 
-void DebuggableThread::SetMixedDebugEnabled(bool mixedDebugEnabled)
-{
-    os::memory::LockHolder lock(mutex_);
-    state_.SetMixedDebugEnabled(mixedDebugEnabled);
-}
-
 void DebuggableThread::SetPauseOnExceptions(PauseOnExceptionsState state)
 {
     os::memory::LockHolder lock(mutex_);
@@ -306,12 +300,6 @@ bool DebuggableThread::IsStepInto()
 {
     os::memory::LockHolder lock(mutex_);
     return state_.IsStepInto();
-}
-
-bool DebuggableThread::IsMixedDebugEnabled()
-{
-    os::memory::LockHolder lock(mutex_);
-    return state_.IsMixedDebugEnabled();
 }
 
 ObjectRepository *DebuggableThread::GetObjectRepository()

@@ -477,17 +477,14 @@ void Inspector::SetSkipAllPauses(PtThread thread, bool skip)
     }
 }
 
-void Inspector::SetMixedDebugEnabled(PtThread thread, bool mixedDebugEnabled)
+void Inspector::SetMixedDebugEnabled(bool mixedDebugEnabled)
 {
     os::memory::ReadLockHolder lock(vmDeathLock_);
     if (UNLIKELY(CheckVmDead())) {
         return;
     }
 
-    auto *debuggableThread = GetDebuggableThread(thread);
-    if (debuggableThread != nullptr) {
-        debuggableThread->SetMixedDebugEnabled(mixedDebugEnabled);
-    }
+    mixedDebugEnabled_.store(mixedDebugEnabled, std::memory_order_relaxed);
 }
 
 std::set<int32_t> Inspector::GetPossibleBreakpoints(std::string_view sourceFile, int32_t startLine,
@@ -962,15 +959,15 @@ void Inspector::SetNativeRange(PtThread thread)
 
 void Inspector::NativeMethodCall(PtThread thread, const void *nativeAddress)
 {
+    if (!mixedDebugEnabled_.load(std::memory_order_relaxed)) {
+        LOG(DEBUG, DEBUGGER) << "NativeMethodCall mixed debug is disabled, skip sending nativeCalling";
+        return;
+    }
+
     {
         os::memory::ReadLockHolder lock(debuggerEventsLock_);
         auto *debuggableThread = GetDebuggableThread(thread);
         if (debuggableThread == nullptr) {
-            return;
-        }
-
-        if (!debuggableThread->IsMixedDebugEnabled()) {
-            LOG(DEBUG, DEBUGGER) << "NativeMethodCall mixed debug is disabled, skip sending nativeCalling";
             return;
         }
 
@@ -1091,7 +1088,7 @@ void Inspector::RegisterMethodHandlers()
     inspectorServer_.OnCallDebuggerSetNativeRange(std::bind(&Inspector::SetNativeRange, this, _1));
     inspectorServer_.OnCallDebuggerReplyNativeMethodCall(std::bind(&Inspector::ReplyNativeMethodCall, this, _1, _2));
     inspectorServer_.OnCallDebuggerCallFunctionOn(std::bind(&Inspector::Evaluate, this, _1, _2, _3));
-    inspectorServer_.OnCallDebuggerSetMixedDebugEnabled(std::bind(&Inspector::SetMixedDebugEnabled, this, _1, _2));
+    inspectorServer_.OnCallDebuggerSetMixedDebugEnabled(std::bind(&Inspector::SetMixedDebugEnabled, this, _1));
     inspectorServer_.OnCallRuntimeEnable(std::bind(&Inspector::RuntimeEnable, this, _1));
     inspectorServer_.OnCallRuntimeGetProperties(std::bind(&Inspector::GetProperties, this, _1, _2, _3));
     inspectorServer_.OnCallRuntimeRunIfWaitingForDebugger(std::bind(&Inspector::RunIfWaitingForDebugger, this, _1));

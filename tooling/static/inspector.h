@@ -98,7 +98,7 @@ private:
     void ReplyNativeMethodCall(PtThread thread, bool userCode);
     void SetBreakpointsActive(PtThread thread, bool active);
     void SetSkipAllPauses(PtThread thread, bool skip);
-    void SetMixedDebugEnabled(PtThread thread, bool mixedDebugEnabled);
+    void SetMixedDebugEnabled(bool mixedDebugEnabled);
     std::set<int32_t> GetPossibleBreakpoints(std::string_view sourceFile, int32_t startLine, int32_t endLine,
                                             bool restrictToFunction);
     std::optional<BreakpointId> SetBreakpoint(PtThread thread, SourceFileFilter &&sourceFilesFilter, int32_t lineNumber,
@@ -164,6 +164,7 @@ private:
 private:
     os::memory::RWLock debuggerEventsLock_;
     bool connecting_ {false};  // Should be accessed only from the server thread
+    std::atomic<bool> mixedDebugEnabled_ {false};  // Mixed debug is a global, shared by all threads
 
     InspectorServer inspectorServer_;  // NOLINT(misc-non-private-member-variables-in-classes)
     DebugInterface &debugger_;
