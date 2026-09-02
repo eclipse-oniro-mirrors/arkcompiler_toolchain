@@ -1796,6 +1796,45 @@ HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_DropFrame__001)
     }
 }
 
+HWTEST_F_L0(DebuggerImplTest, Dispatcher_Dispatch_DropFrame__002)
+{
+    std::string outStrForCallbackCheck = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&outStrForCallbackCheck]([[maybe_unused]] const void *ptr, const std::string &inStrOfReply) {
+            outStrForCallbackCheck = inStrOfReply;};
+    ProtocolChannel *protocolChannel = new ProtocolHandler(callback, ecmaVm);
+    auto runtimeImpl = std::make_unique<RuntimeImpl>(ecmaVm, protocolChannel);
+    auto debuggerImpl = std::make_unique<DebuggerImpl>(ecmaVm, protocolChannel, runtimeImpl.get());
+
+    std::string enableMsg = std::string() + R"({
+        "id":0,
+        "method":"Debugger.enable",
+        "params":{"options":["enableSimplifiedMode"]}
+    })";
+    std::unique_ptr<EnableParams> enableParams =
+        EnableParams::Create(DispatchRequest(enableMsg).GetParams());
+    ASSERT_NE(enableParams, nullptr);
+    UniqueDebuggerId debuggerId = 0;
+    EXPECT_TRUE(debuggerImpl->Enable(*enableParams, &debuggerId).IsOk());
+    debuggerImpl->SetDebuggerState(DebuggerState::PAUSED);
+    auto dispatcherImpl = std::make_unique<DebuggerImpl::DispatcherImpl>(protocolChannel, std::move(debuggerImpl));
+
+    std::string msg = std::string() + R"({
+        "id":0,
+        "method":"Debugger.dropFrame",
+        "params":{"droppedDepth":3}
+    })";
+    DispatchRequest request(msg);
+
+    dispatcherImpl->Dispatch(request);
+    EXPECT_STREQ(outStrForCallbackCheck.c_str(),
+        R"({"id":0,"result":{"code":1,"message":"DropFrame is not supported in simplified mode"}})");
+    if (protocolChannel) {
+        delete protocolChannel;
+        protocolChannel = nullptr;
+    }
+}
+
 HWTEST_F_L0(DebuggerImplTest, DispatcherImplCallFunctionOn__001)
 {
     std::string outStrForCallbackCheck = "";

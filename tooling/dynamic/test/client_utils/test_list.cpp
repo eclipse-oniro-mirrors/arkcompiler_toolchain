@@ -46,6 +46,7 @@
 #include "tooling/dynamic/test/testcases/js_multiple_breakpoint_in_function_test.h"
 #include "tooling/dynamic/test/testcases/js_multiple_common_breakpoint_test.h"
 #include "tooling/dynamic/test/testcases/js_smart_stepInto_test.h"
+#include "tooling/dynamic/test/testcases/js_simplified_mode_test.h"
 #include "tooling/dynamic/test/testcases/js_source_test.h"
 #include "tooling/dynamic/test/testcases/js_special_location_breakpoint_test.h"
 #include "tooling/dynamic/test/testcases/js_stepinto_and_stepout_test.h"
@@ -145,6 +146,7 @@ static void RegisterTests()
     TestUtil::RegisterTest("JsHeapusageRecursionTest", GetJsHeapusageRecursionTest());
     TestUtil::RegisterTest("JsSmartStepoutTest", GetJsSmartStepoutTest());
     TestUtil::RegisterTest("JsAccelerateLaunchTest", GetJsAccelerateLaunchTest());
+    TestUtil::RegisterTest("JsSimplifiedModeTest", GetJsSimplifiedModeTest());
     TestUtil::RegisterTest("JsSymbolicBreakpointTest", GetJsSymbolicBreakpointTest());
     TestUtil::RegisterTest("JsVariablePropertyWithRangeTest", GetJsVariablePropertyWithRangeTest());
 }

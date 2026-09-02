@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -49,6 +49,7 @@ bool DebuggerClient::DispatcherCmd(const std::string &cmd)
         { "step-out", std::bind(&DebuggerClient::StepOutCommand, this)},
         { "step-over", std::bind(&DebuggerClient::StepOverCommand, this)},
         { "enable-launch-accelerate", std::bind(&DebuggerClient::EnableLaunchAccelerateCommand, this)},
+        { "enable-simplified-mode", std::bind(&DebuggerClient::EnableSimplifiedModeCommand, this)},
         { "removeBreakpointsByUrl", std::bind(&DebuggerClient::RemoveBreakpointsByUrlCommand, this)},
         { "saveAllPossibleBreakpoints", std::bind(&DebuggerClient::SaveAllPossibleBreakpointsCommand, this)},
         { "setSymbolicBreakpoints", std::bind(&DebuggerClient::SetSymbolicBreakpointsCommand, this)},
@@ -94,6 +95,25 @@ int DebuggerClient::BreakCommand()
 
 int DebuggerClient::BacktrackCommand()
 {
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
+    uint32_t id = session->GetMessageId();
+
+    std::unique_ptr<PtJson> request = PtJson::CreateObject();
+    request->Add("id", id);
+    request->Add("method", "Debugger.dropFrame");
+
+    std::unique_ptr<PtJson> params = PtJson::CreateObject();
+    params->Add("droppedDepth", 1);
+    request->Add("params", params);
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Debugger");
+    }
     return 0;
 }
 
@@ -661,6 +681,32 @@ int DebuggerClient::EnableLaunchAccelerateCommand()
         session->GetDomainManager().SetDomainById(id, "Debugger");
     }
 
+    return 0;
+}
+
+int DebuggerClient::EnableSimplifiedModeCommand()
+{
+    Session *session = SessionManager::getInstance().GetSessionById(sessionId_);
+    if (session == nullptr) {
+        LOGE("get session by id %{public}u failed", sessionId_);
+        return -1;
+    }
+    uint32_t id = session->GetMessageId();
+
+    std::unique_ptr<PtJson> request = PtJson::CreateObject();
+    request->Add("id", id);
+    request->Add("method", "Debugger.enable");
+
+    std::unique_ptr<PtJson> params = PtJson::CreateObject();
+    std::unique_ptr<PtJson> options = PtJson::CreateArray();
+    options->Push("enableSimplifiedMode");
+    params->Add("options", options);
+    request->Add("params", params);
+
+    std::string message = request->Stringify();
+    if (session->ClientSendReq(message)) {
+        session->GetDomainManager().SetDomainById(id, "Debugger");
+    }
     return 0;
 }
 } // OHOS::ArkCompiler::Toolchain
