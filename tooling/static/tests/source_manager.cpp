@@ -89,6 +89,32 @@ TEST_F(SourceManagerTest, General)
     mthread1.join();
 }
 
+TEST_F(SourceManagerTest, SameNameSourceFilesUseStableScriptIds)
+{
+    constexpr std::string_view SOURCE_FILE = "main.ets";
+
+    auto first = sm_.GetScriptId(SOURCE_FILE, "modules/first.abc");
+    ASSERT_TRUE(first.second);
+    auto second = sm_.GetScriptId(SOURCE_FILE, "modules/second.abc");
+    ASSERT_TRUE(second.second);
+    ASSERT_NE(first.first, second.first);
+
+    auto firstAgain = sm_.GetScriptId(SOURCE_FILE, "modules/first.abc");
+    ASSERT_FALSE(firstAgain.second);
+    ASSERT_EQ(firstAgain.first, first.first);
+
+    ASSERT_EQ(sm_.GetSourceFileName(first.first), SOURCE_FILE);
+    ASSERT_EQ(sm_.GetSourceFileName(second.first), SOURCE_FILE);
+
+    auto firstInfo = sm_.GetScript(first.first);
+    ASSERT_EQ(firstInfo.fileName, SOURCE_FILE);
+    ASSERT_EQ(firstInfo.identity, "modules/first.abc");
+
+    auto secondInfo = sm_.GetScript(second.first);
+    ASSERT_EQ(secondInfo.fileName, SOURCE_FILE);
+    ASSERT_EQ(secondInfo.identity, "modules/second.abc");
+}
+
 }  // namespace ark::tooling::inspector::test
 
 // NOLINTEND

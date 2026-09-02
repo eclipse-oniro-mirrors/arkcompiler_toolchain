@@ -14,7 +14,6 @@
 import("../../toolchain.gni")
 
 libarkinspector_sources = [
-  "init.cpp",
   "connection/endpoint_base.cpp",
   "connection/ohos_ws/ohos_ws_server.cpp",
   "connection/ohos_ws/ohos_ws_server_endpoint.cpp",
@@ -26,14 +25,16 @@ libarkinspector_sources = [
   "debugger/debuggable_thread.cpp",
   "debugger/object_repository.cpp",
   "debugger/thread_state.cpp",
-  "hybrid/static_frame_provider.cpp",
   "error.cpp",
   "evaluation/evaluation_engine.cpp",
+  "hybrid/static_frame_provider.cpp",
+  "init.cpp",
   "inspector.cpp",
   "inspector_server.cpp",
   "json_serialization/jrpc_error.cpp",
   "session_manager.cpp",
   "source_manager.cpp",
+  "types/async_stack_trace.cpp",
   "types/custom_url_breakpoint_response.cpp",
   "types/debugger_call_function_on_request.cpp",
   "types/debugger_evaluation_request.cpp",
@@ -55,12 +56,20 @@ config("libarkinspector_config") {
     "-Wno-error=unknown-warning-option",
   ]
   include_dirs = [ "./" ]
-  include_dirs += [ "../" ]
-  include_dirs += [ "../../" ]
-  defines = []
+  include_dirs += [
+    "${root_gen_dir}/arkcompiler/runtime_core/static_core",
+    "../",
+    "../../",
+  ]
+  defines = [
+    "PANDA_32_BIT_MANAGED_POINTER",
+    "PANDA_WITH_ETS",
+  ]
+  cflags_cc += [ "-UPANDA_USE_32_BIT_POINTER" ]
   if (enable_hilog) {
     defines += [ "ENABLE_HILOG" ]
   }
+
   # required for arkcompiler_toolchain compilation
   if (is_ohos) {
     defines += [ "OHOS_PLATFORM" ]
@@ -73,15 +82,16 @@ ohos_static_library("libarkinspector_plus_static") {
   }
   sources = libarkinspector_sources
 
-  configs = [
+  public_configs = [
     "../..:ark_toolchain_common_config",
-    ":libarkinspector_config"
+    ":libarkinspector_config",
   ]
   external_deps = [
     "bounds_checking_function:libsec_shared",
-    "runtime_core:libarktscompiler",
     "runtime_core:arktsdisassembler",
-    "runtime_core:libarktsbase",
+    "runtime_core:assembler_headers",
+    "runtime_core:libarktsbase_package",
+    "runtime_core:runtime_headers",
   ]
   deps = [
     "../../common:libark_toolchain_log",
@@ -104,15 +114,11 @@ group("unittest") {
   testonly = true
 
   # deps file
-  deps = [
-    "tests:arkinspector_tests",
-  ]
+  deps = [ "tests:arkinspector_tests" ]
 }
 
 group("host_unittest") {
   testonly = true
 
-  deps = [
-    "tests:arkinspector_testsAction",
-  ]
+  deps = [ "tests:arkinspector_testsAction" ]
 }

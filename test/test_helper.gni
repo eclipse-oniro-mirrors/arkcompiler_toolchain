@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2026 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -39,6 +39,7 @@ template("host_unittest_action") {
     if (!defined(external_deps)) {
       external_deps = []
     }
+
     # hiviewdfx libraries
     external_deps += hiviewdfx_ext_deps
     deps += hiviewdfx_deps
@@ -65,6 +66,7 @@ template("host_unittest_action") {
       "0",
       "--env-path",
       rebase_path(_root_out_dir_) + "/arkcompiler/ets_runtime:" +
+          rebase_path(_root_out_dir_) + "/arkcompiler/runtime_core:" +
           rebase_path(_root_out_dir_) + "/arkcompiler/toolchain:" +
           rebase_path(_root_out_dir_) + "/test/test:" +
           rebase_path(_root_out_dir_) + "/${_icu_path_}:" +

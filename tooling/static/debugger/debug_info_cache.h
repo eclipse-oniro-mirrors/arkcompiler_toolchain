@@ -17,14 +17,17 @@
 #define PANDA_TOOLING_INSPECTOR_DEBUG_INFO_CACHE_H
 
 #include <set>
+#include <optional>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
+#include "common.h"
 #include "disassembler/disasm_backed_debug_info_extractor.h"
 #include "include/typed_value.h"
 #include "runtime/tooling/debugger.h"
+#include "types/async_stack_trace.h"
 
 namespace ark::tooling::inspector {
 class DebugInfoCache final {
@@ -38,20 +41,24 @@ public:
     void AddPandaFile(const panda_file::File &file, bool isUserPandafile = false);
     void GetSourceLocation(const PtFrame &frame, std::string_view &sourceFile, std::string_view &methodName,
                            int32_t &lineNumber) const;
+    std::optional<AsyncFrameSourceLocation> GetAsyncFrameSourceLocation(std::string_view pandaFile, uint64_t methodId,
+                                                                        uint32_t bytecodeOffset) const;
     std::unordered_set<PtLocation, HashLocation> GetCurrentLineLocations(const PtFrame &frame);
     std::unordered_set<PtLocation, HashLocation> GetContinueToLocations(std::string_view sourceFile,
+                                                                        std::string_view scriptIdentity,
                                                                         int32_t lineNumber);
     std::unordered_set<PtLocation, HashLocation> GetBreakpointLocations(
-        const std::function<bool(std::string_view)> &sourceFileFilter, int32_t lineNumber,
-        std::set<std::string_view> &sourceFiles) const;
-    std::set<int32_t> GetValidLineNumbers(std::string_view sourceFile, int32_t startLine,
-                                         int32_t endLine, bool restrictToFunction);
+        const std::function<bool(std::string_view, std::string_view)> &sourceFileFilter, int32_t lineNumber,
+        SourceFileSet &sourceFiles) const;
+    std::set<int32_t> GetValidLineNumbers(std::string_view sourceFile, std::string_view scriptIdentity,
+                                          int32_t startLine, int32_t endLine, bool restrictToFunction);
 
     std::map<std::string, TypedValue> GetLocals(const PtFrame &frame) const;
 
-    std::string GetSourceCode(std::string_view sourceFile);
+    std::string GetSourceCode(std::string_view sourceFile, std::string_view scriptIdentity = {});
 
-    std::vector<const panda_file::File*> GetPandaFiles(const std::function<bool(std::string_view)> &sourceFileFilter);
+    std::vector<const panda_file::File *> GetPandaFiles(
+        const std::function<bool(std::string_view, std::string_view)> &sourceFileFilter);
 
     const char *GetSourceFile(Method *method);
 
@@ -60,6 +67,11 @@ public:
     const panda_file::DebugInfoExtractor *GetDebugInfo(const panda_file::File *file) const;
 
 private:
+    std::string GetSourceCodeByIdentity(std::string_view sourceFile, std::string_view scriptIdentity);
+    std::string GetDisassemblySourceCode(std::string_view sourceFile);
+    std::string GetCachedSourceCode(std::string_view sourceFile);
+    std::string GetFileSourceCode(std::string_view sourceFile);
+
     template <typename PFF, typename MF, typename H>
     void EnumerateLineEntries(PFF &&pandaFileFilter, MF &&methodFilter, H &&handler) const
     {

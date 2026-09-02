@@ -17,55 +17,33 @@ import("../../../toolchain.gni")
 module_output_path = "toolchain/toolchain"
 
 libarkinspector_test_sources = [
-    "base64.cpp",
-    "bigint_decimal_conversion_test.cpp",
-    "debug_info_cache.cpp",
-    "inspector_server.cpp",
-    "json_object_matcher.cpp",
-    "object_repository.cpp",
-    "profiler_api_test.cpp",
-    "session_manager.cpp",
-    "source_manager.cpp",
-    "thread_state.cpp"
+  "base64.cpp",
+  "bigint_decimal_conversion_test.cpp",
+  "debug_info_cache.cpp",
+  "inspector_server.cpp",
+  "json_object_matcher.cpp",
+  "object_repository.cpp",
+  "profiler_api_test.cpp",
+  "session_manager.cpp",
+  "source_manager.cpp",
+  "thread_state.cpp",
 ]
-
-config("libarkinspector_config") {
-  cflags_cc = [
-    "-fexceptions",
-    "-Wno-invalid-offsetof",
-    "-Wno-null-pointer-subtraction",
-    "-Wno-error=unknown-warning-option",
-  ]
-  include_dirs = [ "./" ]
-  include_dirs += [ "../" ]
-  include_dirs += [ "../../" ]
-  include_dirs += [ "../../../" ]
-  defines = []
-  if (enable_hilog) {
-    defines += [ "ENABLE_HILOG" ]
-  }
-  # required for arkcompiler_toolchain compilation
-  if (is_ohos) {
-    defines += [ "OHOS_PLATFORM" ]
-  }
-}
 
 ohos_source_set("arkinspector_tests_source") {
   testonly = true
   sources = libarkinspector_test_sources
 
-  configs = [
-    ":libarkinspector_config"
-  ]
-  deps = [
-    "../:libarkinspector_plus_static",
-  ]
+  deps = [ "../:libarkinspector_plus_static" ]
   external_deps = [
-    "runtime_core:libarktscompiler",
-    "runtime_core:arktsdisassembler",
-    "runtime_core:libarktsbase",
+    "bounds_checking_function:libsec_shared",
     "googletest:gmock",
     "googletest:gtest",
+    "runtime_core:arktsdisassembler",
+    "runtime_core:assembler_headers",
+    "runtime_core:libarktsbase_package",
+    "runtime_core:libpandabase_headers",
+    "runtime_core:runtime_gen_headers",
+    "runtime_core:runtime_headers",
   ]
   part_name = "toolchain"
   subsystem_name = "arkcompiler"
@@ -73,12 +51,15 @@ ohos_source_set("arkinspector_tests_source") {
 
 host_unittest_action("arkinspector_tests") {
   module_out_path = module_output_path
-  deps = [ "./:arkinspector_tests_source" ]
+  deps = [
+    "./:arkinspector_tests_source",
+    "./async_stack_promise_test_abc:async_stack_promise_test_abc",
+  ]
 
   external_deps = [
-    "runtime_core:libarkruntime",
-    "runtime_core:arktarget_options",
     "googletest:gtest",
     "googletest:gtest_main",
+    "runtime_core:arktarget_options",
+    "runtime_core:libarkruntime",
   ]
 }

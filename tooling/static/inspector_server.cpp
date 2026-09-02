@@ -15,7 +15,9 @@
 
 #include "inspector_server.h"
 
+#include <cmath>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <regex>
 #include <string>
@@ -53,12 +55,12 @@ void InspectorServer::Kill()
     server_.Kill();
 }
 
-void InspectorServer::Run(const std::string& msg)
+void InspectorServer::Run(const std::string &msg)
 {
     server_.Run(msg);
 }
 
-std::string InspectorServer::RunSync(const std::string& msg)
+std::string InspectorServer::RunSync(const std::string &msg)
 {
     return server_.RunSync(msg);
 }
@@ -111,30 +113,31 @@ static std::string_view GetPauseReasonString(PauseReason reason)
     UNREACHABLE();
 }
 
-void InspectorServer::CallDebuggerPaused(PtThread thread, const std::vector<BreakpointId> &hitBreakpoints,
-                                         const std::optional<RemoteObject> &exception, PauseReason pauseReason,
-                                         const std::function<void(const FrameInfoHandler &)> &enumerateFrames)
+void InspectorServer::CallDebuggerPaused(DebuggerPausedParams pausedParams)
 {
-    auto sessionId = sessionManager_.GetSessionIdByThread(thread);
+    const auto sessionId = sessionManager_.GetSessionIdByThread(pausedParams.thread);
 
-    server_.Call(sessionId, "Debugger.paused", [&](auto &params) {
-        params.AddProperty("callFrames", [this, thread, &enumerateFrames](JsonArrayBuilder &callFrames) {
-            EnumerateCallFrames(callFrames, thread, enumerateFrames);
+    server_.Call(sessionId, "Debugger.paused", [this, sessionId, &pausedParams](auto &params) {
+        params.AddProperty("callFrames", [this, &pausedParams](JsonArrayBuilder &callFrames) {
+            EnumerateCallFrames(callFrames, pausedParams.thread, pausedParams.enumerateFrames);
         });
 
-        params.AddProperty("hitBreakpoints", [&hitBreakpoints](JsonArrayBuilder &hitBreakpointsBuilder) {
-            AddHitBreakpoints(hitBreakpointsBuilder, hitBreakpoints);
-        });
-
-        if (exception) {
-            params.AddProperty("data", *exception);
+        if (pausedParams.asyncStackTrace != nullptr) {
+            params.AddProperty("asyncStackTrace", *pausedParams.asyncStackTrace);
         }
 
-        params.AddProperty("reason", GetPauseReasonString(pauseReason));
-        params.AddProperty("sessionId", sessionId);
-        params.AddProperty("allSessions", [&](JsonArrayBuilder &sessionsBuilder) {
-            sessionManager_.GetAllSessions(sessionsBuilder);
+        params.AddProperty("hitBreakpoints", [&pausedParams](JsonArrayBuilder &hitBreakpointsBuilder) {
+            AddHitBreakpoints(hitBreakpointsBuilder, pausedParams.hitBreakpoints);
         });
+
+        if (pausedParams.exception) {
+            params.AddProperty("data", *pausedParams.exception);
+        }
+
+        params.AddProperty("reason", GetPauseReasonString(pausedParams.pauseReason));
+        params.AddProperty("sessionId", sessionId);
+        params.AddProperty("allSessions",
+                           [&](JsonArrayBuilder &sessionsBuilder) { sessionManager_.GetAllSessions(sessionsBuilder); });
     });
 }
 
@@ -155,6 +158,47 @@ void InspectorServer::CallDebuggerScriptParsed(ScriptId scriptId, std::string_vi
         params.AddProperty("endColumn", std::numeric_limits<int>::max());
         params.AddProperty("hash", "");
     });
+}
+
+std::unique_ptr<AsyncStackTrace> InspectorServer::CreateAsyncStackTrace(const AsyncStackSnapshotView &snapshotView,
+                                                                        const AsyncFrameResolver &resolveFrame)
+{
+    std::unique_ptr<AsyncStackTrace> asyncStackTrace;
+
+    for (auto segmentIt = snapshotView.segments.rbegin(); segmentIt != snapshotView.segments.rend(); ++segmentIt) {
+        if (segmentIt->frames.empty()) {
+            continue;
+        }
+
+        std::vector<AsyncCallFrame> callFrames;
+        callFrames.reserve(segmentIt->frames.size());
+
+        for (const auto &frame : segmentIt->frames) {
+            auto sourceLocation = resolveFrame(frame);
+            if (!sourceLocation || sourceLocation->lineNumber < 0) {
+                LOG(WARNING, DEBUGGER) << "Cannot resolve async stack frame in " << frame.pandaFile;
+                continue;
+            }
+
+            auto [scriptId, isNew] = sourceManager_.GetScriptId(sourceLocation->sourceFile, frame.pandaFile);
+            if (isNew) {
+                CallDebuggerScriptParsed(scriptId, sourceLocation->sourceFile);
+            }
+
+            callFrames.push_back(
+                AsyncCallFrame {frame.functionName, sourceLocation->sourceFile, scriptId, sourceLocation->lineNumber});
+        }
+
+        if (callFrames.empty()) {
+            continue;
+        }
+
+        auto segment = std::make_unique<AsyncStackTrace>(segmentIt->description, std::move(callFrames));
+        segment->SetParent(std::move(asyncStackTrace));
+        asyncStackTrace = std::move(segment);
+    }
+
+    return asyncStackTrace;
 }
 
 void InspectorServer::CallRuntimeConsoleApiCalled(PtThread thread, ConsoleCallType type, uint64_t timestamp,
@@ -247,7 +291,7 @@ void InspectorServer::CallTargetDetachedFromTarget(PtThread thread)
 }
 
 void InspectorServer::OnCallDebuggerContinueToLocation(
-    std::function<void(PtThread, std::string_view, int32_t)> &&handler)
+    std::function<void(PtThread, std::string_view, std::string_view, int32_t)> &&handler)
 {
     // clang-format off
     server_.OnCall("Debugger.continueToLocation",
@@ -259,8 +303,8 @@ void InspectorServer::OnCallDebuggerContinueToLocation(
             }
 
             auto thread = sessionManager_.GetThreadBySessionId(sessionId);
-            handler(thread, sourceManager_.GetSourceFileName(location->GetScriptId()),
-                    location->GetLineNumber());
+            auto script = sourceManager_.GetScript(location->GetScriptId());
+            handler(thread, script.fileName, script.identity, location->GetLineNumber());
             return std::unique_ptr<JsonSerializable>();
         });
     // clang-format on
@@ -283,7 +327,7 @@ void InspectorServer::OnCallDebuggerEnable(std::function<void()> &&handler)
 }
 
 void InspectorServer::OnCallDebuggerGetPossibleBreakpoints(
-    std::function<std::set<int32_t>(std::string_view, int32_t, int32_t, bool)> &&handler)
+    std::function<std::set<int32_t>(std::string_view, std::string_view, int32_t, int32_t, bool)> &&handler)
 {
     // clang-format off
     server_.OnCall("Debugger.getPossibleBreakpoints",
@@ -295,6 +339,7 @@ void InspectorServer::OnCallDebuggerGetPossibleBreakpoints(
             }
 
             auto scriptId = optStart->GetScriptId();
+            auto script = sourceManager_.GetScript(scriptId);
 
             int32_t endLine = ~0U;
             if (auto end = Location::FromJsonProperty(params, "end")) {
@@ -312,8 +357,8 @@ void InspectorServer::OnCallDebuggerGetPossibleBreakpoints(
                 restrictToFunction = *prop;
             }
 
-            auto lineNumbers = handler(sourceManager_.GetSourceFileName(scriptId), optStart->GetLineNumber(),
-                                       endLine, restrictToFunction);
+            auto lineNumbers = handler(script.fileName, script.identity, optStart->GetLineNumber(), endLine,
+                                       restrictToFunction);
             auto response = std::make_unique<PossibleBreakpointsResponse>();
             for (const auto &line : lineNumbers) {
                 response->Add(Location(scriptId, line));
@@ -323,16 +368,17 @@ void InspectorServer::OnCallDebuggerGetPossibleBreakpoints(
     // clang-format on
 }
 
-void InspectorServer::OnCallDebuggerGetScriptSource(std::function<std::string(std::string_view)> &&handler)
+void InspectorServer::OnCallDebuggerGetScriptSource(
+    std::function<std::string(std::string_view, std::string_view)> &&handler)
 {
     // clang-format off
     server_.OnCall("Debugger.getScriptSource",
         [this, handler = std::move(handler)](auto &, auto &params) -> Server::MethodResponse {
             auto scriptId = ParseNumericId<ScriptId>(params, "scriptId");
             if (scriptId) {
-                auto sourceFile = sourceManager_.GetSourceFileName(*scriptId);
+                auto script = sourceManager_.GetScript(*scriptId);
                 return std::unique_ptr<JsonSerializable>(
-                    std::make_unique<ScriptSourceResponse>(handler(sourceFile)));
+                    std::make_unique<ScriptSourceResponse>(handler(script.fileName, script.identity)));
             }
             LOG(INFO, DEBUGGER) << scriptId.Error();
             return Unexpected(JRPCError(scriptId.Error(), ErrorCode::PARSE_ERROR));
@@ -386,13 +432,12 @@ static bool IsPathEqual(const std::string_view &src, const std::string_view &dst
 static auto GetUrlFileFilter(const std::string &url)
 {
     static constexpr std::string_view FILE_PREFIX = "file://";
-    return [sourceFile = url.find(FILE_PREFIX) == 0 ? url.substr(FILE_PREFIX.size()) : url](auto fileName) {
-        return IsPathEqual(sourceFile, fileName);
-    };
+    return [sourceFile = url.find(FILE_PREFIX) == 0 ? url.substr(FILE_PREFIX.size()) : url](
+               auto fileName, [[maybe_unused]] auto pandaFile) { return IsPathEqual(sourceFile, fileName); };
 }
 
 void InspectorServer::OnCallDebuggerRemoveBreakpointsByUrl(
-    std::function<void(PtThread, const char*, SourceFileFilter)> &&handler)
+    std::function<void(PtThread, const char *, SourceFileFilter)> &&handler)
 {
     // clang-format off
     server_.OnCall("Debugger.removeBreakpointsByUrl",
@@ -474,11 +519,14 @@ void InspectorServer::OnCallDebuggerSetBreakpoint(std::function<SetBreakpointHan
 
             auto thread = sessionManager_.GetThreadBySessionId(sessionId);
 
-            auto sourceFile = sourceManager_.GetSourceFileName(location->GetScriptId());
-            std::set<std::string_view> sourceFiles;
+            auto script = sourceManager_.GetScript(location->GetScriptId());
+            SourceFileSet sourceFiles;
 
             auto id = handler(
-                thread, [sourceFile](auto fileName) { return fileName == sourceFile; },
+                thread,
+                [sourceFile = script.fileName, scriptIdentity = script.identity](auto fileName, auto pandaFile) {
+                    return fileName == sourceFile && (scriptIdentity.empty() || pandaFile == scriptIdentity);
+                },
                 location->GetLineNumber(), sourceFiles, condition);
             if (!id) {
                 std::string_view msg = "Failed to set breakpoint";
@@ -496,7 +544,7 @@ Expected<std::unique_ptr<UrlBreakpointResponse>, std::string> InspectorServer::S
     const std::function<SetBreakpointHandler> &handler)
 {
     // Note: Current interaction with IDE only supports 'url', not 'urlRegex'
-    std::function<bool(std::string_view)> sourceFileFilter;
+    SourceFileFilter sourceFileFilter;
     if (const auto &url = breakpointRequest.GetUrl()) {
         sourceFileFilter = GetUrlFileFilter(*url);
     } else {
@@ -508,7 +556,7 @@ Expected<std::unique_ptr<UrlBreakpointResponse>, std::string> InspectorServer::S
 
     const auto *condition = breakpointRequest.GetCondition().has_value() ? &*breakpointRequest.GetCondition() : nullptr;
 
-    std::set<std::string_view> sourceFiles;
+    SourceFileSet sourceFiles;
     auto thread = sessionManager_.GetThreadBySessionId(sessionId);
 
     auto id = handler(thread, std::move(sourceFileFilter), breakpointRequest.GetLineNumber(), sourceFiles, condition);
@@ -807,13 +855,32 @@ void InspectorServer::OnCallDebuggerClientDisconnect(std::function<void(PtThread
     });
 }
 
-void InspectorServer::OnCallDebuggerSetAsyncCallStackDepth(std::function<void(PtThread)> &&handler)
+void InspectorServer::OnCallDebuggerSetAsyncCallStackDepth(std::function<void(PtThread, uint32_t)> &&handler)
 {
-    server_.OnCall("Debugger.setAsyncCallStackDepth", [this, handler = std::move(handler)](auto &sessionId, auto &) {
-        auto thread = sessionManager_.GetThreadBySessionId(sessionId);
-        handler(thread);
-        return std::unique_ptr<JsonSerializable>();
+    // clang-format off
+    server_.OnCall("Debugger.setAsyncCallStackDepth",
+        [this, handler = std::move(handler)](auto &sessionId, const JsonObject &params) -> Server::MethodResponse {
+            auto maxDepthProperty = params.GetValue<JsonObject::NumT>("maxDepth");
+            if (!maxDepthProperty) {
+                std::string_view msg = "No 'maxDepth' property";
+                LOG(INFO, DEBUGGER) << msg;
+                return Unexpected(JRPCError(msg, ErrorCode::INVALID_PARAMS));
+            }
+
+            const auto maxDepthValue = *maxDepthProperty;
+            const auto truncatedMaxDepth = std::trunc(maxDepthValue);
+            if (!std::isfinite(maxDepthValue) || maxDepthValue < 0.0 || maxDepthValue != truncatedMaxDepth ||
+                truncatedMaxDepth > std::numeric_limits<uint32_t>::max()) {
+                std::string_view msg = "Invalid 'maxDepth' property";
+                LOG(INFO, DEBUGGER) << msg;
+                return Unexpected(JRPCError(msg, ErrorCode::INVALID_PARAMS));
+            }
+
+            auto thread = sessionManager_.GetThreadBySessionId(sessionId);
+            handler(thread, static_cast<uint32_t>(truncatedMaxDepth));
+            return std::unique_ptr<JsonSerializable>();
     });
+    // clang-format on
 }
 
 void InspectorServer::OnCallDebuggerSetBlackboxPatterns(std::function<void(PtThread)> &&handler)
@@ -1082,9 +1149,9 @@ void InspectorServer::SendTargetAttachedToTarget(const std::string &sessionId)
 void InspectorServer::EnumerateCallFrames(JsonArrayBuilder &callFrames, PtThread thread,
                                           const std::function<void(const FrameInfoHandler &)> &enumerateFrames)
 {
-    enumerateFrames([this, thread, &callFrames](auto frameId, auto methodName, auto sourceFile, auto lineNumber,
-                                                auto &scopeChain, auto &objThis, auto isStaticFrame) {
-        CallFrameInfo callFrameInfo {frameId, sourceFile, methodName, lineNumber, isStaticFrame};
+    enumerateFrames([this, thread, &callFrames](auto frameId, auto methodName, auto sourceFile, auto scriptIdentity,
+                                                auto lineNumber, auto &scopeChain, auto &objThis, auto isStaticFrame) {
+        CallFrameInfo callFrameInfo {frameId, sourceFile, scriptIdentity, methodName, lineNumber, isStaticFrame};
         AddCallFrameInfo(callFrames, callFrameInfo, scopeChain, thread, objThis);
     });
 }
@@ -1094,7 +1161,7 @@ void InspectorServer::AddCallFrameInfo(JsonArrayBuilder &callFrames, const CallF
                                        const std::optional<RemoteObject> &objThis)
 {
     callFrames.Add([&](JsonObjectBuilder &callFrame) {
-        auto [scriptId, isNew] = sourceManager_.GetScriptId(callFrameInfo.sourceFile);
+        auto [scriptId, isNew] = sourceManager_.GetScriptId(callFrameInfo.sourceFile, callFrameInfo.scriptIdentity);
 
         if (isNew) {
             CallDebuggerScriptParsed(scriptId, callFrameInfo.sourceFile);
@@ -1119,11 +1186,11 @@ void InspectorServer::AddCallFrameInfo(JsonArrayBuilder &callFrames, const CallF
     });
 }
 
-void InspectorServer::AddLocations(UrlBreakpointResponse &response, const std::set<std::string_view> &sourceFiles,
+void InspectorServer::AddLocations(UrlBreakpointResponse &response, const SourceFileSet &sourceFiles,
                                    int32_t lineNumber, [[maybe_unused]] PtThread thread)
 {
-    for (auto sourceFile : sourceFiles) {
-        auto [scriptId, isNew] = sourceManager_.GetScriptId(sourceFile);
+    for (const auto &[sourceFile, scriptIdentity] : sourceFiles) {
+        auto [scriptId, isNew] = sourceManager_.GetScriptId(sourceFile, scriptIdentity);
 
         if (isNew) {
             CallDebuggerScriptParsed(scriptId, sourceFile);

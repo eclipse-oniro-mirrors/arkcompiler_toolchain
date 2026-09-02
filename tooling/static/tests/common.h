@@ -20,7 +20,7 @@
 #include "libarkbase/utils/json_parser.h"
 
 namespace ark::tooling::inspector {
-using SourceFileFilter = std::function<bool(std::string_view)>;
+using SourceFileFilter = std::function<bool(std::string_view, std::string_view)>;
 }  // namespace ark::tooling::inspector
 
 namespace ark::tooling::inspector::test {

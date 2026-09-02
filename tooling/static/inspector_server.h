@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <set>
 #include <string_view>
@@ -32,12 +33,15 @@
 #include "source_manager.h"
 #include "debugger/thread_state.h"
 #include "types/evaluation_result.h"
+#include "types/async_stack_trace.h"
 #include "types/numeric_id.h"
 #include "types/pause_on_exceptions_state.h"
 #include "types/profile_result.h"
 #include "types/property_descriptor.h"
 #include "types/remote_object.h"
 #include "types/scope.h"
+
+#include "runtime/execution/async_stack_snapshot_view.h"
 
 namespace ark::tooling::inspector {
 class UrlBreakpointResponse;
@@ -46,10 +50,20 @@ class UrlBreakpointRequest;
 
 class InspectorServer final {
 public:
-    using SetBreakpointHandler = std::optional<BreakpointId>(PtThread, SourceFileFilter &&, int32_t,
-                                                             std::set<std::string_view> &, const std::string *);
-    using FrameInfoHandler = std::function<void(FrameId, std::string_view, std::string_view, size_t,
-        const std::vector<Scope> &, const std::optional<RemoteObject> &, bool)>;
+    using SetBreakpointHandler = std::optional<BreakpointId>(PtThread, SourceFileFilter &&, int32_t, SourceFileSet &,
+                                                             const std::string *);
+    using FrameInfoHandler = std::function<void(FrameId, std::string_view, std::string_view, std::string_view, size_t,
+                                                const std::vector<Scope> &, const std::optional<RemoteObject> &, bool)>;
+    using AsyncFrameResolver = std::function<std::optional<AsyncFrameSourceLocation>(const AsyncStackFrameView &)>;
+
+    struct DebuggerPausedParams {
+        PtThread thread;
+        std::vector<BreakpointId> hitBreakpoints;
+        std::optional<RemoteObject> exception;
+        PauseReason pauseReason;
+        std::function<void(const FrameInfoHandler &)> enumerateFrames;
+        const AsyncStackTrace *asyncStackTrace = nullptr;
+    };
 
 public:
     explicit InspectorServer(Server &server);
@@ -59,18 +73,18 @@ public:
     NO_MOVE_SEMANTIC(InspectorServer);
 
     void Kill();
-    void Run(const std::string& msg);
-    std::string RunSync(const std::string& msg);
+    void Run(const std::string &msg);
+    std::string RunSync(const std::string &msg);
 
     void OnValidate(std::function<void()> &&handler);
     void OnOpen(std::function<void()> &&handler);
     void OnFail(std::function<void()> &&handler);
 
-    void CallDebuggerPaused(PtThread thread, const std::vector<BreakpointId> &hitBreakpoints,
-                            const std::optional<RemoteObject> &exception, PauseReason pauseReason,
-                            const std::function<void(const FrameInfoHandler &)> &enumerateFrames);
+    void CallDebuggerPaused(DebuggerPausedParams params);
     void CallDebuggerResumed(PtThread thread);
     void CallDebuggerScriptParsed(ScriptId scriptId, std::string_view sourceFile);
+    std::unique_ptr<AsyncStackTrace> CreateAsyncStackTrace(const AsyncStackSnapshotView &snapshotView,
+                                                           const AsyncFrameResolver &resolveFrame);
     void CallRuntimeConsoleApiCalled(PtThread thread, ConsoleCallType type, uint64_t timestamp,
                                      const std::vector<RemoteObject> &arguments);
     void CallRuntimeExecutionContextCreated(PtThread thread);
@@ -78,17 +92,18 @@ public:
     bool CallTargetAttachedToTarget(PtThread thread);
     void CallTargetDetachedFromTarget(PtThread thread);
 
-    void OnCallDebuggerContinueToLocation(std::function<void(PtThread, std::string_view, int32_t)> &&handler);
+    void OnCallDebuggerContinueToLocation(
+        std::function<void(PtThread, std::string_view, std::string_view, int32_t)> &&handler);
     void OnCallDebuggerEnable(std::function<void()> &&handler);
     void OnCallDebuggerGetPossibleBreakpoints(
-        std::function<std::set<int32_t>(std::string_view, int32_t, int32_t, bool)> &&handler);
-    void OnCallDebuggerGetScriptSource(std::function<std::string(std::string_view)> &&handler);
+        std::function<std::set<int32_t>(std::string_view, std::string_view, int32_t, int32_t, bool)> &&handler);
+    void OnCallDebuggerGetScriptSource(std::function<std::string(std::string_view, std::string_view)> &&handler);
     void OnCallDebuggerPause(std::function<void(PtThread)> &&handler);
     void OnCallDebuggerRemoveBreakpoint(std::function<void(PtThread, BreakpointId)> &&handler);
-    void OnCallDebuggerRemoveBreakpointsByUrl(std::function<void(PtThread, const char*, SourceFileFilter)> &&handler);
+    void OnCallDebuggerRemoveBreakpointsByUrl(std::function<void(PtThread, const char *, SourceFileFilter)> &&handler);
     void OnCallDebuggerRestartFrame(std::function<void(PtThread, FrameId)> &&handler);
     void OnCallDebuggerResume(std::function<void(PtThread)> &&handler);
-    void OnCallDebuggerSetAsyncCallStackDepth(std::function<void(PtThread)> &&handler);
+    void OnCallDebuggerSetAsyncCallStackDepth(std::function<void(PtThread, uint32_t)> &&handler);
     void OnCallDebuggerSetBlackboxPatterns(std::function<void(PtThread)> &&handler);
     void OnCallDebuggerSmartStepInto(std::function<void(PtThread)> &&handler);
     void OnCallDebuggerSetBreakpoint(std::function<SetBreakpointHandler> &&handler);
@@ -138,6 +153,7 @@ private:
     struct CallFrameInfo {
         FrameId frameId;
         std::string_view sourceFile;
+        std::string_view scriptIdentity;
         std::string_view methodName;
         int32_t lineNumber;
         bool isStaticFrame;
@@ -153,8 +169,8 @@ private:
     Expected<std::unique_ptr<UrlBreakpointResponse>, std::string> SetBreakpointByUrl(
         const std::string &sessionId, const UrlBreakpointRequest &breakpointRequest,
         const std::function<SetBreakpointHandler> &handler);
-    void AddLocations(UrlBreakpointResponse &response, const std::set<std::string_view> &sourceFiles,
-                      int32_t lineNumber, PtThread thread);
+    void AddLocations(UrlBreakpointResponse &response, const SourceFileSet &sourceFiles, int32_t lineNumber,
+                      PtThread thread);
     static void AddHitBreakpoints(JsonArrayBuilder &hitBreakpointsBuilder,
                                   const std::vector<BreakpointId> &hitBreakpoints);
     static std::string GetExecutionContextUniqueId(const PtThread &thread);

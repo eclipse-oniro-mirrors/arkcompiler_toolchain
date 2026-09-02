@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -90,7 +90,7 @@ public:
      * @param[out] breakpointLocations map of breakpoint locations from storage
      * @returns BreakpointId of set breakpoint.
      */
-    virtual bool SetLocations(std::set<std::string_view> &sourceFiles, const DebugInfoCache &debugCache,
+    virtual bool SetLocations(SourceFileSet &sourceFiles, const DebugInfoCache &debugCache,
                               std::unordered_multimap<PtLocation, BreakpointId, HashLocation> &breakpointLocations) = 0;
 
 protected:

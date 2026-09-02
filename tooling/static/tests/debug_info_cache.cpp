@@ -15,6 +15,11 @@
 
 #include "debugger/debug_info_cache.h"
 
+#include <array>
+#include <memory>
+#include <optional>
+#include <utility>
+
 #include "gtest/gtest.h"
 
 #include "assembly-emitter.h"
@@ -42,42 +47,127 @@ static constexpr const char *g_source = R"(
     }
 )";
 
+static constexpr const char *g_second_source = R"(
+    .record Test2 {}
+
+    .function i32 Test2.second() {
+        movi v0, 7         # line 7, offset 0
+        return             # line 8, offset 1
+    }
+)";
+
+static constexpr const char *g_sameFirstSource = R"(
+    .record SameFirst {}
+
+    .function i32 SameFirst.foo() {
+        movi v0, 20        # line 20, offset 0
+        return             # line 21, offset 1
+    }
+)";
+
+static constexpr const char *g_sameSecondSource = R"(
+    .record SameSecond {}
+
+    .function i32 SameSecond.second() {
+        movi v0, 30        # line 30, offset 0
+        return             # line 31, offset 1
+    }
+)";
+
+static constexpr size_t PANDA_FILES_COUNT = 4U;
+static constexpr uint32_t SAME_FIRST_START_LINE = 20U;
+static constexpr uint32_t SAME_SECOND_START_LINE = 30U;
+
 class DebugInfoCacheTest : public testing::Test {
 protected:
-    static void SetUpTestSuite()
+    static std::optional<pandasm::Program> ParseProgram(const char *source, const char *sourceFileName)
     {
-        pandasm::Parser p;
+        pandasm::Parser parser;
+        auto result = parser.Parse(source, sourceFileName);
+        if (!result.HasValue()) {
+            return std::nullopt;
+        }
+        return std::move(result.Value());
+    }
 
-        auto res = p.Parse(g_source, SOURCE_FILE_NAME.data());
-        ASSERT_TRUE(res.HasValue());
-        ASSERT_TRUE(pandasm::AsmEmitter::Emit(ASM_FILE_NAME.data(), res.Value()));
-        auto pf = panda_file::OpenPandaFile(ASM_FILE_NAME);
-        ASSERT_NE(pf, nullptr);
+    static std::unique_ptr<const panda_file::File> EmitPandaFile(pandasm::Program &program, const char *asmFileName)
+    {
+        if (!pandasm::AsmEmitter::Emit(asmFileName, program)) {
+            return nullptr;
+        }
+        return panda_file::OpenPandaFile(asmFileName);
+    }
 
-        cache.AddPandaFile(*pf, true);
+    static void SetSourceCodeAndLineNumbers(pandasm::Program &program, const char *sourceCode, uint32_t startLine)
+    {
+        for (auto &[name, function] : program.functionStaticTable) {
+            (void)name;
+            function.sourceCode = sourceCode;
+            for (size_t i = 0; i < function.ins.size(); ++i) {
+                function.ins[i].insDebug.SetLineNumber(startLine + i);
+            }
+        }
+    }
 
+    static void LinkPandaFiles(std::array<std::unique_ptr<const panda_file::File>, PANDA_FILES_COUNT> &pandaFiles)
+    {
         RuntimeOptions options;
         options.SetShouldInitializeIntrinsics(false);
         options.SetShouldLoadBootPandaFiles(false);
         Runtime::Create(options);
 
         thread_ = ManagedThread::GetCurrent();
-        {
-            ScopedManagedCodeThread s(thread_);
+        ScopedManagedCodeThread scopedThread(thread_);
+        ClassLinker *classLinker = Runtime::GetCurrent()->GetClassLinker();
+        classLinker->AddPandaFile(std::move(pandaFiles[0]));
 
-            ClassLinker *classLinker = Runtime::GetCurrent()->GetClassLinker();
-            classLinker->AddPandaFile(std::move(pf));
+        PandaString descriptorHolder;
+        const auto *descriptor = ClassHelper::GetDescriptor(utf::CStringAsMutf8("Test"), &descriptorHolder);
+        auto *extension = classLinker->GetExtension(panda_file::SourceLang::PANDA_ASSEMBLY);
+        Class *klass = extension->GetClass(descriptor, true, extension->GetBootContext());
+        ASSERT_NE(klass, nullptr);
 
-            PandaString descriptorHolder;
-            const auto *descriptor = ClassHelper::GetDescriptor(utf::CStringAsMutf8("Test"), &descriptorHolder);
-            auto *ext = classLinker->GetExtension(panda_file::SourceLang::PANDA_ASSEMBLY);
-            Class *klass = ext->GetClass(descriptor, true, ext->GetBootContext());
-            ASSERT_NE(klass, nullptr);
+        auto methods = klass->GetMethods();
+        ASSERT_EQ(methods.size(), 1U);
+        methodFoo = &methods[0];
 
-            auto methods = klass->GetMethods();
-            ASSERT_EQ(methods.size(), 1);
-            methodFoo = &methods[0];
+        for (size_t i = 1; i < pandaFiles.size(); ++i) {
+            classLinker->AddPandaFile(std::move(pandaFiles[i]));
         }
+    }
+
+    static void SetUpTestSuite()
+    {
+        auto program = ParseProgram(g_source, SOURCE_FILE_NAME);
+        ASSERT_TRUE(program.has_value());
+        auto pandaFile = EmitPandaFile(*program, ASM_FILE_NAME);
+        ASSERT_NE(pandaFile, nullptr);
+
+        auto secondProgram = ParseProgram(g_second_source, SOURCE_FILE_NAME);
+        ASSERT_TRUE(secondProgram.has_value());
+        auto secondPandaFile = EmitPandaFile(*secondProgram, SECOND_ASM_FILE_NAME);
+        ASSERT_NE(secondPandaFile, nullptr);
+
+        auto sameFirstProgram = ParseProgram(g_sameFirstSource, SAME_SOURCE_FILE_NAME);
+        ASSERT_TRUE(sameFirstProgram.has_value());
+        SetSourceCodeAndLineNumbers(*sameFirstProgram, g_sameFirstSource, SAME_FIRST_START_LINE);
+        auto sameFirstPandaFile = EmitPandaFile(*sameFirstProgram, SAME_FIRST_ASM_FILE_NAME);
+        ASSERT_NE(sameFirstPandaFile, nullptr);
+
+        auto sameSecondProgram = ParseProgram(g_sameSecondSource, SAME_SOURCE_FILE_NAME);
+        ASSERT_TRUE(sameSecondProgram.has_value());
+        SetSourceCodeAndLineNumbers(*sameSecondProgram, g_sameSecondSource, SAME_SECOND_START_LINE);
+        auto sameSecondPandaFile = EmitPandaFile(*sameSecondProgram, SAME_SECOND_ASM_FILE_NAME);
+        ASSERT_NE(sameSecondPandaFile, nullptr);
+
+        std::array<std::unique_ptr<const panda_file::File>, PANDA_FILES_COUNT> pandaFiles = {
+            std::move(pandaFile), std::move(secondPandaFile), std::move(sameFirstPandaFile),
+            std::move(sameSecondPandaFile)};
+        for (auto &file : pandaFiles) {
+            ASSERT_NE(file, nullptr);
+            cache.AddPandaFile(*file, true);
+        }
+        LinkPandaFiles(pandaFiles);
     }
 
     static void TearDownTestSuite()
@@ -85,9 +175,13 @@ protected:
         Runtime::Destroy();
     }
 
-    static constexpr std::string_view ASM_FILE_NAME = "source.abc";
+    static constexpr const char *ASM_FILE_NAME = "source.abc";
+    static constexpr const char *SECOND_ASM_FILE_NAME = "second-source.abc";
+    static constexpr const char *SAME_SOURCE_FILE_NAME = "same-source.ets";
+    static constexpr const char *SAME_FIRST_ASM_FILE_NAME = "same-source-first.abc";
+    static constexpr const char *SAME_SECOND_ASM_FILE_NAME = "same-source-second.abc";
     // This test intentionally sets empty source file name to ensure that disassembly is used for debug info
-    static constexpr std::string_view SOURCE_FILE_NAME = "";
+    static constexpr const char *SOURCE_FILE_NAME = "";
     static DebugInfoCache cache;
     static ManagedThread *thread_;
     static Method *methodFoo;
@@ -105,18 +199,18 @@ TEST_F(DebugInfoCacheTest, GetCurrentLineLocations)
 
     auto curr = cache.GetCurrentLineLocations(fr0);
     ASSERT_EQ(curr.size(), 3U);
-    ASSERT_NE(curr.find(PtLocation(ASM_FILE_NAME.data(), methodFoo->GetFileId(), 2U)), curr.end());
-    ASSERT_NE(curr.find(PtLocation(ASM_FILE_NAME.data(), methodFoo->GetFileId(), 3U)), curr.end());
-    ASSERT_NE(curr.find(PtLocation(ASM_FILE_NAME.data(), methodFoo->GetFileId(), 4U)), curr.end());
+    ASSERT_NE(curr.find(PtLocation(ASM_FILE_NAME, methodFoo->GetFileId(), 2U)), curr.end());
+    ASSERT_NE(curr.find(PtLocation(ASM_FILE_NAME, methodFoo->GetFileId(), 3U)), curr.end());
+    ASSERT_NE(curr.find(PtLocation(ASM_FILE_NAME, methodFoo->GetFileId(), 4U)), curr.end());
 
     curr = cache.GetCurrentLineLocations(fr1);
     ASSERT_EQ(curr.size(), 2U);
-    ASSERT_NE(curr.find(PtLocation(ASM_FILE_NAME.data(), methodFoo->GetFileId(), 5U)), curr.end());
-    ASSERT_NE(curr.find(PtLocation(ASM_FILE_NAME.data(), methodFoo->GetFileId(), 6U)), curr.end());
+    ASSERT_NE(curr.find(PtLocation(ASM_FILE_NAME, methodFoo->GetFileId(), 5U)), curr.end());
+    ASSERT_NE(curr.find(PtLocation(ASM_FILE_NAME, methodFoo->GetFileId(), 6U)), curr.end());
 
     curr = cache.GetCurrentLineLocations(fr2);
     ASSERT_EQ(curr.size(), 1);
-    ASSERT_NE(curr.find(PtLocation(ASM_FILE_NAME.data(), methodFoo->GetFileId(), 10U)), curr.end());
+    ASSERT_NE(curr.find(PtLocation(ASM_FILE_NAME, methodFoo->GetFileId(), 10U)), curr.end());
 }
 
 TEST_F(DebugInfoCacheTest, GetLocals)
@@ -195,28 +289,28 @@ TEST_F(DebugInfoCacheTest, GetSourceLocation)
     int32_t line_number = 0;
 
     cache.GetSourceLocation(fr0, disasm_file, method_name, line_number);
-    ASSERT_NE(disasm_file.find(ASM_FILE_NAME.data()), std::string::npos);
+    ASSERT_NE(disasm_file.find(ASM_FILE_NAME), std::string::npos);
     ASSERT_EQ(method_name, "foo");
     ASSERT_EQ(line_number, 3U);
 
     cache.GetSourceLocation(fr1, disasm_file, method_name, line_number);
-    ASSERT_NE(disasm_file.find(ASM_FILE_NAME.data()), std::string::npos);
+    ASSERT_NE(disasm_file.find(ASM_FILE_NAME), std::string::npos);
     ASSERT_EQ(method_name, "foo");
     ASSERT_EQ(line_number, 4U);
 
-    auto set_locs = cache.GetContinueToLocations(disasm_file, 4U);
+    auto set_locs = cache.GetContinueToLocations(disasm_file, {}, 4U);
     ASSERT_EQ(set_locs.size(), 2U);
-    ASSERT_NE(set_locs.find(PtLocation(ASM_FILE_NAME.data(), methodFoo->GetFileId(), 6U)), set_locs.end());
-    ASSERT_NE(set_locs.find(PtLocation(ASM_FILE_NAME.data(), methodFoo->GetFileId(), 5U)), set_locs.end());
+    ASSERT_NE(set_locs.find(PtLocation(ASM_FILE_NAME, methodFoo->GetFileId(), 6U)), set_locs.end());
+    ASSERT_NE(set_locs.find(PtLocation(ASM_FILE_NAME, methodFoo->GetFileId(), 5U)), set_locs.end());
 
-    set_locs = cache.GetContinueToLocations(disasm_file, 6U);
+    set_locs = cache.GetContinueToLocations(disasm_file, {}, 6U);
     ASSERT_EQ(set_locs.size(), 1);
-    ASSERT_NE(set_locs.find(PtLocation(ASM_FILE_NAME.data(), methodFoo->GetFileId(), 10U)), set_locs.end());
+    ASSERT_NE(set_locs.find(PtLocation(ASM_FILE_NAME, methodFoo->GetFileId(), 10U)), set_locs.end());
 
-    set_locs = cache.GetContinueToLocations(disasm_file, 1);
+    set_locs = cache.GetContinueToLocations(disasm_file, {}, 1);
     ASSERT_EQ(set_locs.size(), 0);
 
-    auto valid_locs = cache.GetValidLineNumbers(disasm_file, 0U, 100U, false);
+    auto valid_locs = cache.GetValidLineNumbers(disasm_file, {}, 0U, 100U, false);
     ASSERT_EQ(valid_locs.size(), 5U);
 
     ASSERT_NE(valid_locs.find(2U), valid_locs.end());
@@ -228,17 +322,44 @@ TEST_F(DebugInfoCacheTest, GetSourceLocation)
     auto s = cache.GetSourceCode(disasm_file);
     ASSERT_NE(s.find(".function i32 Test.foo(u64 a0, u64 a1)"), std::string::npos);
 
-    s = cache.GetSourceCode("source.pa");
+    s = cache.GetSourceCode("source.pa", ASM_FILE_NAME);
     ASSERT_TRUE(s.empty());
 
-    std::set<std::string_view> sets;
-    auto breaks = cache.GetBreakpointLocations([](auto) { return true; }, 4U, sets);
+    SourceFileSet sets;
+    auto breaks = cache.GetBreakpointLocations([](auto, [[maybe_unused]] auto) { return true; }, 4U, sets);
     ASSERT_EQ(breaks.size(), 1);
     ASSERT_EQ(sets.size(), 1);
-    ASSERT_EQ(*sets.begin(), disasm_file);
+    ASSERT_EQ(sets.begin()->first, disasm_file);
 
-    ASSERT_NE(std::find(breaks.begin(), breaks.end(), PtLocation(ASM_FILE_NAME.data(), methodFoo->GetFileId(), 5U)),
+    ASSERT_NE(std::find(breaks.begin(), breaks.end(), PtLocation(ASM_FILE_NAME, methodFoo->GetFileId(), 5U)),
               breaks.end());
+}
+
+TEST_F(DebugInfoCacheTest, GetAsyncFrameSourceLocation)
+{
+    auto location = cache.GetAsyncFrameSourceLocation(ASM_FILE_NAME, methodFoo->GetFileId().GetOffset(), 2U);
+    ASSERT_TRUE(location.has_value());
+    ASSERT_NE(location->sourceFile.find(ASM_FILE_NAME), std::string::npos);
+    ASSERT_EQ(location->lineNumber, 3U);
+
+    ASSERT_FALSE(cache.GetAsyncFrameSourceLocation("missing.abc", methodFoo->GetFileId().GetOffset(), 2U).has_value());
+    ASSERT_FALSE(cache.GetAsyncFrameSourceLocation(ASM_FILE_NAME, 0xDEADBEEFU, 2U).has_value());
+}
+
+TEST_F(DebugInfoCacheTest, SameSourceNameUsesPandaFileIdentity)
+{
+    auto firstSource = cache.GetSourceCode(SAME_SOURCE_FILE_NAME, SAME_FIRST_ASM_FILE_NAME);
+    ASSERT_NE(firstSource.find("SameFirst.foo"), std::string::npos);
+
+    auto secondSource = cache.GetSourceCode(SAME_SOURCE_FILE_NAME, SAME_SECOND_ASM_FILE_NAME);
+    ASSERT_NE(secondSource.find("SameSecond.second"), std::string::npos);
+    ASSERT_EQ(secondSource.find("SameFirst.foo"), std::string::npos);
+
+    auto firstLines = cache.GetValidLineNumbers(SAME_SOURCE_FILE_NAME, SAME_FIRST_ASM_FILE_NAME, 0, 100, false);
+    ASSERT_EQ(firstLines, (std::set<int32_t> {20, 21}));
+
+    auto secondLines = cache.GetValidLineNumbers(SAME_SOURCE_FILE_NAME, SAME_SECOND_ASM_FILE_NAME, 0, 100, false);
+    ASSERT_EQ(secondLines, (std::set<int32_t> {30, 31}));
 }
 
 }  // namespace ark::tooling::inspector::test

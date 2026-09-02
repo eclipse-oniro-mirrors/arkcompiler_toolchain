@@ -28,8 +28,8 @@ class EvaluationEngine;
 /// @brief Conditional breakpoint, allows only one location, condition is evaluated on breakpoint hit
 class ConditionalBreakpoint final : public BreakpointBase {
 public:
-    explicit ConditionalBreakpoint(BreakpointId id, SourceFileFilter &&filter,
-                                   int32_t line, const std::string *bytecode)
+    explicit ConditionalBreakpoint(BreakpointId id, SourceFileFilter &&filter, int32_t line,
+                                   const std::string *bytecode)
         : BreakpointBase(id), sourceFileFilter_(std::move(filter)), lineNumber_(line), bytecode_(*bytecode)
     {
     }
@@ -39,7 +39,7 @@ public:
 
     ~ConditionalBreakpoint() override = default;
 
-    bool SetLocations(std::set<std::string_view> &sourceFiles, const DebugInfoCache &debugCache,
+    bool SetLocations(SourceFileSet &sourceFiles, const DebugInfoCache &debugCache,
                       std::unordered_multimap<PtLocation, BreakpointId, HashLocation> &breakpointLocations) override;
 
     void EnumerateLocations(const std::function<bool(BreakpointId, const PtLocation &)> &func) override

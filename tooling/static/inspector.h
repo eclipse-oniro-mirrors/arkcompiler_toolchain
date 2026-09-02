@@ -17,9 +17,12 @@
 #define PANDA_TOOLING_INSPECTOR_INSPECTOR_H
 
 #include <atomic>
+#include <condition_variable>
 #include <cstddef>
+#include <memory>
 #include <optional>
 #include <set>
+#include <string>
 #include <string_view>
 #include <thread>
 #include <vector>
@@ -75,13 +78,20 @@ public:
     void ThreadEnd(PtThread thread) override;
     void VmDeath() override;
 
-    void Run(const std::string& msg);
+    void Run(const std::string &msg);
     void Stop();
     void WaitForDebugger();
     DebugResponse GetStaticCallFrames();
-    DebugResponse OperateJsDebugMessageForStatic(const char* message);
+    DebugResponse OperateJsDebugMessageForStatic(const char *message);
 
 private:
+    struct StaticCallFramesData {
+        std::string framesJson;
+        std::string nativePointerJson;
+    };
+
+    StaticCallFramesData CollectStaticCallFrames(PtThread thread, ObjectRepository &objectRepository);
+
     void RuntimeEnable(PtThread thread);
 
     void RunIfWaitingForDebugger(PtThread thread);
@@ -90,7 +100,7 @@ private:
     void Continue(PtThread thread);
     void Disable(PtThread thread);
     void ClientDisconnect(PtThread thread);
-    void SetAsyncCallStackDepth(PtThread thread);
+    void SetAsyncCallStackDepth(PtThread thread, uint32_t maxDepth);
     void SetBlackboxPatterns(PtThread thread);
     void SmartStepInto(PtThread thread);
     void DropFrame(PtThread thread);
@@ -99,30 +109,31 @@ private:
     void SetBreakpointsActive(PtThread thread, bool active);
     void SetSkipAllPauses(PtThread thread, bool skip);
     void SetMixedDebugEnabled(bool mixedDebugEnabled);
-    std::set<int32_t> GetPossibleBreakpoints(std::string_view sourceFile, int32_t startLine, int32_t endLine,
-                                            bool restrictToFunction);
+    std::set<int32_t> GetPossibleBreakpoints(std::string_view sourceFile, std::string_view scriptIdentity,
+                                             int32_t startLine, int32_t endLine, bool restrictToFunction);
     std::optional<BreakpointId> SetBreakpoint(PtThread thread, SourceFileFilter &&sourceFilesFilter, int32_t lineNumber,
-                                              std::set<std::string_view> &sourceFiles, const std::string *condition);
+                                              SourceFileSet &sourceFiles, const std::string *condition);
     void RemoveBreakpoint(PtThread thread, BreakpointId id);
-    void RemoveBreakpointsByUrl(PtThread thread, const char* url, const SourceFileFilter &sourceFilesFilter);
+    void RemoveBreakpointsByUrl(PtThread thread, const char *url, const SourceFileFilter &sourceFilesFilter);
 
     void SetPauseOnExceptions(PtThread thread, PauseOnExceptionsState state);
 
     void StepInto(PtThread thread);
     void StepOver(PtThread thread);
     void StepOut(PtThread thread);
-    void ContinueToLocation(PtThread thread, std::string_view sourceFile, int32_t lineNumber);
+    void ContinueToLocation(PtThread thread, std::string_view sourceFile, std::string_view scriptIdentity,
+                            int32_t lineNumber);
 
     void RestartFrame(PtThread thread, FrameId frameId);
 
     std::vector<PropertyDescriptor> GetProperties(PtThread thread, RemoteObjectId objectId, bool generatePreview);
-    std::string GetSourceCode(std::string_view sourceFile);
+    std::string GetSourceCode(std::string_view sourceFile, std::string_view scriptIdentity = {});
 
     void DebuggableThreadPostSuspend(PtThread thread, ObjectRepository &objectRepository,
                                      const std::vector<BreakpointId> &hitBreakpoints, ObjectHeader *exception,
                                      PauseReason pauseReason);
-    void EnumerateStaticFrames(PtThread thread, ObjectRepository &objectRepository,
-                               FrameId &frameId, const InspectorServer::FrameInfoHandler &handler);
+    void EnumerateStaticFrames(PtThread thread, ObjectRepository &objectRepository, FrameId &frameId,
+                               const InspectorServer::FrameInfoHandler &handler);
     void EnumerateHybridFrames(ObjectRepository &objectRepository, FrameId &frameId,
                                const InspectorServer::FrameInfoHandler &handler);
 
@@ -156,14 +167,14 @@ private:
     void ResolveBreakpoints(const panda_file::File &file, const panda_file::DebugInfoExtractor *debugInfoCache);
     void CollectModules();
     void DebuggerEnable();
-    void SourceNameInsert(const panda_file::DebugInfoExtractor *extractor);
+    void SourceNameInsert(const panda_file::DebugInfoExtractor *extractor, std::string_view scriptIdentity);
     void PauseOtherThreads(PtThread thread);
     size_t GetFrameCount(PtThread thread);
     bool NeedSkippedForSingleStep(Method *method);
 
 private:
     os::memory::RWLock debuggerEventsLock_;
-    bool connecting_ {false};  // Should be accessed only from the server thread
+    bool connecting_ {false};                      // Should be accessed only from the server thread
     std::atomic<bool> mixedDebugEnabled_ {false};  // Mixed debug is a global, shared by all threads
 
     InspectorServer inspectorServer_;  // NOLINT(misc-non-private-member-variables-in-classes)
@@ -191,7 +202,6 @@ private:
     std::mutex nativeMethodCallMutex_;
     std::condition_variable nativeMethodCallCond_;
     bool nativeMethodCallWaiting_ {false};
-
 };
 }  // namespace inspector
 }  // namespace ark::tooling

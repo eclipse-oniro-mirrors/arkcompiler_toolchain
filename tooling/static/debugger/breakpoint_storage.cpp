@@ -67,8 +67,7 @@ void BreakpointStorage::RemoveBreakpoint(BreakpointId id)
 }
 
 std::optional<BreakpointId> BreakpointStorage::SetBreakpoint(SourceFileFilter &&sourceFilesFilter, int32_t lineNumber,
-                                                             std::set<std::string_view> &sourceFiles,
-                                                             const std::string *condition,
+                                                             SourceFileSet &sourceFiles, const std::string *condition,
                                                              const DebugInfoCache &debugCache)
 {
     os::memory::WriteLockHolder lock(lock_);
