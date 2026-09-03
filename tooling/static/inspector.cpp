@@ -35,7 +35,8 @@
 
 #include "error.h"
 #include "evaluation/base64.h"
-#include "tooling/sampler/sampling_profiler.h"
+#include "tooling/sampler/samples_record.h"
+#include "tooling/inspector/debugger_arkapi.h"
 #include "types/remote_object.h"
 #include "types/scope.h"
 
@@ -1015,14 +1016,12 @@ Expected<bool, std::string> Inspector::ProfilerStart()
     if (UNLIKELY(CheckVmDead())) {
         return Unexpected(std::string("Fatal, VM is dead"));
     }
-    if (cpuProfilerStarted_) {
+    if (ArkDebugNativeAPI::IsProfilerRunning()) {
         return Unexpected(std::string("Fatal, profiling operation is already running."));
     }
-    cpuProfilerStarted_ = true;
-    profileInfoBuffer_ = std::make_shared<sampler::SamplesRecord>();
-    profileInfoBuffer_->SetThreadStartTime(sampler::Sampler::GetMicrosecondsTimeStamp());
-    Runtime::GetCurrent()->GetTools().StartSamplingProfiler(
-        std::make_unique<sampler::InspectorStreamWriter>(profileInfoBuffer_), samplingInterval_);
+    if (!ArkDebugNativeAPI::StartProfilingSession(samplingInterval_)) {
+        return Unexpected(std::string("Fatal, profiling operation failed to start."));
+    }
     return true;
 }
 
@@ -1033,17 +1032,15 @@ Expected<Profile, std::string> Inspector::ProfilerStop()
         return Unexpected(std::string("Fatal, VM is dead"));
     }
 
-    if (!cpuProfilerStarted_) {
+    auto buffer = ArkDebugNativeAPI::StopProfilingSession();
+    if (buffer == nullptr) {
         return Unexpected(std::string("Fatal, profiler inactive"));
     }
 
-    Runtime::GetCurrent()->GetTools().StopSamplingProfiler();
-    auto profileInfoPtr = profileInfoBuffer_->GetAllThreadsProfileInfos();
+    auto profileInfoPtr = buffer->GetAllThreadsProfileInfos();
     if (!profileInfoPtr) {
         return Unexpected(std::string("Fatal, profiler info is empty"));
     }
-    profileInfoBuffer_.reset();
-    cpuProfilerStarted_ = false;
     return Profile(std::move(profileInfoPtr));
 }
 

@@ -184,8 +184,6 @@ private:
 
     std::thread serverThread_;
     uint32_t samplingInterval_ {0};
-    std::shared_ptr<sampler::SamplesRecord> profileInfoBuffer_ = nullptr;
-    bool cpuProfilerStarted_ = false;
     os::memory::Mutex waitDebuggerMutex_;
     os::memory::ConditionVariable waitDebuggerCond_ GUARDED_BY(waitDebuggerMutex_);
 

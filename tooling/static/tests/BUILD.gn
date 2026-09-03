@@ -23,6 +23,7 @@ libarkinspector_test_sources = [
     "inspector_server.cpp",
     "json_object_matcher.cpp",
     "object_repository.cpp",
+    "profiler_api_test.cpp",
     "session_manager.cpp",
     "source_manager.cpp",
     "thread_state.cpp"
