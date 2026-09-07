@@ -34,7 +34,11 @@ class TestHooks;
 }  // namespace test
 
 enum class DebuggerState { DISABLED, ENABLED, PAUSED };
-enum class DebuggerFeature { LAUNCH_ACCELERATE, UNKNOWN };
+enum class DebuggerFeature {
+    LAUNCH_ACCELERATE,
+    ENABLE_SIMPLIFIED_MODE,
+    UNKNOWN
+};
 class DebuggerImpl final {
 public:
     DebuggerImpl(const EcmaVM *vm, ProtocolChannel *channel, RuntimeImpl *runtime, bool isHybrid = false);
@@ -301,7 +305,7 @@ private:
     void SaveParsedScriptsAndUrl(const std::string &fileName, const std::string &url,
         const std::string &recordName, const std::string &source = "");
     void EnableDebuggerFeatures(const EnableParams &params);
-    DebuggerFeature GetDebuggerFeatureEnum(std::string &option);
+    DebuggerFeature GetDebuggerFeatureEnum(const std::string &option);
     void EnableFeature(DebuggerFeature feature);
 
     const std::unordered_set<std::string> &GetRecordName(const std::string &url)

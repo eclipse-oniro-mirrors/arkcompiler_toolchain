@@ -1205,10 +1205,13 @@ void DebuggerImpl::EnableDebuggerFeatures(const EnableParams &params)
     }
 }
 
-DebuggerFeature DebuggerImpl::GetDebuggerFeatureEnum(std::string &option)
+DebuggerFeature DebuggerImpl::GetDebuggerFeatureEnum(const std::string &option)
 {
     if (option == "enableLaunchAccelerate") {
         return DebuggerFeature::LAUNCH_ACCELERATE;
+    }
+    if (option == "enableSimplifiedMode") {
+        return DebuggerFeature::ENABLE_SIMPLIFIED_MODE;
     }
     // Future features could be added here to parse as DebuggerFeatureEnum
     return DebuggerFeature::UNKNOWN;
@@ -1220,6 +1223,9 @@ void DebuggerImpl::EnableFeature(DebuggerFeature feature)
         case DebuggerFeature::LAUNCH_ACCELERATE:
             EnableLaunchAccelerateMode();
             DebuggerApi::DisableFirstTimeFlag(jsDebugger_);
+            break;
+        case DebuggerFeature::ENABLE_SIMPLIFIED_MODE:
+            DebuggerApi::EnableSimplifiedMode(jsDebugger_);
             break;
         default:
             break;
@@ -1769,6 +1775,9 @@ DispatchResponse DebuggerImpl::DropFrame(const DropFrameParams &params)
 {
     if (debuggerState_ != DebuggerState::PAUSED) {
         return DispatchResponse::Fail("Can only perform operation while paused");
+    }
+    if (DebuggerApi::IsSimplifiedMode(jsDebugger_)) {
+        return DispatchResponse::Fail("DropFrame is not supported in simplified mode");
     }
     uint32_t droppedDepth = 1;
     if (params.HasDroppedDepth()) {

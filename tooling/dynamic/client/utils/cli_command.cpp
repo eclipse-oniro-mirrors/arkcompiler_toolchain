@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -178,8 +178,6 @@ void CliCommand::CreateCommandMap()
         {std::make_pair("enable", "enable"), std::bind(&CliCommand::DebuggerCommand, this, "enable")},
         {std::make_pair("finish", "fin"), std::bind(&CliCommand::DebuggerCommand, this, "finish")},
         {std::make_pair("frame", "f"), std::bind(&CliCommand::DebuggerCommand, this, "frame")},
-        {std::make_pair("enable-launch-accelerate", "enable-acc"),
-            std::bind(&CliCommand::DebuggerCommand, this, "enable-launch-accelerate")},
         {std::make_pair("saveAllPossibleBreakpoints", "b-new"),
             std::bind(&CliCommand::SaveAllPossibleBreakpointsCommand, this, "saveAllPossibleBreakpoints")},
         {std::make_pair("setSymbolicBreakpoints", "setSymbolicBreakpoints"),
@@ -189,8 +187,20 @@ void CliCommand::CreateCommandMap()
         {std::make_pair("removeBreakpointsByUrl", "removeBreakpointsByUrl"),
             std::bind(&CliCommand::RemoveBreakpointsByUrlCommand, this, "removeBreakpointsByUrl")},
     };
+    CreateDebuggerCommandMap();
     CreateOtherCommandMap();
 }
+
+void CliCommand::CreateDebuggerCommandMap()
+{
+    commandMap_.insert({
+        {std::make_pair("enable-launch-accelerate", "enable-acc"),
+            std::bind(&CliCommand::DebuggerCommand, this, "enable-launch-accelerate")},
+        {std::make_pair("enable-simplified-mode", "enable-simplified"),
+            std::bind(&CliCommand::DebuggerCommand, this, "enable-simplified-mode")},
+    });
+}
+
 void CliCommand::CreateOtherCommandMap()
 {
     commandMap_.insert({
