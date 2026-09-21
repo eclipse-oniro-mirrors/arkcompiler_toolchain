@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,7 +40,7 @@ bool ConditionalBreakpoint::ShouldStopAt(const PtLocation &location, EvaluationE
 }
 
 bool ConditionalBreakpoint::SetLocations(
-    std::set<std::string_view> &sourceFiles, const DebugInfoCache &debugCache,
+    SourceFileSet &sourceFiles, const DebugInfoCache &debugCache,
     std::unordered_multimap<PtLocation, BreakpointId, HashLocation> &breakpointLocations)
 {
     auto locations = debugCache.GetBreakpointLocations(sourceFileFilter_, lineNumber_, sourceFiles);
@@ -81,7 +81,7 @@ void ConditionalBreakpoint::TryResolveImpl(
     };
 
     for (const auto &methodId : debugInfo->GetMethodIdList()) {
-        if (!sourceFileFilter_(debugInfo->GetSourceFile(methodId))) {
+        if (!sourceFileFilter_(debugInfo->GetSourceFile(methodId), file.GetFilename())) {
             continue;
         }
 

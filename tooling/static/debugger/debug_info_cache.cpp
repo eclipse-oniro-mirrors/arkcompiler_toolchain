@@ -15,6 +15,9 @@
 
 #include "debug_info_cache.h"
 
+#include <algorithm>
+#include <limits>
+
 #include "libarkfile/debug_info_extractor.h"
 #include "include/tooling/pt_location.h"
 #include "libarkbase/utils/bit_utils.h"
@@ -22,6 +25,24 @@
 #include "libarkbase/os/mutex.h"
 
 namespace ark::tooling::inspector {
+namespace {
+bool IsSelectedPandaFile(const panda_file::File *file, std::string_view scriptIdentity)
+{
+    return scriptIdentity.empty() || file->GetFilename() == scriptIdentity;
+}
+
+std::string FindSourceCode(const disasm::DisasmBackedDebugInfoExtractor &debugInfo, std::string_view sourceFile)
+{
+    for (const auto &methodId : debugInfo.GetMethodIdList()) {
+        std::string_view sourceCode = debugInfo.GetSourceCode(methodId);
+        if (!sourceCode.empty() && debugInfo.GetSourceFile(methodId) == sourceFile) {
+            return std::string(sourceCode);
+        }
+    }
+    return {};
+}
+}  // namespace
+
 void DebugInfoCache::AddPandaFile(const panda_file::File &file, bool isUserPandafile)
 {
     os::memory::LockHolder lock(debugInfosMutex_);
@@ -77,6 +98,41 @@ void DebugInfoCache::GetSourceLocation(const PtFrame &frame, std::string_view &s
     lineNumber = std::prev(lineNumberIter)->line;
 }
 
+std::optional<AsyncFrameSourceLocation> DebugInfoCache::GetAsyncFrameSourceLocation(std::string_view pandaFile,
+                                                                                    uint64_t methodId,
+                                                                                    uint32_t bytecodeOffset) const
+{
+    if (methodId > std::numeric_limits<uint32_t>::max()) {
+        return std::nullopt;
+    }
+
+    os::memory::LockHolder lock(debugInfosMutex_);
+
+    for (const auto &[file, debugInfo] : debugInfos_) {
+        if (file->GetFilename() != pandaFile || !debugInfo.IsUserFile()) {
+            continue;
+        }
+
+        const auto entityMethodId = panda_file::File::EntityId(static_cast<uint32_t>(methodId));
+        const auto &methodIds = debugInfo.GetMethodIdList();
+        if (std::find(methodIds.begin(), methodIds.end(), entityMethodId) == methodIds.end()) {
+            continue;
+        }
+
+        const auto &table = debugInfo.GetLineNumberTable(entityMethodId);
+        auto lineNumberIter = std::upper_bound(table.begin(), table.end(), bytecodeOffset,
+                                               [](auto offset, auto &entry) { return offset < entry.offset; });
+        if (lineNumberIter == table.begin()) {
+            continue;
+        }
+
+        return AsyncFrameSourceLocation {std::string(debugInfo.GetSourceFile(entityMethodId)),
+                                         std::prev(lineNumberIter)->line};
+    }
+
+    return std::nullopt;
+}
+
 std::unordered_set<PtLocation, HashLocation> DebugInfoCache::GetCurrentLineLocations(const PtFrame &frame)
 {
     std::unordered_set<PtLocation, HashLocation> locations;
@@ -111,11 +167,12 @@ std::unordered_set<PtLocation, HashLocation> DebugInfoCache::GetCurrentLineLocat
 }
 
 std::unordered_set<PtLocation, HashLocation> DebugInfoCache::GetContinueToLocations(std::string_view sourceFile,
+                                                                                    std::string_view scriptIdentity,
                                                                                     int32_t lineNumber)
 {
     std::unordered_set<PtLocation, HashLocation> locations;
     EnumerateLineEntries(
-        [](auto, auto &) { return true; },
+        [scriptIdentity](auto *pandaFile, auto &) { return IsSelectedPandaFile(pandaFile, scriptIdentity); },
         [sourceFile](auto, auto &debugInfo, auto methodId) { return debugInfo.GetSourceFile(methodId) == sourceFile; },
         [lineNumber, &locations](auto pandaFile, auto &, auto methodId, auto &entry, auto next) {
             if (entry.line != lineNumber) {
@@ -144,21 +201,21 @@ std::unordered_set<PtLocation, HashLocation> DebugInfoCache::GetContinueToLocati
 }
 
 std::unordered_set<PtLocation, HashLocation> DebugInfoCache::GetBreakpointLocations(
-    const std::function<bool(std::string_view)> &sourceFileFilter, int32_t lineNumber,
-    std::set<std::string_view> &sourceFiles) const
+    const std::function<bool(std::string_view, std::string_view)> &sourceFileFilter, int32_t lineNumber,
+    SourceFileSet &sourceFiles) const
 {
     std::unordered_set<PtLocation, HashLocation> locations;
     sourceFiles.clear();
     // clang-format off
     EnumerateLineEntries(
         [](auto, auto &) { return true; },
-        [&sourceFileFilter](auto, auto &debugInfo, auto methodId) {
-            return sourceFileFilter(debugInfo.GetSourceFile(methodId));
+        [&sourceFileFilter](auto *file, auto &debugInfo, auto methodId) {
+            return sourceFileFilter(debugInfo.GetSourceFile(methodId), file->GetFilename());
         },
         [lineNumber, &sourceFiles, &locations](auto pandaFile, auto &debugInfo, auto methodId,
                                                auto &entry, auto /* next */) {
             if (entry.line == lineNumber) {
-                sourceFiles.insert(debugInfo.GetSourceFile(methodId));
+                sourceFiles.insert({debugInfo.GetSourceFile(methodId), pandaFile->GetFilename()});
                 locations.emplace(pandaFile->GetFilename().data(), methodId, entry.offset);
                 // Must choose the first found bytecode location in each method
                 return false;
@@ -170,8 +227,8 @@ std::unordered_set<PtLocation, HashLocation> DebugInfoCache::GetBreakpointLocati
     return locations;
 }
 
-std::set<int32_t> DebugInfoCache::GetValidLineNumbers(std::string_view sourceFile, int32_t startLine,
-                                                      int32_t endLine, bool restrictToFunction)
+std::set<int32_t> DebugInfoCache::GetValidLineNumbers(std::string_view sourceFile, std::string_view scriptIdentity,
+                                                      int32_t startLine, int32_t endLine, bool restrictToFunction)
 {
     std::set<int32_t> lineNumbers;
     auto lineHandler = [startLine, endLine, &lineNumbers](auto, auto &, auto, auto &entry, auto /* next */) {
@@ -182,11 +239,12 @@ std::set<int32_t> DebugInfoCache::GetValidLineNumbers(std::string_view sourceFil
         return true;
     };
     if (!restrictToFunction) {
-        EnumerateLineEntries([](auto, auto &) { return true; },
-                             [sourceFile](auto, auto &debugInfo, auto methodId) {
-                                 return (debugInfo.GetSourceFile(methodId) == sourceFile);
-                             },
-                             lineHandler);
+        EnumerateLineEntries(
+            [scriptIdentity](auto *pandaFile, auto &) { return IsSelectedPandaFile(pandaFile, scriptIdentity); },
+            [sourceFile](auto, auto &debugInfo, auto methodId) {
+                return (debugInfo.GetSourceFile(methodId) == sourceFile);
+            },
+            lineHandler);
         return lineNumbers;
     }
 
@@ -213,7 +271,9 @@ std::set<int32_t> DebugInfoCache::GetValidLineNumbers(std::string_view sourceFil
 
         return hasLess && hasGreater;
     };
-    EnumerateLineEntries([](auto, auto &) { return true; }, methodFilter, lineHandler);
+    EnumerateLineEntries(
+        [scriptIdentity](auto *pandaFile, auto &) { return IsSelectedPandaFile(pandaFile, scriptIdentity); },
+        methodFilter, lineHandler);
     return lineNumbers;
 }
 
@@ -250,8 +310,7 @@ static TypedValue CreateTypedValueFromReg(uint64_t reg, panda_file::Type::TypeId
         case panda_file::Type::TypeId::REFERENCE: {
             auto rawTagged = static_cast<coretypes::TaggedType>(reg);
             if (rawTagged == coretypes::TaggedValue::VALUE_UNDEFINED ||
-                rawTagged == coretypes::TaggedValue::VALUE_HOLE ||
-                rawTagged == coretypes::TaggedValue::VALUE_NULL) {
+                rawTagged == coretypes::TaggedValue::VALUE_HOLE || rawTagged == coretypes::TaggedValue::VALUE_NULL) {
                 return TypedValue::Tagged(coretypes::TaggedValue(rawTagged));
             }
             return TypedValue::Reference(reinterpret_cast<ObjectHeader *>(reg));
@@ -355,63 +414,106 @@ std::map<std::string, TypedValue> DebugInfoCache::GetLocals(const PtFrame &frame
     return result;
 }
 
-std::string DebugInfoCache::GetSourceCode(std::string_view sourceFile)
+std::string DebugInfoCache::GetSourceCodeByIdentity(std::string_view sourceFile, std::string_view scriptIdentity)
 {
+    os::memory::LockHolder lock(debugInfosMutex_);
+
+    for (const auto &[file, debugInfo] : debugInfos_) {
+        if (file->GetFilename() != scriptIdentity) {
+            continue;
+        }
+
+        auto sourceCode = FindSourceCode(debugInfo, sourceFile);
+        if (!sourceCode.empty()) {
+            return sourceCode;
+        }
+    }
+
+    return {};
+}
+
+std::string DebugInfoCache::GetDisassemblySourceCode(std::string_view sourceFile)
+{
+    const panda_file::File *pandaFile = nullptr;
+    panda_file::File::EntityId methodId;
     {
         os::memory::LockHolder lock(disassembliesMutex_);
-
         auto it = disassemblies_.find(sourceFile);
-        if (it != disassemblies_.end()) {
-            auto* debugInfo = GetDebugInfo(&it->second.first);
-            if (debugInfo != nullptr) {
-                return debugInfo->GetSourceCode(it->second.second);
-            }
+        if (it == disassemblies_.end()) {
+            return {};
         }
+        pandaFile = &it->second.first;
+        methodId = it->second.second;
     }
 
-    // Try to get source code read from debug info
-    {
-        os::memory::LockHolder lock(debugInfosMutex_);
-
-        auto iter = fileToSourceCode_.find(sourceFile);
-        if (iter != fileToSourceCode_.end()) {
-            return std::string(iter->second);
-        }
+    auto *debugInfo = GetDebugInfo(pandaFile);
+    if (debugInfo == nullptr) {
+        return {};
     }
+    return debugInfo->GetSourceCode(methodId);
+}
 
+std::string DebugInfoCache::GetCachedSourceCode(std::string_view sourceFile)
+{
+    os::memory::LockHolder lock(debugInfosMutex_);
+    auto it = fileToSourceCode_.find(sourceFile);
+    if (it == fileToSourceCode_.end()) {
+        return {};
+    }
+    return std::string(it->second);
+}
+
+std::string DebugInfoCache::GetFileSourceCode(std::string_view sourceFile)
+{
     if (!os::file::File::IsRegularFile(sourceFile.data())) {
         return {};
     }
 
     std::string result;
-
     std::stringstream buffer;
     buffer << std::ifstream(sourceFile.data()).rdbuf();
-
     result = buffer.str();
     if (!result.empty() && result.back() != '\n') {
         result += "\n";
     }
-
     return result;
 }
 
-std::vector<const panda_file::File*> DebugInfoCache::GetPandaFiles(
-    const std::function<bool(std::string_view)> &sourceFileFilter)
+std::string DebugInfoCache::GetSourceCode(std::string_view sourceFile, std::string_view scriptIdentity)
 {
-    std::unordered_set<const panda_file::File*> uniquePandaFiles;
+    if (!scriptIdentity.empty()) {
+        return GetSourceCodeByIdentity(sourceFile, scriptIdentity);
+    }
+
+    auto sourceCode = GetDisassemblySourceCode(sourceFile);
+    if (!sourceCode.empty()) {
+        return sourceCode;
+    }
+
+    sourceCode = GetCachedSourceCode(sourceFile);
+    if (!sourceCode.empty()) {
+        return sourceCode;
+    }
+
+    return GetFileSourceCode(sourceFile);
+}
+
+std::vector<const panda_file::File *> DebugInfoCache::GetPandaFiles(
+    const std::function<bool(std::string_view, std::string_view)> &sourceFileFilter)
+{
+    std::unordered_set<const panda_file::File *> uniquePandaFiles;
     // clang-format off
     EnumerateLineEntries(
         [](auto, auto &) { return true; },
-        [&sourceFileFilter](auto, auto &debugInfo, auto methodId) {
-            return sourceFileFilter(debugInfo.GetSourceFile(methodId));
+        [&sourceFileFilter](auto *file, auto &debugInfo, auto methodId) {
+            return sourceFileFilter(debugInfo.GetSourceFile(methodId), file->GetFilename());
         },
         [&uniquePandaFiles](const panda_file::File* pf, auto &, auto, auto &, auto) {
             uniquePandaFiles.insert(pf);
             return false;
         });
     // clang-format on
-    std::vector<const panda_file::File*> pandaFiles;
+    std::vector<const panda_file::File *> pandaFiles;
     pandaFiles.reserve(uniquePandaFiles.size());
     pandaFiles.assign(uniquePandaFiles.begin(), uniquePandaFiles.end());
     return pandaFiles;

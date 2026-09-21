@@ -1,0 +1,61 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("../../../../toolchain.gni")
+
+if (ark_standalone_build) {
+  import("//arkcompiler/ets_frontend/ets2panda/ets2abc_config.gni")
+} else {
+  import("//build/config/components/ets_frontend/ets2abc_config.gni")
+}
+
+async_stack_promise_test_abc = "$target_gen_dir/AsyncStackPromiseTest.abc"
+
+action("async_stack_promise_test_abc") {
+  script = "//arkcompiler/ets_runtime/script/run_ark_executable.py"
+  inputs = [ "AsyncStackPromiseTest.ets" ]
+  outputs = [ async_stack_promise_test_abc ]
+
+  if (ark_standalone_build) {
+    _es2panda_bin = rebase_path("${ets2abc_build_path}/es2panda")
+  } else {
+    _es2panda_bin = rebase_path(ets2panda_target_out_path)
+  }
+
+  args = [
+    "--script-file",
+    _es2panda_bin,
+    "--script-args",
+    string_join(" ",
+                [
+                  "--extension=ets",
+                  "--opt-level=0",
+                  "--debug-info",
+                  "--output=" + rebase_path(async_stack_promise_test_abc),
+                  rebase_path(inputs[0]),
+                ]),
+    "--env-path",
+    rebase_path("${ets2abc_out_root}/arkcompiler/runtime_core/") + ":" +
+        rebase_path("${ets2abc_out_root}/arkcompiler/ets_frontend/") + ":" +
+        rebase_path("${ets2abc_out_root}/thirdparty/zlib/") + ":" +
+        rebase_path("${ets2abc_out_root}/thirdparty/icu/"),
+    "--expect-output",
+    "0",
+  ]
+
+  if (ark_standalone_build) {
+    deps = ets2abc_build_deps
+  } else {
+    external_deps = [ ets2abc_build_deps ]
+  }
+}

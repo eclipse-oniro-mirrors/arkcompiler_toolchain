@@ -61,7 +61,7 @@ public:
      * @returns BreakpointId of set breakpoint.
      */
     std::optional<BreakpointId> SetBreakpoint(SourceFileFilter &&sourceFilesFilter, int32_t lineNumber,
-                                              std::set<std::string_view> &sourceFiles, const std::string *condition,
+                                              SourceFileSet &sourceFiles, const std::string *condition,
                                               const DebugInfoCache &debugCache);
 
     /**

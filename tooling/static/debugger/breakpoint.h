@@ -38,7 +38,7 @@ public:
 
     ~Breakpoint() override = default;
 
-    bool SetLocations(std::set<std::string_view> &sourceFiles, const DebugInfoCache &debugCache,
+    bool SetLocations(SourceFileSet &sourceFiles, const DebugInfoCache &debugCache,
                       std::unordered_multimap<PtLocation, BreakpointId, HashLocation> &breakpointLocations) override;
 
     void EnumerateLocations(const std::function<bool(BreakpointId, const PtLocation &)> &func) override

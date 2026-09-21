@@ -16,15 +16,18 @@
 #define PANDA_TOOLING_INSPECTOR_COMMON_H
 
 #include <functional>
+#include <set>
 #include <string_view>
+#include <utility>
 
 struct DebugResponse {
     size_t size;
-    char* response;
+    char *response;
 };
 
 namespace ark::tooling::inspector {
-using SourceFileFilter = std::function<bool(std::string_view)>;
+using SourceFileFilter = std::function<bool(std::string_view, std::string_view)>;
+using SourceFileSet = std::set<std::pair<std::string_view, std::string_view>>;
 }  // namespace ark::tooling::inspector
 
 #endif  // PANDA_TOOLING_INSPECTOR_COMMON_H

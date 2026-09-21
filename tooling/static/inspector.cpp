@@ -66,8 +66,7 @@ static Scope::Type ConvertUnifiedScopeType(panda::tooling::hybrid_step::UnifiedS
 }
 
 // Helper function to convert UnifiedRemoteObject to static RemoteObject
-static RemoteObject ConvertFromUnifiedRemoteObject(
-    const panda::tooling::hybrid_step::UnifiedRemoteObject &unifiedObj)
+static RemoteObject ConvertFromUnifiedRemoteObject(const panda::tooling::hybrid_step::UnifiedRemoteObject &unifiedObj)
 {
     using namespace panda::tooling::hybrid_step;
 
@@ -93,27 +92,29 @@ static RemoteObject ConvertFromUnifiedRemoteObject(
             return RemoteObject::String("");
         case UnifiedRemoteObject::Type::OBJECT:
             return RemoteObject::Object(unifiedObj.className.empty() ? "Object" : unifiedObj.className,
-                unifiedObj.objectId.has_value() ? std::optional<RemoteObjectId>(unifiedObj.objectId.value())
-                                                : std::nullopt,
-                unifiedObj.description);
+                                        unifiedObj.objectId.has_value()
+                                            ? std::optional<RemoteObjectId>(unifiedObj.objectId.value())
+                                            : std::nullopt,
+                                        unifiedObj.description);
         case UnifiedRemoteObject::Type::FUNCTION:
             return RemoteObject::Function(unifiedObj.className.empty() ? "Function" : unifiedObj.className,
-                "",  // function name - not available in UnifiedRemoteObject
-                0,   // length - not available in UnifiedRemoteObject
-                unifiedObj.objectId.has_value() ? std::optional<RemoteObjectId>(unifiedObj.objectId.value())
-                                                : std::nullopt);
+                                          "",  // function name - not available in UnifiedRemoteObject
+                                          0,   // length - not available in UnifiedRemoteObject
+                                          unifiedObj.objectId.has_value()
+                                              ? std::optional<RemoteObjectId>(unifiedObj.objectId.value())
+                                              : std::nullopt);
         case UnifiedRemoteObject::Type::ARRAY:
             return RemoteObject::Array(unifiedObj.className.empty() ? "Array" : unifiedObj.className,
-                0,   // length - not available in UnifiedRemoteObject
-                unifiedObj.objectId.has_value() ? std::optional<RemoteObjectId>(unifiedObj.objectId.value())
-                                                : std::nullopt);
+                                       0,  // length - not available in UnifiedRemoteObject
+                                       unifiedObj.objectId.has_value()
+                                           ? std::optional<RemoteObjectId>(unifiedObj.objectId.value())
+                                           : std::nullopt);
         default:
             return RemoteObject::Undefined();
     }
 }
 
-Inspector::Inspector(Server &server, DebugInterface &debugger)
-    : inspectorServer_(server), debugger_(debugger)
+Inspector::Inspector(Server &server, DebugInterface &debugger) : inspectorServer_(server), debugger_(debugger)
 {
     if (!HandleError(debugger_.RegisterHooks(this))) {
         return;
@@ -140,8 +141,7 @@ Inspector::Inspector(Server &server, DebugInterface &debugger)
     // Register static frame provider with hybrid step coordinator
     panda::tooling::hybrid_step::FrameInfoExtractor::Get().RegisterProvider(
         true,  // isStaticFrame
-        nullptr,
-        std::make_unique<StaticFrameProvider>(debugInfoCache_));
+        nullptr, std::make_unique<StaticFrameProvider>(debugInfoCache_));
 
     RegisterMethodHandlers();
 }
@@ -164,7 +164,7 @@ void Inspector::CollectModules()
     });
 }
 
-void Inspector::Run(const std::string& msg)
+void Inspector::Run(const std::string &msg)
 {
     inspectorServer_.Run(msg);
 }
@@ -181,12 +181,8 @@ void Inspector::ConsoleCall(PtThread thread, ConsoleCallType type, uint64_t time
 
     auto *debuggableThread = GetDebuggableThread(thread);
     if (debuggableThread != nullptr) {
-        inspectorServer_.CallRuntimeConsoleApiCalled(
-            thread,
-            type,
-            timestamp,
-            debuggableThread->OnConsoleCall(arguments)
-        );
+        inspectorServer_.CallRuntimeConsoleApiCalled(thread, type, timestamp,
+                                                     debuggableThread->OnConsoleCall(arguments));
     }
 }
 
@@ -241,7 +237,7 @@ void Inspector::MethodEntry(PtThread thread, Method *method)
     }
 }
 
-void Inspector::SourceNameInsert(const panda_file::DebugInfoExtractor *extractor)
+void Inspector::SourceNameInsert(const panda_file::DebugInfoExtractor *extractor, std::string_view scriptIdentity)
 {
     const auto &methodList = extractor->GetMethodIdList();
     std::unordered_set<std::string> sourceNames;
@@ -250,7 +246,7 @@ void Inspector::SourceNameInsert(const panda_file::DebugInfoExtractor *extractor
     }
     for (const auto &sourceName : sourceNames) {
         // Get src file name
-        auto [scriptId, isNew] = inspectorServer_.GetSourceManager().GetScriptId(sourceName);
+        auto [scriptId, isNew] = inspectorServer_.GetSourceManager().GetScriptId(sourceName, scriptIdentity);
         inspectorServer_.CallDebuggerScriptParsed(scriptId, sourceName);
     }
 }
@@ -332,7 +328,7 @@ void Inspector::ThreadStart(PtThread thread)
     os::memory::WriteLockHolder lock(debuggerEventsLock_);
 
     if (thread != PtThread::NONE) {
-        inspectorServer_.CallTargetAttachedToTarget(thread); // IDE not adjusted
+        inspectorServer_.CallTargetAttachedToTarget(thread);  // IDE not adjusted
     }
 
     // NOLINTBEGIN(modernize-avoid-bind)
@@ -410,7 +406,7 @@ void Inspector::RunIfWaitingForDebugger(PtThread thread)
     waitDebuggerCond_.Signal();
 }
 
-//For Hybrid it was not used, instead it use 1.0 waitForDebugger
+// For Hybrid it was not used, instead it use 1.0 waitForDebugger
 void Inspector::WaitForDebugger()
 {
     os::memory::LockHolder<os::memory::Mutex> lock(waitDebuggerMutex_);
@@ -488,21 +484,20 @@ void Inspector::SetMixedDebugEnabled(bool mixedDebugEnabled)
     mixedDebugEnabled_.store(mixedDebugEnabled, std::memory_order_relaxed);
 }
 
-std::set<int32_t> Inspector::GetPossibleBreakpoints(std::string_view sourceFile, int32_t startLine,
-                                                    int32_t endLine, bool restrictToFunction)
+std::set<int32_t> Inspector::GetPossibleBreakpoints(std::string_view sourceFile, std::string_view scriptIdentity,
+                                                    int32_t startLine, int32_t endLine, bool restrictToFunction)
 {
     os::memory::ReadLockHolder lock(vmDeathLock_);
     if (UNLIKELY(CheckVmDead())) {
         return {};
     }
 
-    return debugInfoCache_.GetValidLineNumbers(sourceFile, startLine, endLine, restrictToFunction);
+    return debugInfoCache_.GetValidLineNumbers(sourceFile, scriptIdentity, startLine, endLine, restrictToFunction);
 }
 
 std::optional<BreakpointId> Inspector::SetBreakpoint([[maybe_unused]] PtThread thread,
                                                      SourceFileFilter &&sourceFilesFilter, int32_t lineNumber,
-                                                     std::set<std::string_view> &sourceFiles,
-                                                     const std::string *condition)
+                                                     SourceFileSet &sourceFiles, const std::string *condition)
 {
     os::memory::ReadLockHolder lock(vmDeathLock_);
     if (UNLIKELY(CheckVmDead())) {
@@ -534,7 +529,7 @@ void Inspector::RemoveBreakpoint([[maybe_unused]] PtThread thread, BreakpointId 
     breakpointStorage_.RemoveBreakpoint(id);
 }
 
-void Inspector::RemoveBreakpointsByUrl(PtThread thread, const char* url, const SourceFileFilter &sourceFilesFilter)
+void Inspector::RemoveBreakpointsByUrl(PtThread thread, const char *url, const SourceFileFilter &sourceFilesFilter)
 {
     os::memory::ReadLockHolder lock(vmDeathLock_);
     if (UNLIKELY(CheckVmDead())) {
@@ -549,11 +544,11 @@ void Inspector::RemoveBreakpointsByUrl(PtThread thread, const char* url, const S
     if (debuggableThread == nullptr) {
         return;
     }
-    auto pandaFilesPaths =  debugInfoCache_.GetPandaFiles(sourceFilesFilter);
+    auto pandaFilesPaths = debugInfoCache_.GetPandaFiles(sourceFilesFilter);
 
     breakpointStorage_.RemoveBreakpoints([this, url, pfs = std::as_const(pandaFilesPaths)](const auto &loc) {
         for (const auto &pf : pfs) {
-            const char* sourceFile = debugInfoCache_.GetDebugInfo(pf)->GetSourceFile(loc.GetMethodId());
+            const char *sourceFile = debugInfoCache_.GetDebugInfo(pf)->GetSourceFile(loc.GetMethodId());
             return sourceFile && std::strcmp(sourceFile, url) == 0;
         }
         return false;
@@ -640,7 +635,8 @@ void Inspector::StepOut(PtThread thread)
     }
 }
 
-void Inspector::ContinueToLocation(PtThread thread, std::string_view sourceFile, int32_t lineNumber)
+void Inspector::ContinueToLocation(PtThread thread, std::string_view sourceFile, std::string_view scriptIdentity,
+                                   int32_t lineNumber)
 {
     os::memory::ReadLockHolder lock(vmDeathLock_);
     if (UNLIKELY(CheckVmDead())) {
@@ -654,7 +650,7 @@ void Inspector::ContinueToLocation(PtThread thread, std::string_view sourceFile,
             return;
         }
 
-        debuggableThread->ContinueTo(debugInfoCache_.GetContinueToLocations(sourceFile, lineNumber));
+        debuggableThread->ContinueTo(debugInfoCache_.GetContinueToLocations(sourceFile, scriptIdentity, lineNumber));
     }
 }
 
@@ -712,20 +708,25 @@ std::vector<PropertyDescriptor> Inspector::GetProperties(PtThread thread, Remote
     return *properties;
 }
 
-std::string Inspector::GetSourceCode(std::string_view sourceFile)
+std::string Inspector::GetSourceCode(std::string_view sourceFile, std::string_view scriptIdentity)
 {
     os::memory::ReadLockHolder lock(vmDeathLock_);
     if (UNLIKELY(CheckVmDead())) {
         return {};
     }
 
-    return debugInfoCache_.GetSourceCode(sourceFile);
+    return debugInfoCache_.GetSourceCode(sourceFile, scriptIdentity);
 }
 
 static void ProcessStaticFrame(const PtFrame *ptFrame, DebugInfoCache &debugInfoCache,
                                ObjectRepository &objectRepository, FrameId &frameId,
                                const InspectorServer::FrameInfoHandler &handler)
 {
+    auto *method = ptFrame->GetMethod();
+    if (method == nullptr) {
+        return;
+    }
+
     std::string_view sourceFile;
     std::string_view methodName;
     int32_t lineNumber;
@@ -736,10 +737,12 @@ static void ProcessStaticFrame(const PtFrame *ptFrame, DebugInfoCache &debugInfo
 
     std::optional<RemoteObject> objThis;
     auto frameObject = objectRepository.CreateFrameObject(*ptFrame, debugInfoCache.GetLocals(*ptFrame), objThis);
-    auto scopeChain = std::vector{Scope(Scope::Type::LOCAL, std::move(frameObject)),
-                                  Scope(Scope::Type::GLOBAL, objectRepository.CreateGlobalObject())};
+    auto scopeChain = std::vector {Scope(Scope::Type::LOCAL, std::move(frameObject)),
+                                   Scope(Scope::Type::GLOBAL, objectRepository.CreateGlobalObject())};
 
-    handler(frameId++, methodName, sourceFile, lineNumber, scopeChain, objThis, true);
+    auto *pandaFile = method->GetPandaFile();
+    std::string_view scriptIdentity = pandaFile == nullptr ? std::string_view {} : pandaFile->GetFilename();
+    handler(frameId++, methodName, sourceFile, scriptIdentity, lineNumber, scopeChain, objThis, true);
 }
 
 static void ProcessDynamicFrame(const void *vm, const void *frame, FrameId &frameId,
@@ -770,33 +773,32 @@ static void ProcessDynamicFrame(const void *vm, const void *frame, FrameId &fram
         objThis = ConvertFromUnifiedRemoteObject(frameInfo.thisObject.value());
     }
 
-    handler(frameId++, frameInfo.methodName, frameInfo.sourceFile,
-            frameInfo.lineNumber + 1, scopeChain, objThis, false);
+    handler(frameId++, frameInfo.methodName, frameInfo.sourceFile, {}, frameInfo.lineNumber + 1, scopeChain, objThis,
+            false);
 }
 
-void Inspector::EnumerateStaticFrames(PtThread thread, ObjectRepository &objectRepository,
-                                      FrameId &frameId, const InspectorServer::FrameInfoHandler &handler)
+void Inspector::EnumerateStaticFrames(PtThread thread, ObjectRepository &objectRepository, FrameId &frameId,
+                                      const InspectorServer::FrameInfoHandler &handler)
 {
-    HandleError(debugger_.EnumerateFrames(
-        thread, [this, &objectRepository, &frameId, &handler](const PtFrame &frame) {
-            ProcessStaticFrame(&frame, debugInfoCache_, objectRepository, frameId, handler);
-            return true;
-        }));
+    HandleError(debugger_.EnumerateFrames(thread, [this, &objectRepository, &frameId, &handler](const PtFrame &frame) {
+        ProcessStaticFrame(&frame, debugInfoCache_, objectRepository, frameId, handler);
+        return true;
+    }));
 }
 
 void Inspector::EnumerateHybridFrames(ObjectRepository &objectRepository, FrameId &frameId,
                                       const InspectorServer::FrameInfoHandler &handler)
 {
     const void *vm = ets::interop::js::GetEcmaVM();
-    ets::interop::js::ForEachFrameInUnionStack([this, vm, &objectRepository, &frameId, &handler](
-                                                    const void *frame, bool isStaticFrame) {
-        if (isStaticFrame) {
-            ProcessStaticFrame(
-                static_cast<const PtFrame *>(frame), debugInfoCache_, objectRepository, frameId, handler);
-        } else {
-            ProcessDynamicFrame(vm, frame, frameId, handler);
-        }
-    });
+    ets::interop::js::ForEachFrameInUnionStack(
+        [this, vm, &objectRepository, &frameId, &handler](const void *frame, bool isStaticFrame) {
+            if (isStaticFrame) {
+                ProcessStaticFrame(static_cast<const PtFrame *>(frame), debugInfoCache_, objectRepository, frameId,
+                                   handler);
+            } else {
+                ProcessDynamicFrame(vm, frame, frameId, handler);
+            }
+        });
 }
 
 void Inspector::DebuggableThreadPostSuspend(PtThread thread, ObjectRepository &objectRepository,
@@ -807,18 +809,23 @@ void Inspector::DebuggableThreadPostSuspend(PtThread thread, ObjectRepository &o
                                                       : std::optional<RemoteObject>();
     bool isEmpty = true;
     ets::interop::js::UnionStackIsEmpty(&isEmpty);
-    inspectorServer_.CallDebuggerPaused(thread,
-        hitBreakpoints,
-        exceptionRemoteObject,
-        pauseReason,
-        [this, thread, isEmpty, &objectRepository](auto &handler) {
-            FrameId frameId = 0;
-            if (isEmpty) {
-                EnumerateStaticFrames(thread, objectRepository, frameId, handler);
-            } else {
-                EnumerateHybridFrames(objectRepository, frameId, handler);
-            }
-        });
+    auto asyncStackSnapshotView = debugger_.CreateCurrentAsyncStackSnapshotView();
+    auto resolveAsyncFrame = [this](const AsyncStackFrameView &frame) {
+        return debugInfoCache_.GetAsyncFrameSourceLocation(frame.pandaFile, frame.methodId, frame.bytecodeOffset);
+    };
+    auto asyncStackTrace = asyncStackSnapshotView == nullptr
+                               ? nullptr
+                               : inspectorServer_.CreateAsyncStackTrace(*asyncStackSnapshotView, resolveAsyncFrame);
+    inspectorServer_.CallDebuggerPaused({thread, hitBreakpoints, exceptionRemoteObject, pauseReason,
+                                         [this, thread, isEmpty, &objectRepository](auto &handler) {
+                                             FrameId frameId = 0;
+                                             if (isEmpty) {
+                                                 EnumerateStaticFrames(thread, objectRepository, frameId, handler);
+                                             } else {
+                                                 EnumerateHybridFrames(objectRepository, frameId, handler);
+                                             }
+                                         },
+                                         asyncStackTrace.get()});
 
     if (!hitBreakpoints.empty()) {
         PauseOtherThreads(thread);
@@ -933,9 +940,13 @@ void Inspector::ClientDisconnect(PtThread thread)
     (void)thread;
 }
 
-void Inspector::SetAsyncCallStackDepth(PtThread thread)
+void Inspector::SetAsyncCallStackDepth(PtThread thread, uint32_t maxDepth)
 {
     (void)thread;
+    auto error = debugger_.SetAsyncCallStackDepth(maxDepth);
+    if (error) {
+        LOG(ERROR, DEBUGGER) << "Failed to set async call stack depth: " << error->GetMessage();
+    }
 }
 
 void Inspector::SetBlackboxPatterns(PtThread thread)
@@ -1054,18 +1065,18 @@ void Inspector::DebuggerEnable()
 void Inspector::RegisterMethodHandlers()
 {
     // NOLINTBEGIN(modernize-avoid-bind)
-    inspectorServer_.OnCallDebuggerContinueToLocation(std::bind(&Inspector::ContinueToLocation, this, _1, _2, _3));
+    inspectorServer_.OnCallDebuggerContinueToLocation(std::bind(&Inspector::ContinueToLocation, this, _1, _2, _3, _4));
     inspectorServer_.OnCallDebuggerEnable(std::bind(&Inspector::DebuggerEnable, this));
     inspectorServer_.OnCallDebuggerGetPossibleBreakpoints(
-        std::bind(&Inspector::GetPossibleBreakpoints, this, _1, _2, _3, _4));
-    inspectorServer_.OnCallDebuggerGetScriptSource(std::bind(&Inspector::GetSourceCode, this, _1));
+        std::bind(&Inspector::GetPossibleBreakpoints, this, _1, _2, _3, _4, _5));
+    inspectorServer_.OnCallDebuggerGetScriptSource(std::bind(&Inspector::GetSourceCode, this, _1, _2));
     inspectorServer_.OnCallDebuggerPause(std::bind(&Inspector::Pause, this, _1));
     inspectorServer_.OnCallDebuggerRemoveBreakpoint(std::bind(&Inspector::RemoveBreakpoint, this, _1, _2));
     inspectorServer_.OnCallDebuggerRemoveBreakpointsByUrl(
         std::bind(&Inspector::RemoveBreakpointsByUrl, this, _1, _2, _3));
     inspectorServer_.OnCallDebuggerRestartFrame(std::bind(&Inspector::RestartFrame, this, _1, _2));
     inspectorServer_.OnCallDebuggerResume(std::bind(&Inspector::Continue, this, _1));
-    inspectorServer_.OnCallDebuggerSetAsyncCallStackDepth(std::bind(&Inspector::SetAsyncCallStackDepth, this, _1));
+    inspectorServer_.OnCallDebuggerSetAsyncCallStackDepth(std::bind(&Inspector::SetAsyncCallStackDepth, this, _1, _2));
     inspectorServer_.OnCallDebuggerSetBlackboxPatterns(std::bind(&Inspector::SetBlackboxPatterns, this, _1));
     inspectorServer_.OnCallDebuggerSmartStepInto(std::bind(&Inspector::SmartStepInto, this, _1));
     inspectorServer_.OnCallDebuggerSetBreakpoint(std::bind(&Inspector::SetBreakpoint, this, _1, _2, _3, _4, _5));
@@ -1115,7 +1126,9 @@ std::string BuildCallFrameJson(ObjectRepository &objectRepository, const DebugIn
         return "";
     }
 
-    auto scriptIdResult = sourceManager.GetScriptId(sourceFile);
+    auto *pandaFile = method->GetPandaFile();
+    auto scriptIdResult =
+        sourceManager.GetScriptId(sourceFile, pandaFile == nullptr ? std::string_view {} : pandaFile->GetFilename());
     auto scriptId = scriptIdResult.first;
 
     std::optional<RemoteObject> objThis;
@@ -1164,6 +1177,39 @@ DebugResponse AllocateResponse(const std::string &json)
 }
 }  // namespace
 
+Inspector::StaticCallFramesData Inspector::CollectStaticCallFrames(PtThread ptThread,
+                                                                   ObjectRepository &objectRepository)
+{
+    StaticCallFramesData data;
+    uint32_t frameIndex = 0;
+    std::string npSep;
+    std::string framesSep;
+
+    debugger_.EnumerateFrames(ptThread, [&](const ark::tooling::PtFrame &frame) {
+        auto *method = frame.GetMethod();
+        if (method == nullptr) {
+            return true;
+        }
+        if (method->IsNative()) {
+            data.nativePointerJson += npSep + std::to_string(reinterpret_cast<intptr_t>(method->GetNativePointer()));
+            npSep = ",";
+            return true;
+        }
+        auto callFrame = BuildCallFrameJson(objectRepository, debugInfoCache_, inspectorServer_.GetSourceManager(),
+                                            frame, frameIndex);
+        if (callFrame.empty()) {
+            return true;
+        }
+        data.framesJson += framesSep + callFrame;
+        data.nativePointerJson += npSep + "0";
+        framesSep = ",";
+        npSep = ",";
+        frameIndex++;
+        return true;
+    });
+    return data;
+}
+
 DebugResponse Inspector::GetStaticCallFrames()
 {
     auto *thread = ark::ManagedThread::GetCurrent();
@@ -1178,49 +1224,24 @@ DebugResponse Inspector::GetStaticCallFrames()
     }
 
     debuggableThread->ResetObjectRepository();
-    auto *objectRepositoryPtr = debuggableThread->GetObjectRepository();
-    if (objectRepositoryPtr == nullptr) {
+    auto *objectRepository = debuggableThread->GetObjectRepository();
+    if (objectRepository == nullptr) {
         return {0, nullptr};
     }
-    ObjectRepository &objectRepository = *objectRepositoryPtr;
-
-    std::string framesJson;
-    std::string nativePointerJson;
-    uint32_t frameIndex = 0;
-    std::string npSep;
-    std::string framesSep;
-
-    debugger_.EnumerateFrames(ptThread,
-        [&](const ark::tooling::PtFrame &frame) {
-            auto *method = frame.GetMethod();
-            if (method == nullptr) {
-                return true;
-            }
-            if (method->IsNative()) {
-                nativePointerJson += npSep + std::to_string(reinterpret_cast<intptr_t>(method->GetNativePointer()));
-                npSep = ",";
-                return true;
-            }
-            auto callFrame = BuildCallFrameJson(objectRepository, debugInfoCache_,
-                inspectorServer_.GetSourceManager(), frame, frameIndex);
-            if (callFrame.empty()) {
-                return true;
-            }
-            framesJson += framesSep + callFrame;
-            nativePointerJson += npSep + "0";
-            framesSep = ",";
-            npSep = ",";
-            frameIndex++;
-            return true;
-        });
-
-    return AllocateResponse("{\"method\":\"Debugger.mixedStack\","
-        "\"params\":{\"sessionId\":\"" + inspectorServer_.GetSessionIdByThread(ptThread) + "\","
-        "\"nativePointer\":[" + nativePointerJson + "],"
-        "\"callFrames\":[" + framesJson + "]}}");
+    auto frames = CollectStaticCallFrames(ptThread, *objectRepository);
+    return AllocateResponse(
+        "{\"method\":\"Debugger.mixedStack\","
+        "\"params\":{\"sessionId\":\"" +
+        inspectorServer_.GetSessionIdByThread(ptThread) +
+        "\","
+        "\"nativePointer\":[" +
+        frames.nativePointerJson +
+        "],"
+        "\"callFrames\":[" +
+        frames.framesJson + "]}}");
 }
 
-DebugResponse Inspector::OperateJsDebugMessageForStatic(const char* message)
+DebugResponse Inspector::OperateJsDebugMessageForStatic(const char *message)
 {
     if (message == nullptr) {
         return {0, nullptr};

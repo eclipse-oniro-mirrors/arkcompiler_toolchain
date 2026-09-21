@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,20 +31,43 @@
 namespace ark::tooling::inspector {
 class SourceManager final {
 public:
+    struct ScriptInfo {
+        std::string_view fileName;
+        std::string_view identity;
+    };
+
     SourceManager() = default;
     ~SourceManager() = default;
 
     NO_COPY_SEMANTIC(SourceManager);
     NO_MOVE_SEMANTIC(SourceManager);
 
-    std::pair<ScriptId, bool> GetScriptId(std::string_view fileName);
+    std::pair<ScriptId, bool> GetScriptId(std::string_view fileName, std::string_view scriptIdentity = {}) const;
     [[nodiscard]] std::string_view GetSourceFileName(ScriptId id) const;
+    [[nodiscard]] ScriptInfo GetScript(ScriptId id) const;
 
 private:
+    struct ScriptKey {
+        std::string fileName;
+        std::string identity;
+
+        bool operator==(const ScriptKey &other) const
+        {
+            return fileName == other.fileName && identity == other.identity;
+        }
+    };
+
+    struct ScriptKeyHash {
+        size_t operator()(const ScriptKey &key) const noexcept
+        {
+            return std::hash<std::string> {}(key.fileName) ^ (std::hash<std::string> {}(key.identity) << 1U);
+        }
+    };
+
     mutable os::memory::Mutex mutex_;
-    std::unordered_map<std::string, ScriptId> fileNameToId_ GUARDED_BY(mutex_);
-    std::unordered_map<ScriptId, std::string_view> idToFileName_ GUARDED_BY(mutex_);
-    std::unordered_set<ScriptId> knownSources_ GUARDED_BY(mutex_);
+    mutable std::unordered_map<ScriptKey, ScriptId, ScriptKeyHash> fileNameToId_ GUARDED_BY(mutex_);
+    mutable std::unordered_map<ScriptId, const ScriptKey *> idToScript_ GUARDED_BY(mutex_);
+    mutable std::unordered_set<ScriptId> knownSources_ GUARDED_BY(mutex_);
 };
 }  // namespace ark::tooling::inspector
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,7 +21,7 @@
 
 namespace ark::tooling::inspector {
 
-bool Breakpoint::SetLocations(std::set<std::string_view> &sourceFiles, const DebugInfoCache &debugCache,
+bool Breakpoint::SetLocations(SourceFileSet &sourceFiles, const DebugInfoCache &debugCache,
                               std::unordered_multimap<PtLocation, BreakpointId, HashLocation> &breakpointLocations)
 {
     locations_ = debugCache.GetBreakpointLocations(sourceFileFilter_, lineNumber_, sourceFiles);
@@ -53,7 +53,7 @@ void Breakpoint::TryResolveImpl(const panda_file::File &file, const panda_file::
     };
 
     for (const auto &methodId : debugInfo->GetMethodIdList()) {
-        if (!sourceFileFilter_(debugInfo->GetSourceFile(methodId))) {
+        if (!sourceFileFilter_(debugInfo->GetSourceFile(methodId), file.GetFilename())) {
             continue;
         }
 

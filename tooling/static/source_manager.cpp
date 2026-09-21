@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,17 +21,17 @@
 #include "types/numeric_id.h"
 
 namespace ark::tooling::inspector {
-std::pair<ScriptId, bool> SourceManager::GetScriptId(std::string_view fileName)
+std::pair<ScriptId, bool> SourceManager::GetScriptId(std::string_view fileName, std::string_view scriptIdentity) const
 {
     os::memory::LockHolder lock(mutex_);
 
-    auto p = fileNameToId_.emplace(std::string(fileName), fileNameToId_.size());
+    auto p =
+        fileNameToId_.emplace(ScriptKey {std::string(fileName), std::string(scriptIdentity)}, fileNameToId_.size());
     ScriptId id(p.first->second);
     bool isNewForThread = knownSources_.insert(id).second;
 
     if (p.second) {
-        std::string_view name {p.first->first};
-        idToFileName_.emplace(id, name);
+        idToScript_.emplace(id, &p.first->first);
     }
 
     return {id, isNewForThread};
@@ -41,14 +41,26 @@ std::string_view SourceManager::GetSourceFileName(ScriptId id) const
 {
     os::memory::LockHolder lock(mutex_);
 
-    auto it = idToFileName_.find(id);
-    if (it != idToFileName_.end()) {
-        return it->second;
+    auto it = idToScript_.find(id);
+    if (it != idToScript_.end()) {
+        return it->second->fileName;
     }
 
     LOG(ERROR, DEBUGGER) << "No file with script id " << id;
 
     return {};
+}
+
+SourceManager::ScriptInfo SourceManager::GetScript(ScriptId id) const
+{
+    os::memory::LockHolder lock(mutex_);
+
+    auto it = idToScript_.find(id);
+    if (it == idToScript_.end()) {
+        return {};
+    }
+
+    return {it->second->fileName, it->second->identity};
 }
 
 }  // namespace ark::tooling::inspector
