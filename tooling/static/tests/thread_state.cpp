@@ -29,11 +29,11 @@
 namespace ark::tooling::inspector::test {
 class MockEvaluationEngine final : public EvaluationEngine {
 public:
-    Expected<std::pair<TypedValue, ObjectHeader *>, Error> EvaluateExpression(
+    Expected<std::tuple<TypedValue, ObjectHeader *, std::string>, Error> EvaluateExpression(
         [[maybe_unused]] uint32_t frameNumber, [[maybe_unused]] const ExpressionWrapper &bytecode,
         [[maybe_unused]] Method **method) override
     {
-        return std::make_pair<TypedValue, ObjectHeader *>(TypedValue::Invalid(), nullptr);
+        return std::make_tuple(TypedValue::Invalid(), static_cast<ObjectHeader *>(nullptr), std::string());
     }
 };
 

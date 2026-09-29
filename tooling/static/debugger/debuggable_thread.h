@@ -28,6 +28,9 @@
 #include "types/pause_on_exceptions_state.h"
 
 namespace ark::tooling::inspector {
+using EvaluateExpressionResult =
+    Expected<std::tuple<RemoteObject, std::optional<RemoteObject>, std::string>, std::string>;
+
 /**
  * @brief Application thread abstraction.
  * Note that private inheritance is used in order not to expose evaluation-related state details.
@@ -117,10 +120,9 @@ public:
      * @brief Evaluates the given bytecode expression.
      * @param frameNumber frame depth to evaluate expression in.
      * @param bytecode fragment with expression.
-     * @returns pair of result (might be void) and optional exception objects OR error message
+     * @returns tuple of result (might be void) and optional exception objects, exception message OR error message
      */
-    Expected<std::pair<RemoteObject, std::optional<RemoteObject>>, std::string> EvaluateExpression(
-        uint32_t frameNumber, const ExpressionWrapper &bytecode);
+    EvaluateExpressionResult EvaluateExpression(uint32_t frameNumber, const ExpressionWrapper &bytecode);
 
     // Checks if the thread was paused by BreakOnStart
     bool IsPausedByBreakOnStart();
@@ -130,6 +132,8 @@ public:
 
     // Checks if the current step kind is STEP_INTO
     bool IsStepInto();
+
+    using PtThreadEvaluationEngine::IsEvaluating;
 
     // Gets the cached ObjectRepository for LLDB GetProperties (returns nullptr if not initialized)
     ObjectRepository *GetObjectRepository();

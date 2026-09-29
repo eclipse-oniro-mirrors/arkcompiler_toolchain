@@ -15,11 +15,69 @@
 
 #include "conditional_breakpoint.h"
 
-#include "libarkfile/debug_info_extractor.h"
 #include "error.h"
 #include "evaluation/evaluation_engine.h"
+#include "include/managed_thread.h"
+#include "include/tooling/pt_lang_extension.h"
+#include "include/typed_value.h"
+#include "libarkfile/debug_info_extractor.h"
 
 namespace ark::tooling::inspector {
+/**
+ * @brief Decides whether a condition result stops at the breakpoint. Only an explicit boolean
+ * result is honored (U1, tagged boolean, or boxed boolean); any other expression result never stops.
+ */
+bool ConditionalBreakpoint::IsConditionTrue(TypedValue value)
+{
+    switch (value.GetType()) {
+        case panda_file::Type::TypeId::U1:
+            return value.GetAsU1();
+        case panda_file::Type::TypeId::REFERENCE:
+            return IsConditionTrue(value.GetAsReference());
+        case panda_file::Type::TypeId::TAGGED:
+            return IsConditionTrue(value.GetAsTagged());
+        default:
+            LOG(DEBUG, DEBUGGER) << "Breakpoint condition result is not boolean, continue execution";
+            return false;
+    }
+}
+
+bool ConditionalBreakpoint::IsConditionTrue(coretypes::TaggedValue value)
+{
+    if (value.IsBoolean()) {
+        return value.IsTrue();
+    }
+    if (value.IsHeapObject()) {
+        return IsConditionTrue(value.GetHeapObject());
+    }
+    return false;
+}
+
+bool ConditionalBreakpoint::IsConditionTrue(ObjectHeader *object)
+{
+    if (object == nullptr) {
+        return false;
+    }
+
+    auto extension = ManagedThread::GetCurrent()->GetLanguageContext().CreatePtLangExt();
+    // Strings never stop
+    if (extension->GetAsString(object)) {
+        return false;
+    }
+
+    // BigInts never stop
+    if (extension->GetAsBigIntString(object)) {
+        return false;
+    }
+
+    // Only a boxed boolean may unwrap to true
+    if (auto boxedValue = extension->GetBoxedPrimitiveValue(object)) {
+        return IsConditionTrue(*boxedValue);
+    }
+
+    // Any other object never stops
+    return false;
+}
 
 bool ConditionalBreakpoint::ShouldStopAt(const PtLocation &location, EvaluationEngine &engine)
 {
@@ -32,11 +90,17 @@ bool ConditionalBreakpoint::ShouldStopAt(const PtLocation &location, EvaluationE
         HandleError(evalRes.Error());
         return false;
     }
-    if (evalRes.Value().second != nullptr) {
-        LOG(WARNING, DEBUGGER) << "Breakpoint #" << GetId() << " condition evaluated with an exception";
+    auto &[result, exception, excMessage] = evalRes.Value();
+    if (exception != nullptr) {
+        if (excMessage.empty()) {
+            LOG(WARNING, DEBUGGER) << "Breakpoint #" << GetId() << " condition evaluated with an exception";
+        } else {
+            LOG(WARNING, DEBUGGER) << "Breakpoint #" << GetId()
+                                   << " condition evaluated with an exception: " << excMessage;
+        }
         return false;
     }
-    return evalRes.Value().first.GetAsU1();
+    return IsConditionTrue(result);
 }
 
 bool ConditionalBreakpoint::SetLocations(

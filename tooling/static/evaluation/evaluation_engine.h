@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,9 @@
 #include "include/object_header.h"
 #include "include/tooling/debug_interface.h"
 
+#include <string>
+#include <tuple>
+
 namespace ark::tooling::inspector {
 class EvaluationEngine {
 public:
@@ -30,9 +33,8 @@ public:
 
     virtual ~EvaluationEngine() = default;
 
-    virtual Expected<std::pair<TypedValue, ObjectHeader *>, Error> EvaluateExpression(uint32_t frameNumber,
-                                                                                      const ExpressionWrapper &bytecode,
-                                                                                      Method **method) = 0;
+    virtual Expected<std::tuple<TypedValue, ObjectHeader *, std::string>, Error> EvaluateExpression(
+        uint32_t frameNumber, const ExpressionWrapper &bytecode, Method **method) = 0;
 };
 
 /// @brief Class provides debugger-based evaluation within the given application thread.
@@ -67,11 +69,12 @@ public:
      * @param method pointer either providing the previously loaded method or used for storing the expression method.
      * @returns pair of result and raised exception or an error.
      */
-    Expected<std::pair<TypedValue, ObjectHeader *>, Error> EvaluateExpression(uint32_t frameNumber,
-                                                                              const ExpressionWrapper &bytecode,
-                                                                              Method **method) final;
+    Expected<std::tuple<TypedValue, ObjectHeader *, std::string>, Error> EvaluateExpression(
+        uint32_t frameNumber, const ExpressionWrapper &bytecode, Method **method) final;
 
 private:
+    std::string GetExceptionMessage(ObjectHeader *exception) const;
+
     DebugInterface *debugger_;
     ManagedThread *thread_;
     bool evaluating_ {false};

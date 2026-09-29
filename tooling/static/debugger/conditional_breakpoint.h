@@ -51,6 +51,10 @@ public:
 
     bool ShouldStopAt(const PtLocation &location, EvaluationEngine &engine) override;
 
+    static bool IsConditionTrue(TypedValue value);
+    static bool IsConditionTrue(coretypes::TaggedValue value);
+    static bool IsConditionTrue(ObjectHeader *object);
+
 protected:
     void TryResolveImpl(const panda_file::File &file, const panda_file::DebugInfoExtractor *debugInfo,
                         std::unordered_multimap<PtLocation, BreakpointId, HashLocation> &breakpointLocations) override;

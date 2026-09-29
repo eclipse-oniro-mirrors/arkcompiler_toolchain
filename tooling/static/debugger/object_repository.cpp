@@ -19,6 +19,41 @@
 #include "runtime/handle_scope-inl.h"
 
 namespace ark::tooling::inspector {
+
+namespace {
+// Converts a primitive TypedValue to its string representation for use as
+// a RemoteObject description (e.g. enum underlying values).
+std::string TypedValueToString(const TypedValue &value)
+{
+    switch (value.GetType()) {
+        case panda_file::Type::TypeId::U1:
+            return value.GetAsU1() ? "true" : "false";
+        case panda_file::Type::TypeId::I8:
+            return std::to_string(value.GetAsI8());
+        case panda_file::Type::TypeId::U8:
+            return std::to_string(value.GetAsU8());
+        case panda_file::Type::TypeId::I16:
+            return std::to_string(value.GetAsI16());
+        case panda_file::Type::TypeId::U16:
+            return std::to_string(value.GetAsU16());
+        case panda_file::Type::TypeId::I32:
+            return std::to_string(value.GetAsI32());
+        case panda_file::Type::TypeId::U32:
+            return std::to_string(value.GetAsU32());
+        case panda_file::Type::TypeId::F32:
+            return std::to_string(value.GetAsF32());
+        case panda_file::Type::TypeId::F64:
+            return std::to_string(value.GetAsF64());
+        case panda_file::Type::TypeId::I64:
+            return std::to_string(value.GetAsI64());
+        case panda_file::Type::TypeId::U64:
+            return std::to_string(value.GetAsU64());
+        default:
+            return {};
+    }
+}
+}  // namespace
+
 ObjectRepository::ObjectRepository()
     : extension_(ManagedThread::GetCurrent()->GetLanguageContext().CreatePtLangExt()),
       scope_(ManagedThread::GetCurrent())
@@ -179,6 +214,10 @@ RemoteObject ObjectRepository::CreateObject(ObjectHeader *object)
         return RemoteObject::BigIntString(*bigintStr);
     }
 
+    if (auto boxedValue = extension_->GetBoxedPrimitiveValue(object)) {
+        return CreateObject(*boxedValue);
+    }
+
     RemoteObjectId id;
 
     // SUPPRESS_CSA_NEXTLINE(alpha.core.WasteObjHeader)
@@ -198,8 +237,17 @@ RemoteObject ObjectRepository::CreateObject(ObjectHeader *object)
         return RemoteObject::Array(extension_->GetClassName(object), *arrayLen, id);
     }
 
+    // ETS enum objects: set description to the underlying primitive value
+    // (e.g. "0" for Color.RED with value 0) so the debugger displays the
+    // enum's value rather than just the class name.
+    auto className = extension_->GetClassName(object);
+    std::optional<std::string> description;
+    if (auto enumVal = extension_->GetEnumValue(object)) {
+        description = TypedValueToString(*enumVal);
+    }
+
     // SUPPRESS_CSA_NEXTLINE(alpha.core.WasteObjHeader)
-    return RemoteObject::Object(extension_->GetClassName(object), id);
+    return RemoteObject::Object(className, id, std::move(description));
 }
 
 std::vector<PropertyDescriptor> ObjectRepository::GetProperties(RemoteObjectId id)

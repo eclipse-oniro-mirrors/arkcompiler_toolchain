@@ -19,6 +19,7 @@
 #include <functional>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "include/method.h"
@@ -38,6 +39,7 @@
 #include "tooling/sampler/samples_record.h"
 #include "tooling/inspector/debugger_arkapi.h"
 #include "types/remote_object.h"
+#include "types/remote_object_type.h"
 #include "types/scope.h"
 
 using namespace std::placeholders;  // NOLINT(google-build-using-namespace)
@@ -228,7 +230,9 @@ void Inspector::MethodEntry(PtThread thread, Method *method)
         if (sourceFiles_.find(file) == sourceFiles_.end()) {
             os::memory::LockHolder sourceFilesLock(sourceFilesMutex_);
             sourceFiles_.emplace(file, true);
-            debuggableThread->BreakOnStart();
+            if (file.find(".ets") != std::string_view::npos && !debuggableThread->IsEvaluating()) {
+                debuggableThread->BreakOnStart();
+            }
         }
     }
 
@@ -869,9 +873,27 @@ Expected<EvaluationResult, std::string> Inspector::Evaluate(PtThread thread, con
     if (!optResult) {
         return Unexpected(std::move(optResult.Error()));
     }
-    auto optExceptionDetails = (optResult->second) ? CreateExceptionDetails(thread, std::move(*optResult->second))
-                                                   : std::optional<ExceptionDetails>();
-    return EvaluationResult(std::move(optResult->first), std::move(optExceptionDetails));
+    auto &[result, optException, excMessage] = *optResult;
+    if (optException) {
+        std::string errorMsg;
+        auto *objT = std::get_if<RemoteObjectType::ObjectT>(&optException->GetValue());
+        if (objT != nullptr) {
+            errorMsg = objT->className;
+        }
+        if (!excMessage.empty()) {
+            if (!errorMsg.empty()) {
+                errorMsg += ": ";
+                errorMsg += std::move(excMessage);
+            } else {
+                errorMsg = std::move(excMessage);
+            }
+        }
+        if (errorMsg.empty()) {
+            errorMsg = "Unknown error";
+        }
+        return Unexpected(std::move(errorMsg));
+    }
+    return EvaluationResult(std::move(result), std::nullopt);
 }
 
 std::optional<ExceptionDetails> Inspector::CreateExceptionDetails(PtThread thread, RemoteObject &&exception)
@@ -980,6 +1002,10 @@ void Inspector::NativeMethodCall(PtThread thread, const void *nativeAddress)
         os::memory::ReadLockHolder lock(debuggerEventsLock_);
         auto *debuggableThread = GetDebuggableThread(thread);
         if (debuggableThread == nullptr) {
+            return;
+        }
+
+        if (debuggableThread->IsEvaluating()) {
             return;
         }
 
