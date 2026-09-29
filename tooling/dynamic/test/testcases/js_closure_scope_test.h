@@ -93,24 +93,7 @@ public:
                     return false;
                 }
 
-                std::string name;
-                ret = innerResult->Get(0)->GetString("name", &name);
-                if (ret != Result::SUCCESS || name != "v3") {
-                    return false;
-                }
-
-                std::unique_ptr<PtJson> value;
-                ret = innerResult->Get(0)->GetObject("value", &value);
-                if (ret != Result::SUCCESS) {
-                    return false;
-                }
-
-                std::string valueDes;
-                ret = value->GetString("description", &valueDes);
-                if (ret != Result::SUCCESS || valueDes != "4") {
-                    return false;
-                }
-                return true;
+                return CheckScopeVariable(innerResult, "v3", "4");
             }},
             {SocketAction::SEND, "print 3"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [] (auto recv, auto, auto) -> bool {
@@ -134,39 +117,8 @@ public:
                     return false;
                 }
 
-                std::string name;
-                ret = innerResult->Get(0)->GetString("name", &name);
-                if (ret != Result::SUCCESS || name != "v2_2") {
-                    return false;
-                }
-
-                std::unique_ptr<PtJson> value;
-                ret = innerResult->Get(0)->GetObject("value", &value);
-                if (ret != Result::SUCCESS) {
-                    return false;
-                }
-
-                std::string valueDes;
-                ret = value->GetString("description", &valueDes);
-                if (ret != Result::SUCCESS || valueDes != "3") {
-                    return false;
-                }
-
-                ret = innerResult->Get(1)->GetString("name", &name);
-                if (ret != Result::SUCCESS || name != "v2_1") {
-                    return false;
-                }
-
-                ret = innerResult->Get(1)->GetObject("value", &value);
-                if (ret != Result::SUCCESS) {
-                    return false;
-                }
-
-                ret = value->GetString("description", &valueDes);
-                if (ret != Result::SUCCESS || valueDes != "2") {
-                    return false;
-                }
-                return true;
+                return CheckScopeVariable(innerResult, "v2_2", "3") &&
+                       CheckScopeVariable(innerResult, "v2_1", "2");
             }},
             {SocketAction::SEND, "print 4"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [] (auto recv, auto, auto) -> bool {
@@ -190,24 +142,7 @@ public:
                     return false;
                 }
 
-                std::string name;
-                ret = innerResult->Get(0)->GetString("name", &name);
-                if (ret != Result::SUCCESS || name != "v1") {
-                    return false;
-                }
-
-                std::unique_ptr<PtJson> value;
-                ret = innerResult->Get(0)->GetObject("value", &value);
-                if (ret != Result::SUCCESS) {
-                    return false;
-                }
-
-                std::string valueDes;
-                ret = value->GetString("description", &valueDes);
-                if (ret != Result::SUCCESS || valueDes != "1") {
-                    return false;
-                }
-                return true;
+                return CheckScopeVariable(innerResult, "v1", "1");
             }},
 
             // hit breakpoint after resume second time
@@ -260,24 +195,7 @@ public:
                     return false;
                 }
 
-                std::string name;
-                ret = innerResult->Get(0)->GetString("name", &name);
-                if (ret != Result::SUCCESS || name != "i") {
-                    return false;
-                }
-
-                std::unique_ptr<PtJson> value;
-                ret = innerResult->Get(0)->GetObject("value", &value);
-                if (ret != Result::SUCCESS) {
-                    return false;
-                }
-
-                std::string valueDes;
-                ret = value->GetString("description", &valueDes);
-                if (ret != Result::SUCCESS || valueDes != "5") {
-                    return false;
-                }
-                return true;
+                return CheckScopeVariable(innerResult, "i", "5");
             }},
             {SocketAction::SEND, "print 3"},
             {SocketAction::RECV, "", ActionRule::CUSTOM_RULE, [] (auto recv, auto, auto) -> bool {
@@ -301,24 +219,7 @@ public:
                     return false;
                 }
 
-                std::string name;
-                ret = innerResult->Get(0)->GetString("name", &name);
-                if (ret != Result::SUCCESS || name != "a") {
-                    return false;
-                }
-
-                std::unique_ptr<PtJson> value;
-                ret = innerResult->Get(0)->GetObject("value", &value);
-                if (ret != Result::SUCCESS) {
-                    return false;
-                }
-
-                std::string valueDes;
-                ret = value->GetString("description", &valueDes);
-                if (ret != Result::SUCCESS || valueDes != "10") {
-                    return false;
-                }
-                return true;
+                return CheckScopeVariable(innerResult, "a", "10");
             }},
             // reply success and run
             {SocketAction::SEND, "success"},
@@ -335,6 +236,30 @@ public:
     ~JsClosureScopeTest() = default;
 
 private:
+    static bool CheckScopeVariable(const std::unique_ptr<PtJson> &innerResult,
+                                   const std::string &expectName, const std::string &expectValue)
+    {
+        for (int32_t i = 0; i < innerResult->GetSize(); i++) {
+            std::string name;
+            if (innerResult->Get(i)->GetString("name", &name) != Result::SUCCESS) {
+                return false;
+            }
+            if (name != expectName) {
+                continue;
+            }
+            std::unique_ptr<PtJson> value;
+            if (innerResult->Get(i)->GetObject("value", &value) != Result::SUCCESS) {
+                return false;
+            }
+            std::string valueDes;
+            if (value->GetString("description", &valueDes) != Result::SUCCESS) {
+                return false;
+            }
+            return valueDes == expectValue;
+        }
+        return false;
+    }
+
     std::string pandaFile_ = DEBUGGER_ABC_DIR "closure_scope.abc";
     std::string sourceFile_ = DEBUGGER_JS_DIR "closure_scope.js";
     std::string entryPoint_ = "closure_scope";
