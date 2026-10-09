@@ -51,9 +51,9 @@ public:
 
     bool ShouldStopAt(const PtLocation &location, EvaluationEngine &engine) override;
 
-    static bool IsConditionTrue(TypedValue value);
-    static bool IsConditionTrue(coretypes::TaggedValue value);
-    static bool IsConditionTrue(ObjectHeader *object);
+    static bool IsConditionTrue(TypedValue value, bool &isConditionValid);
+    static bool IsConditionTrue(coretypes::TaggedValue value, bool &isConditionValid);
+    static bool IsConditionTrue(ObjectHeader *object, bool &isConditionValid);
 
 protected:
     void TryResolveImpl(const panda_file::File &file, const panda_file::DebugInfoExtractor *debugInfo,
@@ -65,6 +65,7 @@ private:
     int32_t lineNumber_ {0};
     std::string bytecode_;
     Method *method_ {nullptr};
+    bool isConditionValid_ {true};
 };
 
 }  // namespace ark::tooling::inspector

@@ -16,6 +16,7 @@
 #ifndef PANDA_TOOLING_INSPECTOR_THREAD_STATE_H
 #define PANDA_TOOLING_INSPECTOR_THREAD_STATE_H
 
+#include <cstdint>
 #include <memory>
 #include <unordered_set>
 #include <vector>
@@ -31,6 +32,14 @@
 #include "types/pause_on_exceptions_state.h"
 
 namespace ark::tooling::inspector {
+
+// Sentinel line number values used by OnSingleStep.
+// OnSingleStep never pauses on a location whose line number is not positive;
+// both sentinels below are covered by that early return.
+// SKIP_LINE_NUMBER is equivalent to INVALID_LINE_NO in ets_frontend/ets2panda/compiler/core/emitter.cpp.
+// UNKNOWN_LINE_NUMBER is equivalent to a LINE_NUMBER that has not been computed.
+constexpr int32_t SKIP_LINE_NUMBER = -1;
+constexpr int32_t UNKNOWN_LINE_NUMBER = 0;
 
 class DebuggableThread;
 
@@ -107,6 +116,14 @@ private:
 private:
     bool ShouldStopAtBreakpoint(const PtLocation &location);
 
+    // Helpers for OnSingleStep. Each returns true when it has fully decided the pause
+    // state for this step and the caller should return immediately.
+    bool HandleBreakOnStart(const PtLocation &location);
+    bool HandleDynamicToStatic(int32_t lineNumber);
+    bool HandleBreakpointHit(const PtLocation &location);
+    void HandleStep(const PtLocation &location);
+    void UpdateLineNumber(int32_t lineNumber);
+
 private:
     StepKind stepKind_ {StepKind::NONE};
 
@@ -127,6 +144,10 @@ private:
     bool skipAllPauses_ {false};
     bool breakOnStart_ {false};
     PauseReason pauseReason_ {PauseReason::OTHER};
+
+    // Source line number seen on the most recent single step. Used by STEP_INTO to
+    // avoid pausing again when the new location is still on the same source line.
+    int32_t lastLineNumber_ {0};
 };
 }  // namespace ark::tooling::inspector
 

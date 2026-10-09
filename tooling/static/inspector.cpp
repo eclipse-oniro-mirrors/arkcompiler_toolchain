@@ -323,7 +323,10 @@ void Inspector::SingleStep(PtThread thread, Method *method, const PtLocation &lo
 
     auto *debuggableThread = GetDebuggableThread(thread);
     if (debuggableThread != nullptr) {
-        debuggableThread->OnSingleStep(location);
+        auto lineNumberOpt = debugInfoCache_.GetLocationLineNumber(method, location);
+        PtLocation locationWithLineNumber(location.GetPandaFile(), location.GetMethodId(),
+                                          location.GetBytecodeOffset(), lineNumberOpt.value_or(SKIP_LINE_NUMBER));
+        debuggableThread->OnSingleStep(locationWithLineNumber);
     }
 }
 

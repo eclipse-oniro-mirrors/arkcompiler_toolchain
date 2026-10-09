@@ -335,6 +335,21 @@ TEST_F(DebugInfoCacheTest, GetSourceLocation)
               breaks.end());
 }
 
+TEST_F(DebugInfoCacheTest, GetLocationLineNumber)
+{
+    auto line = [this](uint32_t offset) {
+        return cache.GetLocationLineNumber(methodFoo, PtLocation(ASM_FILE_NAME, methodFoo->GetFileId(), offset));
+    };
+
+    ASSERT_EQ(line(0U), 2);   // offset 0, line 2 of function
+    ASSERT_EQ(line(2U), 3);   // offset 2, line 3 of function
+    ASSERT_EQ(line(6U), 4);   // offset 6, line 4 of function
+    ASSERT_EQ(line(10U), 6);  // offset 10, line 6 of function
+
+    panda_file::File::EntityId invalidFileId(0xDEADBEEFU);
+    ASSERT_FALSE(cache.GetLocationLineNumber(methodFoo, PtLocation(ASM_FILE_NAME, invalidFileId, 2U)).has_value());
+}
+
 TEST_F(DebugInfoCacheTest, GetAsyncFrameSourceLocation)
 {
     auto location = cache.GetAsyncFrameSourceLocation(ASM_FILE_NAME, methodFoo->GetFileId().GetOffset(), 2U);

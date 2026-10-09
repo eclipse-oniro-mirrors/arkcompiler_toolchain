@@ -16,8 +16,8 @@
 #ifndef PANDA_TOOLING_INSPECTOR_DEBUG_INFO_CACHE_H
 #define PANDA_TOOLING_INSPECTOR_DEBUG_INFO_CACHE_H
 
-#include <set>
 #include <optional>
+#include <set>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -44,6 +44,11 @@ public:
     std::optional<AsyncFrameSourceLocation> GetAsyncFrameSourceLocation(std::string_view pandaFile, uint64_t methodId,
                                                                         uint32_t bytecodeOffset) const;
     std::unordered_set<PtLocation, HashLocation> GetCurrentLineLocations(const PtFrame &frame);
+
+    // Resolves the source line number corresponding to the given bytecode location
+    // in the method's panda file. Returns std::nullopt when the panda file is not
+    // a user file or no matching line number entry is found.
+    std::optional<int32_t> GetLocationLineNumber(Method *method, const PtLocation &location) const;
     std::unordered_set<PtLocation, HashLocation> GetContinueToLocations(std::string_view sourceFile,
                                                                         std::string_view scriptIdentity,
                                                                         int32_t lineNumber);
