@@ -129,36 +129,35 @@ bool DebuggableThread::RequestToObjectRepository(std::function<void(ObjectReposi
     return true;
 }
 
-Expected<std::pair<RemoteObject, std::optional<RemoteObject>>, std::string> DebuggableThread::EvaluateExpression(
-    uint32_t frameNumber, const ExpressionWrapper &bytecode)
+EvaluateExpressionResult DebuggableThread::EvaluateExpression(uint32_t frameNumber, const ExpressionWrapper &bytecode)
 {
     std::optional<RemoteObject> optResult;
     std::optional<RemoteObject> optException;
+    std::string excMessage;
     std::optional<Error> optError;
     RequestToObjectRepository(
-        [this, frameNumber, &bytecode, &optResult, &optException, &optError](ObjectRepository &objectRepo) {
+        [this, frameNumber, &bytecode, &optResult, &optException, &excMessage,
+         &optError](ObjectRepository &objectRepo) {
             Method *method = nullptr;
             auto res = EvaluateExpression(frameNumber, bytecode, &method);
-            // Stub: Return "hello world" string object directly
-            optResult.emplace(RemoteObject::String("hello world"));
-            return;
             if (!res) {
                 HandleError(res.Error());
                 optError = res.Error();
                 return;
             }
 
-            auto [result, exc] = res.Value();
+            auto [result, exc, msg] = res.Value();
             optResult.emplace(objectRepo.CreateObject(result));
             if (exc != nullptr) {
                 optException.emplace(objectRepo.CreateObject(TypedValue::Reference(exc)));
             }
+            excMessage = std::move(msg);
         });
     if (optError) {
         ASSERT(!optResult);
         return Unexpected(optError->GetMessage());
     }
-    return std::make_pair(*optResult, optException);
+    return std::make_tuple(*optResult, optException, std::move(excMessage));
 }
 
 void DebuggableThread::OnException(bool uncaught)
@@ -256,9 +255,12 @@ void DebuggableThread::Suspend(ObjectRepository &objectRepository, const std::ve
         ASSERT(suspended_ == request_.has_value());
 
         if (request_) {
-            (*request_)(objectRepository);
-
+            auto localRequest = std::move(*request_);
             request_.reset();
+            mutex_.Unlock();
+            localRequest(objectRepository);
+            mutex_.Lock();
+
             GetManagedThread()->Suspend();
 
             requestDone_.Signal();

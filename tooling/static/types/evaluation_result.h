@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -49,6 +49,25 @@ public:
 private:
     RemoteObject result_;
     std::optional<ExceptionDetails> exceptionDetails_;
+};
+
+class EvaluationErrorResult : public JsonSerializable {
+public:
+    explicit EvaluationErrorResult(std::string &&message) : message_(std::move(message)) {}
+
+    DEFAULT_COPY_SEMANTIC(EvaluationErrorResult);
+    DEFAULT_MOVE_SEMANTIC(EvaluationErrorResult);
+
+    ~EvaluationErrorResult() override = default;
+
+    void Serialize(JsonObjectBuilder &builder) const override
+    {
+        builder.AddProperty("code", 1);
+        builder.AddProperty("message", message_);
+    }
+
+private:
+    std::string message_;
 };
 
 }  // namespace ark::tooling::inspector

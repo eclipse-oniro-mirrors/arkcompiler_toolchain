@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,10 +15,11 @@
 
 #include "evaluation/evaluation_engine.h"
 
+#include "include/tooling/pt_lang_extension.h"
 #include "include/tooling/pt_thread.h"
 
 namespace ark::tooling::inspector {
-Expected<std::pair<TypedValue, ObjectHeader *>, Error> PtThreadEvaluationEngine::EvaluateExpression(
+Expected<std::tuple<TypedValue, ObjectHeader *, std::string>, Error> PtThreadEvaluationEngine::EvaluateExpression(
     uint32_t frameNumber, const ExpressionWrapper &bytecode, Method **method)
 {
     ASSERT(!IsEvaluating());
@@ -41,11 +42,35 @@ Expected<std::pair<TypedValue, ObjectHeader *>, Error> PtThreadEvaluationEngine:
     ASSERT(*method != nullptr);
 
     auto *exception = thread_->GetException();
+    std::string excMessage;
     // Current implementation must clear any occurred exceptions
     if (exception != nullptr) {
+        excMessage = GetExceptionMessage(exception);
         thread_->SetException(nullptr);
     }
 
-    return std::make_pair(result.ToTypedValue((*method)->GetReturnType().GetId()), exception);
+    return std::make_tuple(result.ToTypedValue((*method)->GetReturnType().GetId()), exception, std::move(excMessage));
+}
+
+std::string PtThreadEvaluationEngine::GetExceptionMessage(ObjectHeader *exception) const
+{
+    std::string excMessage;
+    auto ptLangExt = thread_->GetLanguageContext().CreatePtLangExt();
+    if (ptLangExt == nullptr) {
+        return excMessage;
+    }
+    ptLangExt->EnumerateProperties(exception,
+        [&excMessage, &ptLangExt](auto &name, auto value, auto /*isFinal*/, auto /*isAccessor*/) {
+            if ((name == "message" || name == "message_") && excMessage.empty() && value.IsReference()) {
+                auto *obj = value.GetAsReference();
+                if (obj == nullptr) {
+                    return;
+                }
+                if (auto str = ptLangExt->GetAsString(obj)) {
+                    excMessage = std::move(*str);
+                }
+            }
+        });
+    return excMessage;
 }
 }  // namespace ark::tooling::inspector

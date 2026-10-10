@@ -777,11 +777,8 @@ void InspectorServer::OnCallDebuggerEvaluateOnCallFrame(
 
             auto optResult = handler(thread, optRequest->GetExpression(), optRequest->GetCallFrameId());
             if (!optResult) {
-                std::stringstream ss;
-                ss << "Evaluation failed: " << optResult.Error();
-                auto msg = ss.str();
-                LOG(DEBUG, DEBUGGER) << msg;
-                return Unexpected(JRPCError(std::move(msg), ErrorCode::INTERNAL_ERROR));
+                auto errorMsg = std::move(optResult.Error());
+                return std::unique_ptr<JsonSerializable>(std::make_unique<EvaluationErrorResult>(std::move(errorMsg)));
             }
 
             return std::unique_ptr<JsonSerializable>(std::make_unique<EvaluationResult>(std::move(*optResult)));
@@ -805,11 +802,8 @@ void InspectorServer::OnCallDebuggerCallFunctionOn(
 
             auto optResult = handler(thread, optRequest->GetFunctionDeclaration(), optRequest->GetCallFrameId());
             if (!optResult) {
-                std::stringstream ss;
-                ss << "Evaluation failed: " << optResult.Error();
-                auto msg = ss.str();
-                LOG(DEBUG, DEBUGGER) << msg;
-                return Unexpected(JRPCError(std::move(msg), ErrorCode::INTERNAL_ERROR));
+                auto errorMsg = std::move(optResult.Error());
+                return std::unique_ptr<JsonSerializable>(std::make_unique<EvaluationErrorResult>(std::move(errorMsg)));
             }
 
             return std::unique_ptr<JsonSerializable>(std::make_unique<EvaluationResult>(std::move(*optResult)));

@@ -116,6 +116,7 @@ panda_add_gtest(
     SOURCES
         tests/base64.cpp
         tests/bigint_decimal_conversion_test.cpp
+        tests/conditional_breakpoint.cpp
         tests/debug_info_cache.cpp
         tests/inspector_server.cpp
         tests/json_object_matcher.cpp

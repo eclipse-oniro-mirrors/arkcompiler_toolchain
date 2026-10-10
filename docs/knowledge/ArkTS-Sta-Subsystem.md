@@ -49,7 +49,7 @@ Where to look（任务→入口）：
 | 触发词或任务 | 主链路/运行时模型 | 优先入口 | 不变式/维护点 |
 |---|---|---|---|
 | `BreakpointStorage` / `SetBreakpoint` / `RemoveBreakpoint` / `ResolveBreakpoints` / `breakpointLocations_` / `breakpointsActive_` | 设断点→创建 Breakpoint/ConditionalBreakpoint；文件加载时 ResolveBreakpoints 解析行号→PtLocation 多重映射；命中查 breakpointLocations_ | `debugger/breakpoint_storage.cpp/h` | **breakpointLocations_ 是多重映射，一位置多断点**——原因：同一 PtLocation 可被多断点命中，遍历须取全 vector 而非第一个 |
-| `Breakpoint` / `ConditionalBreakpoint` / `BreakpointBase` / `ShouldStopAt` / `IsUrlPattern` / `SetLocations` | Breakpoint 无条件多位置；ConditionalBreakpoint 单位置、条件字节码命中时经 EvaluationEngine 求值 | `debugger/breakpoint.cpp/h` `debugger/conditional_breakpoint.cpp/h` | **Breakpoint 多位置、ConditionalBreakpoint 单位置**——原因：ConditionalBreakpoint 仅 location_（optional），混用语义会丢条件或断点无法解析 |
+| `Breakpoint` / `ConditionalBreakpoint` / `BreakpointBase` / `ShouldStopAt` / `IsConditionTrue` / `IsUrlPattern` / `SetLocations` | Breakpoint 无条件多位置；ConditionalBreakpoint 单位置、条件字节码命中时经 EvaluationEngine 求值，**仅 boolean 求值结果为 true 才停**（U1/tagged boolean/boxed boolean），其他类型（数值、字符串、对象等）一律不停 | `debugger/breakpoint.cpp/h` `debugger/conditional_breakpoint.cpp/h` | **Breakpoint 多位置、ConditionalBreakpoint 单位置**——原因：ConditionalBreakpoint 仅 location_（optional），混用语义会丢条件或断点无法解析 |
 | `ThreadState` / `StepKind` / `STEP_INTO` / `STEP_OVER` / `STEP_OUT` / `BREAK_ON_START` / `CONTINUE_TO` / `OnSingleStep` | 状态机：StepKind 决定 OnSingleStep/OnMethodEntry 是否暂停；stepLocations_ 语义随步类变 | `debugger/thread_state.cpp/h` | **`BREAK_ON_START` 不随新连接 Reset 清除**——原因：头注释明示 BREAK_ON_START 在 Reset 期间不重置以保留断起点语义，误清致初始入口不暂停 |
 | `DebuggableThread` / `OnMethodEntry` / `OnFramePop` / `IsPaused` / `BreakOnStart` / `ResetObjectRepository` | 每应用线程一个，私有继承 PtThreadEvaluationEngine；server 线程发步进指令，app 线程回调驱动 | `debugger/debuggable_thread.cpp/h` | **步进指令发到未暂停线程无效**——原因：步进靠 OnSingleStep 回调，运行中线程无 step 事件 |
 
@@ -131,8 +131,9 @@ Where to look（任务→入口）：
 
 | 变更类型 | 测试目标 |
 |---|---|
-| 断点/线程状态/对象仓储/会话/源码/调试信息缓存/inspector_server/base64 | `arkinspector_tests` — `tooling/static/tests/BUILD.gn`（host_unittest_action，源集含 base64.cpp、debug_info_cache.cpp、inspector_server.cpp、object_repository.cpp、session_manager.cpp、source_manager.cpp、thread_state.cpp、bigint_decimal_conversion_test.cpp） |
-| breakpoint_storage / conditional_breakpoint / evaluation_engine | 无独立测试，验证方式：构建 `arkinspector_tests` 确认编译通过，断点命中经 inspector 集成测试覆盖 |
+| 断点/线程状态/对象仓储/会话/源码/调试信息缓存/inspector_server/base64 | `arkinspector_tests` — `tooling/static/tests/BUILD.gn`（host_unittest_action，源集含 base64.cpp、conditional_breakpoint.cpp、debug_info_cache.cpp、inspector_server.cpp、object_repository.cpp、session_manager.cpp、source_manager.cpp、thread_state.cpp、bigint_decimal_conversion_test.cpp） |
+| conditional_breakpoint | `tooling/static/tests/conditional_breakpoint.cpp` — 覆盖 `IsConditionTrue` 各类型语义（仅 boolean true 停）与 `ShouldStopAt` 未解析行为 |
+| breakpoint_storage / evaluation_engine | 无独立测试，验证方式：构建 `arkinspector_tests` 确认编译通过，断点命中经 inspector 集成测试覆盖 |
 
 ### 验证闭环
 
