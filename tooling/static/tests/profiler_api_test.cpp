@@ -102,6 +102,24 @@ protected:
         return message != nullptr ? *message : "";
     }
 
+    // Invokes a captured handler and returns the serialized payload ("" on error), like the server does.
+    std::string InvokeForPayload(const std::string &method)
+    {
+        auto it = server_.handlers_.find(method);
+        if (it == server_.handlers_.end()) {
+            ADD_FAILURE() << "handler not registered: " << method;
+            return "";
+        }
+        JsonObject emptyParams;
+        auto response = it->second("", emptyParams);
+        if (!response.HasValue()) {
+            return "";
+        }
+        JsonObjectBuilder builder;
+        response.Value()->Serialize(builder);
+        return std::move(builder).Build();
+    }
+
     HandlerCapturingServer server_;
     Runtime::DebugSessionHandle debugSession_;
     std::unique_ptr<Inspector> inspector_;
@@ -125,10 +143,12 @@ TEST_F(ProfilerApiTest, StartThenStopCompletesRoundtrip)
 {
     ASSERT_TRUE(Invoke("Profiler.start").empty());
 
-    auto message = Invoke("Profiler.stop");
-    // No managed code ran, so aggregation is empty: the stop chain must still complete past the
-    // session guards (inactive / failed to start) and terminate at the empty-profile stage.
-    EXPECT_NE(message.find("info is empty"), std::string::npos);
+    // No managed code ran: CDP semantics require Profiler.stop to succeed with a well-formed
+    auto payload = InvokeForPayload("Profiler.stop");
+    ASSERT_FALSE(payload.empty());
+    EXPECT_NE(payload.find("(root)"), std::string::npos);
+    EXPECT_NE(payload.find("(program)"), std::string::npos);
+    EXPECT_NE(payload.find("(idle)"), std::string::npos);
 }
 
 }  // namespace ark::tooling::inspector::test
