@@ -91,6 +91,7 @@ ohos_static_library("libarkinspector_plus_static") {
     "runtime_core:arktsdisassembler",
     "runtime_core:assembler_headers",
     "runtime_core:libarktsbase_package",
+    "runtime_core:libarktsfile",
     "runtime_core:runtime_headers",
   ]
   deps = [
