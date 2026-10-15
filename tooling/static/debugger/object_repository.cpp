@@ -203,7 +203,10 @@ RemoteObject ObjectRepository::CreateObject(ObjectHeader *object)
     ASSERT(ManagedThread::GetCurrent()->GetMutatorLock()->HasLock());
 
     if (object == nullptr) {
-        return RemoteObject::Null();
+        // The static inspector is ArkTS-Sta specific: a raw null reference
+        // denotes `undefined` (`null` is the std.core.Null singleton,
+        // serialized as CDP null by IsNullOrUndefined below).
+        return RemoteObject::Undefined();
     }
 
     if (auto str = extension_->GetAsString(object)) {
@@ -216,6 +219,12 @@ RemoteObject ObjectRepository::CreateObject(ObjectHeader *object)
 
     if (auto boxedValue = extension_->GetBoxedPrimitiveValue(object)) {
         return CreateObject(*boxedValue);
+    }
+
+    // Language-specific null/undefined singletons (e.g. ETS NullValue) should
+    // be serialized as CDP null rather than a generic object.
+    if (extension_->IsNullOrUndefined(object)) {
+        return RemoteObject::Null();
     }
 
     RemoteObjectId id;
