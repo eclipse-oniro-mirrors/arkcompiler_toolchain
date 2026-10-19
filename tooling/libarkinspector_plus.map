@@ -1,0 +1,16 @@
+{
+  global:
+    extern "C" {
+      StartDebugger;
+      InitializeInspector;
+      HandleMessage;
+      StopInspector;
+      WaitForDebugger;
+      StopDebugger;
+      GetStaticCallFrames;
+      OperateJsDebugMessageForStatic;
+      IsStaticRuntimeOnCurrentThread;
+    };
+  local:
+    *;
+};

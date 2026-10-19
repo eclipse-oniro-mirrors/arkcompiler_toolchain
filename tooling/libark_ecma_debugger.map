@@ -1,0 +1,16 @@
+{
+  global:
+    extern "C" {
+      InitializeDebugger;
+      UninitializeDebugger;
+      OnMessage;
+      WaitForDebugger;
+      ProcessMessage;
+      GetDispatchStatus;
+      GetCallFrames;
+      OperateDebugMessage;
+      SetDebugApp;
+    };
+  local:
+    *;
+};

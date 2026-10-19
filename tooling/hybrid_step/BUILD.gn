@@ -59,6 +59,10 @@ ohos_shared_library("arkhybridstep")
 
   deps += hiviewdfx_deps
 
+  if (is_ohos && is_standard_system && !is_debug) {
+    version_script = "libarkhybridstep.map"
+  }
+
   if (!is_mingw && !is_mac) {
     output_extension = "so"
   }

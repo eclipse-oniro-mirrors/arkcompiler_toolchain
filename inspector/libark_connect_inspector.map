@@ -1,0 +1,25 @@
+{
+  global:
+    extern "C" {
+      StartServer;
+      StartServerForSocketPair;
+      StopServer;
+      SendMessage;
+      StoreMessage;
+      RemoveMessage;
+      WaitForConnection;
+      SetConnectCallback;
+      SetDebugModeCallBack;
+      SetSwitchCallBack;
+      SetProfilerCallback;
+      SetRecordCallback;
+      SetArkUICallback;
+      SetWMSCallback;
+      SetCangjieCallback;
+    };
+    extern "C++" {
+      OHOS::ArkCompiler::Toolchain::ConnectServer::*;
+    };
+  local:
+    *;
+};

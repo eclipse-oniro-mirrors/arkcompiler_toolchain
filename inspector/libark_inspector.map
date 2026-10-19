@@ -1,0 +1,20 @@
+{
+  global:
+    extern "C" {
+      StartDebug;
+      StartDebugForSocketpair;
+      InitializeDebuggerForSocketpair;
+      StopDebug;
+      StopOldDebug;
+      WaitForDebugger;
+      StartDebugger;
+      StopDebugger;
+      StoreDebuggerInfo;
+      GetJsBacktrace;
+      OperateJsDebugMessage;
+      GetJsBacktraceV1;
+      OperateJsDebugMessageV1;
+    };
+  local:
+    *;
+};
