@@ -50,6 +50,7 @@ ohos_shared_library("libarkinspector_plus") {
   external_deps = [
     "runtime_core:arktsdisassembler",
     "runtime_core:libarktsbase",
+    "runtime_core:libarktsfile",
     "runtime_core:libarkruntime",
   ]
   if (enable_hilog) {
