@@ -25,6 +25,10 @@ ohos_shared_library("libark_ecma_debugger") {
   }
   install_enable = true
 
+  if (is_ohos && is_standard_system && !is_debug) {
+    version_script = "libark_ecma_debugger.map"
+  }
+
   if (is_mingw || is_win) {
     output_extension = "dll"
   } else if (is_mac) {
@@ -57,7 +61,11 @@ ohos_shared_library("libarkinspector_plus") {
     external_deps += [ "hilog:libhilog" ]
   }
   external_deps += hiviewdfx_ext_deps
- 
+
+  if (is_ohos && is_standard_system && !is_debug) {
+    version_script = "libarkinspector_plus.map"
+  }
+
   if (is_mingw || is_win) {
     output_extension = "dll"
   } else if (is_mac) {

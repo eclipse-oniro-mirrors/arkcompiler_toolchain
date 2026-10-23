@@ -75,6 +75,9 @@ ohos_shared_library("ark_debugger") {
   if (enable_hilog) {
     external_deps = [ "hilog:libhilog" ]
   }
+  if (is_ohos && is_standard_system && !is_debug) {
+    version_script = "libark_inspector.map"
+  }
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
   output_name = "ark_inspector"
@@ -135,6 +138,9 @@ ohos_shared_library("connectserver_debugger") {
   deps = [ ":connectserver_debugger_static" ]
   if (enable_hilog) {
     external_deps = [ "hilog:libhilog" ]
+  }
+  if (is_ohos && is_standard_system && !is_debug) {
+    version_script = "libark_connect_inspector.map"
   }
   subsystem_name = "arkcompiler"
   part_name = "toolchain"
