@@ -175,6 +175,7 @@ void ResetServiceLocked(void *vm, bool isCloseHandle)
     if (g_handle != nullptr && isCloseHandle) {
         CloseHandle(g_handle);
         g_handle = nullptr;
+        g_hasArkFuncsInited = false;
     }
 #endif
 }
@@ -536,6 +537,7 @@ void StopDebug(void* vm, bool isHybrid)
     if (g_handle != nullptr) {
         CloseHandle(g_handle);
         g_handle = nullptr;
+        g_hasArkFuncsInited = false;
     }
 #endif
     if (isHybrid) {

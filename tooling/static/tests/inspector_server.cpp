@@ -1008,6 +1008,7 @@ private:
 
 TEST_F(InspectorAsyncStackE2ETest, RealPromiseThenProducesAsyncStackTrace)
 {
+    ASSERT_EQ(Runtime::GetCurrent()->GetTools().AttachDebugSession(), DebugSessionAttachErrorCode::OK);
     InspectorServer inspectorServer(server_);
     inspectorServer.CallTargetAttachedToTarget(g_mthread);
 
@@ -1033,6 +1034,7 @@ TEST_F(InspectorAsyncStackE2ETest, RealPromiseThenProducesAsyncStackTrace)
 
 TEST_F(InspectorAsyncStackE2ETest, RealPromiseCatchProducesAsyncStackTrace)
 {
+    ASSERT_EQ(Runtime::GetCurrent()->GetTools().AttachDebugSession(), DebugSessionAttachErrorCode::OK);
     InspectorServer inspectorServer(server_);
     inspectorServer.CallTargetAttachedToTarget(g_mthread);
 
@@ -1074,6 +1076,7 @@ TEST_F(InspectorAsyncStackE2ETest, RealPromiseCatchProducesAsyncStackTrace)
 
 TEST_F(InspectorAsyncStackE2ETest, RealPromiseFinallyProducesAsyncStackTrace)
 {
+    ASSERT_EQ(Runtime::GetCurrent()->GetTools().AttachDebugSession(), DebugSessionAttachErrorCode::OK);
     InspectorServer inspectorServer(server_);
     inspectorServer.CallTargetAttachedToTarget(g_mthread);
 
@@ -1115,6 +1118,7 @@ TEST_F(InspectorAsyncStackE2ETest, RealPromiseFinallyProducesAsyncStackTrace)
 
 TEST_F(InspectorAsyncStackE2ETest, RealAwaitSurvivesDisableAndReenable)
 {
+    ASSERT_EQ(Runtime::GetCurrent()->GetTools().AttachDebugSession(), DebugSessionAttachErrorCode::OK);
     InspectorServer inspectorServer(server_);
     inspectorServer.CallTargetAttachedToTarget(g_mthread);
     auto [defaultScriptId, isNewDefaultSource] = inspectorServer.GetSourceManager().GetScriptId(g_sourceFile);

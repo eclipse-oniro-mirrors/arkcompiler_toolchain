@@ -279,6 +279,15 @@ group("ark_toolchain_packages") {
   }
 }
 
+group("ark_toolchain_dynamic_host_packages") {
+  deps = [
+    "./tooling:libark_ecma_debugger(${host_toolchain})",
+    "./tooling/dynamic/client:libark_client(${host_toolchain})",
+    "./tooling/dynamic/client/ark_cli:arkdb(${host_toolchain})",
+    "./tooling/dynamic/client/ark_multi:ark_multi(${host_toolchain})",
+  ]
+}
+
 group("ark_toolchain_unittest") {
   testonly = true
   deps = []

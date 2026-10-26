@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+/**
+ * Copyright (c) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -89,6 +89,25 @@ void TestUtil::NotifyFail()
     }
 }
 
+static void CreateSessionWithRetry(std::string sockInfo)
+{
+    constexpr int waitDebuggerMs = 500;
+    std::this_thread::sleep_for(std::chrono::milliseconds(waitDebuggerMs));
+    constexpr int retryLimit = 10;
+    constexpr int retryIntervalMs = 500;
+    int ret = -1;
+    for (int i = 0; i <= retryLimit; i++) {
+        ret = SessionManager::getInstance().CreateTestSession(sockInfo);
+        if (ret == 0) {
+            return;
+        }
+        LOG_DEBUGGER(ERROR) << "CreateTestSession fail, retry " << i;
+        std::this_thread::sleep_for(std::chrono::milliseconds(retryIntervalMs));
+    }
+    LOG_DEBUGGER(ERROR) << "CreateTestSession fail";
+    exit(-1);
+}
+
 void TestUtil::ForkSocketClient([[maybe_unused]] int port, const std::string &name)
 {
 #ifdef OHOS_PLATFORM
@@ -100,15 +119,13 @@ void TestUtil::ForkSocketClient([[maybe_unused]] int port, const std::string &na
         UNREACHABLE();
     } else if (pid == 0) {
         LOG_DEBUGGER(INFO) << "fork son pid: " << getpid();
-        std::this_thread::sleep_for(std::chrono::microseconds(500000));  // 500000: 500ms for wait debugger
 #ifdef OHOS_PLATFORM
         std::string pidStr = std::to_string(correntPid);
         std::string sockInfo = pidStr + "PandaDebugger";
 #else
         std::string sockInfo = std::to_string(port);
 #endif
-        int ret = SessionManager::getInstance().CreateTestSession(sockInfo);
-        LOG_ECMA_IF(ret, FATAL) << "CreateTestSession fail";
+        CreateSessionWithRetry(sockInfo);
 
         WebSocketClient &client = SessionManager::getInstance().GetCurrentSession()->GetWebSocketClient();
         auto &testAction = TestUtil::GetTest(name)->testAction;

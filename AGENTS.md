@@ -126,7 +126,8 @@ arkcompiler/toolchain/
 ### 最小验证
 
 - 构建：`./build.sh --product-name rk3568 --build-target libarkinspector_plus`（静态库）或 `./build.sh --product-name rk3568 --build-target libark_ecma_debugger`（动态库）
-- 全量测试：`./build.sh --product-name rk3568 --build-target ark_toolchain_host_unittest`
+- Linux 主机产物：`./build.sh --product-name rk3568 --build-target ark_toolchain_dynamic_host_packages`（动态调试模块 4 个产物：libark_tooling.so、libark_client.so、arkdb、ark_multi；client 类 host UT 的构建图已含 libark_ecma_debugger host 依赖，正常构建 UT 即自动产出 libark_tooling.so，无需手动前置）
+- 全量测试：`./build.sh --product-name rk3568 --build-target ark_toolchain_host_unittest`（主机 UT，含 inspector/websocket/tooling 各目录；单模块可用 `ninja -w dupbuild=warn -C out/rk3568 'arkcompiler/toolchain/tooling/dynamic/test:host_unittest'` 直跑）
 - 静态检查：编译即检查（`-Werror` 在 `ark_toolchain_common_config` 中，任何 warning 构建失败）
 
 ### 任务级验证
@@ -134,7 +135,7 @@ arkcompiler/toolchain/
 | 变更类型 | 最小验证 |
 |---|---|
 | ArkTS-Sta 调试变更 | 构建 `libarkinspector_plus` + 跑 `arkinspector_tests` |
-| ArkTS-Dyn 调试变更 | 构建 `libark_ecma_debugger` + 跑 `DebuggerTest` |
+| ArkTS-Dyn 调试变更 | 构建 `libark_ecma_debugger` + 跑 `DebuggerTest`；主机回归 `ninja -w dupbuild=warn -C out/rk3568 'arkcompiler/toolchain/tooling/dynamic/test:host_unittest'`（5 个 UT 全跑） |
 | Inspector 会话变更 | 构建 `ark_debugger` + 跑 `InspectorConnectTest` |
 | WebSocket 变更 | 构建 `ark_debugger` + 跑 `WebSocketTest` |
 | 混合调试变更 | 构建 `libarkinspector_plus` + 混合调试集成测试 |
