@@ -44,6 +44,7 @@ ohos_source_set("arkinspector_tests_source") {
     "runtime_core:libarktsbase_package",
     "runtime_core:libarktsfile",
     "runtime_core:libpandabase_headers",
+    "runtime_core:libarktsassembler_package",
     "runtime_core:runtime_gen_headers",
     "runtime_core:runtime_headers",
   ]
