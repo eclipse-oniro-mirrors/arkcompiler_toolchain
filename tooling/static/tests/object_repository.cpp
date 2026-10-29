@@ -128,10 +128,11 @@ TEST_F(ObjectRepositoryTest, S)
     ASSERT_EQ(clsObj.GetObjectId(), RemoteObjectId(1));
     ASSERT_THAT(ToJson(clsObj), GetObjectProperties(testing::_, testing::_, "1"));
 
+    // A raw null reference denotes `undefined` in ArkTS-Sta (the static
+    // inspector is ArkTS-Sta specific; `null` is the Null singleton object).
     auto nullObj = obj.CreateObject(TypedValue::Reference(nullptr));
-    ASSERT_THAT(ToJson(nullObj), JsonProperties(JsonProperty<JsonObject::StringT> {"type", "object"},
-                                                JsonProperty<JsonObject::StringT> {"subtype", "null"},
-                                                JsonProperty<JsonObject::JsonObjPointer> {"value", testing::IsNull()}));
+    ASSERT_THAT(ToJson(nullObj), JsonProperties(JsonProperty<JsonObject::StringT> {"type", "undefined"},
+                                                JsonProperty<JsonObject::StringT> {"description", "undefined"}));
 
     auto invObj = obj.CreateObject(TypedValue::Invalid());
     ASSERT_THAT(ToJson(invObj), JsonProperties(JsonProperty<JsonObject::StringT> {"type", "undefined"},
