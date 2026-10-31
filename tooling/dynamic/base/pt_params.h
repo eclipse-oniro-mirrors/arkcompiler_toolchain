@@ -995,6 +995,16 @@ public:
         return nativeAddrToNodeIdMap_.has_value();
     }
 
+    bool GetLz4Compressed() const
+    {
+        return lz4Compressed_.value_or(false);
+    }
+
+    bool HasLz4Compressed() const
+    {
+        return lz4Compressed_.has_value();
+    }
+
 private:
     NO_COPY_SEMANTIC(StopTrackingHeapObjectsParams);
     NO_MOVE_SEMANTIC(StopTrackingHeapObjectsParams);
@@ -1003,6 +1013,7 @@ private:
     std::optional<bool> treatGlobalObjectsAsRoots_ {};
     std::optional<bool> captureNumericValue_ {};
     std::optional<int32_t> nativeAddrToNodeIdMap_ {};
+    std::optional<bool> lz4Compressed_ {};
 };
 
 class AddInspectedHeapObjectParams : public PtBaseParams {

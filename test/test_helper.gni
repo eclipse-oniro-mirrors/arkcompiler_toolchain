@@ -76,6 +76,7 @@ template("host_unittest_action") {
           "/thirdparty/bounds_checking_function:" +
           rebase_path(_root_out_dir_) + "/thirdparty/openssl:" +
           rebase_path(_root_out_dir_) + "/thirdparty/zlib:" +
+          rebase_path(_root_out_dir_) + "/thirdparty/lz4:" +
           rebase_path(_root_out_dir_) + "/resourceschedule/qos_manager:" +
           rebase_path(_root_out_dir_) + "/hiviewdfx/hilog:" +
           rebase_path("//prebuilts/clang/ohos/linux-x86_64/llvm/lib/"),
