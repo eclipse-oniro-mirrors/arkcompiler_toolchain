@@ -276,6 +276,10 @@ HWTEST_F(WebSocketTest, ServerAbnormalTest, testing::ext::TestSize.Level0)
         };
         serverSocket.SetValidateConnectionCallback(notValidCallBack);
         ASSERT_FALSE(serverSocket.AcceptNewConnection());
+        int status;
+        waitpid(pid, &status, 0);
+        ASSERT_EQ(status, 0);
+        serverSocket.Close();
     } else {
         std::cerr << "ServerAbnormalTest::fork failed, error = "
                   << errno << ", desc = " << strerror(errno) << std::endl;

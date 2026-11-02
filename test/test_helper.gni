@@ -15,6 +15,10 @@ import("//arkcompiler/toolchain/toolchain.gni")
 import("$build_root/config/components/ets_frontend/es2abc_config.gni")
 import("$build_root/test.gni")
 
+if (!defined(run_with_qemu)) {
+  run_with_qemu = false
+}
+
 if (is_standard_system || ark_standalone_build) {
   _icu_path_ = "thirdparty/icu"
 } else {
@@ -78,7 +82,9 @@ template("host_unittest_action") {
           rebase_path(_root_out_dir_) + "/thirdparty/zlib:" +
           rebase_path(_root_out_dir_) + "/resourceschedule/qos_manager:" +
           rebase_path(_root_out_dir_) + "/hiviewdfx/hilog:" +
-          rebase_path("//prebuilts/clang/ohos/linux-x86_64/llvm/lib/"),
+          rebase_path(_root_out_dir_) + "/arkui/napi:" +
+          rebase_path("//prebuilts/clang/ohos/linux-x86_64/llvm/lib:") +
+          rebase_path(_root_out_dir_) + "/hmosbundlemanager/zlib_override/",
       "--timeout-limit",
       "${_timeout_}",
     ]
@@ -135,8 +141,7 @@ template("host_unittest_action") {
     testonly = true
 
     deps = []
-    if (ark_standalone_build && host_os == "linux" && target_os == "ohos" &&
-        !run_with_qemu) {
+    if (!run_with_qemu) {
       deps += [ ":${_target_name_}ActionWithoutQemu" ]
     }
   }

@@ -143,7 +143,25 @@ Test targets: `DebuggerTest` and related test suites (defined in `test/BUILD.gn`
 
 ### Running Tests
 
-From the `ark_standalone_build` directory, you can use the standalone build commands without pulling the full OpenHarmony code:
+On a full OpenHarmony source tree (Linux host), build and run the host unit tests directly via ninja (no standalone checkout needed):
+
+```bash
+# All 5 dynamic-module host UTs (build + run), from the OpenHarmony root:
+ninja -w dupbuild=warn -C out/rk3568 'arkcompiler/toolchain/tooling/dynamic/test:host_unittest'
+
+# Or a single suite (compile + run):
+ninja -w dupbuild=warn -C out/rk3568 \
+    'arkcompiler/toolchain/tooling/dynamic/test:DebuggerTestActionWithoutQemu'
+# Equivalently via build.sh: ./build.sh --product-name rk3568 \
+#    --build-target 'arkcompiler/toolchain/tooling/dynamic/test:host_unittest'
+
+# Host artifacts of the dynamic module (libark_tooling.so, libark_client.so, arkdb, ark_multi):
+ninja -w dupbuild=warn -C out/rk3568 'arkcompiler/toolchain:ark_toolchain_dynamic_host_packages'
+```
+
+Test binaries and resources land in the host-toolchain output directory of `out/rk3568/` (binaries in `tests/unittest/toolchain/toolchain/`, `.abc` fixtures next to the test's obj dir, `libjsdebugtest.so`/`libdebugger_entry.so` in `test/test/`).
+
+Alternatively, from the `ark_standalone_build` directory, you can use the standalone build commands without pulling the full OpenHarmony code:
 
 ```bash
 cd ark_standalone_build

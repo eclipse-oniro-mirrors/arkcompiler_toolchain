@@ -319,6 +319,9 @@ host_unittest_action("DebuggerClientTest") {
     "..:libark_ecma_debugger_test",
     "../client:libark_client_set",
   ]
+  if (current_toolchain == host_toolchain) {
+    deps += [ "../..:libark_ecma_debugger" ]
+  }
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
@@ -367,6 +370,9 @@ host_unittest_action("DebuggerCIntClientTest") {
     "..:libark_ecma_debugger_test",
     "../client:libark_client_set",
   ]
+  if (current_toolchain == host_toolchain) {
+    deps += [ "../..:libark_ecma_debugger" ]
+  }
 
   # hiviewdfx libraries
   external_deps = hiviewdfx_ext_deps
