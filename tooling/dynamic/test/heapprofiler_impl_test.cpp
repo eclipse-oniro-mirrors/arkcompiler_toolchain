@@ -932,4 +932,70 @@ HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplTakeHeapSnapshotWithNativeAddrTo
         channel = nullptr;
     }
 }
+
+// Param parsing: lz4Compressed true/false/default, and TakeHeapSnapshot succeeds.
+HWTEST_F_L0(HeapProfilerImplTest, TakeHeapSnapshotWithLz4Compressed)
+{
+#if defined(ECMASCRIPT_SUPPORT_HEAPPROFILER)
+    ProtocolChannel *channel = nullptr;
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+
+    // lz4Compressed=true
+    std::unique_ptr<PtJson> json = PtJson::Parse(R"({"lz4Compressed":true})");
+    auto params = StopTrackingHeapObjectsParams::Create(*json);
+    ASSERT_TRUE(params->HasLz4Compressed());
+    ASSERT_TRUE(params->GetLz4Compressed());
+    ASSERT_TRUE(heapProfiler->TakeHeapSnapshot(*params).IsOk());
+    json->ReleaseRoot();
+
+    // lz4Compressed=false
+    json = PtJson::Parse(R"({"lz4Compressed":false})");
+    params = StopTrackingHeapObjectsParams::Create(*json);
+    ASSERT_TRUE(params->HasLz4Compressed());
+    ASSERT_FALSE(params->GetLz4Compressed());
+    ASSERT_TRUE(heapProfiler->TakeHeapSnapshot(*params).IsOk());
+    json->ReleaseRoot();
+
+    // lz4Compressed omitted → defaults to false
+    json = PtJson::Parse(R"({})");
+    params = StopTrackingHeapObjectsParams::Create(*json);
+    ASSERT_FALSE(params->HasLz4Compressed());
+    ASSERT_FALSE(params->GetLz4Compressed());
+    ASSERT_TRUE(heapProfiler->TakeHeapSnapshot(*params).IsOk());
+    json->ReleaseRoot();
+#else
+    ASSERT_TRUE(true);
+#endif
+}
+
+// Dispatcher: lz4Compressed=true with other params → success; wrong type → error.
+HWTEST_F_L0(HeapProfilerImplTest, DispatcherImplTakeHeapSnapshotWithLz4Compressed)
+{
+    std::string result = "";
+    std::function<void(const void*, const std::string &)> callback =
+        [&result]([[maybe_unused]] const void *ptr, const std::string &temp) {result = temp;};
+    ProtocolChannel *channel = new ProtocolHandler(callback, ecmaVm);
+    auto heapProfiler = std::make_unique<HeapProfilerImpl>(ecmaVm, channel);
+    auto dispatcherImpl = std::make_unique<HeapProfilerImpl::DispatcherImpl>(channel, std::move(heapProfiler));
+
+    // All params combined including lz4Compressed=true
+    std::string msg = R"({"id":0,"method":"HeapProfiler.takeHeapSnapshot","params":{
+        "reportProgress":true,
+        "captureNumericValue":true,
+        "nativeAddrToNodeIdMap":1,
+        "lz4Compressed":true}})";
+    DispatchRequest request(msg);
+    dispatcherImpl->Dispatch(request);
+    ASSERT_TRUE(result == "{\"id\":0,\"result\":{}}");
+
+    // lz4Compressed wrong type → "wrong params"
+    result.clear();
+    msg = R"({"id":0,"method":"HeapProfiler.takeHeapSnapshot","params":{
+        "lz4Compressed":"not_a_bool"}})";
+    DispatchRequest request2(msg);
+    dispatcherImpl->Dispatch(request2);
+    ASSERT_TRUE(result.find("wrong params") != std::string::npos);
+
+    delete channel;
+}
 }  // namespace panda::test

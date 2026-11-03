@@ -480,6 +480,7 @@ DispatchResponse HeapProfilerImpl::TakeHeapSnapshot(const StopTrackingHeapObject
     dumpOption.isPrivate = false;
     dumpOption.captureNumericValue = captureNumericValue;
     dumpOption.nativeAddrToNodeIdMap = nativeAddrToNodeIdMap;
+    dumpOption.enableCompression = params.GetLz4Compressed();
     if (params.GetReportProgress()) {
         HeapProfilerProgress progress(&frontend_);
         panda::DFXJSNApi::DumpHeapSnapshot(vm_, &stream_, dumpOption, &progress);

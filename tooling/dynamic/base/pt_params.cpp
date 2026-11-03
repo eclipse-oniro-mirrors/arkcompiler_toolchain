@@ -1013,6 +1013,14 @@ std::unique_ptr<StopTrackingHeapObjectsParams> StopTrackingHeapObjectsParams::Cr
     } else if (ret == Result::TYPE_ERROR) {
         error += "Wrong type of 'nativeAddrToNodeIdMap';";
     }
+
+    bool lz4Compressed = false;
+    ret = params.GetBool("lz4Compressed", &lz4Compressed);
+    if (ret == Result::SUCCESS) {
+        paramsObject->lz4Compressed_ = lz4Compressed;
+    } else if (ret == Result::TYPE_ERROR) {
+        error += "Wrong type of 'lz4Compressed';";
+    }
     if (!error.empty()) {
         LOG_DEBUGGER(ERROR) << "StopTrackingHeapObjectsParams::Create " << error;
         return nullptr;
