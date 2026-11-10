@@ -58,6 +58,13 @@ bool JSPtHooks::SingleStep(const JSPtLocation &location)
     // pause by single step from static side
     if (debugger_->isHybrid_ &&
         HybridSingleStepper::GetInstance().GetHybridSingleStepFlag(HybridStepDirection::STATIC_TO_DYNAMIC)) {
+        // Skip internal lines (e.g. line -1 / SPECIAL_LINE_MARK at function entry)
+        // and continue stepping until reaching a user source line before pausing.
+        if (debugger_->IsSkipLine(location)) {
+            LOG_DEBUGGER(DEBUG) << "JSPtHooks::SingleStep skip internal line => " << location.GetMethodId()
+                                << ": " << location.GetBytecodeOffset();
+            return false;
+        }
         LOG_DEBUGGER(DEBUG) << "JSPtHooks::SingleStep paused by single step from static side";
         // reset STATIC_TO_DYNAMIC to false to avoid redundant pauses
         HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::STATIC_TO_DYNAMIC, false);

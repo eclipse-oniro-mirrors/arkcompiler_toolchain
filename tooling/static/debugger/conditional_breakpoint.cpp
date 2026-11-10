@@ -26,34 +26,39 @@ namespace ark::tooling::inspector {
 /**
  * @brief Decides whether a condition result stops at the breakpoint. Only an explicit boolean
  * result is honored (U1, tagged boolean, or boxed boolean); any other expression result never stops.
+ * When the result type is not boolean, isConditionValid is set to false so the caller can skip
+ * further expensive evaluations on subsequent hits.
  */
-bool ConditionalBreakpoint::IsConditionTrue(TypedValue value)
+bool ConditionalBreakpoint::IsConditionTrue(TypedValue value, bool &isConditionValid)
 {
     switch (value.GetType()) {
         case panda_file::Type::TypeId::U1:
             return value.GetAsU1();
         case panda_file::Type::TypeId::REFERENCE:
-            return IsConditionTrue(value.GetAsReference());
+            return IsConditionTrue(value.GetAsReference(), isConditionValid);
         case panda_file::Type::TypeId::TAGGED:
-            return IsConditionTrue(value.GetAsTagged());
+            return IsConditionTrue(value.GetAsTagged(), isConditionValid);
         default:
+            isConditionValid = false;
             LOG(DEBUG, DEBUGGER) << "Breakpoint condition result is not boolean, continue execution";
             return false;
     }
 }
 
-bool ConditionalBreakpoint::IsConditionTrue(coretypes::TaggedValue value)
+bool ConditionalBreakpoint::IsConditionTrue(coretypes::TaggedValue value, bool &isConditionValid)
 {
     if (value.IsBoolean()) {
         return value.IsTrue();
     }
     if (value.IsHeapObject()) {
-        return IsConditionTrue(value.GetHeapObject());
+        return IsConditionTrue(value.GetHeapObject(), isConditionValid);
     }
+    // Non-boolean, non-heap-object tagged value (undefined/null/hole/exception/numbers)
+    isConditionValid = false;
     return false;
 }
 
-bool ConditionalBreakpoint::IsConditionTrue(ObjectHeader *object)
+bool ConditionalBreakpoint::IsConditionTrue(ObjectHeader *object, bool &isConditionValid)
 {
     if (object == nullptr) {
         return false;
@@ -72,7 +77,7 @@ bool ConditionalBreakpoint::IsConditionTrue(ObjectHeader *object)
 
     // Only a boxed boolean may unwrap to true
     if (auto boxedValue = extension->GetBoxedPrimitiveValue(object)) {
-        return IsConditionTrue(*boxedValue);
+        return IsConditionTrue(*boxedValue, isConditionValid);
     }
 
     // Any other object never stops
@@ -82,6 +87,11 @@ bool ConditionalBreakpoint::IsConditionTrue(ObjectHeader *object)
 bool ConditionalBreakpoint::ShouldStopAt(const PtLocation &location, EvaluationEngine &engine)
 {
     if (!location_.has_value() || !(*location_ == location)) {
+        return false;
+    }
+    // Skip evaluation entirely once the condition has been detected as non-boolean,
+    // to avoid repeated expensive EvaluateExpression calls on every single-step hit.
+    if (!isConditionValid_) {
         return false;
     }
     // Condition is evaluated in the context of top frame
@@ -100,7 +110,12 @@ bool ConditionalBreakpoint::ShouldStopAt(const PtLocation &location, EvaluationE
         }
         return false;
     }
-    return IsConditionTrue(result);
+    bool shouldStop = IsConditionTrue(result, isConditionValid_);
+    if (!isConditionValid_) {
+        LOG(WARNING, DEBUGGER) << "Breakpoint #" << GetId()
+                               << " condition result is not boolean, skip further evaluation";
+    }
+    return shouldStop;
 }
 
 bool ConditionalBreakpoint::SetLocations(

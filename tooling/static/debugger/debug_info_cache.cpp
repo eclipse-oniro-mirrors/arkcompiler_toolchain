@@ -166,6 +166,26 @@ std::unordered_set<PtLocation, HashLocation> DebugInfoCache::GetCurrentLineLocat
     return locations;
 }
 
+std::optional<int32_t> DebugInfoCache::GetLocationLineNumber(Method *method, const PtLocation &location) const
+{
+    auto debugInfo = GetDebugInfo(method->GetPandaFile());
+    if (debugInfo == nullptr || !debugInfo->IsUserFile()) {
+        return std::nullopt;
+    }
+
+    if (method->GetFileId() != location.GetMethodId()) {
+        return std::nullopt;
+    }
+
+    const auto &table = debugInfo->GetLineNumberTable(location.GetMethodId());
+    auto it = std::upper_bound(table.begin(), table.end(), location.GetBytecodeOffset(),
+                               [](auto offset, auto &entry) { return offset < entry.offset; });
+    if (it == table.begin()) {
+        return std::nullopt;
+    }
+    return std::prev(it)->line;
+}
+
 std::unordered_set<PtLocation, HashLocation> DebugInfoCache::GetContinueToLocations(std::string_view sourceFile,
                                                                                     std::string_view scriptIdentity,
                                                                                     int32_t lineNumber)

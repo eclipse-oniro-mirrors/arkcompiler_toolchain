@@ -47,11 +47,11 @@ protected:
     MockEvaluationEngine mockEvaluationEngine_;
     BreakpointStorage bpStorage_;
     std::unique_ptr<ThreadState> state;
-    PtLocation fake = PtLocation("", {}, 0);
-    PtLocation location0 = PtLocation("test.abc", panda_file::File::EntityId(1), 0);
-    PtLocation location1 = PtLocation("test.abc", panda_file::File::EntityId(1), 1);
-    PtLocation location2 = PtLocation("test.abc", panda_file::File::EntityId(1), 2);
-    PtLocation location3 = PtLocation("test.abc", panda_file::File::EntityId(1), 3);
+    PtLocation fake = PtLocation("", {}, 0, 1);
+    PtLocation location0 = PtLocation("test.abc", panda_file::File::EntityId(1), 0, 1);
+    PtLocation location1 = PtLocation("test.abc", panda_file::File::EntityId(1), 1, 2);
+    PtLocation location2 = PtLocation("test.abc", panda_file::File::EntityId(1), 2, 3);
+    PtLocation location3 = PtLocation("test.abc", panda_file::File::EntityId(1), 3, 4);
     const char *source = "/test.ets";
 };
 
@@ -190,6 +190,87 @@ TEST_F(ThreadStateTest, OnException)
     state->Continue();
     ASSERT_FALSE(state->IsPaused());
     state->OnException(true);
+    ASSERT_TRUE(state->IsPaused());
+}
+
+TEST_F(ThreadStateTest, OnSingleStepPausesOnNonPositiveLineNumber)
+{
+    PtLocation skipLocation = PtLocation("test.abc", panda_file::File::EntityId(1), 0, SKIP_LINE_NUMBER);
+    PtLocation unknownLocation = PtLocation("test.abc", panda_file::File::EntityId(1), 0, UNKNOWN_LINE_NUMBER);
+
+    state->Pause();
+    state->OnSingleStep(skipLocation);
+    ASSERT_TRUE(state->IsPaused());
+
+    state->Continue();
+    state->Pause();
+    state->OnSingleStep(unknownLocation);
+    ASSERT_TRUE(state->IsPaused());
+
+    state->Continue();
+    state->BreakOnStart();
+    state->OnSingleStep(unknownLocation);
+    ASSERT_TRUE(state->IsPaused());
+}
+
+TEST_F(ThreadStateTest, UpdateLineNumberIgnoresSkipLineNumber)
+{
+    state->Pause();
+    state->OnSingleStep(fake);
+    ASSERT_TRUE(state->IsPaused());
+
+    std::unordered_set<PtLocation, HashLocation> locs;
+    locs.insert(location1);
+    state->StepInto(locs);
+
+    constexpr int32_t SOURCE_LINE = 5;
+    PtLocation location1Line5 = PtLocation("test.abc", panda_file::File::EntityId(1), 1, SOURCE_LINE);
+    PtLocation cctorSkipLine = PtLocation("test.abc", panda_file::File::EntityId(1), 0, SKIP_LINE_NUMBER);
+    PtLocation location2Line5 = PtLocation("test.abc", panda_file::File::EntityId(1), 2, SOURCE_LINE);
+
+    // Step onto line 5 (in stepLocations_): keeps stepping and records lastLineNumber_ = 5.
+    state->OnSingleStep(location1Line5);
+    ASSERT_FALSE(state->IsPaused());
+
+    // The static cctor step carries SKIP_LINE_NUMBER and stays in stepLocations_, so it keeps
+    // stepping; the guard keeps lastLineNumber_ = 5 instead of overwriting it with SKIP_LINE_NUMBER.
+    locs.insert(cctorSkipLine);
+    state->StepInto(locs);
+    state->OnSingleStep(cctorSkipLine);
+    ASSERT_FALSE(state->IsPaused());
+
+    // Returning to the same source line (dynamic->static->dynamic round trip) is still
+    // suppressed by the same-line guard, even outside stepLocations_.
+    state->OnSingleStep(location2Line5);
+    ASSERT_FALSE(state->IsPaused());
+}
+
+TEST_F(ThreadStateTest, StepIntoDoesNotPauseOnSameLineNumber)
+{
+    state->Pause();
+    state->OnSingleStep(fake);
+
+    std::unordered_set<PtLocation, HashLocation> locs;
+    locs.insert(location1);
+
+    ASSERT_TRUE(state->IsPaused());
+    state->StepInto(locs);
+
+    PtLocation location1Line5 = PtLocation("test.abc", panda_file::File::EntityId(1), 1, 5);
+    PtLocation location2Line5 = PtLocation("test.abc", panda_file::File::EntityId(1), 2, 5);
+    PtLocation location2Line6 = PtLocation("test.abc", panda_file::File::EntityId(1), 2, 6);
+
+    // Stepping to location1 (in stepLocations_) on line 5 does not pause, but records
+    // lastLineNumber_ = 5.
+    state->OnSingleStep(location1Line5);
+    ASSERT_FALSE(state->IsPaused());
+
+    // A subsequent step to another location still on line 5 is suppressed by the same-line guard.
+    state->OnSingleStep(location2Line5);
+    ASSERT_FALSE(state->IsPaused());
+
+    // A step onto a different line (6) re-enables pausing (location2 not in stepLocations_).
+    state->OnSingleStep(location2Line6);
     ASSERT_TRUE(state->IsPaused());
 }
 

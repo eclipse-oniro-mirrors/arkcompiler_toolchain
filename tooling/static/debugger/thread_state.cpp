@@ -35,6 +35,7 @@ void ThreadState::Reset()
     methodEntered_ = false;
     skipAllPauses_ = false;
     pauseOnExceptionsState_ = PauseOnExceptionsState::NONE;
+    lastLineNumber_ = 0;
 }
 
 void ThreadState::BreakOnStart()
@@ -131,6 +132,8 @@ void ThreadState::OnException(bool uncaught)
         case PauseOnExceptionsState::ALL:
             paused_ = true;
             break;
+        default:
+            UNREACHABLE();
     }
     if (paused_) {
         pauseReason_ = PauseReason::EXCEPTION;
@@ -154,6 +157,10 @@ void ThreadState::OnFramePop()
             methodEntered_ = false;
             break;
         }
+
+        default: {
+            UNREACHABLE();
+        }
     }
 }
 
@@ -173,79 +180,116 @@ bool ThreadState::OnMethodEntry()
         case StepKind::STEP_OVER: {
             return !std::exchange(methodEntered_, true);
         }
-    }
 
-    UNREACHABLE();
+        default: {
+            UNREACHABLE();
+        }
+    }
+}
+
+void ThreadState::UpdateLineNumber(int32_t lineNumber)
+{
+    // SKIP_LINE_NUMBER (cctor) nerver update
+    // dynamic->static->dynamic. After passing through the static cctor function, it returns to the same line.
+    if (lineNumber != SKIP_LINE_NUMBER) {
+        LOG(INFO, DEBUGGER) << "ThreadState::OnSingleStep lineNumber update from " << lastLineNumber_ << " to "
+                            << lineNumber;
+        lastLineNumber_ = lineNumber;
+    }
+}
+
+bool ThreadState::HandleBreakOnStart(const PtLocation &location)
+{
+    if (ShouldStopAtBreakpoint(location)) {
+        paused_ = true;
+        UpdateLineNumber(location.GetLineNumber());
+        pauseReason_ = PauseReason::OTHER;
+        return true;
+    }
+    if (stepKind_ != StepKind::STEP_INTO) {
+        pauseReason_ = PauseReason::BREAK_ON_START;
+    }
+    stepKind_ = StepKind::BREAK_ON_START;
+    paused_ = true;
+    UpdateLineNumber(location.GetLineNumber());
+    breakOnStart_ = false;
+    return true;
+}
+
+bool ThreadState::HandleDynamicToStatic(int32_t lineNumber)
+{
+    if (!HybridSingleStepper::GetInstance().GetHybridSingleStepFlag(HybridStepDirection::DYNAMIC_TO_STATIC)) {
+        return false;
+    }
+    LOG(DEBUG, DEBUGGER) << "ThreadState::OnSingleStep paused by single step from dynamic side";
+    // reset DYNAMIC_TO_STATIC to false to avoid redundant pauses
+    HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::DYNAMIC_TO_STATIC, false);
+    paused_ = true;
+    UpdateLineNumber(lineNumber);
+    pauseReason_ = PauseReason::OTHER;
+    return true;
+}
+
+bool ThreadState::HandleBreakpointHit(const PtLocation &location)
+{
+    if (!ShouldStopAtBreakpoint(location)) {
+        return false;
+    }
+    paused_ = true;
+    UpdateLineNumber(location.GetLineNumber());
+    return true;
+}
+
+void ThreadState::HandleStep(const PtLocation &location)
+{
+    int32_t lineNumber = location.GetLineNumber();
+    switch (stepKind_) {
+        case StepKind::NONE:
+            paused_ = false;
+            break;
+        case StepKind::BREAK_ON_START:
+            break;
+        case StepKind::CONTINUE_TO:
+            paused_ = stepLocations_.find(location) != stepLocations_.end();
+            break;
+        case StepKind::PAUSE:
+            paused_ = true;
+            UpdateLineNumber(lineNumber);
+            break;
+        case StepKind::STEP_INTO:
+            // Same source line as the previous step: keep stepping without pausing.
+            if (lineNumber == lastLineNumber_) {
+                paused_ = false;
+                break;
+            }
+            paused_ = stepLocations_.find(location) == stepLocations_.end();
+            UpdateLineNumber(lineNumber);
+            break;
+        case StepKind::STEP_OUT:
+            paused_ = !methodEntered_;
+            break;
+        case StepKind::STEP_OVER:
+            paused_ = !methodEntered_ && stepLocations_.find(location) == stepLocations_.end();
+            break;
+        default:
+            UNREACHABLE();
+            break;
+    }
 }
 
 void ThreadState::OnSingleStep(const PtLocation &location)
 {
     ASSERT(!paused_);
-
-    if (breakOnStart_) {
-        if (ShouldStopAtBreakpoint(location)) {
-            paused_ = true;
-            pauseReason_ = PauseReason::OTHER;
-            return;
-        }
-        if (stepKind_ != StepKind::STEP_INTO) {
-            pauseReason_ = PauseReason::BREAK_ON_START;
-        }
-        stepKind_ = StepKind::BREAK_ON_START;
-        paused_ = true;
-        breakOnStart_ = false;
+    if (breakOnStart_ && HandleBreakOnStart(location)) {
         return;
     }
-    // pause by single step from dynamic side
-    if (HybridSingleStepper::GetInstance().GetHybridSingleStepFlag(HybridStepDirection::DYNAMIC_TO_STATIC)) {
-        LOG(DEBUG, DEBUGGER) << "ThreadState::OnSingleStep paused by single step from dynamic side";
-        // reset DYNAMIC_TO_STATIC to false to avoid redundant pauses
-        HybridSingleStepper::GetInstance().SetHybridSingleStepFlag(HybridStepDirection::DYNAMIC_TO_STATIC, false);
-        paused_ = true;
-        pauseReason_ = PauseReason::OTHER;
+    if (HandleDynamicToStatic(location.GetLineNumber())) {
         return;
     }
-
-    if (ShouldStopAtBreakpoint(location)) {
-        paused_ = true;
+    if (HandleBreakpointHit(location)) {
         return;
     }
-
-    switch (stepKind_) {
-        case StepKind::NONE: {
-            paused_ = false;
-            break;
-        }
-
-        case StepKind::BREAK_ON_START: {
-            break;
-        }
-
-        case StepKind::CONTINUE_TO: {
-            paused_ = stepLocations_.find(location) != stepLocations_.end();
-            break;
-        }
-
-        case StepKind::PAUSE: {
-            paused_ = true;
-            break;
-        }
-
-        case StepKind::STEP_INTO: {
-            paused_ = stepLocations_.find(location) == stepLocations_.end();
-            break;
-        }
-
-        case StepKind::STEP_OUT: {
-            paused_ = !methodEntered_;
-            break;
-        }
-
-        case StepKind::STEP_OVER: {
-            paused_ = !methodEntered_ && stepLocations_.find(location) == stepLocations_.end();
-            break;
-        }
-    }
+    HandleStep(location);
 }
 
 bool ThreadState::ShouldStopAtBreakpoint(const PtLocation &location)
