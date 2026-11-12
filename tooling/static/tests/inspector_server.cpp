@@ -34,6 +34,8 @@
 #include "plugins/ets/runtime/ani/ani.h"
 #include "plugins/ets/runtime/ets_coroutine.h"
 #include "plugins/ets/runtime/ets_vm.h"
+#include "include/panda_vm.h"
+#include "runtime/tooling/pt_scoped_managed_code.h"
 #include "runtime/tooling/tools.h"
 #include "runtime/execution/job.h"
 #include "types/location.h"
@@ -154,8 +156,6 @@ std::set<int32_t> GetLinesFalse(std::string_view source, std::string_view script
 static std::unique_ptr<AsyncStackSnapshotView> g_realAsyncStackSnapshot;
 static Server::Handler g_realPauseHandler;
 static Inspector *g_realInspector {nullptr};
-static os::memory::Mutex g_realRegisteredThreadsMutex;
-static std::set<PtThread> g_realRegisteredThreads GUARDED_BY(g_realRegisteredThreadsMutex);
 static constexpr const char *asyncE2EAbcPath =
     "gen/arkcompiler/toolchain/tooling/static/tests/async_stack_promise_test_abc/AsyncStackPromiseTest.abc";
 static constexpr const char *asyncE2EStdlibPath = "gen/arkcompiler/runtime_core/static_core/plugins/ets/etsstdlib.abc";
@@ -525,26 +525,25 @@ private:
 
 #if defined(PANDA_TARGET_LINUX)
 
-ani_int CaptureRealAsyncStack([[maybe_unused]] ani_env *env, ani_int value)
+NO_THREAD_SAFETY_ANALYSIS ani_int CaptureRealAsyncStack([[maybe_unused]] ani_env *env, ani_int value)
 {
     g_realAsyncStackSnapshot.reset();
 
     auto handle = ark::Job::CloneCurrentAsyncDebuggerStack();
     if (handle != nullptr) {
-        g_realAsyncStackSnapshot = handle->CreateSnapshotView();
-    }
-
-    auto continuationThread = PtThread(ManagedThread::GetCurrent());
-    if (g_realInspector != nullptr && continuationThread != g_mthread) {
-        // The test creates Inspector after the VM worker pool, so it cannot replay ThreadStart events.
-        // Register the continuation thread explicitly to test a pause emitted on that thread.
-        bool shouldRegisterThread = false;
-        {
-            os::memory::LockHolder lock(g_realRegisteredThreadsMutex);
-            shouldRegisterThread = g_realRegisteredThreads.insert(continuationThread).second;
+        std::optional<ark::tooling::PtScopedManagedCode> managedCodeScope;
+        bool lockedDirectly = false;
+        if (MTManagedThread::GetCurrent() != nullptr) {
+            managedCodeScope.emplace();
+        } else {
+            PandaVM::GetCurrent()->GetMutatorLock()->ReadLock();
+            lockedDirectly = true;
         }
-        if (shouldRegisterThread) {
-            g_realInspector->ThreadStart(continuationThread);
+
+        g_realAsyncStackSnapshot = handle->CreateSnapshotView();
+
+        if (lockedDirectly) {
+            PandaVM::GetCurrent()->GetMutatorLock()->Unlock();
         }
     }
 
@@ -592,10 +591,6 @@ protected:
         pandaVm_->SetAsyncDebuggerMaxAsyncDepth(defaultMaxAsyncDepth);
         g_mthread = PtThread(ManagedThread::GetCurrent());
         g_realAsyncStackSnapshot.reset();
-        {
-            os::memory::LockHolder lock(g_realRegisteredThreadsMutex);
-            g_realRegisteredThreads.clear();
-        }
 
         BindNativeFunctions();
         AddModuleDebugInfo();
@@ -604,10 +599,6 @@ protected:
     void TearDown() override
     {
         g_realAsyncStackSnapshot.reset();
-        {
-            os::memory::LockHolder lock(g_realRegisteredThreadsMutex);
-            g_realRegisteredThreads.clear();
-        }
         g_realPauseHandler = nullptr;
         g_realInspector = nullptr;
         if (vm_ != nullptr) {
