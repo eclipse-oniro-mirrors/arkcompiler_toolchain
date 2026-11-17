@@ -380,7 +380,7 @@ void DebuggerImpl::GeneratePausedInfo(PauseReason reason,
     std::vector<std::unique_ptr<CallFrame>> callFrames;
     bool isEmptyUnionStack = true;
     if (isHybrid_) {
-        DebuggerApi::UnionStackIsEmpty(vm_, &isEmptyUnionStack);
+        DebuggerApi::HybridStackIsEmpty(vm_, &isEmptyUnionStack);
     }
     if (isEmptyUnionStack) {
         if (!GenerateCallFrames(&callFrames, true)) {
@@ -2064,7 +2064,7 @@ bool DebuggerImpl::GenerateHybridFrames(std::vector<std::unique_ptr<CallFrame>> 
 {
     if (!isHybrid_) return false;
     CallFrameId callFrameId = 0;
-    bool success = DebuggerApi::ForEachFrameInUnionStack(vm_,
+    bool success = DebuggerApi::ForEachFrameInHybridStack(vm_,
         [this, &callFrameId, callFrames](const void *frame, bool isStaticFrame) {
             if (isStaticFrame) {
                 ProcessStaticFrame(frame, callFrameId, callFrames);
@@ -2073,7 +2073,7 @@ bool DebuggerImpl::GenerateHybridFrames(std::vector<std::unique_ptr<CallFrame>> 
             }
         });
     if (!success) {
-        LOG_DEBUGGER(ERROR) << "GenerateHybridFrames: ForEachFrameInUnionStack failed";
+        LOG_DEBUGGER(ERROR) << "GenerateHybridFrames: ForEachFrameInHybridStack failed";
     }
     return !callFrames->empty();
 }
